@@ -1,0 +1,17 @@
+name: Publish documentation
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+      - run: pip install mkdocs-material==9.6.12 mkdocs==1.6.1 mkdocs-section-index==0.3.10
+      - run: make docs-deploy
