@@ -51,6 +51,7 @@ type VMSRest struct {
 	NonLocalUsers         *NonLocalUser
 	NonLocalGroups        *NonLocalGroup
 	ApiTokens             *ApiToken
+	KafkaBrokers          *KafkaBroker
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -108,6 +109,7 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.NonLocalUsers = newResource[NonLocalUser](rest, "users/query", dummyClusterVersion)
 	rest.NonLocalGroups = newResource[NonLocalGroup](rest, "groups/query", dummyClusterVersion)
 	rest.ApiTokens = newResource[ApiToken](rest, "apitokens", "5.3.0")
+	rest.KafkaBrokers = newResource[KafkaBroker](rest, "kafkabrokers", dummyClusterVersion)
 
 	return rest, nil
 }
