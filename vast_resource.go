@@ -15,38 +15,39 @@ import (
 
 type VastResourceType interface {
 	Dummy |
-	Version |
-	Quota |
-	View |
-	VipPool |
-	User |
-	UserKey |
-	Snapshot |
-	BlockHost |
-	Volume |
-	VTask |
-	BlockHostMapping |
-	Cnode |
-	QosPolicy |
-	Dns |
-	ViewPolicy |
-	Group |
-	Nis |
-	Tenant |
-	Ldap |
-	S3LifeCycleRule |
-	ActiveDirectory |
-	S3Policy |
-	ProtectedPath |
-	GlobalSnapshotStream |
-	ReplicationPeers |
-	ProtectionPolicy |
-	S3replicationPeers |
-	Realm |
-	Role |
-	NonLocalUser |
-	NonLocalGroup |
-	ApiToken
+		Version |
+		Quota |
+		View |
+		VipPool |
+		User |
+		UserKey |
+		Snapshot |
+		BlockHost |
+		Volume |
+		VTask |
+		BlockHostMapping |
+		Cnode |
+		QosPolicy |
+		Dns |
+		ViewPolicy |
+		Group |
+		Nis |
+		Tenant |
+		Ldap |
+		S3LifeCycleRule |
+		ActiveDirectory |
+		S3Policy |
+		ProtectedPath |
+		GlobalSnapshotStream |
+		ReplicationPeers |
+		ProtectionPolicy |
+		S3replicationPeers |
+		Realm |
+		Role |
+		NonLocalUser |
+		NonLocalGroup |
+		ApiToken |
+		KafkaBroker
 }
 
 // ------------------------------------------------------
@@ -560,6 +561,12 @@ type NonLocalGroup struct {
 // ------------------------------------------------------
 
 type ApiToken struct {
+	*VastResourceEntry
+}
+
+// ------------------------------------------------------
+
+type KafkaBroker struct {
 	*VastResourceEntry
 }
 
