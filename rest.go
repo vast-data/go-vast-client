@@ -16,7 +16,7 @@ var dummyResource *Dummy
 type VMSRest struct {
 	ctx         context.Context
 	Session     RESTSession
-	resourceMap map[string]VastResource // Map to store resources by resourceType
+	resourceMap map[string]VastResourceAPI // Map to store resources by resourceType
 
 	dummy                 *Dummy
 	Versions              *Version
@@ -70,7 +70,7 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	}
 	rest := &VMSRest{
 		Session:     session,
-		resourceMap: make(map[string]VastResource),
+		resourceMap: make(map[string]VastResourceAPI),
 	}
 	rest.dummy = newResource[Dummy](rest, "", dummyClusterVersion)
 	dummyResource = rest.dummy
@@ -133,14 +133,14 @@ func newResource[T VastResourceType](rest *VMSRest, resourcePath, availableFromV
 	}
 	resourceType := reflect.TypeOf(T{}).Name()
 	resource := &T{
-		&VastResourceEntry{
+		&VastResource{
 			resourcePath:         resourcePath,
 			resourceType:         resourceType,
 			rest:                 rest,
 			availableFromVersion: availableFrom,
 		},
 	}
-	if res, ok := any(resource).(VastResource); ok {
+	if res, ok := any(resource).(VastResourceAPI); ok {
 		rest.resourceMap[resourceType] = res
 	} else {
 		panic(fmt.Sprintf("Resource %s doesnt implement VastResource interface!", resourceType))

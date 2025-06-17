@@ -7,7 +7,7 @@ using the endpoints `<base url>/users` for listing and `<base url>/users/<id>` f
 
 ```go
 type User struct {
-	*VastResourceEntry
+	*VastResource
 }
 ```
 
@@ -104,7 +104,7 @@ It has 2 custom methods `CreateKey` and `DeleteKey`
 
 ```go
 type UserKey struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (uk *UserKey) CreateKey(context.Context, userId int64) (Record, error) {
@@ -160,7 +160,7 @@ For `afterRequest` good example is `Snapshot` resource:
 
 ```go
 type Snapshot struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (s *Snapshot) afterRequest(ctx context.Context, response Renderable) (Renderable, error) {

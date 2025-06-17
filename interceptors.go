@@ -51,18 +51,18 @@ type RequestInterceptor interface {
 
 // beforeRequest No op in current implementation. You have to shadow this method on particular VastResource
 // IOW declare the same method with the same signature for Users or Quotas or Views etc.
-func (e *VastResourceEntry) beforeRequest(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error {
+func (e *VastResource) beforeRequest(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error {
 	return nil
 }
 
 // afterRequest No op in current implementation. You have to shadow this method on particular VastResource
 // IOW declare the same method with the same signature for Users or Quotas or Views etc.
-func (e *VastResourceEntry) afterRequest(ctx context.Context, response Renderable) (Renderable, error) {
+func (e *VastResource) afterRequest(ctx context.Context, response Renderable) (Renderable, error) {
 	return response, nil
 }
 
 // doBeforeRequest Do not override this method in VastResource implementations. For internal use only
-func (e *VastResourceEntry) doBeforeRequest(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error {
+func (e *VastResource) doBeforeRequest(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error {
 	var err error
 	session := e.Session()
 	config := session.GetConfig()
@@ -84,7 +84,7 @@ func (e *VastResourceEntry) doBeforeRequest(ctx context.Context, r *http.Request
 }
 
 // doAfterRequest Do not override this method in VastResource implementations. For internal use only
-func (e *VastResourceEntry) doAfterRequest(ctx context.Context, response Renderable) (Renderable, error) {
+func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable) (Renderable, error) {
 	var err error
 	session := e.Session()
 	config := session.GetConfig()

@@ -53,13 +53,13 @@ type VastResourceType interface {
 // ------------------------------------------------------
 
 type Dummy struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Version struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 var sysVersion *version.Version
@@ -101,19 +101,19 @@ func (v *Version) CompareWith(other *version.Version) (int, error) {
 // ------------------------------------------------------
 
 type Quota struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type View struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type VipPool struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (v *VipPool) IpRangeForWithContext(ctx context.Context, name string) ([]string, error) {
@@ -137,13 +137,13 @@ func (v *VipPool) IpRangeFor(name string) ([]string, error) {
 // ------------------------------------------------------
 
 type User struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type UserKey struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (uk *UserKey) CreateKeyWithContext(ctx context.Context, userId int64) (Record, error) {
@@ -167,79 +167,79 @@ func (uk *UserKey) DeleteKey(userId int64, accessKey string) (EmptyRecord, error
 // ------------------------------------------------------
 
 type Cnode struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type QosPolicy struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Dns struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type ViewPolicy struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Group struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Nis struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Tenant struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Ldap struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type S3LifeCycleRule struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type ActiveDirectory struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type S3Policy struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type ProtectedPath struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type GlobalSnapshotStream struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (gss *GlobalSnapshotStream) EnsureGssWithContext(ctx context.Context, name, destPath string, snapId, tenantId int64, enabled bool) (Renderable, error) {
@@ -316,37 +316,37 @@ func (gss *GlobalSnapshotStream) EnsureGssDeleted(searchParams Params) (Renderab
 // ------------------------------------------------------
 
 type ReplicationPeers struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type ProtectionPolicy struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type S3replicationPeers struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Realm struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Role struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type Snapshot struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (s *Snapshot) afterRequest(ctx context.Context, response Renderable) (Renderable, error) {
@@ -375,7 +375,7 @@ func (s *Snapshot) afterRequest(ctx context.Context, response Renderable) (Rende
 // ------------------------------------------------------
 
 type BlockHost struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (bh *BlockHost) EnsureBlockHostWithContext(ctx context.Context, name string, tenantId int, nqn string) (Record, error) {
@@ -397,7 +397,7 @@ func (bh *BlockHost) EnsureBlockHost(name string, tenantId int, nqn string) (Rec
 // ------------------------------------------------------
 
 type Volume struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (v *Volume) CloneVolumeWithContext(ctx context.Context, snapId, targetSubsystemId int64, targetVolumePath string) (Renderable, error) {
@@ -413,7 +413,7 @@ func (v *Volume) CloneVolume(snapId, targetSubsystemId int64, targetVolumePath s
 // ------------------------------------------------------
 
 type VTask struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // WaitTask waits for the task to complete
@@ -474,7 +474,7 @@ func (t *VTask) WaitTask(taskId int64) (Record, error) {
 // ------------------------------------------------------
 
 type BlockHostMapping struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 func (bhm *BlockHostMapping) MapWithContext(ctx context.Context, hostId, volumeId int64) (Record, error) {
@@ -549,25 +549,25 @@ func (bhm *BlockHostMapping) EnsureUnmap(hostId, volumeId int64) (Record, error)
 // ------------------------------------------------------
 
 type NonLocalUser struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type NonLocalGroup struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type ApiToken struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------
 
 type KafkaBroker struct {
-	*VastResourceEntry
+	*VastResource
 }
 
 // ------------------------------------------------------

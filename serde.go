@@ -175,6 +175,16 @@ func (r Record) RecordID() int64 {
 	return intIdVal
 }
 
+// RecordGUID returns the name of the record as a string.
+// It looks up the "name" field in the record map.
+func (r Record) RecordGUID() string {
+	nameVal, ok := r["guid"]
+	if !ok {
+		panic(fmt.Sprintf("GUID not found in record %s", r.PrettyTable()))
+	}
+	return fmt.Sprintf("%v", nameVal)
+}
+
 // RecordTenantID returns the ID of the record as an int64.
 // It looks up the "id" field in the record map.
 func (r Record) RecordTenantID() int64 {

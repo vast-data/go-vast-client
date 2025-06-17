@@ -103,7 +103,7 @@ func buildUrl(s RESTSession, path, query, apiVer string) (string, error) {
 }
 
 // Check if current VAST cluster version support triggered API
-func checkVastResourceVersionCompat(ctx context.Context, r VastResource) error {
+func checkVastResourceVersionCompat(ctx context.Context, r VastResourceAPI) error {
 	resourceType := r.GetResourceType()
 	availableFromVersion := r.getAvailableFromVersion()
 	rest := r.getRest()

@@ -89,3 +89,10 @@ func ipGreaterThan(a, b net.IP) bool {
 	}
 	return false
 }
+
+func must[T any](v T, err error) T {
+	if err != nil {
+		panic(fmt.Sprintf("must: %v", err))
+	}
+	return v
+}

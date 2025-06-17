@@ -84,7 +84,7 @@ func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
 
 func request[T RecordUnion](
 	ctx context.Context,
-	r InterceptableVastResource,
+	r InterceptableVastResourceAPI,
 	verb, path, apiVer string,
 	params, body Params,
 ) (T, error) {
@@ -191,12 +191,12 @@ func setupHeaders(s RESTSession, r *http.Request) error {
 func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params) (Renderable, error) {
 	// callerExist if request is processed via "request" method
 	var (
-		resourceCaller    InterceptableVastResource
+		resourceCaller    InterceptableVastResourceAPI
 		requestData       io.Reader
 		beforeRequestData io.Reader
 		err               error
 	)
-	originResource, resourceExist := ctx.Value(caller).(InterceptableVastResource)
+	originResource, resourceExist := ctx.Value(caller).(InterceptableVastResourceAPI)
 	if !resourceExist {
 		resourceCaller = dummyResource
 	} else {
