@@ -48,8 +48,8 @@ func isTooManyRecordsErr(err error) bool {
 	return false
 }
 
-// VastResource defines the interface for standard CRUD operations on a VAST resource.
-type VastResource interface {
+// VastResourceAPI defines the interface for standard CRUD operations on a VAST resource.
+type VastResourceAPI interface {
 	Session() RESTSession
 	GetResourceType() string
 
@@ -63,6 +63,7 @@ type VastResource interface {
 	Get(Params) (Record, error)
 	GetById(int64) (Record, error)
 	Exists(Params) (bool, error)
+	MustExists(Params) bool
 
 	// Internal methods
 	sync.Locker
@@ -70,9 +71,8 @@ type VastResource interface {
 	getAvailableFromVersion() *version.Version
 }
 
-// VastResourceWithContext VastResource method with pre-bound Rest context
-type VastResourceWithContext interface {
-	VastResource
+type VastResourceAPIWithContext interface {
+	VastResourceAPI
 	ListWithContext(context.Context, Params) (RecordSet, error)
 	CreateWithContext(context.Context, Params) (Record, error)
 	UpdateWithContext(context.Context, int64, Params) (Record, error)
@@ -83,12 +83,13 @@ type VastResourceWithContext interface {
 	GetWithContext(context.Context, Params) (Record, error)
 	GetByIdWithContext(context.Context, int64) (Record, error)
 	ExistsWithContext(context.Context, Params) (bool, error)
+	MustExistsWithContext(context.Context, Params) bool
 }
 
-// InterceptableVastResource combines request interception with vast resource behavior.
-type InterceptableVastResource interface {
+// InterceptableVastResourceAPI combines request interception with vast resource behavior.
+type InterceptableVastResourceAPI interface {
 	RequestInterceptor
-	VastResourceWithContext
+	VastResourceAPIWithContext
 }
 
 type Awaitable interface {
@@ -96,14 +97,40 @@ type Awaitable interface {
 	Wait() (Record, error)
 }
 
-// VastResourceEntry implements VastResource and provides common behavior for managing VAST resources.
-type VastResourceEntry struct {
+// VastResource implements VastResource and provides common behavior for managing VAST resources.
+type VastResource struct {
 	resourcePath         string
 	resourceType         string
 	apiVersion           string
 	availableFromVersion *version.Version
 	rest                 *VMSRest
 	mu                   sync.Mutex
+}
+
+// NewVastResource creates a new VastResource instance with the specified parameters.
+func NewVastResource(
+	resourcePath, resourceType, apiVersion string,
+	availableFromVersion *version.Version, rest *VMSRest,
+) *VastResource {
+	if rest == nil {
+		panic("rest cannot be nil")
+	}
+	if resourcePath == "" {
+		panic("resourcePath cannot be empty")
+	}
+	if resourceType == "" {
+		panic("resourceType cannot be empty")
+	}
+	if apiVersion == "" {
+		panic("apiVersion cannot be empty")
+	}
+	return &VastResource{
+		resourcePath:         resourcePath,
+		resourceType:         resourceType,
+		apiVersion:           apiVersion,
+		availableFromVersion: availableFromVersion,
+		rest:                 rest,
+	}
 }
 
 // AsyncResult represents the result of an asynchronous task.
@@ -115,33 +142,33 @@ type AsyncResult struct {
 }
 
 // Session returns the current VMSSession associated with the resource.
-func (e *VastResourceEntry) Session() RESTSession {
+func (e *VastResource) Session() RESTSession {
 	return e.rest.Session
 }
 
-func (e *VastResourceEntry) GetResourceType() string {
+func (e *VastResource) GetResourceType() string {
 	return e.resourceType
 }
 
 // ListWithContext retrieves all resources matching the given parameters using the provided context.
-func (e *VastResourceEntry) ListWithContext(ctx context.Context, params Params) (RecordSet, error) {
+func (e *VastResource) ListWithContext(ctx context.Context, params Params) (RecordSet, error) {
 	return request[RecordSet](ctx, e, http.MethodGet, e.resourcePath, e.apiVersion, params, nil)
 }
 
 // CreateWithContext creates a new resource using the provided parameters and context.
-func (e *VastResourceEntry) CreateWithContext(ctx context.Context, body Params) (Record, error) {
+func (e *VastResource) CreateWithContext(ctx context.Context, body Params) (Record, error) {
 	return request[Record](ctx, e, http.MethodPost, e.resourcePath, e.apiVersion, nil, body)
 }
 
 // UpdateWithContext updates an existing resource by its ID using the provided parameters and context.
-func (e *VastResourceEntry) UpdateWithContext(ctx context.Context, id int64, body Params) (Record, error) {
+func (e *VastResource) UpdateWithContext(ctx context.Context, id int64, body Params) (Record, error) {
 	path := fmt.Sprintf("%s/%d", e.resourcePath, id)
 	return request[Record](ctx, e, http.MethodPatch, path, e.apiVersion, nil, body)
 }
 
 // DeleteWithContext deletes a resource found using searchParams, using the provided deleteParams, within the given context.
 // If the resource is not found, it returns success without error.
-func (e *VastResourceEntry) DeleteWithContext(ctx context.Context, searchParams, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) DeleteWithContext(ctx context.Context, searchParams, deleteParams Params) (EmptyRecord, error) {
 	result, err := e.GetWithContext(ctx, searchParams)
 	if err != nil {
 		if IsNotFoundErr(err) {
@@ -166,14 +193,14 @@ func (e *VastResourceEntry) DeleteWithContext(ctx context.Context, searchParams,
 }
 
 // DeleteByIdWithContext deletes a resource by its unique ID using the provided context and delete parameters.
-func (e *VastResourceEntry) DeleteByIdWithContext(ctx context.Context, id int64, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) DeleteByIdWithContext(ctx context.Context, id int64, deleteParams Params) (EmptyRecord, error) {
 	path := fmt.Sprintf("%s/%d", e.resourcePath, id)
 	return request[EmptyRecord](ctx, e, http.MethodDelete, path, e.apiVersion, nil, deleteParams)
 }
 
 // EnsureWithContext ensures a resource matching the search parameters exists. If not, it creates it using the body.
 // All operations are performed within the given context.
-func (e *VastResourceEntry) EnsureWithContext(ctx context.Context, searchParams Params, body Params) (Record, error) {
+func (e *VastResource) EnsureWithContext(ctx context.Context, searchParams Params, body Params) (Record, error) {
 	result, err := e.GetWithContext(ctx, searchParams)
 	if IsNotFoundErr(err) {
 		return e.CreateWithContext(ctx, body)
@@ -185,7 +212,7 @@ func (e *VastResourceEntry) EnsureWithContext(ctx context.Context, searchParams 
 
 // EnsureByNameWithContext ensures a resource with the given name exists. If not, it creates one using the provided body.
 // All operations are performed within the provided context.
-func (e *VastResourceEntry) EnsureByNameWithContext(ctx context.Context, name string, body Params) (Record, error) {
+func (e *VastResource) EnsureByNameWithContext(ctx context.Context, name string, body Params) (Record, error) {
 	result, err := e.GetWithContext(ctx, Params{"name": name})
 	if IsNotFoundErr(err) {
 		body["name"] = name
@@ -198,7 +225,7 @@ func (e *VastResourceEntry) EnsureByNameWithContext(ctx context.Context, name st
 
 // GetWithContext retrieves a single resource that matches the given parameters using the provided context.
 // Returns a NotFoundError if no resource is found.
-func (e *VastResourceEntry) GetWithContext(ctx context.Context, params Params) (Record, error) {
+func (e *VastResource) GetWithContext(ctx context.Context, params Params) (Record, error) {
 	result, err := request[RecordSet](ctx, e, http.MethodGet, e.resourcePath, e.apiVersion, params, nil)
 	if err != nil {
 		return nil, err
@@ -227,14 +254,14 @@ func (e *VastResourceEntry) GetWithContext(ctx context.Context, params Params) (
 }
 
 // GetByIdWithContext retrieves a resource by its unique ID using the provided context.
-func (e *VastResourceEntry) GetByIdWithContext(ctx context.Context, id int64) (Record, error) {
+func (e *VastResource) GetByIdWithContext(ctx context.Context, id int64) (Record, error) {
 	path := fmt.Sprintf("%s/%d", e.resourcePath, id)
 	return request[Record](ctx, e, http.MethodGet, path, e.apiVersion, nil, nil)
 }
 
 // ExistsWithContext checks if any resource matches the provided parameters within the given context.
 // Returns true if a match is found. Returns false if not found. Returns an error only if an unexpected failure occurs.
-func (e *VastResourceEntry) ExistsWithContext(ctx context.Context, params Params) (bool, error) {
+func (e *VastResource) ExistsWithContext(ctx context.Context, params Params) (bool, error) {
 	if _, err := e.GetWithContext(ctx, params); err != nil && !isTooManyRecordsErr(err) {
 		if !IsNotFoundErr(err) {
 			return false, err
@@ -244,77 +271,93 @@ func (e *VastResourceEntry) ExistsWithContext(ctx context.Context, params Params
 	return true, nil
 }
 
+// MustExistsWithContext checks if a resource exists using the provided context and parameters.
+// It returns true if the resource exists, and false otherwise.
+// This method panics if an unexpected error occurs during the check.
+// It is intended for use in scenarios where failure to access the resource is considered fatal.
+func (e *VastResource) MustExistsWithContext(ctx context.Context, params Params) bool {
+	return must(e.ExistsWithContext(ctx, params))
+}
+
 // List retrieves all resources matching the given parameters using the bound REST context.
-func (e *VastResourceEntry) List(params Params) (RecordSet, error) {
+func (e *VastResource) List(params Params) (RecordSet, error) {
 	return e.ListWithContext(e.rest.ctx, params)
 }
 
 // Create creates a new resource using the provided parameters and the bound REST context.
-func (e *VastResourceEntry) Create(params Params) (Record, error) {
+func (e *VastResource) Create(params Params) (Record, error) {
 	return e.CreateWithContext(e.rest.ctx, params)
 }
 
 // Update updates a resource by its ID using the provided parameters and the bound REST context.
-func (e *VastResourceEntry) Update(id int64, params Params) (Record, error) {
+func (e *VastResource) Update(id int64, params Params) (Record, error) {
 	return e.UpdateWithContext(e.rest.ctx, id, params)
 }
 
 // Delete deletes a resource found with searchParams using deleteParams and the bound REST context.
 // Returns success even if the resource is not found.
-func (e *VastResourceEntry) Delete(searchParams, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) Delete(searchParams, deleteParams Params) (EmptyRecord, error) {
 	return e.DeleteWithContext(e.rest.ctx, searchParams, deleteParams)
 }
 
 // DeleteById deletes a resource by its ID using the bound REST context and provided deleteParams.
-func (e *VastResourceEntry) DeleteById(id int64, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) DeleteById(id int64, deleteParams Params) (EmptyRecord, error) {
 	return e.DeleteByIdWithContext(e.rest.ctx, id, deleteParams)
 }
 
 // Ensure ensures a resource exists matching the searchParams. Creates it with body if not found.
 // Uses the bound REST context.
-func (e *VastResourceEntry) Ensure(searchParams, body Params) (Record, error) {
+func (e *VastResource) Ensure(searchParams, body Params) (Record, error) {
 	return e.EnsureWithContext(e.rest.ctx, searchParams, body)
 }
 
 // EnsureByName ensures a resource with the given name exists using the bound REST context.
 // Creates it with the provided body if not found.
-func (e *VastResourceEntry) EnsureByName(name string, body Params) (Record, error) {
+func (e *VastResource) EnsureByName(name string, body Params) (Record, error) {
 	return e.EnsureByNameWithContext(e.rest.ctx, name, body)
 }
 
 // Get retrieves a single resource matching the given parameters using the bound REST context.
 // Returns NotFoundError if the resource does not exist.
-func (e *VastResourceEntry) Get(params Params) (Record, error) {
+func (e *VastResource) Get(params Params) (Record, error) {
 	return e.GetWithContext(e.rest.ctx, params)
 }
 
 // GetById retrieves a resource by its ID using the bound REST context.
-func (e *VastResourceEntry) GetById(id int64) (Record, error) {
+func (e *VastResource) GetById(id int64) (Record, error) {
 	return e.GetByIdWithContext(e.rest.ctx, id)
 }
 
 // Exists checks if any resource matches the given parameters using the bound REST context.
 // Returns true if a match is found, false if not. Returns error only for unexpected issues.
-func (e *VastResourceEntry) Exists(params Params) (bool, error) {
+func (e *VastResource) Exists(params Params) (bool, error) {
 	return e.ExistsWithContext(e.rest.ctx, params)
 }
 
-func (e *VastResourceEntry) Lock() {
+// MustExists performs an existence check for a resource using the given parameters.
+// It returns true if the resource exists, or false if it does not.
+// If an error occurs during the check (other than not-found), the method panics.
+// This is a convenience method intended for use in control paths where failures are not expected or tolerated.
+func (e *VastResource) MustExists(params Params) bool {
+	return e.MustExistsWithContext(e.rest.ctx, params)
+}
+
+func (e *VastResource) Lock() {
 	e.mu.Lock()
 }
 
-func (e *VastResourceEntry) Unlock() {
+func (e *VastResource) Unlock() {
 	e.mu.Lock()
 }
 
 // internal methods
 // getRest Rest returns Rest object
-func (e *VastResourceEntry) getRest() *VMSRest {
+func (e *VastResource) getRest() *VMSRest {
 	return e.rest
 }
 
 // getAvailableFromVersion Get minimal VAST version resource is available from.
-func (e *VastResourceEntry) getAvailableFromVersion() *version.Version {
+func (e *VastResource) getAvailableFromVersion() *version.Version {
 	return e.availableFromVersion
 }
 
