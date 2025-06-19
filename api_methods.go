@@ -40,6 +40,13 @@ func IsNotFoundErr(err error) bool {
 	return false
 }
 
+func IgnoreNotFound(val Record, err error) (Record, error) {
+	if IsNotFoundErr(err) {
+		return val, nil
+	}
+	return val, err
+}
+
 func isTooManyRecordsErr(err error) bool {
 	var tooManyRecordsErr *TooManyRecordsError
 	if errors.As(err, &tooManyRecordsErr) {

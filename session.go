@@ -55,6 +55,19 @@ func IsApiError(err error) bool {
 	return false
 }
 
+func IgnoreStatusCodes(err error, codes ...int) error {
+	if !IsApiError(err) {
+		return err
+	}
+	apiErr := err.(*ApiError)
+	for _, code := range codes {
+		if apiErr.StatusCode == code {
+			return nil
+		}
+	}
+	return err
+}
+
 type VMSSession struct {
 	config *VMSConfig
 	client *http.Client
@@ -191,6 +204,7 @@ func setupHeaders(s RESTSession, r *http.Request) error {
 func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params) (Renderable, error) {
 	// callerExist if request is processed via "request" method
 	var (
+		config            = s.GetConfig()
 		resourceCaller    InterceptableVastResourceAPI
 		requestData       io.Reader
 		beforeRequestData io.Reader
@@ -232,7 +246,7 @@ func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params
 	if responseErr != nil {
 		return nil, fmt.Errorf("failed to perform %s request to %s, error %v", verb, url, responseErr)
 	}
-	if err = validateResponse(response); err != nil {
+	if err = validateResponse(response, config.Host, config.Port); err != nil {
 		return nil, err
 	}
 	result, err := unmarshalToRecordUnion(response)

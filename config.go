@@ -48,6 +48,21 @@ type VMSConfig struct {
 	//   - A potentially modified Renderable object.
 	//   - An error, if processing the response fails.
 	AfterRequestFn func(ctx context.Context, response Renderable) (Renderable, error)
+
+	// FillFn optionally overrides the default function used to populate structs
+	// from generic Record maps. If provided, this function is invoked instead of
+	// the default JSON-based marshal/unmarshal logic.
+	//
+	// This is useful for customizing how API responses are decoded into typed
+	// structures — for example, using a different decoding library or adding hooks.
+	//
+	// Parameters:
+	//   - r: The Record to fill from (typically parsed from JSON response).
+	//   - container: A pointer to a struct to be populated.
+	//
+	// Returns:
+	//   - error: Any decoding or validation error encountered during population.
+	FillFn func(r Record, container any) error
 }
 
 // VMSConfigFunc defines a function that can modify or validate a VMSConfig.
@@ -129,13 +144,25 @@ func withUserAgent(config *VMSConfig) error {
 	return nil
 }
 
-// witAPIVersion sets a default API version
+// withApiVersion sets a default API version
 // NOTE: API version can be overwritten for particular VastResource
-func witApiVersion(defaultVer string) VMSConfigFunc {
+func withApiVersion(defaultVer string) VMSConfigFunc {
 	return func(config *VMSConfig) error {
 		if config.ApiVersion == "" {
 			config.ApiVersion = defaultVer
 		}
 		return nil
 	}
+}
+
+// withFillFn is a VMSConfigFunc that installs a custom FillFn into the global
+// fillFunc used by the Record.Fill method.
+//
+// This allows the client to globally override the default record-to-struct
+// population logic.
+func withFillFn(config *VMSConfig) error {
+	if config.FillFn != nil {
+		fillFunc = config.FillFn
+	}
+	return nil
 }

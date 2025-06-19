@@ -34,6 +34,16 @@ var printableAttrs = map[string]struct{}{
 	"secret_key":     empty,
 }
 
+type FillFunc func(Record, any) error
+
+var fillFunc FillFunc = func(r Record, container any) error {
+	dbByte, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(dbByte, container)
+}
+
 //  ######################################################
 //              FUNCTION PARAMS
 //  ######################################################
@@ -111,6 +121,30 @@ type Renderable interface {
 	PrettyJson(indent ...string) string
 }
 
+// Filler is a generic interface for filling a struct or slice of structs.
+type Filler interface {
+	// Fill populates the given container with data from the implementing type.
+	// The container can be a pointer to a struct (for Record),
+	// or a pointer to a slice of structs (for RecordSet).
+	Fill(container any) error
+}
+
+// DisplayableRecord defines a unified interface for working with structured data
+// that has been deserialized from an API response. It combines both rendering and
+// data population capabilities.
+//
+// Implementing types must support:
+//
+//   - Rendering themselves as human-readable output via the Renderable interface.
+//   - Filling provided container structs or slices using the Filler interface.
+//
+// This interface is implemented by Record, RecordSet, and EmptyRecord, allowing
+// generic handling of different response shapes (single item, list, or empty).
+type DisplayableRecord interface {
+	Renderable
+	Filler
+}
+
 // Record represents a single generic data object as a key-value map.
 // It's commonly used to unmarshal a single JSON object from an API response.
 type Record map[string]any
@@ -154,11 +188,7 @@ func (r Record) Fill(container any) error {
 	if val.Kind() != reflect.Struct {
 		return fmt.Errorf("container must point to a struct")
 	}
-	dbByte, err := json.Marshal(r)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(dbByte, container)
+	return fillFunc(r, container)
 }
 
 // RecordID returns the ID of the record as an int64.
@@ -217,6 +247,13 @@ func (r Record) RecordTenantName() string {
 		panic(fmt.Sprintf("tenant_name not found in record %s", r.PrettyTable()))
 	}
 	return fmt.Sprintf("%v", nameVal)
+}
+
+// SetMissingValue If the key is not present in the Record, set it to the provided value
+func (r Record) SetMissingValue(key string, value any) {
+	if _, exists := r[key]; !exists {
+		r[key] = value
+	}
 }
 
 // PrettyTable prints a single Record as a table
@@ -288,6 +325,48 @@ func (r Record) String() string {
 	return r.PrettyTable()
 }
 
+// Fill populates the provided container slice with data from the RecordSet.
+// The container must be a non-nil pointer to a slice of structs. Each Record in the RecordSet
+// is individually marshaled into an element of the slice using JSON serialization,
+// and appended to the resulting slice.
+//
+// Example usage:
+//
+//	var users []User
+//	err := recordSet.Fill(&users)
+//	if err != nil {
+//	    // handle error
+//	}
+//
+// Parameters:
+//   - container: must be a pointer to a slice of structs (e.g., *[]MyStruct).
+//
+// Returns an error if:
+//   - The container is not a non-nil pointer to a slice.
+//   - The slice element type is not a struct.
+//   - Any Record in the RecordSet fails to unmarshal into an element.
+func (rs RecordSet) Fill(container any) error {
+	val := reflect.ValueOf(container)
+	if val.Kind() != reflect.Ptr || val.IsNil() {
+		return fmt.Errorf("container must be a non-nil pointer to a slice")
+	}
+
+	sliceVal := val.Elem()
+	if sliceVal.Kind() != reflect.Slice {
+		return fmt.Errorf("container must point to a slice")
+	}
+
+	elemType := sliceVal.Type().Elem()
+	for _, record := range rs {
+		elemPtr := reflect.New(elemType)
+		if err := record.Fill(elemPtr.Interface()); err != nil {
+			return err
+		}
+		sliceVal.Set(reflect.Append(sliceVal, elemPtr.Elem()))
+	}
+	return nil
+}
+
 // PrettyTable prints the full RecordSet by rendering each individual Record
 func (rs RecordSet) PrettyTable() string {
 	if len(rs) == 0 {
@@ -322,6 +401,10 @@ func (rs RecordSet) PrettyJson(indent ...string) string {
 		return fmt.Sprintf("failed to marshal JSON: %v", err)
 	}
 	return string(b)
+}
+
+func (er EmptyRecord) Fill(container any) error {
+	return nil
 }
 
 // PrettyTable EmptyRecord

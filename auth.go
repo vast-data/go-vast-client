@@ -145,7 +145,7 @@ func (auth *JWTAuthenticator) authorize() error {
 		resp, err = auth.acquireToken(client)
 		auth.setInitialized(true)
 	}
-	if err = validateResponse(resp); err != nil {
+	if err = validateResponse(resp, auth.Host, auth.Port); err != nil {
 		return err
 	}
 	// Read response

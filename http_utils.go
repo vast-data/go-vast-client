@@ -20,15 +20,18 @@ import (
 //
 // Returns:
 // - error: an error if validation fails
-func validateResponse(response *http.Response) error {
-	requestURL := "<unknown URL>"
+func validateResponse(response *http.Response, host string, port uint64) error {
+	requestURL := fmt.Sprintf("https://%s:%d", host, port)
 	method := "<unknown method>"
 	if response == nil {
 		return &ApiError{
 			Method:     method,
 			URL:        requestURL,
 			StatusCode: 0,
-			Body:       "server unreachable: verify the host is correct and the network is accessible",
+			Body: fmt.Sprintf(
+				"URL %s is unreachable: verify the host is correct and the network is accessible",
+				requestURL,
+			),
 		}
 	}
 	if response.StatusCode >= 200 && response.StatusCode <= 299 {
