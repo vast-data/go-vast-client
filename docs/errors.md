@@ -1,5 +1,3 @@
-## Errors
-
 The VAST client can return **two categories of errors**:
 
 ---

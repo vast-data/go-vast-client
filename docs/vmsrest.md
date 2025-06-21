@@ -1,5 +1,3 @@
-## VMSRest object
-
 After configuration, you use VMSRest to access API groups:
 
 ```go

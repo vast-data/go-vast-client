@@ -1,5 +1,3 @@
-## Response
-
 All API operations return a **Response** object that supports rendering, inspection, and optional conversion into Go structs.
 
 A response is one of the following:

@@ -1,5 +1,3 @@
-## Session
-
 Resources can be queried using session if you need more control over request endpoints, headers, or other parameters. 
 Or if endpoint is not present in the VMSRest object.
 
