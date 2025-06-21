@@ -1,6 +1,6 @@
 ### Do you want to add new API resource?
 
-Suppose you want to add a User resource so that it can be queried 
+Suppose you want to add a User resource so that it can be queried
 using the endpoints `<base url>/users` for listing and `<base url>/users/<id>` for retrieving details.
 
 - Start by defining a new VastResource named User in the `vast_resource.go` file.
@@ -44,7 +44,11 @@ rest.Users = newResource[User](rest, "users", dummyClusterVersion) // <- Here
 ....
 ```
 
-At this point methods `List`, `Get`, `Delete`, `Update`, `Ensure`, `EnsureByName`, `GetById`, `DeleteById` are available at your disposal.
+At this point methods:
+`List`, `Get`, `Delete`, `Update`, `Create`, `Ensure`, `EnsureByName`, `GetById`, `DeleteById` 
+and also variants of forementioned methods with context:
+`ListWithContext`, `GetWithContext`, `DeleteWithContext`, `UpdateWithContext`, `CreateWithContext`, `EnsureWithContext`, `EnsureByNameWithContext`, `GetByIdWithContext`, `DeleteByIdWithContext`
+are available for `User` resource.
 
 Examples:
 
@@ -93,8 +97,8 @@ result, err := rest.Users.DeleteById(1, nil)
 ```
 
 !!! note
-    Aforementioned flow covers "classic" API resources of form `/<resource name>/<id>`. 
-    For non-standard APIs you have to define custom methods or use "Low level API" (see Overview section)
+Aforementioned flow covers "classic" API resources of form `/<resource name>/<id>`.
+For non-standard APIs you have to define custom methods or use "Low level API" (see Overview section)
 
 
 ### Define non-standard method for API Resource
@@ -119,7 +123,7 @@ func (uk *UserKey) DeleteKey(context.Context, userId int64, accessKey string) (E
 ```
 
 !!! warning
-    Main rule: **Do not override standard methods Ensure, Get, List, Create, DeleteById etc**. Create your own methods like CreateUser, DeleteKey etc.
+Main rule: **Do not override standard methods Ensure, Get, List, Create, DeleteById etc**. Create your own methods like CreateUser, DeleteKey etc.
 
 
 Another good example is `BlockHostMapping` Resource where specific methods are used to map BlockHosts to Volumes.
@@ -136,10 +140,10 @@ beforeRequest(context.Context, r *http.Request, verb string, url string, body io
 
 Parameters:
 
-  - ctx: The request context, useful for deadlines, tracing, or cancellation.
-  - verb: The HTTP method (e.g., GET, POST, PUT).
-  - url: The URL path being accessed (including query params)
-  - body: The request body as an io.Reader, typically containing JSON data.
+- ctx: The request context, useful for deadlines, tracing, or cancellation.
+- verb: The HTTP method (e.g., GET, POST, PUT).
+- url: The URL path being accessed (including query params)
+- body: The request body as an io.Reader, typically containing JSON data.
 
 
 Or you can define method `afterRequest`:
@@ -150,8 +154,8 @@ afterRequest(ctx context.Context, response Renderable) (Renderable, error)
 
 Parameters:
 
-  - ctx: The request context, useful for deadlines, tracing, or cancellation.
-  - response: Resources that implement Renderable interface (Record, RecordSet, EmptyRecord)
+- ctx: The request context, useful for deadlines, tracing, or cancellation.
+- response: Resources that implement Renderable interface (Record, RecordSet, EmptyRecord)
 
 
 At this moment I don't have practical example for `beforeRequest`. Probably it can be used for logging etc.

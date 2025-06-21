@@ -55,6 +55,19 @@ func IsApiError(err error) bool {
 	return false
 }
 
+func IgnoreStatusCodes(err error, codes ...int) error {
+	if !IsApiError(err) {
+		return err
+	}
+	apiErr := err.(*ApiError)
+	for _, code := range codes {
+		if apiErr.StatusCode == code {
+			return nil
+		}
+	}
+	return err
+}
+
 type VMSSession struct {
 	config *VMSConfig
 	client *http.Client

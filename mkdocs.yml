@@ -20,8 +20,11 @@ theme:
         name: Switch to light mode
 nav:
   - Overview: index.md
-  - Supported Resources: resources.md
-  - For Developers: for-developers.md
+  - Configuration: configuration.md
+  - VMSRest: vmsrest.md
+  - Session: session.md
+  - Response: response.md
+  - Errors: errors.md
 
 plugins:
   - search
