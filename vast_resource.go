@@ -155,6 +155,26 @@ func (uk *UserKey) CreateKey(userId int64) (Record, error) {
 	return uk.CreateKeyWithContext(uk.rest.ctx, userId)
 }
 
+func (uk *UserKey) EnableKeyWithContext(ctx context.Context, userId int64, accessKey string) (EmptyRecord, error) {
+	path := fmt.Sprintf(uk.resourcePath, userId)
+	params := Params{"access_key": accessKey, "enabled": true}
+	return request[EmptyRecord](ctx, uk, http.MethodPatch, path, uk.apiVersion, nil, params)
+}
+
+func (uk *UserKey) EnableKey(userId int64, accessKey string) (EmptyRecord, error) {
+	return uk.EnableKeyWithContext(uk.rest.ctx, userId, accessKey)
+}
+
+func (uk *UserKey) DisableKeyWithContext(ctx context.Context, userId int64, accessKey string) (EmptyRecord, error) {
+	path := fmt.Sprintf(uk.resourcePath, userId)
+	params := Params{"access_key": accessKey, "enabled": false}
+	return request[EmptyRecord](ctx, uk, http.MethodPatch, path, uk.apiVersion, nil, params)
+}
+
+func (uk *UserKey) DisableKey(userId int64, accessKey string) (EmptyRecord, error) {
+	return uk.DisableKeyWithContext(uk.rest.ctx, userId, accessKey)
+}
+
 func (uk *UserKey) DeleteKeyWithContext(ctx context.Context, userId int64, accessKey string) (EmptyRecord, error) {
 	path := fmt.Sprintf(uk.resourcePath, userId)
 	return request[EmptyRecord](ctx, uk, http.MethodDelete, path, uk.apiVersion, nil, Params{"access_key": accessKey})
