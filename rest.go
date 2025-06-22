@@ -19,6 +19,7 @@ type VMSRest struct {
 	resourceMap map[string]VastResourceAPI // Map to store resources by resourceType
 
 	dummy                 *Dummy
+	OpenAPI               *OpenAPI
 	Versions              *Version
 	VTasks                *VTask
 	Quotas                *Quota
@@ -111,6 +112,9 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.NonLocalGroups = newResource[NonLocalGroup](rest, "groups/query", dummyClusterVersion)
 	rest.ApiTokens = newResource[ApiToken](rest, "apitokens", "5.3.0")
 	rest.KafkaBrokers = newResource[KafkaBroker](rest, "kafkabrokers", dummyClusterVersion)
+
+	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
+	rest.OpenAPI = &OpenAPI{session: rest.Session}
 
 	return rest, nil
 }

@@ -2,11 +2,16 @@ package vast_client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	version "github.com/hashicorp/go-version"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/getkin/kin-openapi/openapi2"
+	"github.com/getkin/kin-openapi/openapi2conv"
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
 //  ######################################################
@@ -54,6 +59,93 @@ type VastResourceType interface {
 
 type Dummy struct {
 	*VastResource
+}
+
+// ------------------------------------------------------
+
+type OpenAPI struct {
+	session RESTSession
+}
+
+// FetchSchemaV2 retrieves the Swagger 2.0 (OpenAPI v2) schema from the remote VAST backend.
+//
+// It performs an authenticated request to the OpenAPI schema endpoint and attempts to unmarshal
+// the returned JSON into a structured `openapi2.T` object, which includes metadata about the API,
+// available paths, definitions (models), parameters, responses, and security schemes.
+//
+// The returned object follows the OpenAPI 2.0 specification, with fields like:
+//   - Swagger: version (must be "2.0")
+//   - Info: API title, version, contact, and license
+//   - Host: API hostname (e.g. "domain.com")
+//   - BasePath: base path for endpoints (e.g. "/api")
+//   - Paths: map of endpoint paths and operations
+//   - Definitions: schema definitions for reusable data structures
+//   - Parameters, Responses, SecurityDefinitions, etc.
+//
+// Returns:
+//
+//	*openapi2.T: structured representation of the OpenAPI 2.0 document
+//	error: if fetching or unmarshalling fails
+//
+// Example usage:
+//
+//	schema, err := client.FetchSchema(ctx)
+//	if err != nil {
+//	    log.Fatalf("error loading OpenAPI schema: %v", err)
+//	}
+//	fmt.Println(schema.Paths["/users/"].Get.Summary)
+func (o *OpenAPI) FetchSchemaV2(ctx context.Context) (*openapi2.T, error) {
+	record, err := o.session.(*VMSSession).fetchSchema(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	raw, err := json.Marshal(record)
+	if err != nil {
+		return nil, err
+	}
+
+	var doc openapi2.T
+	if err = json.Unmarshal(raw, &doc); err != nil {
+		return nil, err
+	}
+	return &doc, nil
+}
+
+// FetchSchemaV3 retrieves the OpenAPI v3.0 schema for the VAST backend by first
+// fetching the Swagger 2.0 (OpenAPI v2) document and converting it to v3 format.
+//
+// This function is useful when working with tools or generators (e.g., Terraform
+// schema generators) that expect OpenAPI 3.0-compliant schemas.
+//
+// The returned OpenAPI v3 document includes:
+//   - Components: schemas, responses, parameters, etc.
+//   - Paths: endpoint definitions
+//   - Info: metadata about the API
+//
+// Returns:
+//
+//	*openapi3.T: the converted OpenAPI v3 schema
+//	error: if either fetching the v2 schema or converting to v3 fails
+//
+// Example:
+//
+//	doc, err := client.OpenAPI.FetchSchemaV3(ctx)
+//	if err != nil {
+//	    log.Fatalf("failed to fetch schema: %v", err)
+//	}
+//	fmt.Println(doc.Components.Schemas["User"].Value.Type)
+func (o *OpenAPI) FetchSchemaV3(ctx context.Context) (*openapi3.T, error) {
+	schemaV2, err := o.FetchSchemaV2(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := openapi2conv.ToV3(schemaV2)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert to OpenAPI v3: %w", err)
+	}
+	return doc, nil
 }
 
 // ------------------------------------------------------

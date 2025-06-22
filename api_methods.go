@@ -6,6 +6,7 @@ import (
 	"fmt"
 	version "github.com/hashicorp/go-version"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -59,6 +60,7 @@ func isTooManyRecordsErr(err error) bool {
 type VastResourceAPI interface {
 	Session() RESTSession
 	GetResourceType() string
+	GetResourcePath() string // normalized path to the resource in OpenAPI format
 
 	List(Params) (RecordSet, error)
 	Create(Params) (Record, error)
@@ -114,32 +116,6 @@ type VastResource struct {
 	mu                   sync.Mutex
 }
 
-// NewVastResource creates a new VastResource instance with the specified parameters.
-func NewVastResource(
-	resourcePath, resourceType, apiVersion string,
-	availableFromVersion *version.Version, rest *VMSRest,
-) *VastResource {
-	if rest == nil {
-		panic("rest cannot be nil")
-	}
-	if resourcePath == "" {
-		panic("resourcePath cannot be empty")
-	}
-	if resourceType == "" {
-		panic("resourceType cannot be empty")
-	}
-	if apiVersion == "" {
-		panic("apiVersion cannot be empty")
-	}
-	return &VastResource{
-		resourcePath:         resourcePath,
-		resourceType:         resourceType,
-		apiVersion:           apiVersion,
-		availableFromVersion: availableFromVersion,
-		rest:                 rest,
-	}
-}
-
 // AsyncResult represents the result of an asynchronous task.
 // It contains the task's ID and necessary context for waiting on the task to complete.
 type AsyncResult struct {
@@ -155,6 +131,12 @@ func (e *VastResource) Session() RESTSession {
 
 func (e *VastResource) GetResourceType() string {
 	return e.resourceType
+}
+
+func (e *VastResource) GetResourcePath() string {
+	path := e.resourcePath
+	trimmed := strings.Trim(path, "/")
+	return "/" + trimmed + "/"
 }
 
 // ListWithContext retrieves all resources matching the given parameters using the provided context.
