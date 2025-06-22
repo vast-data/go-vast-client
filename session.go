@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -166,23 +167,39 @@ func request[T RecordUnion](
 }
 
 func (s *VMSSession) Get(ctx context.Context, url string, _ Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodGet, url, nil)
+	return doRequestWithRetries(ctx, s, http.MethodGet, url, nil, nil)
 }
 
 func (s *VMSSession) Post(ctx context.Context, url string, body Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodPost, url, body)
+	return doRequestWithRetries(ctx, s, http.MethodPost, url, body, nil)
 }
 
 func (s *VMSSession) Put(ctx context.Context, url string, body Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodPut, url, body)
+	return doRequestWithRetries(ctx, s, http.MethodPut, url, body, nil)
 }
 
 func (s *VMSSession) Patch(ctx context.Context, url string, body Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodPatch, url, body)
+	return doRequestWithRetries(ctx, s, http.MethodPatch, url, body, nil)
 }
 
 func (s *VMSSession) Delete(ctx context.Context, url string, body Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodDelete, url, body)
+	return doRequestWithRetries(ctx, s, http.MethodDelete, url, body, nil)
+}
+
+// fetchSchema retrieves the OpenAPI schema using Basic Auth and custom headers
+func (s *VMSSession) fetchSchema(ctx context.Context) (Renderable, error) {
+	url, err := buildUrl(s, "", "", s.config.ApiVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build URL for OpenAPI schema: %w", err)
+	}
+	// Basic Auth
+	authStr := s.config.Username + ":" + s.config.Password
+	encoded := base64.StdEncoding.EncodeToString([]byte(authStr))
+	headers := []http.Header{{
+		"Authorization": []string{"Basic " + encoded},
+		"Accept":        []string{"application/openapi+json"},
+	}}
+	return doRequest(ctx, s, http.MethodGet, url+"?format=openapi", nil, headers)
 }
 
 func (s *VMSSession) GetConfig() *VMSConfig {
@@ -201,7 +218,7 @@ func setupHeaders(s RESTSession, r *http.Request) error {
 }
 
 // doRequest Create and process the new HTTP request using the context
-func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params) (Renderable, error) {
+func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params, headers []http.Header) (Renderable, error) {
 	// callerExist if request is processed via "request" method
 	var (
 		config            = s.GetConfig()
@@ -235,14 +252,28 @@ func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params
 	if beforeRequestData, err = body.ToBody(); err != nil {
 		return nil, err
 	}
-	if err = setupHeaders(s, req); err != nil {
-		return nil, err
+	if headers != nil {
+		// Setup custom headers if provided
+		for _, header := range headers {
+			for key, values := range header {
+				for _, value := range values {
+					req.Header.Add(key, value)
+				}
+			}
+		}
+	} else {
+		// Setup default headers
+		if err = setupHeaders(s, req); err != nil {
+			return nil, err
+		}
 	}
+
 	// before request interceptor
 	if err = resourceCaller.doBeforeRequest(ctx, req, verb, url, beforeRequestData); err != nil {
 		return nil, err
 	}
 	response, responseErr := s.client.Do(req)
+
 	if responseErr != nil {
 		return nil, fmt.Errorf("failed to perform %s request to %s, error %v", verb, url, responseErr)
 	}
@@ -261,13 +292,13 @@ func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params
 // retrying up to 3 times if the request fails with a 403 Forbidden API error.
 // It uses the provided context for cancellation support. If a non-retryable
 // error occurs, it returns immediately without retrying.
-func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, body Params) (Renderable, error) {
+func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, body Params, headers []http.Header) (Renderable, error) {
 	var (
 		err    error
 		result Renderable
 	)
 	for i := 0; i < maxRetries; i++ {
-		result, err = doRequest(ctx, s, verb, url, body)
+		result, err = doRequest(ctx, s, verb, url, body, headers)
 		if err != nil && IsApiError(err) {
 			statusCode := err.(*ApiError).StatusCode
 			if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
