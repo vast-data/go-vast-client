@@ -6,7 +6,6 @@ require (
 	github.com/bndr/gotabulate v1.1.2
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/hashicorp/go-version v1.7.0
-	github.com/vmihailenco/msgpack/v5 v5.4.1
 )
 
 require (
@@ -19,6 +18,5 @@ require (
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
-	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

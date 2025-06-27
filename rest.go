@@ -100,7 +100,7 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.Ldaps = newResource[Ldap](rest, "ldaps", dummyClusterVersion)
 	rest.S3LifeCycleRules = newResource[S3LifeCycleRule](rest, "s3lifecyclerules", dummyClusterVersion)
 	rest.ActiveDirectories = newResource[ActiveDirectory](rest, "activedirectory", dummyClusterVersion)
-	rest.S3Policies = newResource[S3Policy](rest, "s3userpolicies", dummyClusterVersion)
+	rest.S3Policies = newResource[S3Policy](rest, "s3policies", dummyClusterVersion)
 	rest.ProtectedPaths = newResource[ProtectedPath](rest, "protectedpaths", dummyClusterVersion)
 	rest.GlobalSnapshotStreams = newResource[GlobalSnapshotStream](rest, "globalsnapstreams", dummyClusterVersion)
 	rest.ReplicationPeers = newResource[ReplicationPeers](rest, "nativereplicationremotetargets", dummyClusterVersion)
