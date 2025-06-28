@@ -198,3 +198,11 @@ Here in case of `RecordSet` (List endpoint) list of snapshot records are returne
 ```
 
 So make sense to get `results` value and return only it to avoid additional parsing of returned Record.
+
+
+### Release new version of the client
+
+To release a new version of the client:
+
+1. Update the version in `version` file.
+2. Push changes to the `main` branch.

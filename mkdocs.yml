@@ -1,4 +1,4 @@
-site_name: GO Vast client
+site_name: VAST Go Client
 site_url: ""
 site_dir: mkdocs_files
 theme:
