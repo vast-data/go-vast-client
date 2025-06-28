@@ -1,0 +1,40 @@
+name: Tag Release from Version File
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tag:
+    name: Create Git Tag from Version File
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: get_version
+        run: |
+          version=$(cat version | tr -d '[:space:]')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          git fetch --tags
+          tag_exists=$(git tag -l "v${{ steps.get_version.outputs.version }}")
+          if [ -z "$tag_exists" ]; then
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create tag
+        if: steps.check_tag.outputs.tag_exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ steps.get_version.outputs.version }}"
+          git push origin "v${{ steps.get_version.outputs.version }}"
