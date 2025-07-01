@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 //  ######################################################
@@ -103,7 +104,7 @@ type InterceptableVastResourceAPI interface {
 
 type Awaitable interface {
 	WaitWithContext(context.Context) (Record, error)
-	Wait() (Record, error)
+	Wait(time.Duration) (Record, error)
 }
 
 // VastResource implements VastResource and provides common behavior for managing VAST resources.
@@ -120,7 +121,7 @@ type VastResource struct {
 // It contains the task's ID and necessary context for waiting on the task to complete.
 type AsyncResult struct {
 	TaskId int64
-	rest   VMSRest
+	rest   *VMSRest
 	ctx    context.Context
 }
 
@@ -352,11 +353,13 @@ func (e *VastResource) getAvailableFromVersion() *version.Version {
 
 // Wait blocks until the asynchronous task completes and returns the resulting Record.
 // If the context (ar.ctx) is not set, it falls back to the context from the associated rest client.
-func (ar *AsyncResult) Wait() (Record, error) {
+func (ar *AsyncResult) Wait(timeout time.Duration) (Record, error) {
 	ctx := ar.ctx
 	if ctx == nil {
 		ctx = ar.rest.ctx
 	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 	return ar.WaitWithContext(ctx)
 }
 
@@ -366,10 +369,11 @@ func (ar *AsyncResult) WaitWithContext(ctx context.Context) (Record, error) {
 	return ar.rest.VTasks.WaitTaskWithContext(ctx, ar.TaskId)
 }
 
-func asyncResultFromRecord(ctx context.Context, r Record) *AsyncResult {
+func asyncResultFromRecord(ctx context.Context, r Record, rest *VMSRest) *AsyncResult {
 	taskId := r.RecordID()
 	return &AsyncResult{
-		TaskId: taskId,
 		ctx:    ctx,
+		TaskId: taskId,
+		rest:   rest,
 	}
 }

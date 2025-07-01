@@ -53,6 +53,7 @@ type VMSRest struct {
 	NonLocalGroups        *NonLocalGroup
 	ApiTokens             *ApiToken
 	KafkaBrokers          *KafkaBroker
+	Managers              *Manager
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -112,6 +113,7 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.NonLocalGroups = newResource[NonLocalGroup](rest, "groups/query", dummyClusterVersion)
 	rest.ApiTokens = newResource[ApiToken](rest, "apitokens", "5.3.0")
 	rest.KafkaBrokers = newResource[KafkaBroker](rest, "kafkabrokers", dummyClusterVersion)
+	rest.Managers = newResource[Manager](rest, "managers", dummyClusterVersion)
 
 	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
 	rest.OpenAPI = &OpenAPI{session: rest.Session}

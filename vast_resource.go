@@ -52,7 +52,8 @@ type VastResourceType interface {
 		NonLocalUser |
 		NonLocalGroup |
 		ApiToken |
-		KafkaBroker
+		KafkaBroker |
+		Manager
 }
 
 // ------------------------------------------------------
@@ -354,19 +355,27 @@ type GlobalSnapshotStream struct {
 	*VastResource
 }
 
+func (gss *GlobalSnapshotStream) CreateGssWithContext(ctx context.Context, name, destPath string, snapId, tenantId int64, enabled bool) (Renderable, error) {
+	createParams := Params{
+		"loanee_root_path": destPath,
+		"name":             name,
+		"enabled":          enabled,
+		"loanee_tenant_id": tenantId,
+	}
+	path := fmt.Sprintf("snapshots/%d/clone/", snapId)
+	return request[Record](ctx, gss, http.MethodPost, path, gss.apiVersion, nil, createParams)
+}
+
+func (gss *GlobalSnapshotStream) CreateGss(name, destPath string, snapId, tenantId int64, enabled bool) (Renderable, error) {
+	return gss.CreateGssWithContext(gss.rest.ctx, name, destPath, snapId, tenantId, enabled)
+}
+
 func (gss *GlobalSnapshotStream) EnsureGssWithContext(ctx context.Context, name, destPath string, snapId, tenantId int64, enabled bool) (Renderable, error) {
 	params := Params{"name": name}
 	response, err := gss.GetWithContext(ctx, params)
 	if err != nil {
 		if IsNotFoundErr(err) {
-			createParams := Params{
-				"loanee_root_path": destPath,
-				"name":             name,
-				"enabled":          enabled,
-				"loanee_tenant_id": tenantId,
-			}
-			path := fmt.Sprintf("snapshots/%d/clone/", snapId)
-			return request[Record](ctx, gss, http.MethodPost, path, gss.apiVersion, nil, createParams)
+			return gss.CreateGssWithContext(ctx, name, destPath, snapId, tenantId, enabled)
 		}
 		return nil, err
 	}
@@ -383,7 +392,7 @@ func (gss *GlobalSnapshotStream) StopGssWithContext(ctx context.Context, gssId i
 	if err != nil {
 		return nil, err
 	}
-	return asyncResultFromRecord(ctx, record), nil
+	return asyncResultFromRecord(ctx, record, gss.rest), nil
 }
 
 func (gss *GlobalSnapshotStream) StopGss(gssId int64) (Awaitable, error) {
@@ -406,7 +415,7 @@ func (gss *GlobalSnapshotStream) EnsureGssDeletedWithContext(ctx context.Context
 			if err != nil {
 				return nil, err
 			}
-			if _, err = task.Wait(); err != nil {
+			if _, err = task.Wait(3 * time.Minute); err != nil {
 				return nil, err
 			}
 		}
@@ -528,59 +537,89 @@ type VTask struct {
 	*VastResource
 }
 
-// WaitTask waits for the task to complete
-func (t *VTask) WaitTaskWithContext(ctx context.Context, taskId int64) (Record, error) {
-	// isTaskComplete checks if the task is complete
-	isTaskComplete := func(taskId int64) (Record, error) {
-		task, err := t.GetByIdWithContext(ctx, taskId)
-		if err != nil {
-			return nil, err
-		}
-		// Check the task state
-		taskName := task.RecordName()
-		taskState := strings.ToLower(fmt.Sprintf("%v", task["state"]))
-		_taskId := task.RecordID()
-		if err != nil {
-			return nil, err
-		}
-		switch taskState {
-		case "completed":
-			return task, nil
-		case "running":
-			return nil, fmt.Errorf("task %s with ID %d is still running, timeout occurred", taskName, _taskId)
-		default:
-			rawMessages := task["messages"]
-			messages, ok := rawMessages.([]interface{})
-			if !ok {
-				return nil, fmt.Errorf("unexpected message format: %T", rawMessages)
-			}
-			if len(messages) == 0 {
-				return nil, fmt.Errorf("task %s failed with ID %d: no messages found", taskName, _taskId)
-			}
-			lastMsg := fmt.Sprintf("%v", messages[len(messages)-1])
-			return nil, fmt.Errorf("task %s failed with ID %d: %s", taskName, _taskId, lastMsg)
-		}
+// nextBackoff returns the next polling interval using additive backoff strategy.
+//
+// It increases the current interval by 250ms up to a given max value.
+//
+// Parameters:
+//   - current: the current polling interval.
+//   - max: the maximum allowed interval.
+//
+// Returns:
+//   - time.Duration: the next interval to wait before polling again.
+func nextBackoff(current, max time.Duration) time.Duration {
+	next := current + 250*time.Millisecond
+	if next > max {
+		return max
 	}
-	// Retry logic to poll the task status
-	retries := 30
-	interval := time.Millisecond * 500
-	backoffRate := 1
-
-	for retries > 0 {
-		task, err := isTaskComplete(taskId)
-		if err == nil {
-			return task, nil
-		}
-		time.Sleep(interval)
-		// Backoff logic
-		interval *= time.Duration(backoffRate)
-		retries--
-	}
-	return nil, fmt.Errorf("task did not complete in time")
+	return next
 }
 
-func (t *VTask) WaitTask(taskId int64) (Record, error) {
-	return t.WaitTaskWithContext(t.rest.ctx, taskId)
+// WaitTaskWithContext polls the task status until it completes, fails, or the context expires.
+//
+// It starts with a 500ms polling interval and increases it slightly after each attempt,
+// using exponential-style backoff (capped at 5 seconds). This reduces the load on the API
+// during long-running tasks.
+//
+// Task states:
+//   - "completed" → returns the task Record.
+//   - "running"   → continues polling.
+//   - any other state → considered failure, and returns the last message from the task.
+//
+// If the context deadline is exceeded or canceled, the method returns an error with context cause.
+//
+// Parameters:
+//   - ctx: context with optional timeout or cancellation.
+//   - taskId: unique identifier of the task to wait for.
+//
+// Returns:
+//   - Record: the completed task record, if successful.
+//   - error: if the task failed, context expired, or an API error occurred.
+func (t *VTask) WaitTaskWithContext(ctx context.Context, taskId int64) (Record, error) {
+	if t == nil {
+		return nil, fmt.Errorf("VTask is nil")
+	}
+
+	baseInterval := 500 * time.Millisecond
+	maxInterval := 5 * time.Second
+	currentInterval := baseInterval
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("timeout waiting for task %d: %w", taskId, ctx.Err())
+
+		default:
+			task, err := t.GetByIdWithContext(ctx, taskId)
+			if err != nil {
+				return nil, err
+			}
+
+			state := strings.ToLower(fmt.Sprintf("%v", task["state"]))
+			switch state {
+			case "completed":
+				return task, nil
+			case "running":
+				// backoff
+				time.Sleep(currentInterval)
+				currentInterval = nextBackoff(currentInterval, maxInterval)
+			default:
+				rawMessages := task["messages"]
+				messages, ok := rawMessages.([]interface{})
+				if !ok || len(messages) == 0 {
+					return nil, fmt.Errorf("task %s failed with ID %d: no messages or unexpected format", task.RecordName(), task.RecordID())
+				}
+				lastMsg := fmt.Sprintf("%v", messages[len(messages)-1])
+				return nil, fmt.Errorf("task %s failed with ID %d: %s", task.RecordName(), task.RecordID(), lastMsg)
+			}
+		}
+	}
+}
+
+func (t *VTask) WaitTask(taskId int64, timeout time.Duration) (Record, error) {
+	ctx, cancel := context.WithTimeout(t.rest.ctx, timeout)
+	defer cancel()
+	return t.WaitTaskWithContext(ctx, taskId)
 }
 
 // ------------------------------------------------------
@@ -604,8 +643,8 @@ func (bhm *BlockHostMapping) MapWithContext(ctx context.Context, hostId, volumeI
 	if err != nil {
 		return nil, err
 	}
-	task := asyncResultFromRecord(ctx, record)
-	return task.Wait()
+	task := asyncResultFromRecord(ctx, record, bhm.rest)
+	return task.Wait(1 * time.Minute)
 }
 
 func (bhm *BlockHostMapping) Map(hostId, volumeId int64) (Record, error) {
@@ -626,8 +665,8 @@ func (bhm *BlockHostMapping) UnMapWithContext(ctx context.Context, hostId, volum
 	if err != nil {
 		return nil, err
 	}
-	task := asyncResultFromRecord(ctx, record)
-	return task.Wait()
+	task := asyncResultFromRecord(ctx, record, bhm.rest)
+	return task.Wait(1 * time.Minute)
 }
 
 func (bhm *BlockHostMapping) UnMap(hostId, volumeId int64) (Record, error) {
@@ -679,6 +718,12 @@ type ApiToken struct {
 // ------------------------------------------------------
 
 type KafkaBroker struct {
+	*VastResource
+}
+
+// ------------------------------------------------------
+
+type Manager struct {
 	*VastResource
 }
 
