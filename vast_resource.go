@@ -51,6 +51,7 @@ type VastResourceType interface {
 		Role |
 		NonLocalUser |
 		NonLocalGroup |
+		NonLocalUserKey |
 		ApiToken |
 		KafkaBroker |
 		Manager
@@ -275,6 +276,12 @@ func (uk *UserKey) DeleteKeyWithContext(ctx context.Context, userId int64, acces
 
 func (uk *UserKey) DeleteKey(userId int64, accessKey string) (EmptyRecord, error) {
 	return uk.DeleteKeyWithContext(uk.rest.ctx, userId, accessKey)
+}
+
+// ------------------------------------------------------
+
+type NonLocalUserKey struct {
+	*VastResource
 }
 
 // ------------------------------------------------------
@@ -703,10 +710,30 @@ type NonLocalUser struct {
 	*VastResource
 }
 
+func (u *NonLocalUser) UpdateNonLocalUserWithContext(ctx context.Context, data Params) (Renderable, error) {
+	// This function is used to update a non-local user with the given data.
+	// Note: non-local user has no ID so we cannot use standard UpdateWithContext.
+	return request[Record](ctx, u, http.MethodPatch, u.resourcePath, u.apiVersion, nil, data)
+}
+
+func (u *NonLocalUser) UpdateNonLocalUser(data Params) (Renderable, error) {
+	return u.UpdateNonLocalUserWithContext(u.rest.ctx, data)
+}
+
 // ------------------------------------------------------
 
 type NonLocalGroup struct {
 	*VastResource
+}
+
+func (g *NonLocalGroup) UpdateNonLocalGroupWithContext(ctx context.Context, data Params) (Renderable, error) {
+	// This function is used to update a non-local group with the given data.
+	// Note: non-local group has no ID so we cannot use standard UpdateWithContext.
+	return request[Record](ctx, g, http.MethodPatch, g.resourcePath, g.apiVersion, nil, data)
+}
+
+func (g *NonLocalGroup) UpdateNonLocalGroup(data Params) (Renderable, error) {
+	return g.UpdateNonLocalGroupWithContext(g.rest.ctx, data)
 }
 
 // ------------------------------------------------------

@@ -66,8 +66,10 @@ type VastResourceAPI interface {
 	List(Params) (RecordSet, error)
 	Create(Params) (Record, error)
 	Update(int64, Params) (Record, error)
+	UpdateNonId(Params) (Record, error)
 	Delete(Params, Params) (EmptyRecord, error)
 	DeleteById(int64, Params) (EmptyRecord, error)
+	DeleteNonId(Params) (EmptyRecord, error)
 	Ensure(Params, Params) (Record, error)
 	EnsureByName(string, Params) (Record, error)
 	Get(Params) (Record, error)
@@ -86,8 +88,10 @@ type VastResourceAPIWithContext interface {
 	ListWithContext(context.Context, Params) (RecordSet, error)
 	CreateWithContext(context.Context, Params) (Record, error)
 	UpdateWithContext(context.Context, int64, Params) (Record, error)
+	UpdateNonIdWithContext(context.Context, Params) (Record, error)
 	DeleteWithContext(context.Context, Params, Params) (EmptyRecord, error)
 	DeleteByIdWithContext(context.Context, int64, Params) (EmptyRecord, error)
+	DeleteNonIdWithContext(context.Context, Params) (EmptyRecord, error)
 	EnsureWithContext(context.Context, Params, Params) (Record, error)
 	EnsureByNameWithContext(context.Context, string, Params) (Record, error)
 	GetWithContext(context.Context, Params) (Record, error)
@@ -156,6 +160,12 @@ func (e *VastResource) UpdateWithContext(ctx context.Context, id int64, body Par
 	return request[Record](ctx, e, http.MethodPatch, path, e.apiVersion, nil, body)
 }
 
+// UpdateNonIdWithContext updates a resource that does not use a numeric ID for identification.
+// The resource is identified using unique fields within the provided parameters (e.g., SID, UID).
+func (e *VastResource) UpdateNonIdWithContext(ctx context.Context, body Params) (Record, error) {
+	return request[Record](ctx, e, http.MethodPatch, e.resourcePath, e.apiVersion, nil, body)
+}
+
 // DeleteWithContext deletes a resource found using searchParams, using the provided deleteParams, within the given context.
 // If the resource is not found, it returns success without error.
 func (e *VastResource) DeleteWithContext(ctx context.Context, searchParams, deleteParams Params) (EmptyRecord, error) {
@@ -180,6 +190,12 @@ func (e *VastResource) DeleteWithContext(ctx context.Context, searchParams, dele
 		return nil, err
 	}
 	return e.DeleteByIdWithContext(ctx, idInt, deleteParams)
+}
+
+// DeleteNonIdWithContext deletes a resource that does not use a numeric ID for identification.
+// The resource is identified using unique fields within the provided parameters (e.g., SID, UID).
+func (e *VastResource) DeleteNonIdWithContext(ctx context.Context, deleteParams Params) (EmptyRecord, error) {
+	return request[EmptyRecord](ctx, e, http.MethodDelete, e.resourcePath, e.apiVersion, nil, deleteParams)
 }
 
 // DeleteByIdWithContext deletes a resource by its unique ID using the provided context and delete parameters.
@@ -284,6 +300,13 @@ func (e *VastResource) Update(id int64, params Params) (Record, error) {
 	return e.UpdateWithContext(e.rest.ctx, id, params)
 }
 
+// UpdateNonId updates a resource that does not use a numeric ID for identification.
+// The resource is identified using unique fields within the provided parameters (e.g., SID, UID).
+// This method delegates to UpdateNonIdWithContext using the default context.
+func (e *VastResource) UpdateNonId(params Params) (Record, error) {
+	return e.UpdateNonIdWithContext(e.rest.ctx, params)
+}
+
 // Delete deletes a resource found with searchParams using deleteParams and the bound REST context.
 // Returns success even if the resource is not found.
 func (e *VastResource) Delete(searchParams, deleteParams Params) (EmptyRecord, error) {
@@ -293,6 +316,13 @@ func (e *VastResource) Delete(searchParams, deleteParams Params) (EmptyRecord, e
 // DeleteById deletes a resource by its ID using the bound REST context and provided deleteParams.
 func (e *VastResource) DeleteById(id int64, deleteParams Params) (EmptyRecord, error) {
 	return e.DeleteByIdWithContext(e.rest.ctx, id, deleteParams)
+}
+
+// DeleteNonId deletes a resource that does not use a numeric ID for identification.
+// The resource is identified using unique fields within the provided parameters (e.g., SID, UID).
+// This method delegates to DeleteNonIdWithContext using the default context.
+func (e *VastResource) DeleteNonId(deleteParams Params) (EmptyRecord, error) {
+	return e.DeleteNonIdWithContext(e.rest.ctx, deleteParams)
 }
 
 // Ensure ensures a resource exists matching the searchParams. Creates it with body if not found.

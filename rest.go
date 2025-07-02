@@ -51,6 +51,7 @@ type VMSRest struct {
 	Roles                 *Role
 	NonLocalUsers         *NonLocalUser
 	NonLocalGroups        *NonLocalGroup
+	NonLocalUserKeys      *NonLocalUserKey
 	ApiTokens             *ApiToken
 	KafkaBrokers          *KafkaBroker
 	Managers              *Manager
@@ -111,6 +112,7 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.Roles = newResource[Role](rest, "roles", dummyClusterVersion)
 	rest.NonLocalUsers = newResource[NonLocalUser](rest, "users/query", dummyClusterVersion)
 	rest.NonLocalGroups = newResource[NonLocalGroup](rest, "groups/query", dummyClusterVersion)
+	rest.NonLocalUserKeys = newResource[NonLocalUserKey](rest, "users/non_local_keys", dummyClusterVersion)
 	rest.ApiTokens = newResource[ApiToken](rest, "apitokens", "5.3.0")
 	rest.KafkaBrokers = newResource[KafkaBroker](rest, "kafkabrokers", dummyClusterVersion)
 	rest.Managers = newResource[Manager](rest, "managers", dummyClusterVersion)
