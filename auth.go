@@ -8,14 +8,10 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"sync"
 	"time"
 )
 
-var (
-	authLock       sync.Mutex
-	authenticators []Authenticator
-)
+var authenticators []Authenticator
 
 type Authenticator interface {
 	authorize() error
@@ -126,8 +122,6 @@ func (auth *JWTAuthenticator) acquireToken(client *http.Client) (*http.Response,
 }
 
 func (auth *JWTAuthenticator) authorize() error {
-	authLock.Lock()
-	defer authLock.Unlock()
 	var (
 		resp *http.Response
 		err  error
