@@ -147,6 +147,7 @@ func newResource[T VastResourceType](rest *VMSRest, resourcePath, availableFromV
 			resourceType:         resourceType,
 			rest:                 rest,
 			availableFromVersion: availableFrom,
+			mu:                   NewKeyLocker(),
 		},
 	}
 	if res, ok := any(resource).(VastResourceAPI); ok {

@@ -362,16 +362,16 @@ type GlobalSnapshotStream struct {
 	*VastResource
 }
 
-func (gss *GlobalSnapshotStream) CloneSnapshotWithContext(ctx context.Context, snapId int64, createParams Params) (Renderable, error) {
+func (gss *GlobalSnapshotStream) CloneSnapshotWithContext(ctx context.Context, snapId int64, createParams Params) (Record, error) {
 	path := fmt.Sprintf("snapshots/%d/clone/", snapId)
 	return request[Record](ctx, gss, http.MethodPost, path, gss.apiVersion, nil, createParams)
 }
 
-func (gss *GlobalSnapshotStream) CloneSnapshot(snapId int64, createParams Params) (Renderable, error) {
+func (gss *GlobalSnapshotStream) CloneSnapshot(snapId int64, createParams Params) (Record, error) {
 	return gss.CloneSnapshotWithContext(gss.rest.ctx, snapId, createParams)
 }
 
-func (gss *GlobalSnapshotStream) EnsureCloneSnapshotWithContext(ctx context.Context, name string, snapId int64, createParams Params) (Renderable, error) {
+func (gss *GlobalSnapshotStream) EnsureCloneSnapshotWithContext(ctx context.Context, name string, snapId int64, createParams Params) (Record, error) {
 	params := Params{"name": name}
 	response, err := gss.GetWithContext(ctx, params)
 	if err != nil {
@@ -384,7 +384,7 @@ func (gss *GlobalSnapshotStream) EnsureCloneSnapshotWithContext(ctx context.Cont
 	return response, nil
 }
 
-func (gss *GlobalSnapshotStream) EnsureCloneSnapshot(name string, snapId int64, createParams Params) (Renderable, error) {
+func (gss *GlobalSnapshotStream) EnsureCloneSnapshot(name string, snapId int64, createParams Params) (Record, error) {
 	return gss.EnsureCloneSnapshotWithContext(gss.rest.ctx, name, snapId, createParams)
 }
 
@@ -523,13 +523,13 @@ type Volume struct {
 	*VastResource
 }
 
-func (v *Volume) CloneVolumeWithContext(ctx context.Context, snapId, targetSubsystemId int64, targetVolumePath string) (Renderable, error) {
+func (v *Volume) CloneVolumeWithContext(ctx context.Context, snapId, targetSubsystemId int64, targetVolumePath string) (Record, error) {
 	body := Params{"target_subsystem_id": targetSubsystemId, "target_volume_path": targetVolumePath}
 	path := fmt.Sprintf("snapshots/%d/clone_volume/", snapId)
 	return request[Record](ctx, v, http.MethodPost, path, v.apiVersion, nil, body)
 }
 
-func (v *Volume) CloneVolume(snapId, targetSubsystemId int64, targetVolumePath string) (Renderable, error) {
+func (v *Volume) CloneVolume(snapId, targetSubsystemId int64, targetVolumePath string) (Record, error) {
 	return v.CloneVolumeWithContext(v.rest.ctx, snapId, targetSubsystemId, targetVolumePath)
 }
 
@@ -705,13 +705,13 @@ type NonLocalUser struct {
 	*VastResource
 }
 
-func (u *NonLocalUser) UpdateNonLocalUserWithContext(ctx context.Context, data Params) (Renderable, error) {
+func (u *NonLocalUser) UpdateNonLocalUserWithContext(ctx context.Context, data Params) (Record, error) {
 	// This function is used to update a non-local user with the given data.
 	// Note: non-local user has no ID so we cannot use standard UpdateWithContext.
 	return request[Record](ctx, u, http.MethodPatch, u.resourcePath, u.apiVersion, nil, data)
 }
 
-func (u *NonLocalUser) UpdateNonLocalUser(data Params) (Renderable, error) {
+func (u *NonLocalUser) UpdateNonLocalUser(data Params) (Record, error) {
 	return u.UpdateNonLocalUserWithContext(u.rest.ctx, data)
 }
 
@@ -721,13 +721,13 @@ type NonLocalGroup struct {
 	*VastResource
 }
 
-func (g *NonLocalGroup) UpdateNonLocalGroupWithContext(ctx context.Context, data Params) (Renderable, error) {
+func (g *NonLocalGroup) UpdateNonLocalGroupWithContext(ctx context.Context, data Params) (Record, error) {
 	// This function is used to update a non-local group with the given data.
 	// Note: non-local group has no ID so we cannot use standard UpdateWithContext.
 	return request[Record](ctx, g, http.MethodPatch, g.resourcePath, g.apiVersion, nil, data)
 }
 
-func (g *NonLocalGroup) UpdateNonLocalGroup(data Params) (Renderable, error) {
+func (g *NonLocalGroup) UpdateNonLocalGroup(data Params) (Record, error) {
 	return g.UpdateNonLocalGroupWithContext(g.rest.ctx, data)
 }
 

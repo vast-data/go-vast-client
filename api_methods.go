@@ -7,7 +7,6 @@ import (
 	version "github.com/hashicorp/go-version"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -76,9 +75,9 @@ type VastResourceAPI interface {
 	GetById(int64) (Record, error)
 	Exists(Params) (bool, error)
 	MustExists(Params) bool
-
+	// Resource-level mutex lock for concurrent access control
+	Lock(...any) func()
 	// Internal methods
-	sync.Locker
 	getRest() *VMSRest
 	getAvailableFromVersion() *version.Version
 }
@@ -118,7 +117,7 @@ type VastResource struct {
 	apiVersion           string
 	availableFromVersion *version.Version
 	rest                 *VMSRest
-	mu                   sync.Mutex
+	mu                   *KeyLocker
 }
 
 // AsyncResult represents the result of an asynchronous task.
@@ -362,12 +361,12 @@ func (e *VastResource) MustExists(params Params) bool {
 	return e.MustExistsWithContext(e.rest.ctx, params)
 }
 
-func (e *VastResource) Lock() {
-	e.mu.Lock()
-}
-
-func (e *VastResource) Unlock() {
-	e.mu.Lock()
+// Lock acquires the resource-level mutex and returns a function to release it.
+// This allows for convenient deferring of unlock operations:
+//
+//	defer resource.Lock()()
+func (e *VastResource) Lock(keys ...any) func() {
+	return e.mu.Lock(keys...)
 }
 
 // internal methods
