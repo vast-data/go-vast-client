@@ -362,38 +362,33 @@ type GlobalSnapshotStream struct {
 	*VastResource
 }
 
-func (gss *GlobalSnapshotStream) CreateGssWithContext(ctx context.Context, name, destPath string, snapId, tenantId int64, enabled bool) (Renderable, error) {
-	createParams := Params{
-		"loanee_root_path": destPath,
-		"name":             name,
-		"enabled":          enabled,
-		"loanee_tenant_id": tenantId,
-	}
+func (gss *GlobalSnapshotStream) CloneSnapshotWithContext(ctx context.Context, snapId int64, createParams Params) (Renderable, error) {
 	path := fmt.Sprintf("snapshots/%d/clone/", snapId)
 	return request[Record](ctx, gss, http.MethodPost, path, gss.apiVersion, nil, createParams)
 }
 
-func (gss *GlobalSnapshotStream) CreateGss(name, destPath string, snapId, tenantId int64, enabled bool) (Renderable, error) {
-	return gss.CreateGssWithContext(gss.rest.ctx, name, destPath, snapId, tenantId, enabled)
+func (gss *GlobalSnapshotStream) CloneSnapshot(snapId int64, createParams Params) (Renderable, error) {
+	return gss.CloneSnapshotWithContext(gss.rest.ctx, snapId, createParams)
 }
 
-func (gss *GlobalSnapshotStream) EnsureGssWithContext(ctx context.Context, name, destPath string, snapId, tenantId int64, enabled bool) (Renderable, error) {
+func (gss *GlobalSnapshotStream) EnsureCloneSnapshotWithContext(ctx context.Context, name string, snapId int64, createParams Params) (Renderable, error) {
 	params := Params{"name": name}
 	response, err := gss.GetWithContext(ctx, params)
 	if err != nil {
 		if IsNotFoundErr(err) {
-			return gss.CreateGssWithContext(ctx, name, destPath, snapId, tenantId, enabled)
+			createParams["name"] = name
+			return gss.CloneSnapshotWithContext(ctx, snapId, createParams)
 		}
 		return nil, err
 	}
 	return response, nil
 }
 
-func (gss *GlobalSnapshotStream) EnsureGss(name, destPath string, snapId, tenantId int64, enabled bool) (Renderable, error) {
-	return gss.EnsureGssWithContext(gss.rest.ctx, name, destPath, snapId, tenantId, enabled)
+func (gss *GlobalSnapshotStream) EnsureCloneSnapshot(name string, snapId int64, createParams Params) (Renderable, error) {
+	return gss.EnsureCloneSnapshotWithContext(gss.rest.ctx, name, snapId, createParams)
 }
 
-func (gss *GlobalSnapshotStream) StopGssWithContext(ctx context.Context, gssId int64) (Awaitable, error) {
+func (gss *GlobalSnapshotStream) StopCloneSnapshotWithContext(ctx context.Context, gssId int64) (Awaitable, error) {
 	path := fmt.Sprintf("%s/%d/stop", gss.resourcePath, gssId)
 	record, err := request[Record](ctx, gss, http.MethodPatch, path, gss.apiVersion, nil, nil)
 	if err != nil {
@@ -402,11 +397,11 @@ func (gss *GlobalSnapshotStream) StopGssWithContext(ctx context.Context, gssId i
 	return asyncResultFromRecord(ctx, record, gss.rest), nil
 }
 
-func (gss *GlobalSnapshotStream) StopGss(gssId int64) (Awaitable, error) {
-	return gss.StopGssWithContext(gss.rest.ctx, gssId)
+func (gss *GlobalSnapshotStream) StopCloneSnapshot(gssId int64) (Awaitable, error) {
+	return gss.StopCloneSnapshotWithContext(gss.rest.ctx, gssId)
 }
 
-func (gss *GlobalSnapshotStream) EnsureGssDeletedWithContext(ctx context.Context, searchParams Params) (Renderable, error) {
+func (gss *GlobalSnapshotStream) EnsureCloneSnapshotDeletedWithContext(ctx context.Context, searchParams Params) (Renderable, error) {
 	response, err := gss.GetWithContext(ctx, searchParams)
 	if response != nil {
 		type GssContainer struct {
@@ -418,7 +413,7 @@ func (gss *GlobalSnapshotStream) EnsureGssDeletedWithContext(ctx context.Context
 			return nil, err
 		}
 		if gssContainer.State != "finished" {
-			task, err := gss.StopGssWithContext(ctx, gssContainer.Id)
+			task, err := gss.StopCloneSnapshotWithContext(ctx, gssContainer.Id)
 			if err != nil {
 				return nil, err
 			}
@@ -437,8 +432,8 @@ func (gss *GlobalSnapshotStream) EnsureGssDeletedWithContext(ctx context.Context
 	return response, err
 }
 
-func (gss *GlobalSnapshotStream) EnsureGssDeleted(searchParams Params) (Renderable, error) {
-	return gss.EnsureGssDeletedWithContext(gss.rest.ctx, searchParams)
+func (gss *GlobalSnapshotStream) EnsureCloneSnapshotDeleted(searchParams Params) (Renderable, error) {
+	return gss.EnsureCloneSnapshotDeletedWithContext(gss.rest.ctx, searchParams)
 }
 
 // ------------------------------------------------------
