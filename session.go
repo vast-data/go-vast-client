@@ -168,11 +168,21 @@ func request[T RecordUnion](
 				response = RecordSet{}
 			}
 		}
+	} else if typeMatch[EmptyRecord](response) {
+		// Update (PATCH) requests typically return Record but can also return EmptyRecord
+		// for resources lik NonLocalUserKey
+		// We want to eliminate this discrepancy by casting EmptyRecord to Record here.
+		var zero T
+		if typeMatch[Record](Renderable(zero)) {
+			response = Record{}
+		}
 	}
+
 	resultVal, ok := response.(T)
 	if !ok {
 		return nil, fmt.Errorf(
-			"unexpected response type for request to %s: got %T, expected %T — consider converting the response to the expected type inside the doAfterRequest interceptor",
+			"unexpected response type for request to %s: got %T, expected %T — "+
+				"consider converting the response to the expected type inside the doAfterRequest interceptor",
 			url,
 			response,
 			*new(T),
