@@ -24,6 +24,7 @@ nav:
   - VMSRest: vmsrest.md
   - Session: session.md
   - Response: response.md
+  - Resource Lock: resource-lock.md
   - Errors: errors.md
 
 plugins:
