@@ -129,10 +129,16 @@ func (auth *JWTAuthenticator) authorize() error {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: !auth.SslVerify},
 	}
+
 	client := &http.Client{
 		Transport: tr,
 		Timeout:   20 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// Prevent following redirects (like 301, 302)
+			return http.ErrUseLastResponse
+		},
 	}
+
 	if auth.initialized {
 		resp, err = auth.refreshToken(client)
 	} else {

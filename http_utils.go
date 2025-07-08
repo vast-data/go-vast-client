@@ -86,21 +86,29 @@ func pathToUrl(s RESTSession, input string) (string, error) {
 }
 
 func buildUrl(s RESTSession, path, query, apiVer string) (string, error) {
-	var err error
 	config := s.GetConfig()
 	if apiVer == "" {
 		apiVer = config.ApiVersion
 	}
-	if path, err = urlpkg.JoinPath("api", apiVer, strings.Trim(path, "/")); err != nil {
+
+	// Always force trailing slash
+	path = strings.Trim(path, "/")
+
+	joinedPath, err := urlpkg.JoinPath("api", apiVer, path)
+	if err != nil {
 		return "", err
 	}
-	url := urlpkg.URL{
-		Scheme: "https",
-		Host:   fmt.Sprintf("%s:%v", config.Host, config.Port),
-		Path:   path,
+
+	// Append trailing slash if not present
+	if !strings.HasSuffix(joinedPath, "/") {
+		joinedPath += "/"
 	}
-	if query != "" {
-		url.RawQuery = query
+
+	url := urlpkg.URL{
+		Scheme:   "https",
+		Host:     fmt.Sprintf("%s:%v", config.Host, config.Port),
+		Path:     joinedPath,
+		RawQuery: query,
 	}
 	return url.String(), nil
 }

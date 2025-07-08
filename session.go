@@ -93,12 +93,19 @@ type VMSSession struct {
 type VMSSessionMethod func(context.Context, string, Params) (Renderable, error)
 
 func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
-	//Create a new session object
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: !config.SslVerify}
 	transport.MaxConnsPerHost = config.MaxConnections
 	transport.IdleConnTimeout = *config.Timeout
-	client := &http.Client{Transport: transport}
+
+	client := &http.Client{
+		Transport: transport,
+		// Prevent automatic redirect following (e.g., 301, 302)
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
 	authenticator, err := createAuthenticator(config)
 	if err != nil {
 		return nil, err
@@ -109,6 +116,7 @@ func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
 		auth:   authenticator,
 	}
 	return session, nil
+
 }
 
 func request[T RecordUnion](
