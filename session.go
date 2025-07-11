@@ -167,6 +167,10 @@ func request[T RecordUnion](
 			} else {
 				response = RecordSet{}
 			}
+			// For responses that expect EmptyRecord
+			// for instance non convertable to json responses like folders/delete_folder (return "OK" string)
+		} else if typeMatch[EmptyRecord](Renderable(zero)) {
+			response = EmptyRecord{}
 		}
 	} else if typeMatch[EmptyRecord](response) {
 		// Update (PATCH) requests typically return Record but can also return EmptyRecord

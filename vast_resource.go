@@ -54,7 +54,8 @@ type VastResourceType interface {
 		NonLocalUserKey |
 		ApiToken |
 		KafkaBroker |
-		Manager
+		Manager |
+		Folder
 }
 
 // ------------------------------------------------------
@@ -747,6 +748,21 @@ type KafkaBroker struct {
 
 type Manager struct {
 	*VastResource
+}
+
+// ------------------------------------------------------
+
+type Folder struct {
+	*VastResource
+}
+
+func (f *Folder) DeleteFolderWithContext(ctx context.Context, data Params) (EmptyRecord, error) {
+	path := fmt.Sprintf("%s/delete_folder", f.resourcePath)
+	return request[EmptyRecord](ctx, f, http.MethodDelete, path, f.apiVersion, nil, data)
+}
+
+func (f *Folder) DeleteFolder(data Params) (EmptyRecord, error) {
+	return f.DeleteFolderWithContext(f.rest.ctx, data)
 }
 
 // ------------------------------------------------------

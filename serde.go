@@ -12,7 +12,10 @@ import (
 	"strings"
 )
 
-const resourceTypeKey = "@resourceType"
+const (
+	resourceTypeKey = "@resourceType"
+	customRawKey    = "@raw" // used to store raw string values in Record
+)
 
 var empty = struct{}{}
 var printableAttrs = map[string]struct{}{
@@ -465,6 +468,8 @@ func unmarshalToRecordUnion(response *http.Response) (Renderable, error) {
 			return nil, err
 		}
 		return recSet, nil
+	case '"': // string
+		return Record{customRawKey: body}, nil
 	default:
 		return nil, fmt.Errorf("unsupported JSON format: must be object or array")
 	}
