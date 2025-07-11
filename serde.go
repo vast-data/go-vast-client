@@ -98,6 +98,14 @@ func (pr *Params) UpdateWithout(other Params, override bool, without []string) {
 	}
 }
 
+// Without removes the specified keys from the Params map.
+// This is useful when you want to exclude certain parameters before sending a request.
+func (pr *Params) Without(keys ...string) {
+	for _, key := range keys {
+		delete(*pr, key)
+	}
+}
+
 //  ######################################################
 //              RETURN TYPES
 //  ######################################################
