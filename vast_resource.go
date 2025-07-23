@@ -640,14 +640,7 @@ func (bhm *BlockHostMapping) MapWithContext(ctx context.Context, hostId, volumeI
 			},
 		},
 	}
-	path := fmt.Sprintf("%s/bulk", bhm.resourcePath)
-	// Make request on behalf of VTask (for proper parsing)
-	record, err := request[Record](ctx, bhm, http.MethodPatch, path, bhm.apiVersion, nil, body)
-	if err != nil {
-		return nil, err
-	}
-	task := asyncResultFromRecord(ctx, record, bhm.rest)
-	return task.Wait(1 * time.Minute)
+	return bhm.bulkPatchAndWait(ctx, body)
 }
 
 func (bhm *BlockHostMapping) Map(hostId, volumeId int64) (Record, error) {
@@ -663,13 +656,7 @@ func (bhm *BlockHostMapping) UnMapWithContext(ctx context.Context, hostId, volum
 			},
 		},
 	}
-	path := fmt.Sprintf("%s/bulk", bhm.resourcePath)
-	record, err := request[Record](ctx, bhm, http.MethodPatch, path, bhm.apiVersion, nil, body)
-	if err != nil {
-		return nil, err
-	}
-	task := asyncResultFromRecord(ctx, record, bhm.rest)
-	return task.Wait(1 * time.Minute)
+	return bhm.bulkPatchAndWait(ctx, body)
 }
 
 func (bhm *BlockHostMapping) UnMap(hostId, volumeId int64) (Record, error) {
@@ -698,6 +685,16 @@ func (bhm *BlockHostMapping) EnsureUnmapWithContext(ctx context.Context, hostId,
 
 func (bhm *BlockHostMapping) EnsureUnmap(hostId, volumeId int64) (Record, error) {
 	return bhm.EnsureUnmapWithContext(bhm.rest.ctx, hostId, volumeId)
+}
+
+func (bhm *BlockHostMapping) bulkPatchAndWait(ctx context.Context, body Params) (Record, error) {
+	path := fmt.Sprintf("%s/bulk", bhm.resourcePath)
+	record, err := request[Record](ctx, bhm, http.MethodPatch, path, bhm.apiVersion, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	task := asyncResultFromRecord(ctx, record, bhm.rest)
+	return task.Wait(1 * time.Minute)
 }
 
 // ------------------------------------------------------

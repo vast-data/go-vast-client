@@ -34,3 +34,5 @@ venv
 
 # mkdocs
 mkdocs_files
+/.history/
+/REFACTORING_SUMMARY.md

@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/bndr/gotabulate"
 	"io"
 	"net/http"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/bndr/gotabulate"
 )
 
 const (
@@ -107,6 +108,42 @@ func (pr *Params) Without(keys ...string) {
 	for _, key := range keys {
 		delete(*pr, key)
 	}
+}
+
+// listifyParams converts a slice of arbitrary structs into a slice of Params (map[string]any).
+// This is useful when constructing request bodies that require a list of objects, such as
+// bulk operations where each entry is a structured parameter set.
+//
+// Example:
+//
+//	input: []HostVolumePair{{HostID: 1, VolumeID: 2}, {HostID: 3, VolumeID: 4}}
+//	output: []Params{
+//	  {"host_id": 1, "volume_id": 2},
+//	  {"host_id": 3, "volume_id": 4},
+//	}
+func listifyParams[T any](items []T) []Params {
+	paramsList := make([]Params, len(items))
+	for i, item := range items {
+		paramsList[i] = structToParams(item)
+	}
+	return paramsList
+}
+
+// structToParams converts a struct into Params (map[string]any) by marshaling it to JSON
+// and unmarshaling it back into a generic map. This is a convenient way to convert typed
+// data into a request body representation.
+//
+// Note: Fields must be exported and tagged with `json` for this to work properly.
+//
+// Example:
+//
+//	input: HostVolumePair{HostID: 1, VolumeID: 2}
+//	output: Params{"host_id": 1, "volume_id": 2}
+func structToParams(obj any) Params {
+	data, _ := json.Marshal(obj)
+	var out Params
+	_ = json.Unmarshal(data, &out)
+	return out
 }
 
 //  ######################################################
@@ -226,7 +263,7 @@ func (r Record) RecordGUID() string {
 	return fmt.Sprintf("%v", nameVal)
 }
 
-// RecordTenantID returns the ID of the record as an int64.
+// RecordTenantID returns the tenant's ID as an int64.
 // It looks up the "id" field in the record map.
 func (r Record) RecordTenantID() int64 {
 	idVal, ok := r["tenant_id"]
@@ -251,7 +288,7 @@ func (r Record) RecordName() string {
 }
 
 // RecordTenantName returns the name of the tenant as a string.
-// It looks up the "name" field in the record map.
+// It looks up the "tenant_name" field in the record map.
 func (r Record) RecordTenantName() string {
 	nameVal, ok := r["tenant_name"]
 	if !ok {

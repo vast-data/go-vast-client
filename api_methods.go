@@ -110,7 +110,7 @@ type Awaitable interface {
 	Wait(time.Duration) (Record, error)
 }
 
-// VastResource implements VastResource and provides common behavior for managing VAST resources.
+// VastResource implements VastResourceAPI and provides common behavior for managing VAST resources.
 type VastResource struct {
 	resourcePath         string
 	resourceType         string

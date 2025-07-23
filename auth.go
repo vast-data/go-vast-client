@@ -20,10 +20,11 @@ type Authenticator interface {
 	setInitialized(bool)
 }
 
-// createAuthenticator returns a singleton Authenticator instance based on the provided VMSConfig.
-// It ensures only one instance per authenticator type exists.
+// createAuthenticator creates a new Authenticator instance based on the provided VMSConfig.
+// Each session gets its own authenticator instance to avoid global state issues.
 func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 	var authenticator Authenticator
+
 	if config.Username != "" && config.Password != "" {
 		authenticator = &JWTAuthenticator{
 			Host:      config.Host,

@@ -16,7 +16,7 @@ func main() {
 		panic(err)
 	}
 
-	result, err := rest.NonLocalGroups.Get(client.Params{"gid": 1234})
+	result, err := rest.NonLocalGroups.Get(client.Params{"sid": "11", "gid": 100})
 	if err != nil {
 		panic(err)
 	}
