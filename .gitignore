@@ -36,3 +36,4 @@ venv
 mkdocs_files
 /.history/
 /REFACTORING_SUMMARY.md
+/.vscode/

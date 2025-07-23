@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	client "github.com/vast-data/go-vast-client"
 )
 
@@ -57,7 +58,10 @@ func main() {
 	destPath := "/sourceview"
 	gssName := "myGss"
 	fmt.Printf("Ensuring Global Snapshot Stream '%s'...\n", gssName)
-	gssResponse, err := rest.GlobalSnapshotStreams.EnsureGss(gssName, destPath, snapResponse.RecordID(), view.TenantID, true)
+	gssResponse, err := rest.GlobalSnapshotStreams.EnsureCloneSnapshot(
+		gssName, snapResponse.RecordID(),
+		client.Params{"loanee_root_path": destPath, "loanee_tenant_id": view.TenantID},
+	)
 	if err != nil {
 		panic(fmt.Errorf("failed to ensure GSS: %w", err))
 	}
@@ -66,7 +70,7 @@ func main() {
 
 	// Delete GSS
 	fmt.Printf("Ensuring GSS '%s' is deleted...\n", gssName)
-	resp, err := rest.GlobalSnapshotStreams.EnsureGssDeleted(client.Params{"name": gssName})
+	resp, err := rest.GlobalSnapshotStreams.EnsureCloneSnapshotDeleted(client.Params{"name": gssName})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete GSS: %w", err))
 	}

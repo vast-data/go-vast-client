@@ -53,7 +53,7 @@ func contains(slice []string, item string) bool {
 }
 
 func generateIPRange(ipRanges [][2]string) ([]string, error) {
-	var ips []string
+	ips := []string{}
 	for _, r := range ipRanges {
 		start := net.ParseIP(r[0]).To4()
 		end := net.ParseIP(r[1]).To4()
