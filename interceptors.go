@@ -51,13 +51,13 @@ type RequestInterceptor interface {
 
 // beforeRequest No op in current implementation. You have to shadow this method on particular VastResource
 // IOW declare the same method with the same signature for Users or Quotas or Views etc.
-func (e *VastResource) beforeRequest(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error {
+func (e *VastResource) beforeRequest(_ context.Context, r *http.Request, verb, url string, body io.Reader) error {
 	return nil
 }
 
 // afterRequest No op in current implementation. You have to shadow this method on particular VastResource
 // IOW declare the same method with the same signature for Users or Quotas or Views etc.
-func (e *VastResource) afterRequest(ctx context.Context, response Renderable) (Renderable, error) {
+func (e *VastResource) afterRequest(_ context.Context, response Renderable) (Renderable, error) {
 	return response, nil
 }
 

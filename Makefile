@@ -6,6 +6,8 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 GOLINT=golangci-lint
+MKDOCS ?= mkdocs
+ADDR ?= localhost:8000
 
 # Binary names
 BINARY_NAME=go-vast-client
@@ -105,5 +107,11 @@ check-tools: ## Check if required tools are installed
 	@command -v golangci-lint >/dev/null 2>&1 || { echo >&2 "golangci-lint is required but not installed. Run: make ci-deps"; exit 1; }
 	@command -v go >/dev/null 2>&1 || { echo >&2 "Go is required but not installed."; exit 1; }
 
-# Include test.mk if it exists for additional test targets
--include test.mk
+docs-build:
+	$(MKDOCS) build --clean --strict
+
+docs-serve:
+	$(MKDOCS) serve --dev-addr $(ADDR)
+
+docs-deploy:
+	$(MKDOCS) gh-deploy --force

@@ -140,6 +140,12 @@ func (auth *JWTAuthenticator) authorize() error {
 		resp, err = auth.acquireToken(client)
 		auth.setInitialized(true)
 	}
+	if err != nil {
+		return err
+	}
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err = validateResponse(resp, auth.Host, auth.Port); err != nil {
 		return err
 	}
