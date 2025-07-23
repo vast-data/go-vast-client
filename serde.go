@@ -117,34 +117,6 @@ func (pr *Params) Without(keys ...string) {
 // Example:
 //
 //	input: []HostVolumePair{{HostID: 1, VolumeID: 2}, {HostID: 3, VolumeID: 4}}
-//	output: []Params{
-//	  {"host_id": 1, "volume_id": 2},
-//	  {"host_id": 3, "volume_id": 4},
-//	}
-func listifyParams[T any](items []T) []Params {
-	paramsList := make([]Params, len(items))
-	for i, item := range items {
-		paramsList[i] = structToParams(item)
-	}
-	return paramsList
-}
-
-// structToParams converts a struct into Params (map[string]any) by marshaling it to JSON
-// and unmarshaling it back into a generic map. This is a convenient way to convert typed
-// data into a request body representation.
-//
-// Note: Fields must be exported and tagged with `json` for this to work properly.
-//
-// Example:
-//
-//	input: HostVolumePair{HostID: 1, VolumeID: 2}
-//	output: Params{"host_id": 1, "volume_id": 2}
-func structToParams(obj any) Params {
-	data, _ := json.Marshal(obj)
-	var out Params
-	_ = json.Unmarshal(data, &out)
-	return out
-}
 
 //  ######################################################
 //              RETURN TYPES
@@ -345,9 +317,8 @@ func (r Record) PrettyTable() string {
 	t.SetMaxCellSize(85)
 	if name != "" {
 		return fmt.Sprintf("%s:\n%s", name, t.Render("grid"))
-	} else {
-		return fmt.Sprintf("%s", t.Render("grid"))
 	}
+	return t.Render("grid")
 }
 
 // PrettyJson prints the Record as JSON, optionally indented
@@ -451,7 +422,7 @@ func (rs RecordSet) PrettyJson(indent ...string) string {
 	return string(b)
 }
 
-func (er EmptyRecord) Fill(container any) error {
+func (er EmptyRecord) Fill(_ any) error {
 	return nil
 }
 

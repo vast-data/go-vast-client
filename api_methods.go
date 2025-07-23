@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	version "github.com/hashicorp/go-version"
 	"net/http"
 	"strings"
 	"time"
+
+	version "github.com/hashicorp/go-version"
 )
 
 //  ######################################################
@@ -35,10 +36,7 @@ func (e *TooManyRecordsError) Error() string {
 
 func IsNotFoundErr(err error) bool {
 	var nfErr *NotFoundError
-	if errors.As(err, &nfErr) {
-		return true
-	}
-	return false
+	return errors.As(err, &nfErr)
 }
 
 func IgnoreNotFound(val Record, err error) (Record, error) {
@@ -50,10 +48,7 @@ func IgnoreNotFound(val Record, err error) (Record, error) {
 
 func isTooManyRecordsErr(err error) bool {
 	var tooManyRecordsErr *TooManyRecordsError
-	if errors.As(err, &tooManyRecordsErr) {
-		return true
-	}
-	return false
+	return errors.As(err, &tooManyRecordsErr)
 }
 
 // VastResourceAPI defines the interface for standard CRUD operations on a VAST resource.
@@ -242,14 +237,14 @@ func (e *VastResource) GetWithContext(ctx context.Context, params Params) (Recor
 			Query:    params.ToQuery(),
 		}
 	case 1:
-		if singleResult := result[0]; singleResult.empty() {
+		singleResult := result[0]
+		if singleResult.empty() {
 			return nil, &NotFoundError{
 				Resource: e.resourcePath,
 				Query:    params.ToQuery(),
 			}
-		} else {
-			return singleResult, nil
 		}
+		return singleResult, nil
 	default:
 		return nil, &TooManyRecordsError{
 			ResourcePath: e.resourcePath,
@@ -392,7 +387,7 @@ func (ar *AsyncResult) Wait(timeout time.Duration) (Record, error) {
 	return ar.WaitWithContext(ctx)
 }
 
-// WaitWithContext blocks until the asynchronous task completes or the provided context is cancelled.
+// WaitWithContext blocks until the asynchronous task completes or the provided context is canceled.
 // It delegates to the VTasks.WaitTaskWithContext method of the rest client to poll for task completion.
 func (ar *AsyncResult) WaitWithContext(ctx context.Context) (Record, error) {
 	return ar.rest.VTasks.WaitTaskWithContext(ctx, ar.TaskId)

@@ -16,7 +16,7 @@ type contextKey string
 
 const (
 	caller     contextKey = "@caller" // VastResource Caller object key
-	maxRetries            = 3
+	maxRetries int        = 3
 )
 
 type RESTSession interface {
@@ -50,10 +50,7 @@ func (e *ApiError) Error() string {
 
 func IsApiError(err error) bool {
 	var apiErr *ApiError
-	if errors.As(err, &apiErr) {
-		return true
-	}
-	return false
+	return errors.As(err, &apiErr)
 }
 
 func IgnoreStatusCodes(err error, codes ...int) error {
@@ -278,6 +275,9 @@ func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params
 		}
 	}
 	req, err := http.NewRequestWithContext(ctx, verb, url, requestData)
+	if err != nil {
+		return nil, err
+	}
 	if beforeRequestData, err = body.ToBody(); err != nil {
 		return nil, err
 	}

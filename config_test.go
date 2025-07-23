@@ -298,7 +298,7 @@ func TestWithFillFn(t *testing.T) {
 		fillFunc = originalFillFunc
 	}()
 
-	customFillFn := func(r Record, container any) error {
+	customFillFn := func(_ Record, container any) error {
 		return nil
 	}
 
@@ -353,7 +353,7 @@ func TestVMSConfig_CompleteValidation(t *testing.T) {
 func TestVMSConfig_RequestHooks(t *testing.T) {
 	t.Run("before request hook", func(t *testing.T) {
 		called := false
-		beforeFn := func(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error {
+		beforeFn := func(_ context.Context, r *http.Request, verb, url string, body io.Reader) error {
 			called = true
 			return nil
 		}

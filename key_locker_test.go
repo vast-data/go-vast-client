@@ -11,6 +11,7 @@ func TestNewKeyLocker(t *testing.T) {
 	kl := NewKeyLocker()
 	if kl == nil {
 		t.Error("NewKeyLocker() should not return nil")
+		return
 	}
 	if kl.sep != ":" {
 		t.Errorf("NewKeyLocker() separator = %v, want :", kl.sep)
@@ -252,7 +253,7 @@ func TestKeyLocker_Lock_KeyGeneration(t *testing.T) {
 	}
 }
 
-func TestKeyLocker_Lock_ReferenceCountingCleanup(t *testing.T) {
+func TestKeyLocker_Lock_ReferenceCountingCleanup(_ *testing.T) {
 	kl := NewKeyLocker()
 	const key = "cleanup-test"
 
@@ -269,7 +270,7 @@ func TestKeyLocker_Lock_ReferenceCountingCleanup(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		wg.Add(1)
-		go func(id int) {
+		go func(_ int) {
 			defer wg.Done()
 			unlock := kl.Lock(key)
 			defer unlock()

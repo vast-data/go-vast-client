@@ -3,9 +3,10 @@ package vast_client
 import (
 	"context"
 	"fmt"
-	version "github.com/hashicorp/go-version"
 	"reflect"
 	"time"
+
+	"github.com/hashicorp/go-version"
 )
 
 const dummyClusterVersion = "0.0.0"
