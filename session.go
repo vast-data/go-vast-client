@@ -335,8 +335,8 @@ func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, 
 					// Probably refresh token is expired. Need full re-authentication
 					s.auth.setInitialized(false)
 				}
-				if err = s.auth.authorize(); err != nil {
-					return nil, err
+				if authErr := s.auth.authorize(); authErr != nil {
+					return nil, authErr
 				}
 				continue
 			}
