@@ -1,3 +1,82 @@
+# Development Guide
+
+## Prerequisites
+
+- Go 1.20 or later
+- golangci-lint (for linting)
+- git
+
+## Building
+
+```bash
+# Build the library
+make build
+
+# Build all examples
+make examples
+
+# Run all checks (format, lint, test)
+make all
+```
+
+## Testing
+
+```bash
+# Run all tests
+make test
+
+# Run tests with coverage
+make test-coverage
+
+# View coverage report
+make coverage-report
+
+# Run short tests only
+make test-short
+```
+
+## Code Quality
+
+```bash
+# Format code
+make fmt
+
+# Run linter
+make lint
+
+# Run static analysis
+make vet
+
+# Run security checks
+make security
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests and linting (`make all`)
+5. Commit your changes (`git commit -m 'Add some amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+Please ensure your code follows the existing style and includes appropriate tests.
+
+## Continuous Integration
+
+This project uses GitHub Actions for CI/CD:
+
+- **Tests**: Run on Go 1.20, 1.21, and 1.22
+- **Linting**: golangci-lint with comprehensive rules
+- **Security**: gosec and govulncheck
+- **Coverage**: Reports sent to Coveralls
+- **Dependencies**: Automated updates via Dependabot
+
+---
+
+## Adding New API Resources
+
 ### Do you want to add new API resource?
 
 Suppose you want to add a User resource so that it can be queried

@@ -8,6 +8,8 @@ config := &client.VMSConfig{
     Port:           443,
     Username:       "admin",
     Password:       "123456",
+    ApiToken:       "",        // Alternative to Username/Password
+    Tenant:         "mytenant", // Optional tenant for scoped authentication
     SslVerify:      true,
     Timeout:        &timeout,
     MaxConnections: 10,
@@ -24,16 +26,18 @@ config := &client.VMSConfig{
 }
 ```
 
-| Field           | Type                                                                                 | Description                                                                       | Required | Default |
-|-----------------|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|--------|----|
-| `Host`          | `string`                                                                             | Hostname or IP of the VMS API server.                                             | ✅      | —  |
-| `Port`          | `uint64`                                                                             | Port for the API server.                                                          | ❌      | `443` |
-| `Username`      | `string`                                                                             | Username for basic auth (used with `Password`).                                   | ⚠️     | —  |
-| `Password`      | `string`                                                                             | Password for basic auth (used with `Username`).                                   | ⚠️     | —  |
-| `ApiToken`      | `string`                                                                             | Optional API token (alternative to username/password).                            | ⚠️     | —  |
-| `SslVerify`     | `bool`                                                                               | Verify SSL certificates when `true`.                                              | ❌      | `false` |
-| `Timeout`       | `*time.Duration`                                                                     | HTTP timeout for API requests. If `nil`, a default is used.                       | ❌      | `30s` |
-| `MaxConnections`| `int`                                                                                | Max concurrent HTTP connections.                                                  | ❌      | `10` |
+| Field           | Type                                                                                 | Description                                                                       | Required | Default          |
+|-----------------|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|--------|------------------|
+| `Host`          | `string`                                                                             | Hostname or IP of the VMS API server.                                             | ✅      | —                |
+| `Port`          | `uint64`                                                                             | Port for the API server.                                                          | ❌      | `443`            |
+| `Username`      | `string`                                                                             | Username for basic auth (used with `Password`).                                   | ⚠️     | —                |
+| `Password`      | `string`                                                                             | Password for basic auth (used with `Username`).                                   | ⚠️     | —                |
+| `ApiToken`      | `string`                                                                             | Optional API token (alternative to username/password).                            | ⚠️     | —                |
+| `Tenant`        | `string`                                                                             | Optional tenant name for tenant scoped authentication (tenant admin).             | ❌      | —                |
+| `ApiVersion`    | `string`                                                                             | Optional API version to use for requests.                                         | ❌      | `v5`              |
+| `SslVerify`     | `bool`                                                                               | Verify SSL certificates when `true`.                                              | ❌      | `false`          |
+| `Timeout`       | `*time.Duration`                                                                     | HTTP timeout for API requests. If `nil`, a default is used.                       | ❌      | `30s`            |
+| `MaxConnections`| `int`                                                                                | Max concurrent HTTP connections.                                                  | ❌      | `10`             |
 | `UserAgent`     | `string`                                                                             | Optional custom `User-Agent` string for HTTP requests.                            | ❌      | `vast-go-client` |
-| `BeforeRequestFn`    | `func(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error` | Optional hook executed before each request. Useful for logging or mutation.       | ❌      | —  |
-| `AfterRequestFn`    | `func(ctx context.Context, response Renderable) (Renderable, error)`                 | Optional hook executed after receiving a response. Useful for logging or mutation. | ❌   | —  |
+| `BeforeRequestFn`    | `func(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error` | Optional hook executed before each request. Useful for logging or mutation.       | ❌      | —                |
+| `AfterRequestFn`    | `func(ctx context.Context, response Renderable) (Renderable, error)`                 | Optional hook executed after receiving a response. Useful for logging or mutation. | ❌   | —                |

@@ -32,6 +32,7 @@ func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 			SslVerify: config.SslVerify,
 			Username:  config.Username,
 			Password:  config.Password,
+			Tenant:    config.Tenant,
 			Token:     &jwtToken{},
 		}
 	}
@@ -41,6 +42,7 @@ func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 			Port:      config.Port,
 			SslVerify: config.SslVerify,
 			Token:     config.ApiToken,
+			Tenant:    config.Tenant,
 		}
 	}
 	if authenticator != nil {
@@ -71,6 +73,7 @@ type JWTAuthenticator struct {
 	Username    string
 	Password    string
 	Token       *jwtToken
+	Tenant      string
 	initialized bool
 }
 
@@ -88,7 +91,6 @@ func parseToken(rsp *http.Response) (*jwtToken, error) {
 }
 
 func (auth *JWTAuthenticator) refreshToken(client *http.Client) (*http.Response, error) {
-	var resp *http.Response
 	path := url.URL{
 		Scheme: "https",
 		Host:   auth.Host,
@@ -98,11 +100,17 @@ func (auth *JWTAuthenticator) refreshToken(client *http.Client) (*http.Response,
 	if err != nil {
 		return nil, err
 	}
-	resp, err = client.Post(path.String(), "application/json", bytes.NewBuffer(body))
+
+	req, err := http.NewRequest("POST", path.String(), bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
-	return resp, nil
+	req.Header.Set("Content-Type", "application/json")
+	if auth.Tenant != "" {
+		req.Header.Set("X-Tenant-Name", auth.Tenant)
+	}
+
+	return client.Do(req)
 }
 
 func (auth *JWTAuthenticator) acquireToken(client *http.Client) (*http.Response, error) {
@@ -119,7 +127,16 @@ func (auth *JWTAuthenticator) acquireToken(client *http.Client) (*http.Response,
 		Host:   server,
 		Path:   "api/token/",
 	}
-	return client.Post(path.String(), "application/json", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", path.String(), bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if auth.Tenant != "" {
+		req.Header.Set("X-Tenant-Name", auth.Tenant)
+	}
+
+	return client.Do(req)
 }
 
 func (auth *JWTAuthenticator) authorize() error {
@@ -160,6 +177,9 @@ func (auth *JWTAuthenticator) authorize() error {
 
 func (auth *JWTAuthenticator) setAuthHeader(headers *http.Header) {
 	headers.Add("Authorization", "Bearer "+auth.Token.Access)
+	if auth.Tenant != "" {
+		headers.Add("X-Tenant-Name", auth.Tenant)
+	}
 }
 
 func (auth *JWTAuthenticator) equal(other Authenticator) bool {
@@ -171,6 +191,7 @@ func (auth *JWTAuthenticator) equal(other Authenticator) bool {
 		auth.Password == otherAuth.Password &&
 		auth.Host == otherAuth.Host &&
 		auth.Port == otherAuth.Port &&
+		auth.Tenant == otherAuth.Tenant &&
 		auth.SslVerify == otherAuth.SslVerify
 }
 
@@ -183,6 +204,7 @@ type ApiRTokenAuthenticator struct {
 	Port      uint64
 	SslVerify bool
 	Token     string
+	Tenant    string
 }
 
 func (auth *ApiRTokenAuthenticator) authorize() error {
@@ -192,6 +214,9 @@ func (auth *ApiRTokenAuthenticator) authorize() error {
 
 func (auth *ApiRTokenAuthenticator) setAuthHeader(headers *http.Header) {
 	headers.Add("Authorization", "Api-Token "+auth.Token)
+	if auth.Tenant != "" {
+		headers.Add("X-Tenant-Name", auth.Tenant)
+	}
 }
 
 func (auth *ApiRTokenAuthenticator) equal(other Authenticator) bool {
@@ -202,6 +227,7 @@ func (auth *ApiRTokenAuthenticator) equal(other Authenticator) bool {
 	return auth.Token == otherAuth.Token &&
 		auth.Host == otherAuth.Host &&
 		auth.Port == otherAuth.Port &&
+		auth.Tenant == otherAuth.Tenant &&
 		auth.SslVerify == otherAuth.SslVerify
 }
 

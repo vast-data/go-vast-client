@@ -17,6 +17,7 @@ type VMSConfig struct {
 	Username       string         // The username for authentication (used with Password).
 	Password       string         // The password for authentication (used with Username).
 	ApiToken       string         // Optional API token for authentication (alternative to Username/Password).
+	Tenant         string         // Optional tenant name for tenant scoped authentication (tenant admin).
 	SslVerify      bool           // Whether to verify SSL certificates.
 	Timeout        *time.Duration // HTTP client timeout. If nil, a default is applied by validators.
 	MaxConnections int            // Maximum number of concurrent HTTP connections.
