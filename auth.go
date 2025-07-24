@@ -101,7 +101,7 @@ func (auth *JWTAuthenticator) refreshToken(client *http.Client) (*http.Response,
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", path.String(), bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, path.String(), bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (auth *JWTAuthenticator) acquireToken(client *http.Client) (*http.Response,
 		Host:   server,
 		Path:   "api/token/",
 	}
-	req, err := http.NewRequest("POST", path.String(), bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, path.String(), bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
