@@ -157,11 +157,9 @@ type Version struct {
 	*VastResource
 }
 
-var sysVersion *version.Version
-
 func (v *Version) GetVersionWithContext(ctx context.Context) (*version.Version, error) {
-	if sysVersion != nil {
-		return sysVersion, nil
+	if v.rest.cachedVersion != nil {
+		return v.rest.cachedVersion, nil
 	}
 	result, err := v.ListWithContext(ctx, Params{"status": "success"})
 	if err != nil {
@@ -173,8 +171,8 @@ func (v *Version) GetVersionWithContext(ctx context.Context) (*version.Version, 
 		return nil, err
 	}
 	//We only work with core version
-	sysVersion = clusterVersion.Core()
-	return sysVersion, nil
+	v.rest.cachedVersion = clusterVersion.Core()
+	return v.rest.cachedVersion, nil
 }
 
 func (v *Version) GetVersion() (*version.Version, error) {

@@ -15,9 +15,10 @@ const dummyClusterVersion = "0.0.0"
 var dummyResource *Dummy
 
 type VMSRest struct {
-	ctx         context.Context
-	Session     RESTSession
-	resourceMap map[string]VastResourceAPI // Map to store resources by resourceType
+	ctx           context.Context
+	Session       RESTSession
+	resourceMap   map[string]VastResourceAPI // Map to store resources by resourceType
+	cachedVersion *version.Version           // Cache VAST version per connection
 
 	dummy                 *Dummy
 	OpenAPI               *OpenAPI
