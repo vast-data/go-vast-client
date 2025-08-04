@@ -20,44 +20,44 @@ import (
 
 type VastResourceType interface {
 	Dummy |
-		Version |
-		Quota |
-		View |
-		VipPool |
-		User |
-		UserKey |
-		Snapshot |
-		BlockHost |
-		Volume |
-		VTask |
-		BlockHostMapping |
-		Cnode |
-		QosPolicy |
-		Dns |
-		ViewPolicy |
-		Group |
-		Nis |
-		Tenant |
-		Ldap |
-		S3LifeCycleRule |
-		ActiveDirectory |
-		S3Policy |
-		ProtectedPath |
-		GlobalSnapshotStream |
-		ReplicationPeers |
-		ProtectionPolicy |
-		S3replicationPeers |
-		Realm |
-		Role |
-		NonLocalUser |
-		NonLocalGroup |
-		NonLocalUserKey |
-		ApiToken |
-		KafkaBroker |
-		Manager |
-		Folder |
-		EventDefinition |
-		EventDefinitionConfig
+	Version |
+	Quota |
+	View |
+	VipPool |
+	User |
+	UserKey |
+	Snapshot |
+	BlockHost |
+	Volume |
+	VTask |
+	BlockHostMapping |
+	Cnode |
+	QosPolicy |
+	Dns |
+	ViewPolicy |
+	Group |
+	Nis |
+	Tenant |
+	Ldap |
+	S3LifeCycleRule |
+	ActiveDirectory |
+	S3Policy |
+	ProtectedPath |
+	GlobalSnapshotStream |
+	ReplicationPeers |
+	ProtectionPolicy |
+	S3replicationPeers |
+	Realm |
+	Role |
+	NonLocalUser |
+	NonLocalGroup |
+	NonLocalUserKey |
+	ApiToken |
+	KafkaBroker |
+	Manager |
+	Folder |
+	EventDefinition |
+	EventDefinitionConfig
 }
 
 // ------------------------------------------------------
@@ -753,6 +753,24 @@ type Folder struct {
 	*VastResource
 }
 
+func (f *Folder) CreateFolderWithContext(ctx context.Context, data Params) (Record, error) {
+	path := fmt.Sprintf("%s/create_folder", f.resourcePath)
+	return request[Record](ctx, f, http.MethodPost, path, f.apiVersion, nil, data)
+}
+
+func (f *Folder) CreateFolder(data Params) (Record, error) {
+	return f.CreateFolderWithContext(f.rest.ctx, data)
+}
+
+func (f *Folder) ModifyFolderWithContext(ctx context.Context, data Params) (Record, error) {
+	path := fmt.Sprintf("%s/modify_folder", f.resourcePath)
+	return request[Record](ctx, f, http.MethodPatch, path, f.apiVersion, nil, data)
+}
+
+func (f *Folder) ModifyFolder(data Params) (Record, error) {
+	return f.ModifyFolderWithContext(f.rest.ctx, data)
+}
+
 func (f *Folder) DeleteFolderWithContext(ctx context.Context, data Params) (EmptyRecord, error) {
 	path := fmt.Sprintf("%s/delete_folder", f.resourcePath)
 	return request[EmptyRecord](ctx, f, http.MethodDelete, path, f.apiVersion, nil, data)
@@ -760,6 +778,42 @@ func (f *Folder) DeleteFolderWithContext(ctx context.Context, data Params) (Empt
 
 func (f *Folder) DeleteFolder(data Params) (EmptyRecord, error) {
 	return f.DeleteFolderWithContext(f.rest.ctx, data)
+}
+
+func (f *Folder) StatPathWithContext(ctx context.Context, data Params) (Record, error) {
+	path := fmt.Sprintf("%s/stat_path", f.resourcePath)
+	return request[Record](ctx, f, http.MethodPost, path, f.apiVersion, nil, data)
+}
+
+func (f *Folder) StatPath(data Params) (Record, error) {
+	return f.StatPathWithContext(f.rest.ctx, data)
+}
+
+func (f *Folder) SetReadOnlyWithContext(ctx context.Context, data Params) (Record, error) {
+	path := fmt.Sprintf("%s/read_only", f.resourcePath)
+	return request[Record](ctx, f, http.MethodPost, path, f.apiVersion, nil, data)
+}
+
+func (f *Folder) SetReadOnly(data Params) (Record, error) {
+	return f.SetReadOnlyWithContext(f.rest.ctx, data)
+}
+
+func (f *Folder) GetReadOnlyWithContext(ctx context.Context, params Params) (Record, error) {
+	path := fmt.Sprintf("%s/read_only", f.resourcePath)
+	return request[Record](ctx, f, http.MethodGet, path, f.apiVersion, params, nil)
+}
+
+func (f *Folder) GetReadOnly(params Params) (Record, error) {
+	return f.GetReadOnlyWithContext(f.rest.ctx, params)
+}
+
+func (f *Folder) DeleteReadOnlyWithContext(ctx context.Context, data Params) (EmptyRecord, error) {
+	path := fmt.Sprintf("%s/read_only", f.resourcePath)
+	return request[EmptyRecord](ctx, f, http.MethodDelete, path, f.apiVersion, nil, data)
+}
+
+func (f *Folder) DeleteReadOnly(data Params) (EmptyRecord, error) {
+	return f.DeleteReadOnlyWithContext(f.rest.ctx, data)
 }
 
 // ------------------------------------------------------
