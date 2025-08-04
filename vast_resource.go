@@ -55,7 +55,9 @@ type VastResourceType interface {
 		ApiToken |
 		KafkaBroker |
 		Manager |
-		Folder
+		Folder |
+		EventDefinition |
+		EventDefinitionConfig
 }
 
 // ------------------------------------------------------
@@ -758,6 +760,18 @@ func (f *Folder) DeleteFolderWithContext(ctx context.Context, data Params) (Empt
 
 func (f *Folder) DeleteFolder(data Params) (EmptyRecord, error) {
 	return f.DeleteFolderWithContext(f.rest.ctx, data)
+}
+
+// ------------------------------------------------------
+
+type EventDefinition struct {
+	*VastResource
+}
+
+// ------------------------------------------------------
+
+type EventDefinitionConfig struct {
+	*VastResource
 }
 
 // ------------------------------------------------------

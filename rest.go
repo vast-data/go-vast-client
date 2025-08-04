@@ -20,44 +20,46 @@ type VMSRest struct {
 	resourceMap   map[string]VastResourceAPI // Map to store resources by resourceType
 	cachedVersion *version.Version           // Cache VAST version per connection
 
-	dummy                 *Dummy
-	OpenAPI               *OpenAPI
-	Versions              *Version
-	VTasks                *VTask
-	Quotas                *Quota
-	Views                 *View
-	VipPools              *VipPool
-	Users                 *User
-	UserKeys              *UserKey
-	Snapshots             *Snapshot
-	BlockHosts            *BlockHost
-	Volumes               *Volume
-	BlockHostMappings     *BlockHostMapping
-	Cnodes                *Cnode
-	QosPolicies           *QosPolicy
-	Dns                   *Dns
-	ViewPolies            *ViewPolicy
-	Groups                *Group
-	Nis                   *Nis
-	Tenants               *Tenant
-	Ldaps                 *Ldap
-	S3LifeCycleRules      *S3LifeCycleRule
-	ActiveDirectories     *ActiveDirectory
-	S3Policies            *S3Policy
-	ProtectedPaths        *ProtectedPath
-	GlobalSnapshotStreams *GlobalSnapshotStream
-	ReplicationPeers      *ReplicationPeers
-	ProtectionPolicies    *ProtectionPolicy
-	S3replicationPeers    *S3replicationPeers
-	Realms                *Realm
-	Roles                 *Role
-	NonLocalUsers         *NonLocalUser
-	NonLocalGroups        *NonLocalGroup
-	NonLocalUserKeys      *NonLocalUserKey
-	ApiTokens             *ApiToken
-	KafkaBrokers          *KafkaBroker
-	Managers              *Manager
-	Folders               *Folder
+	dummy                  *Dummy
+	OpenAPI                *OpenAPI
+	Versions               *Version
+	VTasks                 *VTask
+	Quotas                 *Quota
+	Views                  *View
+	VipPools               *VipPool
+	Users                  *User
+	UserKeys               *UserKey
+	Snapshots              *Snapshot
+	BlockHosts             *BlockHost
+	Volumes                *Volume
+	BlockHostMappings      *BlockHostMapping
+	Cnodes                 *Cnode
+	QosPolicies            *QosPolicy
+	Dns                    *Dns
+	ViewPolies             *ViewPolicy
+	Groups                 *Group
+	Nis                    *Nis
+	Tenants                *Tenant
+	Ldaps                  *Ldap
+	S3LifeCycleRules       *S3LifeCycleRule
+	ActiveDirectories      *ActiveDirectory
+	S3Policies             *S3Policy
+	ProtectedPaths         *ProtectedPath
+	GlobalSnapshotStreams  *GlobalSnapshotStream
+	ReplicationPeers       *ReplicationPeers
+	ProtectionPolicies     *ProtectionPolicy
+	S3replicationPeers     *S3replicationPeers
+	Realms                 *Realm
+	Roles                  *Role
+	NonLocalUsers          *NonLocalUser
+	NonLocalGroups         *NonLocalGroup
+	NonLocalUserKeys       *NonLocalUserKey
+	ApiTokens              *ApiToken
+	KafkaBrokers           *KafkaBroker
+	Managers               *Manager
+	Folders                *Folder
+	EventDefinitions       *EventDefinition
+	EventDefinitionConfigs *EventDefinitionConfig
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -120,6 +122,8 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.KafkaBrokers = newResource[KafkaBroker](rest, "kafkabrokers", dummyClusterVersion)
 	rest.Managers = newResource[Manager](rest, "managers", dummyClusterVersion)
 	rest.Folders = newResource[Folder](rest, "folders", "4.7.0")
+	rest.EventDefinitions = newResource[EventDefinition](rest, "eventdefinitions", dummyClusterVersion)
+	rest.EventDefinitionConfigs = newResource[EventDefinitionConfig](rest, "eventdefinitionconfigs", dummyClusterVersion)
 
 	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
 	rest.OpenAPI = &OpenAPI{session: rest.Session}
