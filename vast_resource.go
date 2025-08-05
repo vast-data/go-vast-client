@@ -59,7 +59,8 @@ type VastResourceType interface {
 	EventDefinition |
 	EventDefinitionConfig |
 	BGPConfig |
-	Vms
+	Vms |
+	Topic
 }
 
 // ------------------------------------------------------
@@ -859,6 +860,12 @@ func (v *Vms) SetMaxApiTokensPerUserWithContext(ctx context.Context, vmsId int64
 
 func (v *Vms) SetMaxApiTokensPerUser(vmsId int64, tokensCount int64) (EmptyRecord, error) {
 	return v.SetMaxApiTokensPerUserWithContext(v.rest.ctx, vmsId, tokensCount)
+}
+
+// ------------------------------------------------------
+
+type Topic struct {
+	*VastResource
 }
 
 // ------------------------------------------------------
