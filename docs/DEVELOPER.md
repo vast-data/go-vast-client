@@ -12,9 +12,6 @@
 # Build the library
 make build
 
-# Build all examples
-make examples
-
 # Run all checks (format, lint, test)
 make all
 ```

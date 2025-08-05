@@ -64,16 +64,6 @@ coverage-report: test-coverage ## Generate and open coverage report
 build: ## Build the library (test build)
 	$(GOBUILD) -v ./...
 
-examples: ## Build all examples
-	@echo "Building examples..."
-	@for example in $(EXAMPLES_DIR)/*/; do \
-		if [ -f "$$example/main.go" ]; then \
-			example_name=$$(basename "$$example"); \
-			echo "Building $$example_name..."; \
-			(cd "$$example" && $(GOBUILD) -v -o "../bin/$$example_name" .); \
-		fi \
-	done
-
 # Cleaning
 clean: ## Clean build artifacts
 	$(GOCLEAN)

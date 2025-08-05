@@ -58,7 +58,8 @@ type VastResourceType interface {
 	Folder |
 	EventDefinition |
 	EventDefinitionConfig |
-	BGPConfig
+	BGPConfig |
+	Vms
 }
 
 // ------------------------------------------------------
@@ -833,6 +834,22 @@ type EventDefinitionConfig struct {
 
 type BGPConfig struct {
 	*VastResource
+}
+
+// ------------------------------------------------------
+
+type Vms struct {
+	*VastResource
+}
+
+func (v *Vms) SetMaxApiTokensPerUserWithContext(ctx context.Context, vmsId int64, tokensCount int64) (EmptyRecord, error) {
+	path := fmt.Sprintf("%s/%d/set_max_api_tokens_per_user", v.resourcePath, vmsId)
+	body := Params{"max_api_tokens_per_user": tokensCount}
+	return request[EmptyRecord](ctx, v, http.MethodPatch, path, v.apiVersion, nil, body)
+}
+
+func (v *Vms) SetMaxApiTokensPerUser(vmsId int64, tokensCount int64) (EmptyRecord, error) {
+	return v.SetMaxApiTokensPerUserWithContext(v.rest.ctx, vmsId, tokensCount)
 }
 
 // ------------------------------------------------------
