@@ -57,7 +57,8 @@ type VastResourceType interface {
 	Manager |
 	Folder |
 	EventDefinition |
-	EventDefinitionConfig
+	EventDefinitionConfig |
+	BGPConfig
 }
 
 // ------------------------------------------------------
@@ -825,6 +826,12 @@ type EventDefinition struct {
 // ------------------------------------------------------
 
 type EventDefinitionConfig struct {
+	*VastResource
+}
+
+// ------------------------------------------------------
+
+type BGPConfig struct {
 	*VastResource
 }
 

@@ -60,6 +60,7 @@ type VMSRest struct {
 	Folders                *Folder
 	EventDefinitions       *EventDefinition
 	EventDefinitionConfigs *EventDefinitionConfig
+	BGPConfigs             *BGPConfig
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -124,6 +125,7 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.Folders = newResource[Folder](rest, "folders", "4.7.0")
 	rest.EventDefinitions = newResource[EventDefinition](rest, "eventdefinitions", dummyClusterVersion)
 	rest.EventDefinitionConfigs = newResource[EventDefinitionConfig](rest, "eventdefinitionconfigs", dummyClusterVersion)
+	rest.BGPConfigs = newResource[BGPConfig](rest, "bgpconfigs", dummyClusterVersion)
 
 	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
 	rest.OpenAPI = &OpenAPI{session: rest.Session}
