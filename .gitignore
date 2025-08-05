@@ -37,3 +37,6 @@ mkdocs_files
 /.history/
 /REFACTORING_SUMMARY.md
 /.vscode/
+
+# Examples build artifacts
+examples/bin/

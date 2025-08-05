@@ -92,12 +92,18 @@ jobs:
 
     - name: Build examples
       run: |
+        mkdir -p examples/bin
         for example in examples/*/; do
           if [ -f "$example/main.go" ]; then
+            example_name=$(basename "$example")
             echo "Building $example"
-            (cd "$example" && go build -v .)
+            (cd "$example" && go build -v -o "../bin/$example_name" .)
           fi
         done
+
+    - name: Clean up build artifacts
+      run: |
+        rm -rf examples/bin
 
 
   dependency-review:

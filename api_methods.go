@@ -59,15 +59,15 @@ type VastResourceAPI interface {
 
 	List(Params) (RecordSet, error)
 	Create(Params) (Record, error)
-	Update(int64, Params) (Record, error)
+	Update(any, Params) (Record, error)
 	UpdateNonId(Params) (Record, error)
 	Delete(Params, Params) (EmptyRecord, error)
-	DeleteById(int64, Params) (EmptyRecord, error)
+	DeleteById(any, Params) (EmptyRecord, error)
 	DeleteNonId(Params) (EmptyRecord, error)
 	Ensure(Params, Params) (Record, error)
 	EnsureByName(string, Params) (Record, error)
 	Get(Params) (Record, error)
-	GetById(int64) (Record, error)
+	GetById(any) (Record, error)
 	Exists(Params) (bool, error)
 	MustExists(Params) bool
 	// Resource-level mutex lock for concurrent access control
@@ -81,15 +81,15 @@ type VastResourceAPIWithContext interface {
 	VastResourceAPI
 	ListWithContext(context.Context, Params) (RecordSet, error)
 	CreateWithContext(context.Context, Params) (Record, error)
-	UpdateWithContext(context.Context, int64, Params) (Record, error)
+	UpdateWithContext(context.Context, any, Params) (Record, error)
 	UpdateNonIdWithContext(context.Context, Params) (Record, error)
 	DeleteWithContext(context.Context, Params, Params) (EmptyRecord, error)
-	DeleteByIdWithContext(context.Context, int64, Params) (EmptyRecord, error)
+	DeleteByIdWithContext(context.Context, any, Params) (EmptyRecord, error)
 	DeleteNonIdWithContext(context.Context, Params) (EmptyRecord, error)
 	EnsureWithContext(context.Context, Params, Params) (Record, error)
 	EnsureByNameWithContext(context.Context, string, Params) (Record, error)
 	GetWithContext(context.Context, Params) (Record, error)
-	GetByIdWithContext(context.Context, int64) (Record, error)
+	GetByIdWithContext(context.Context, any) (Record, error)
 	ExistsWithContext(context.Context, Params) (bool, error)
 	MustExistsWithContext(context.Context, Params) bool
 }
@@ -149,8 +149,13 @@ func (e *VastResource) CreateWithContext(ctx context.Context, body Params) (Reco
 }
 
 // UpdateWithContext updates an existing resource by its ID using the provided parameters and context.
-func (e *VastResource) UpdateWithContext(ctx context.Context, id int64, body Params) (Record, error) {
-	path := fmt.Sprintf("%s/%d", e.resourcePath, id)
+func (e *VastResource) UpdateWithContext(ctx context.Context, id any, body Params) (Record, error) {
+	var path string
+	if intId, err := toInt(id); err == nil {
+		path = fmt.Sprintf("%s/%d", e.resourcePath, intId)
+	} else {
+		path = fmt.Sprintf("%s/%v", e.resourcePath, id)
+	}
 	return request[Record](ctx, e, http.MethodPatch, path, e.apiVersion, nil, body)
 }
 
@@ -179,11 +184,7 @@ func (e *VastResource) DeleteWithContext(ctx context.Context, searchParams, dele
 				" and thereby cannot be deleted by id", e.GetResourceType(),
 		)
 	}
-	idInt, err := toInt(idVal)
-	if err != nil {
-		return nil, err
-	}
-	return e.DeleteByIdWithContext(ctx, idInt, deleteParams)
+	return e.DeleteByIdWithContext(ctx, idVal, deleteParams)
 }
 
 // DeleteNonIdWithContext deletes a resource that does not use a numeric ID for identification.
@@ -193,8 +194,13 @@ func (e *VastResource) DeleteNonIdWithContext(ctx context.Context, deleteParams 
 }
 
 // DeleteByIdWithContext deletes a resource by its unique ID using the provided context and delete parameters.
-func (e *VastResource) DeleteByIdWithContext(ctx context.Context, id int64, deleteParams Params) (EmptyRecord, error) {
-	path := fmt.Sprintf("%s/%d", e.resourcePath, id)
+func (e *VastResource) DeleteByIdWithContext(ctx context.Context, id any, deleteParams Params) (EmptyRecord, error) {
+	var path string
+	if intId, err := toInt(id); err == nil {
+		path = fmt.Sprintf("%s/%d", e.resourcePath, intId)
+	} else {
+		path = fmt.Sprintf("%s/%v", e.resourcePath, id)
+	}
 	return request[EmptyRecord](ctx, e, http.MethodDelete, path, e.apiVersion, nil, deleteParams)
 }
 
@@ -254,8 +260,17 @@ func (e *VastResource) GetWithContext(ctx context.Context, params Params) (Recor
 }
 
 // GetByIdWithContext retrieves a resource by its unique ID using the provided context.
-func (e *VastResource) GetByIdWithContext(ctx context.Context, id int64) (Record, error) {
-	path := fmt.Sprintf("%s/%d", e.resourcePath, id)
+//
+// Not all VAST resources have strictly numeric IDs; some may use UUIDs, names, or other formats.
+// Therefore, this method accepts a generic 'id' parameter and dynamically formats the request path
+// to handle both numeric and non-numeric identifiers.
+func (e *VastResource) GetByIdWithContext(ctx context.Context, id any) (Record, error) {
+	var path string
+	if intId, err := toInt(id); err == nil {
+		path = fmt.Sprintf("%s/%d", e.resourcePath, intId)
+	} else {
+		path = fmt.Sprintf("%s/%v", e.resourcePath, id)
+	}
 	return request[Record](ctx, e, http.MethodGet, path, e.apiVersion, nil, nil)
 }
 
@@ -290,7 +305,7 @@ func (e *VastResource) Create(params Params) (Record, error) {
 }
 
 // Update updates a resource by its ID using the provided parameters and the bound REST context.
-func (e *VastResource) Update(id int64, params Params) (Record, error) {
+func (e *VastResource) Update(id any, params Params) (Record, error) {
 	return e.UpdateWithContext(e.rest.ctx, id, params)
 }
 
@@ -308,7 +323,7 @@ func (e *VastResource) Delete(searchParams, deleteParams Params) (EmptyRecord, e
 }
 
 // DeleteById deletes a resource by its ID using the bound REST context and provided deleteParams.
-func (e *VastResource) DeleteById(id int64, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) DeleteById(id any, deleteParams Params) (EmptyRecord, error) {
 	return e.DeleteByIdWithContext(e.rest.ctx, id, deleteParams)
 }
 
@@ -338,7 +353,7 @@ func (e *VastResource) Get(params Params) (Record, error) {
 }
 
 // GetById retrieves a resource by its ID using the bound REST context.
-func (e *VastResource) GetById(id int64) (Record, error) {
+func (e *VastResource) GetById(id any) (Record, error) {
 	return e.GetByIdWithContext(e.rest.ctx, id)
 }
 
