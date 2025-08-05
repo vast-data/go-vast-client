@@ -20,45 +20,46 @@ import (
 
 type VastResourceType interface {
 	Dummy |
-	Version |
-	Quota |
-	View |
-	VipPool |
-	User |
-	UserKey |
-	Snapshot |
-	BlockHost |
-	Volume |
-	VTask |
-	BlockHostMapping |
-	Cnode |
-	QosPolicy |
-	Dns |
-	ViewPolicy |
-	Group |
-	Nis |
-	Tenant |
-	Ldap |
-	S3LifeCycleRule |
-	ActiveDirectory |
-	S3Policy |
-	ProtectedPath |
-	GlobalSnapshotStream |
-	ReplicationPeers |
-	ProtectionPolicy |
-	S3replicationPeers |
-	Realm |
-	Role |
-	NonLocalUser |
-	NonLocalGroup |
-	NonLocalUserKey |
-	ApiToken |
-	KafkaBroker |
-	Manager |
-	Folder |
-	EventDefinition |
-	EventDefinitionConfig |
-	BGPConfig
+		Version |
+		Quota |
+		View |
+		VipPool |
+		User |
+		UserKey |
+		Snapshot |
+		BlockHost |
+		Volume |
+		VTask |
+		BlockHostMapping |
+		Cnode |
+		QosPolicy |
+		Dns |
+		ViewPolicy |
+		Group |
+		Nis |
+		Tenant |
+		Ldap |
+		S3LifeCycleRule |
+		ActiveDirectory |
+		S3Policy |
+		ProtectedPath |
+		GlobalSnapshotStream |
+		ReplicationPeers |
+		ProtectionPolicy |
+		S3replicationPeers |
+		Realm |
+		Role |
+		NonLocalUser |
+		NonLocalGroup |
+		NonLocalUserKey |
+		ApiToken |
+		KafkaBroker |
+		Manager |
+		Folder |
+		EventDefinition |
+		EventDefinitionConfig |
+		BGPConfig |
+		Vms
 }
 
 // ------------------------------------------------------
@@ -833,6 +834,22 @@ type EventDefinitionConfig struct {
 
 type BGPConfig struct {
 	*VastResource
+}
+
+// ------------------------------------------------------
+
+type Vms struct {
+	*VastResource
+}
+
+func (v *Vms) SetMaxApiTokensPerUserWithContext(ctx context.Context, vmsId int64, tokensCount int64) (EmptyRecord, error) {
+	path := fmt.Sprintf("%s/%d/set_max_api_tokens_per_user", v.resourcePath, vmsId)
+	body := Params{"max_api_tokens_per_user": tokensCount}
+	return request[EmptyRecord](ctx, v, http.MethodPatch, path, v.apiVersion, body, nil)
+}
+
+func (v *Vms) SetMaxApiTokensPerUser(vmsId int64, tokensCount int64) (EmptyRecord, error) {
+	return v.SetMaxApiTokensPerUserWithContext(v.rest.ctx, vmsId, tokensCount)
 }
 
 // ------------------------------------------------------
