@@ -737,6 +737,15 @@ type ApiToken struct {
 	*VastResource
 }
 
+func (a *ApiToken) RevokeWithContext(ctx context.Context, tokenId string) (EmptyRecord, error) {
+	path := fmt.Sprintf("%s/%s/revoke", a.resourcePath, tokenId)
+	return request[EmptyRecord](ctx, a, http.MethodPatch, path, a.apiVersion, nil, nil)
+}
+
+func (a *ApiToken) Revoke(tokenId string) (EmptyRecord, error) {
+	return a.RevokeWithContext(a.rest.ctx, tokenId)
+}
+
 // ------------------------------------------------------
 
 type KafkaBroker struct {
