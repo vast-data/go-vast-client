@@ -62,7 +62,8 @@ type VastResourceType interface {
 	Vms |
 	Topic |
 	LocalProvider |
-	LocalS3Key
+	LocalS3Key |
+	EncryptionGroup
 }
 
 // ------------------------------------------------------
@@ -284,7 +285,7 @@ func (u *User) Copy(params UsersCopyParams) error {
 
 func (u *User) UpdateTenantDataWithContext(ctx context.Context, userId any, params Params) (Record, error) {
 	path := buildResourcePathWithID(u.resourcePath, userId, "tenant_data")
-	
+
 	result, err := request[Record](ctx, u, http.MethodPatch, path, u.apiVersion, nil, params)
 	if err != nil {
 		return nil, err
@@ -298,7 +299,7 @@ func (u *User) UpdateTenantData(userId any, params Params) (Record, error) {
 
 func (u *User) GetTenantDataWithContext(ctx context.Context, userId any) (Record, error) {
 	path := buildResourcePathWithID(u.resourcePath, userId, "tenant_data")
-	
+
 	result, err := request[Record](ctx, u, http.MethodGet, path, u.apiVersion, nil, nil)
 	if err != nil {
 		return nil, err
@@ -950,6 +951,48 @@ type LocalProvider struct {
 
 type LocalS3Key struct {
 	*VastResource
+}
+
+// ------------------------------------------------------
+
+type EncryptionGroup struct {
+	*VastResource
+}
+
+func (eg *EncryptionGroup) RevokeEncryptionGroupWithContext(ctx context.Context, encryptionGroupId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(eg.resourcePath, encryptionGroupId, "revoke_encryption_group")
+	return request[EmptyRecord](ctx, eg, http.MethodPost, path, eg.apiVersion, nil, nil)
+}
+
+func (eg *EncryptionGroup) RevokeEncryptionGroup(encryptionGroupId any) (EmptyRecord, error) {
+	return eg.RevokeEncryptionGroupWithContext(eg.rest.ctx, encryptionGroupId)
+}
+
+func (eg *EncryptionGroup) DeactivateEncryptionGroupWithContext(ctx context.Context, encryptionGroupId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(eg.resourcePath, encryptionGroupId, "deactivate_encryption_group")
+	return request[EmptyRecord](ctx, eg, http.MethodPost, path, eg.apiVersion, nil, nil)
+}
+
+func (eg *EncryptionGroup) DeactivateEncryptionGroup(encryptionGroupId any) (EmptyRecord, error) {
+	return eg.DeactivateEncryptionGroupWithContext(eg.rest.ctx, encryptionGroupId)
+}
+
+func (eg *EncryptionGroup) ReinstateEncryptionGroupWithContext(ctx context.Context, encryptionGroupId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(eg.resourcePath, encryptionGroupId, "reinstate_encryption_group")
+	return request[EmptyRecord](ctx, eg, http.MethodPost, path, eg.apiVersion, nil, nil)
+}
+
+func (eg *EncryptionGroup) ReinstateEncryptionGroup(encryptionGroupId any) (EmptyRecord, error) {
+	return eg.ReinstateEncryptionGroupWithContext(eg.rest.ctx, encryptionGroupId)
+}
+
+func (eg *EncryptionGroup) RotateEncryptionGroupKeyWithContext(ctx context.Context, encryptionGroupId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(eg.resourcePath, encryptionGroupId, "rotate_encryption_group_key")
+	return request[EmptyRecord](ctx, eg, http.MethodPost, path, eg.apiVersion, nil, nil)
+}
+
+func (eg *EncryptionGroup) RotateEncryptionGroupKey(encryptionGroupId any) (EmptyRecord, error) {
+	return eg.RotateEncryptionGroupKeyWithContext(eg.rest.ctx, encryptionGroupId)
 }
 
 // ------------------------------------------------------
