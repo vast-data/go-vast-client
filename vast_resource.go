@@ -439,6 +439,34 @@ func (t *Tenant) RotateEncryptionGroupKey(tenantId any) (EmptyRecord, error) {
 	return t.RotateEncryptionGroupKeyWithContext(t.rest.ctx, tenantId)
 }
 
+func (t *Tenant) GetConfiguredIdPWithContext(ctx context.Context, tenantName string) (Record, error) {
+	path := fmt.Sprintf("%s/configured_idp", t.resourcePath)
+	params := Params{"name": tenantName}
+	return request[Record](ctx, t, http.MethodGet, path, t.apiVersion, params, nil)
+}
+
+func (t *Tenant) GetConfiguredIdP(tenantName string) (Record, error) {
+	return t.GetConfiguredIdPWithContext(t.rest.ctx, tenantName)
+}
+
+func (t *Tenant) GetClientMetricsWithContext(ctx context.Context, tenantId any) (Record, error) {
+	path := buildResourcePathWithID(t.resourcePath, tenantId, "client_metrics")
+	return request[Record](ctx, t, http.MethodGet, path, t.apiVersion, nil, nil)
+}
+
+func (t *Tenant) GetClientMetrics(tenantId any) (Record, error) {
+	return t.GetClientMetricsWithContext(t.rest.ctx, tenantId)
+}
+
+func (t *Tenant) UpdateClientMetricsWithContext(ctx context.Context, tenantId any, params Params) (Record, error) {
+	path := buildResourcePathWithID(t.resourcePath, tenantId, "client_metrics")
+	return request[Record](ctx, t, http.MethodPatch, path, t.apiVersion, nil, params)
+}
+
+func (t *Tenant) UpdateClientMetrics(tenantId any, params Params) (Record, error) {
+	return t.UpdateClientMetricsWithContext(t.rest.ctx, tenantId, params)
+}
+
 // ------------------------------------------------------
 
 type Ldap struct {
