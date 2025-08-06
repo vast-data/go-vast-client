@@ -63,6 +63,8 @@ type VMSRest struct {
 	BGPConfigs             *BGPConfig
 	Vms                    *Vms
 	Topics                 *Topic
+	LocalProviders         *LocalProvider
+	LocalS3Keys            *LocalS3Key
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -130,6 +132,8 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.BGPConfigs = newResource[BGPConfig](rest, "bgpconfigs", dummyClusterVersion)
 	rest.Vms = newResource[Vms](rest, "vms", dummyClusterVersion)
 	rest.Topics = newResource[Topic](rest, "topics", dummyClusterVersion)
+	rest.LocalProviders = newResource[LocalProvider](rest, "localproviders", dummyClusterVersion)
+	rest.LocalS3Keys = newResource[LocalS3Key](rest, "locals3keys", dummyClusterVersion)
 
 	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
 	rest.OpenAPI = &OpenAPI{session: rest.Session}

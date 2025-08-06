@@ -60,7 +60,9 @@ type VastResourceType interface {
 	EventDefinitionConfig |
 	BGPConfig |
 	Vms |
-	Topic
+	Topic |
+	LocalProvider |
+	LocalS3Key
 }
 
 // ------------------------------------------------------
@@ -865,6 +867,18 @@ func (v *Vms) SetMaxApiTokensPerUser(vmsId int64, tokensCount int64) (EmptyRecor
 // ------------------------------------------------------
 
 type Topic struct {
+	*VastResource
+}
+
+// ------------------------------------------------------
+
+type LocalProvider struct {
+	*VastResource
+}
+
+// ------------------------------------------------------
+
+type LocalS3Key struct {
 	*VastResource
 }
 
