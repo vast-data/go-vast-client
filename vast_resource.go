@@ -63,7 +63,8 @@ type VastResourceType interface {
 	Topic |
 	LocalProvider |
 	LocalS3Key |
-	EncryptionGroup
+	EncryptionGroup |
+	SamlConfig
 }
 
 // ------------------------------------------------------
@@ -999,6 +1000,23 @@ func (v *Vms) SetMaxApiTokensPerUser(vmsId int64, tokensCount int64) (EmptyRecor
 	return v.SetMaxApiTokensPerUserWithContext(v.rest.ctx, vmsId, tokensCount)
 }
 
+func (v *Vms) GetConfiguredIdPsWithContext(ctx context.Context, vmsId any) ([]string, error) {
+	var result = make([]string, 0)
+	path := buildResourcePathWithID(v.resourcePath, vmsId, "configured_idps")
+	recordSet, err := request[RecordSet](ctx, v, http.MethodGet, path, v.apiVersion, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, record := range recordSet {
+		result = append(result, fmt.Sprintf("%v", record["@raw"]))
+	}
+	return result, nil
+}
+
+func (v *Vms) GetConfiguredIdPs(vmsId any) ([]string, error) {
+	return v.GetConfiguredIdPsWithContext(v.rest.ctx, vmsId)
+}
+
 // ------------------------------------------------------
 
 type Topic struct {
@@ -1057,6 +1075,52 @@ func (eg *EncryptionGroup) RotateEncryptionGroupKeyWithContext(ctx context.Conte
 
 func (eg *EncryptionGroup) RotateEncryptionGroupKey(encryptionGroupId any) (EmptyRecord, error) {
 	return eg.RotateEncryptionGroupKeyWithContext(eg.rest.ctx, encryptionGroupId)
+}
+
+// ------------------------------------------------------
+
+type SamlConfig struct {
+	*VastResource
+}
+
+func (sc *SamlConfig) GetConfigWithContext(ctx context.Context, vmsId any, idpName string) (Record, error) {
+	path := fmt.Sprintf(sc.resourcePath, vmsId)
+	params := Params{"idp_name": idpName}
+	return request[Record](ctx, sc, http.MethodGet, path, sc.apiVersion, params, nil)
+}
+
+func (sc *SamlConfig) GetConfig(vmsId any, idpName string) (Record, error) {
+	return sc.GetConfigWithContext(sc.rest.ctx, vmsId, idpName)
+}
+
+func (sc *SamlConfig) RemoveSignedCertWithContext(ctx context.Context, vmsId any, idpName string) (EmptyRecord, error) {
+	path := fmt.Sprintf(sc.resourcePath, vmsId)
+	params := Params{"idp_name": idpName}
+	return request[EmptyRecord](ctx, sc, http.MethodPatch, path, sc.apiVersion, params, nil)
+}
+
+func (sc *SamlConfig) RemoveSignedCert(vmsId any, idpName string) (EmptyRecord, error) {
+	return sc.RemoveSignedCertWithContext(sc.rest.ctx, vmsId, idpName)
+}
+
+func (sc *SamlConfig) UpdateConfigWithContext(ctx context.Context, vmsId any, idpName string, params Params) (Record, error) {
+	path := fmt.Sprintf(sc.resourcePath, vmsId)
+	queryParams := Params{"idp_name": idpName}
+	return request[Record](ctx, sc, http.MethodPost, path, sc.apiVersion, queryParams, params)
+}
+
+func (sc *SamlConfig) UpdateConfig(vmsId any, idpName string, params Params) (Record, error) {
+	return sc.UpdateConfigWithContext(sc.rest.ctx, vmsId, idpName, params)
+}
+
+func (sc *SamlConfig) DeleteConfigWithContext(ctx context.Context, vmsId any, idpName string) (EmptyRecord, error) {
+	path := fmt.Sprintf(sc.resourcePath, vmsId)
+	params := Params{"idp_name": idpName}
+	return request[EmptyRecord](ctx, sc, http.MethodDelete, path, sc.apiVersion, params, nil)
+}
+
+func (sc *SamlConfig) DeleteConfig(vmsId any, idpName string) (EmptyRecord, error) {
+	return sc.DeleteConfigWithContext(sc.rest.ctx, vmsId, idpName)
 }
 
 // ------------------------------------------------------

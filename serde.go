@@ -471,11 +471,22 @@ func unmarshalToRecordUnion(response *http.Response) (Renderable, error) {
 		}
 		return rec, nil
 	case '[': // JSON array
+		// First try to unmarshal as RecordSet (array of objects)
 		var recSet RecordSet
-		if err := json.Unmarshal(body, &recSet); err != nil {
+		if err := json.Unmarshal(body, &recSet); err == nil {
+			return recSet, nil
+		}
+		// If that fails, it might be an array of any type, convert each to Record
+		var anySlice []any
+		if err := json.Unmarshal(body, &anySlice); err != nil {
 			return nil, err
 		}
-		return recSet, nil
+		// Convert each item to a Record with customRawKey
+		recordSet := make(RecordSet, len(anySlice))
+		for i, item := range anySlice {
+			recordSet[i] = Record{customRawKey: item}
+		}
+		return recordSet, nil
 	case '"': // string
 		return Record{customRawKey: body}, nil
 	default:
