@@ -403,6 +403,42 @@ type Tenant struct {
 	*VastResource
 }
 
+func (t *Tenant) RevokeEncryptionGroupWithContext(ctx context.Context, tenantId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(t.resourcePath, tenantId, "revoke_encryption_group")
+	return request[EmptyRecord](ctx, t, http.MethodPost, path, t.apiVersion, nil, nil)
+}
+
+func (t *Tenant) RevokeEncryptionGroup(tenantId any) (EmptyRecord, error) {
+	return t.RevokeEncryptionGroupWithContext(t.rest.ctx, tenantId)
+}
+
+func (t *Tenant) DeactivateEncryptionGroupWithContext(ctx context.Context, tenantId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(t.resourcePath, tenantId, "deactivate_encryption_group")
+	return request[EmptyRecord](ctx, t, http.MethodPost, path, t.apiVersion, nil, nil)
+}
+
+func (t *Tenant) DeactivateEncryptionGroup(tenantId any) (EmptyRecord, error) {
+	return t.DeactivateEncryptionGroupWithContext(t.rest.ctx, tenantId)
+}
+
+func (t *Tenant) ReinstateEncryptionGroupWithContext(ctx context.Context, tenantId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(t.resourcePath, tenantId, "reinstate_encryption_group")
+	return request[EmptyRecord](ctx, t, http.MethodPost, path, t.apiVersion, nil, nil)
+}
+
+func (t *Tenant) ReinstateEncryptionGroup(tenantId any) (EmptyRecord, error) {
+	return t.ReinstateEncryptionGroupWithContext(t.rest.ctx, tenantId)
+}
+
+func (t *Tenant) RotateEncryptionGroupKeyWithContext(ctx context.Context, tenantId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(t.resourcePath, tenantId, "rotate_encryption_group_key")
+	return request[EmptyRecord](ctx, t, http.MethodPost, path, t.apiVersion, nil, nil)
+}
+
+func (t *Tenant) RotateEncryptionGroupKey(tenantId any) (EmptyRecord, error) {
+	return t.RotateEncryptionGroupKeyWithContext(t.rest.ctx, tenantId)
+}
+
 // ------------------------------------------------------
 
 type Ldap struct {
