@@ -150,12 +150,7 @@ func (e *VastResource) CreateWithContext(ctx context.Context, body Params) (Reco
 
 // UpdateWithContext updates an existing resource by its ID using the provided parameters and context.
 func (e *VastResource) UpdateWithContext(ctx context.Context, id any, body Params) (Record, error) {
-	var path string
-	if intId, err := toInt(id); err == nil {
-		path = fmt.Sprintf("%s/%d", e.resourcePath, intId)
-	} else {
-		path = fmt.Sprintf("%s/%v", e.resourcePath, id)
-	}
+	path := buildResourcePathWithID(e.resourcePath, id)
 	return request[Record](ctx, e, http.MethodPatch, path, e.apiVersion, nil, body)
 }
 
@@ -195,12 +190,7 @@ func (e *VastResource) DeleteNonIdWithContext(ctx context.Context, deleteParams 
 
 // DeleteByIdWithContext deletes a resource by its unique ID using the provided context and delete parameters.
 func (e *VastResource) DeleteByIdWithContext(ctx context.Context, id any, deleteParams Params) (EmptyRecord, error) {
-	var path string
-	if intId, err := toInt(id); err == nil {
-		path = fmt.Sprintf("%s/%d", e.resourcePath, intId)
-	} else {
-		path = fmt.Sprintf("%s/%v", e.resourcePath, id)
-	}
+	path := buildResourcePathWithID(e.resourcePath, id)
 	return request[EmptyRecord](ctx, e, http.MethodDelete, path, e.apiVersion, nil, deleteParams)
 }
 
@@ -265,12 +255,7 @@ func (e *VastResource) GetWithContext(ctx context.Context, params Params) (Recor
 // Therefore, this method accepts a generic 'id' parameter and dynamically formats the request path
 // to handle both numeric and non-numeric identifiers.
 func (e *VastResource) GetByIdWithContext(ctx context.Context, id any) (Record, error) {
-	var path string
-	if intId, err := toInt(id); err == nil {
-		path = fmt.Sprintf("%s/%d", e.resourcePath, intId)
-	} else {
-		path = fmt.Sprintf("%s/%v", e.resourcePath, id)
-	}
+	path := buildResourcePathWithID(e.resourcePath, id)
 	return request[Record](ctx, e, http.MethodGet, path, e.apiVersion, nil, nil)
 }
 

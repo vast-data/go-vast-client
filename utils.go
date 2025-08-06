@@ -96,3 +96,22 @@ func must[T any](v T, err error) T {
 	}
 	return v
 }
+
+// buildResourcePathWithID builds a complete resource path with an ID parameter and optional additional segments.
+// It takes a resource path (e.g., "/users"), an ID of any type, and optional additional path segments.
+// Returns the complete path (e.g., "/users/123/tenant_data" or "/users/uuid/tenant_data").
+func buildResourcePathWithID(resourcePath string, id any, additionalSegments ...string) string {
+	var path string
+	if intId, err := toInt(id); err == nil {
+		path = fmt.Sprintf("%s/%d", resourcePath, intId)
+	} else {
+		path = fmt.Sprintf("%s/%v", resourcePath, id)
+	}
+
+	// Append additional segments if provided
+	for _, segment := range additionalSegments {
+		path += "/" + segment
+	}
+
+	return path
+}

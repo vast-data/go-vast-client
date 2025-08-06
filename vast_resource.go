@@ -282,6 +282,34 @@ func (u *User) Copy(params UsersCopyParams) error {
 	return u.CopyWithContext(u.rest.ctx, params)
 }
 
+func (u *User) UpdateTenantDataWithContext(ctx context.Context, userId any, params Params) (Record, error) {
+	path := buildResourcePathWithID(u.resourcePath, userId, "tenant_data")
+	
+	result, err := request[Record](ctx, u, http.MethodPatch, path, u.apiVersion, nil, params)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (u *User) UpdateTenantData(userId any, params Params) (Record, error) {
+	return u.UpdateTenantDataWithContext(u.rest.ctx, userId, params)
+}
+
+func (u *User) GetTenantDataWithContext(ctx context.Context, userId any) (Record, error) {
+	path := buildResourcePathWithID(u.resourcePath, userId, "tenant_data")
+	
+	result, err := request[Record](ctx, u, http.MethodGet, path, u.apiVersion, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (u *User) GetTenantData(userId any) (Record, error) {
+	return u.GetTenantDataWithContext(u.rest.ctx, userId)
+}
+
 // ------------------------------------------------------
 
 type UserKey struct {
