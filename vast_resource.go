@@ -240,6 +240,48 @@ type User struct {
 	*VastResource
 }
 
+// UsersCopyParams represents the parameters for copying users
+type UsersCopyParams struct {
+	DestinationProviderID int64   `json:"destination_provider_id"`
+	TenantID              int64   `json:"tenant_id,omitempty"`
+	UserIDs               []int64 `json:"user_ids,omitempty"`
+}
+
+func (u *User) CopyWithContext(ctx context.Context, params UsersCopyParams) error {
+	// Validate parameters according to OpenAPI spec
+	if params.TenantID == 0 && len(params.UserIDs) == 0 {
+		return fmt.Errorf("either tenant_id or user_ids must be provided")
+	}
+	if params.TenantID != 0 && len(params.UserIDs) > 0 {
+		return fmt.Errorf("cannot provide both tenant_id and user_ids")
+	}
+
+	requestParams := Params{
+		"destination_provider_id": params.DestinationProviderID,
+	}
+	if params.TenantID != 0 {
+		requestParams["tenant_id"] = params.TenantID
+	}
+	if len(params.UserIDs) > 0 {
+		requestParams["user_ids"] = params.UserIDs
+	}
+
+	path := fmt.Sprintf("%s/copy", u.resourcePath)
+	result, err := request[Record](ctx, u, http.MethodPost, path, u.apiVersion, nil, requestParams)
+	if err != nil {
+		return err
+	}
+	task := asyncResultFromRecord(ctx, result, u.rest)
+	if _, err := task.Wait(3 * time.Minute); err != nil {
+		return fmt.Errorf("failed to copy users: %w", err)
+	}
+	return nil
+}
+
+func (u *User) Copy(params UsersCopyParams) error {
+	return u.CopyWithContext(u.rest.ctx, params)
+}
+
 // ------------------------------------------------------
 
 type UserKey struct {
