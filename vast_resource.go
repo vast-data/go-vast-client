@@ -20,51 +20,51 @@ import (
 
 type VastResourceType interface {
 	Dummy |
-	Version |
-	Quota |
-	View |
-	VipPool |
-	User |
-	UserKey |
-	Snapshot |
-	BlockHost |
-	Volume |
-	VTask |
-	BlockHostMapping |
-	Cnode |
-	QosPolicy |
-	Dns |
-	ViewPolicy |
-	Group |
-	Nis |
-	Tenant |
-	Ldap |
-	S3LifeCycleRule |
-	ActiveDirectory |
-	S3Policy |
-	ProtectedPath |
-	GlobalSnapshotStream |
-	ReplicationPeers |
-	ProtectionPolicy |
-	S3replicationPeers |
-	Realm |
-	Role |
-	NonLocalUser |
-	NonLocalGroup |
-	NonLocalUserKey |
-	ApiToken |
-	KafkaBroker |
-	Manager |
-	Folder |
-	EventDefinition |
-	EventDefinitionConfig |
-	BGPConfig |
-	Vms |
-	Topic |
-	LocalProvider |
-	LocalS3Key |
-	EncryptionGroup |
-	SamlConfig
+		Version |
+		Quota |
+		View |
+		VipPool |
+		User |
+		UserKey |
+		Snapshot |
+		BlockHost |
+		Volume |
+		VTask |
+		BlockHostMapping |
+		Cnode |
+		QosPolicy |
+		Dns |
+		ViewPolicy |
+		Group |
+		Nis |
+		Tenant |
+		Ldap |
+		S3LifeCycleRule |
+		ActiveDirectory |
+		S3Policy |
+		ProtectedPath |
+		GlobalSnapshotStream |
+		ReplicationPeers |
+		ProtectionPolicy |
+		S3replicationPeers |
+		Realm |
+		Role |
+		NonLocalUser |
+		NonLocalGroup |
+		NonLocalUserKey |
+		ApiToken |
+		KafkaBroker |
+		Manager |
+		Folder |
+		EventDefinition |
+		EventDefinitionConfig |
+		BGPConfig |
+		Vms |
+		Topic |
+		LocalProvider |
+		LocalS3Key |
+		EncryptionGroup |
+		SamlConfig
 }
 
 // ------------------------------------------------------
@@ -1021,6 +1021,24 @@ func (v *Vms) GetConfiguredIdPs(vmsId any) ([]string, error) {
 
 type Topic struct {
 	*VastResource
+}
+
+func (t *Topic) ShowTopicWithContext(ctx context.Context, params Params) (Record, error) {
+	path := fmt.Sprintf("%s/show", t.resourcePath)
+	return request[Record](ctx, t, http.MethodGet, path, t.apiVersion, params, nil)
+}
+
+func (t *Topic) ShowTopic(params Params) (Record, error) {
+	return t.ShowTopicWithContext(t.rest.ctx, params)
+}
+
+func (t *Topic) DeleteTopicWithContext(ctx context.Context, params Params) (EmptyRecord, error) {
+	path := fmt.Sprintf("%s/delete", t.resourcePath)
+	return request[EmptyRecord](ctx, t, http.MethodDelete, path, t.apiVersion, nil, params)
+}
+
+func (t *Topic) DeleteTopic(params Params) (EmptyRecord, error) {
+	return t.DeleteTopicWithContext(t.rest.ctx, params)
 }
 
 // ------------------------------------------------------
