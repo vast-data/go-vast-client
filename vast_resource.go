@@ -563,7 +563,7 @@ func (gss *GlobalSnapshotStream) EnsureCloneSnapshotDeletedWithContext(ctx conte
 				return nil, err
 			}
 		}
-		if deleteResult, err := gss.DeleteByIdWithContext(ctx, response.RecordID(), Params{"remove_dir": true}); IsApiError(err) {
+        if deleteResult, err := gss.DeleteByIdWithContext(ctx, response.RecordID(), nil, Params{"remove_dir": true}); IsApiError(err) {
 			if err.(*ApiError).StatusCode == 404 {
 				return EmptyRecord{}, nil
 			}
