@@ -358,7 +358,7 @@ func (r Record) String() string {
 //	}
 //
 // Parameters:
-//   - container: must be a pointer to a slice of structs (e.g., *[]MyStruct).
+//   - container: must be a pointer to a slice of structs (e.g., *[]T or *[]*T).
 //
 // Returns an error if:
 //   - The container is not a non-nil pointer to a slice.
@@ -376,12 +376,34 @@ func (rs RecordSet) Fill(container any) error {
 	}
 
 	elemType := sliceVal.Type().Elem()
+	isPtrElem := elemType.Kind() == reflect.Ptr
+
+	var targetType reflect.Type
+	if isPtrElem {
+		if elemType.Elem().Kind() != reflect.Struct {
+			return fmt.Errorf("slice element must be pointer to a struct")
+		}
+		targetType = elemType.Elem()
+	} else {
+		if elemType.Kind() != reflect.Struct {
+			return fmt.Errorf("slice element must be a struct")
+		}
+		targetType = elemType
+	}
+
 	for _, record := range rs {
-		elemPtr := reflect.New(elemType)
+		// Create pointer to the target struct
+		elemPtr := reflect.New(targetType)
 		if err := record.Fill(elemPtr.Interface()); err != nil {
 			return err
 		}
-		sliceVal.Set(reflect.Append(sliceVal, elemPtr.Elem()))
+		if isPtrElem {
+			// Append as pointer
+			sliceVal.Set(reflect.Append(sliceVal, elemPtr))
+		} else {
+			// Append as value
+			sliceVal.Set(reflect.Append(sliceVal, elemPtr.Elem()))
+		}
 	}
 	return nil
 }

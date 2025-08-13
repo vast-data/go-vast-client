@@ -445,6 +445,33 @@ func TestRecordSet_Fill(t *testing.T) {
 	}
 }
 
+func TestRecordSet_Fill_Pointers(t *testing.T) {
+	recordSet := RecordSet{
+		{"id": int64(10), "name": "alpha", "active": true},
+		{"id": int64(20), "name": "beta", "active": false},
+	}
+
+	var users []*TestUser
+	if err := recordSet.Fill(&users); err != nil {
+		t.Fatalf("RecordSet.Fill() pointers error = %v", err)
+	}
+
+	if len(users) != 2 {
+		t.Fatalf("RecordSet.Fill() filled %d users, want 2", len(users))
+	}
+
+	if users[0] == nil || users[1] == nil {
+		t.Fatal("RecordSet.Fill() should fill non-nil pointers")
+	}
+
+	if users[0].ID != 10 || users[0].Name != "alpha" || users[0].Active != true {
+		t.Errorf("first user mismatch: %+v", users[0])
+	}
+	if users[1].ID != 20 || users[1].Name != "beta" || users[1].Active != false {
+		t.Errorf("second user mismatch: %+v", users[1])
+	}
+}
+
 func TestRecordSet_PrettyTable(t *testing.T) {
 	recordSet := RecordSet{
 		{"id": 1, "name": "user1"},
