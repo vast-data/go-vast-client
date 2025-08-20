@@ -5,9 +5,79 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 )
+
+func expectQueryValue(t *testing.T, got string, key string, want string) {
+	t.Helper()
+	parsed, err := url.ParseQuery(got)
+	if err != nil {
+		t.Fatalf("failed to parse query: %v", err)
+	}
+	vals, ok := parsed[key]
+	if !ok || len(vals) == 0 {
+		t.Fatalf("key %q missing in query: %q", key, got)
+	}
+	if vals[0] != want {
+		t.Fatalf("value for %q = %q, want %q (raw: %q)", key, vals[0], want, got)
+	}
+}
+
+func TestConvertMapToQuery_Slices(t *testing.T) {
+	// int slice
+	q := convertMapToQuery(Params{"ids": []int{1, 2, 3}})
+	expectQueryValue(t, q, "ids", "1,2,3")
+
+	// int64 slice
+	q = convertMapToQuery(Params{"ids": []int64{10, 20}})
+	expectQueryValue(t, q, "ids", "10,20")
+
+	// float64 slice
+	q = convertMapToQuery(Params{"f": []float64{1.5, 2}})
+	expectQueryValue(t, q, "f", "1.5,2")
+
+	// float32 slice
+	q = convertMapToQuery(Params{"f": []float32{3.25, 4}})
+	// strconv formats like fmt.Sprint; normalize expected by converting to string explicitly
+	wantF := strconv.FormatFloat(float64(3.25), 'f', -1, 64) + "," + strconv.FormatFloat(float64(4), 'f', -1, 64)
+	expectQueryValue(t, q, "f", wantF)
+
+	// string slice
+	q = convertMapToQuery(Params{"names": []string{"alice", "bob"}})
+	expectQueryValue(t, q, "names", "alice,bob")
+
+	// bool slice
+	q = convertMapToQuery(Params{"flags": []bool{true, false, true}})
+	expectQueryValue(t, q, "flags", "true,false,true")
+
+	// hetero slice
+	q = convertMapToQuery(Params{"mix": []any{"x", 7, 2.5, false}})
+	expectQueryValue(t, q, "mix", "x,7,2.5,false")
+
+	// empty slice
+	q = convertMapToQuery(Params{"empty": []int{}})
+	expectQueryValue(t, q, "empty", "")
+}
+
+func TestConvertMapToQuery_Arrays(t *testing.T) {
+	// int array
+	q := convertMapToQuery(Params{"ids": [3]int{1, 2, 3}})
+	expectQueryValue(t, q, "ids", "1,2,3")
+
+	// string array
+	q = convertMapToQuery(Params{"names": [2]string{"a", "b"}})
+	expectQueryValue(t, q, "names", "a,b")
+
+	// float64 array
+	q = convertMapToQuery(Params{"f": [2]float64{1.25, 9}})
+	expectQueryValue(t, q, "f", "1.25,9")
+
+	// bool array
+	q = convertMapToQuery(Params{"flags": [2]bool{false, true}})
+	expectQueryValue(t, q, "flags", "false,true")
+}
 
 func TestValidateResponse(t *testing.T) {
 	tests := []struct {

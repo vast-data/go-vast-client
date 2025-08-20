@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	urlpkg "net/url"
+	"reflect"
 	"strings"
 )
 
@@ -141,6 +142,17 @@ func checkVastResourceVersionCompat(ctx context.Context, r VastResourceAPI) erro
 func convertMapToQuery(params Params) string {
 	values := urlpkg.Values{}
 	for k, v := range params {
+		rv := reflect.ValueOf(v)
+		if rv.IsValid() && (rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array) {
+			// Join slice/array values as comma-separated list
+			n := rv.Len()
+			parts := make([]string, n)
+			for i := 0; i < n; i++ {
+				parts[i] = fmt.Sprint(rv.Index(i).Interface())
+			}
+			values.Set(k, strings.Join(parts, ","))
+			continue
+		}
 		values.Set(k, fmt.Sprint(v))
 	}
 	return values.Encode()
