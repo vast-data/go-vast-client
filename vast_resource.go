@@ -563,7 +563,7 @@ func (gss *GlobalSnapshotStream) EnsureCloneSnapshotDeletedWithContext(ctx conte
 				return nil, err
 			}
 		}
-        if deleteResult, err := gss.DeleteByIdWithContext(ctx, response.RecordID(), nil, Params{"remove_dir": true}); IsApiError(err) {
+		if deleteResult, err := gss.DeleteByIdWithContext(ctx, response.RecordID(), nil, Params{"remove_dir": true}); IsApiError(err) {
 			if err.(*ApiError).StatusCode == 404 {
 				return EmptyRecord{}, nil
 			}
@@ -612,29 +612,6 @@ type Role struct {
 
 type Snapshot struct {
 	*VastResource
-}
-
-func (s *Snapshot) afterRequest(ctx context.Context, response Renderable) (Renderable, error) {
-	// List of snapshots is returned under "results" key
-	return applyCallbackForRecordUnion[Record](response, func(r Renderable) (Renderable, error) {
-		// This callback is only invoked if response is a RecordSet
-		if rawMap, ok := any(r).(map[string]interface{}); ok {
-			if inner, found := rawMap["results"]; found {
-				if list, ok := inner.([]map[string]any); ok {
-					recordSet, err := toRecordSet(list)
-					if err != nil {
-						return nil, err
-					}
-					// Re set Resource key
-					if err = setResourceKey(recordSet, s.GetResourceType()); err != nil {
-						return nil, err
-					}
-					return recordSet, nil
-				}
-			}
-		}
-		return r, nil
-	})
 }
 
 // ------------------------------------------------------

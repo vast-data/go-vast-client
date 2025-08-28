@@ -683,3 +683,131 @@ type MockReadCloser struct {
 func (m *MockReadCloser) Close() error {
 	return nil
 }
+
+// ------------------------------------------------------
+// Tests for pagination envelope normalization in defaultResponseMutations
+
+func TestDefaultResponseMutations_UnwrapsPaginationEnvelope_MapsList(t *testing.T) {
+	// Prepare a RecordSet wrapping a paginated envelope
+	envelope := Record{
+		"results": []map[string]any{
+			{"id": 1, "name": "a"},
+			{"id": 2, "name": "b"},
+		},
+		"count":    2,
+		"next":     nil,
+		"previous": nil,
+	}
+	wrapped := RecordSet{envelope}
+
+	out, err := defaultResponseMutations(wrapped)
+	if err != nil {
+		t.Fatalf("defaultResponseMutations error: %v", err)
+	}
+
+	rs, ok := out.(RecordSet)
+	if !ok {
+		t.Fatalf("expected RecordSet, got %T", out)
+	}
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(rs))
+	}
+	if rs[0]["id"] != 1 || rs[0]["name"] != "a" || rs[1]["id"] != 2 || rs[1]["name"] != "b" {
+		t.Fatalf("unexpected unwrapped content: %+v", rs)
+	}
+}
+
+func TestDefaultResponseMutations_UnwrapsPaginationEnvelope_AnyList(t *testing.T) {
+	// Same as above but "results" is []any of maps
+	envelope := Record{
+		"results": []any{
+			map[string]any{"id": 10, "name": "x"},
+			map[string]any{"id": 20, "name": "y"},
+		},
+		"count":    2,
+		"next":     nil,
+		"previous": nil,
+	}
+	wrapped := RecordSet{envelope}
+
+	out, err := defaultResponseMutations(wrapped)
+	if err != nil {
+		t.Fatalf("defaultResponseMutations error: %v", err)
+	}
+
+	rs, ok := out.(RecordSet)
+	if !ok {
+		t.Fatalf("expected RecordSet, got %T", out)
+	}
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(rs))
+	}
+	if rs[0]["id"].(int) != 10 || rs[0]["name"].(string) != "x" || rs[1]["id"].(int) != 20 || rs[1]["name"].(string) != "y" {
+		t.Fatalf("unexpected unwrapped content: %+v", rs)
+	}
+}
+
+func TestDefaultResponseMutations_NoUnwrap_WhenMissingKeys(t *testing.T) {
+	// Missing required keys (only results present) should NOT unwrap
+	envelope := Record{
+		"results": []map[string]any{
+			{"id": 1},
+		},
+		// missing: count, next, previous
+	}
+	wrapped := RecordSet{envelope}
+
+	out, err := defaultResponseMutations(wrapped)
+	if err != nil {
+		t.Fatalf("defaultResponseMutations error: %v", err)
+	}
+
+	// Should remain as the original single-item RecordSet (the envelope)
+	rs, ok := out.(RecordSet)
+	if !ok {
+		t.Fatalf("expected RecordSet, got %T", out)
+	}
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 envelope record, got %d", len(rs))
+	}
+}
+
+func TestDefaultResponseMutations_UnwrapsPaginationEnvelope_Record_Mixed(t *testing.T) {
+	envelope := Record{
+		"results": []any{
+			map[string]any{"id": 100, "name": "r1"},
+			map[string]any{"id": 200, "name": "r2"},
+		},
+		"count":    2,
+		"next":     nil,
+		"previous": nil,
+	}
+	out, err := defaultResponseMutations(envelope)
+	if err != nil {
+		t.Fatalf("defaultResponseMutations error: %v", err)
+	}
+	rs, ok := out.(RecordSet)
+	if !ok {
+		t.Fatalf("expected RecordSet, got %T", out)
+	}
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(rs))
+	}
+	if rs[0]["id"].(int) != 100 || rs[1]["id"].(int) != 200 {
+		t.Fatalf("unexpected unwrapped content: %+v", rs)
+	}
+}
+
+func TestDefaultResponseMutations_NoUnwrap_Record_WhenMissingKeys(t *testing.T) {
+	envelope := Record{
+		"results": []map[string]any{{"id": 1}},
+		// missing count/next/previous
+	}
+	out, err := defaultResponseMutations(envelope)
+	if err != nil {
+		t.Fatalf("defaultResponseMutations error: %v", err)
+	}
+	if _, ok := out.(Record); !ok {
+		t.Fatalf("expected Record to remain intact, got %T", out)
+	}
+}

@@ -95,7 +95,8 @@ func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable) 
 		panic(fmt.Sprintf("resource not found in resourceMap for %s", e.GetResourceType()))
 	}
 	if !isDummyResource {
-		// Set resource key only if type of response is the same as declared type.
+		// Pre-normalization: attach @resourceType so resource hooks and user AfterRequestFn
+		// can rely on it for formatting/logging/branching even if later mutations change shape.
 		if err = setResourceKey(response, resourceType); err != nil {
 			return nil, err
 		}
@@ -113,8 +114,19 @@ func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable) 
 			return nil, err
 		}
 	}
-	// Common VAST Response mutations.
-	return defaultResponseMutations(response)
+	// Common VAST Response mutations (may unwrap pagination or otherwise replace the value)
+	mutated, err := defaultResponseMutations(response)
+	if err != nil {
+		return nil, err
+	}
+	// Post-normalization: re-attach @resourceType, because mutations can produce new
+	// Record/RecordSet instances which won't carry the earlier key.
+	if !isDummyResource {
+		if err = setResourceKey(mutated, resourceType); err != nil {
+			return nil, err
+		}
+	}
+	return mutated, nil
 }
 
 // defaultResponseMutations A set of common response transformations in the VAST REST API
@@ -133,13 +145,89 @@ func defaultResponseMutations(response Renderable) (Renderable, error) {
 			}
 			return nil, fmt.Errorf("expected map[string]any under 'async_task', got %T", raw)
 		}
+		// Normalize pagination envelope when response is a single Record
+		if rs, matched, err := unwrapPaginationEnvelopeFromRecord(typed); matched {
+			if err != nil {
+				return nil, err
+			}
+			if rs != nil {
+				return rs, nil
+			}
+		}
 		return response, nil
 	case RecordSet:
-		// Add mutation for each Record in RecordSet if needed
+		// Normalize list responses that wrap data under a pagination envelope
+		// Expected keys: "results", "count", "next", "previous"
+		// Example payload returned as a single Record inside RecordSet: {"results": [...], "count": N, "next": ..., "previous": ...}
+		if len(typed) == 1 {
+			// Accept both Record and raw map[string]any as the envelope
+			if rec, ok := any(typed[0]).(Record); ok {
+				if rs, matched, err := unwrapPaginationEnvelopeFromRecord(rec); matched {
+					if err != nil {
+						return nil, err
+					}
+					if rs != nil {
+						return rs, nil
+					}
+				}
+			} else if raw, ok := any(typed[0]).(map[string]any); ok {
+				if rs, matched, err := unwrapPaginationEnvelopeFromRecord(Record(raw)); matched {
+					if err != nil {
+						return nil, err
+					}
+					if rs != nil {
+						return rs, nil
+					}
+				}
+			}
+		}
 		return typed, nil
 	case EmptyRecord:
 		// No op.
 		return typed, nil
 	}
 	return nil, fmt.Errorf("unsupported type %T for result", response)
+}
+
+// unwrapPaginationEnvelopeFromRecord attempts to detect and unwrap a standard pagination envelope
+// of the form {"results": [...], "count": N, "next": ..., "previous": ...} into a RecordSet.
+//
+// Returns:
+//   - (RecordSet, true, nil) when envelope matched and conversion succeeded
+//   - (nil, true, nil) when envelope matched but results are of unsupported type
+//   - (nil, false, nil) when envelope did not match
+//   - (nil, true, err) when envelope matched but conversion failed
+func unwrapPaginationEnvelopeFromRecord(rec Record) (RecordSet, bool, error) {
+	_, hasResults := rec["results"]
+	_, hasCount := rec["count"]
+	_, hasNext := rec["next"]
+	_, hasPrev := rec["previous"]
+	if !(hasResults && hasCount && hasNext && hasPrev) {
+		return nil, false, nil
+	}
+	inner := rec["results"]
+	// Prefer []map[string]any, but also handle []any of maps
+	if list, ok := inner.([]map[string]any); ok {
+		recordSet, err := toRecordSet(list)
+		if err != nil {
+			return nil, true, err
+		}
+		return recordSet, true, nil
+	}
+	if anyList, ok := inner.([]any); ok {
+		converted := make([]map[string]any, 0, len(anyList))
+		for _, it := range anyList {
+			if m, ok := it.(map[string]any); ok {
+				converted = append(converted, m)
+			} else {
+				return nil, true, nil
+			}
+		}
+		recordSet, err := toRecordSet(converted)
+		if err != nil {
+			return nil, true, err
+		}
+		return recordSet, true, nil
+	}
+	return nil, true, nil
 }
