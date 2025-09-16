@@ -1,4 +1,4 @@
-module github.com/coredgeio/go-vast-client
+module github.com/vast-data/go-vast-client
 
 go 1.22.5
 
