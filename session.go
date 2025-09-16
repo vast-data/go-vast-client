@@ -327,15 +327,19 @@ func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, 
 		result Renderable
 	)
 	for i := 0; i < maxRetries; i++ {
+		fmt.Println("do request retry count", i)
 		result, err = doRequest(ctx, s, verb, url, body, headers)
 		if err != nil && IsApiError(err) {
 			statusCode := err.(*ApiError).StatusCode
+			fmt.Println("This is an API error", err, "Status code", statusCode)
 			if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-				if statusCode == http.StatusUnauthorized {
-					// Probably refresh token is expired. Need full re-authentication
-					s.auth.setInitialized(false)
-				}
+				//if statusCode == http.StatusUnauthorized {
+				// Probably refresh token is expired. Need full re-authentication
+				fmt.Println("Need full re-authentication")
+				s.auth.setInitialized(false)
+				//}
 				if authErr := s.auth.authorize(); authErr != nil {
+					fmt.Println("Auth error after triggering re-authentication")
 					return nil, authErr
 				}
 				continue
@@ -343,5 +347,6 @@ func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, 
 		}
 		break
 	}
+	fmt.Println("do request with retry results", result)
 	return result, err
 }
