@@ -109,8 +109,8 @@ func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
 }
 
 func request[T RecordUnion](
-    ctx context.Context,
-    r VastResourceAPIWithContext,
+	ctx context.Context,
+	r VastResourceAPIWithContext,
 	verb, path, apiVer string,
 	params, body Params,
 ) (T, error) {
@@ -246,18 +246,18 @@ func setupHeaders(s RESTSession, r *http.Request) error {
 // doRequest Create and process the new HTTP request using the context
 func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params, headers []http.Header) (Renderable, error) {
 	// callerExist if request is processed via "request" method
-    var (
-        config            = s.GetConfig()
-        resourceCaller    InterceptableVastResourceAPI
-        requestData       io.Reader
-        beforeRequestData io.Reader
-        err               error
-    )
-    originResource, resourceExist := ctx.Value(caller).(InterceptableVastResourceAPI)
+	var (
+		config            = s.GetConfig()
+		resourceCaller    InterceptableVastResourceAPI
+		requestData       io.Reader
+		beforeRequestData io.Reader
+		err               error
+	)
+	originResource, resourceExist := ctx.Value(caller).(InterceptableVastResourceAPI)
 	if !resourceExist {
-        resourceCaller = dummyResource
+		resourceCaller = dummyResource
 	} else {
-        resourceCaller = originResource
+		resourceCaller = originResource
 	}
 	// Check if called resource can be used with current version of VAST cluster.
 	if err = checkVastResourceVersionCompat(ctx, resourceCaller); err != nil {
@@ -327,15 +327,19 @@ func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, 
 		result Renderable
 	)
 	for i := 0; i < maxRetries; i++ {
+		fmt.Println("do request retry count", i)
 		result, err = doRequest(ctx, s, verb, url, body, headers)
 		if err != nil && IsApiError(err) {
 			statusCode := err.(*ApiError).StatusCode
+			fmt.Println("This is an API error", err, "Status code", statusCode)
 			if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-				if statusCode == http.StatusUnauthorized {
-					// Probably refresh token is expired. Need full re-authentication
-					s.auth.setInitialized(false)
-				}
+				//if statusCode == http.StatusUnauthorized {
+				// Probably refresh token is expired. Need full re-authentication
+				fmt.Println("Need full re-authentication")
+				s.auth.setInitialized(false)
+				//}
 				if authErr := s.auth.authorize(); authErr != nil {
+					fmt.Println("Auth error after triggering re-authentication")
 					return nil, authErr
 				}
 				continue
@@ -343,5 +347,6 @@ func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, 
 		}
 		break
 	}
+	fmt.Println("do request with retry results", result)
 	return result, err
 }
