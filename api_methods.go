@@ -179,7 +179,7 @@ func (e *VastResource) DeleteWithContext(ctx context.Context, searchParams, quer
 				" and thereby cannot be deleted by id", e.GetResourceType(),
 		)
 	}
-    return e.DeleteByIdWithContext(ctx, idVal, queryParams, deleteParams)
+	return e.DeleteByIdWithContext(ctx, idVal, queryParams, deleteParams)
 }
 
 // DeleteNonIdWithContext deletes a resource that does not use a numeric ID for identification.
@@ -304,19 +304,19 @@ func (e *VastResource) UpdateNonId(params Params) (Record, error) {
 // Delete deletes a resource found with searchParams using deleteParams and the bound REST context.
 // Returns success even if the resource is not found.
 func (e *VastResource) Delete(searchParams, deleteParams Params) (EmptyRecord, error) {
-    return e.DeleteWithContext(e.rest.ctx, searchParams, nil, deleteParams)
+	return e.DeleteWithContext(e.rest.ctx, searchParams, nil, deleteParams)
 }
 
 // DeleteById deletes a resource by its ID using the bound REST context and provided deleteParams.
 func (e *VastResource) DeleteById(id any, queryParams, deleteParams Params) (EmptyRecord, error) {
-    return e.DeleteByIdWithContext(e.rest.ctx, id, queryParams, deleteParams)
+	return e.DeleteByIdWithContext(e.rest.ctx, id, queryParams, deleteParams)
 }
 
 // DeleteNonId deletes a resource that does not use a numeric ID for identification.
 // The resource is identified using unique fields within the provided parameters (e.g., SID, UID).
 // This method delegates to DeleteNonIdWithContext using the default context.
 func (e *VastResource) DeleteNonId(queryParams, deleteParams Params) (EmptyRecord, error) {
-    return e.DeleteNonIdWithContext(e.rest.ctx, queryParams, deleteParams)
+	return e.DeleteNonIdWithContext(e.rest.ctx, queryParams, deleteParams)
 }
 
 // Ensure ensures a resource exists matching the searchParams. Creates it with body if not found.

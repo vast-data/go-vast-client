@@ -153,6 +153,16 @@ func (auth *JWTAuthenticator) authorize() error {
 	}
 	if auth.initialized {
 		resp, err = auth.refreshToken(client)
+		// If there is an error while getting new token using refresh token and
+		// that error is API error with status code 401, then refresh token is also
+		// expired. Need to re-authenticate.
+		if err != nil && IsApiError(err) {
+			statusCode := err.(*ApiError).StatusCode
+			if statusCode == http.StatusUnauthorized {
+				resp, err = auth.acquireToken(client)
+				auth.setInitialized(true)
+			}
+		}
 	} else {
 		resp, err = auth.acquireToken(client)
 		auth.setInitialized(true)
