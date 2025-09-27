@@ -12,7 +12,7 @@ import (
 func main() {
 	ctx := context.Background()
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1", // replace with your VAST address
+		Host:     "l101", // replace with your VAST address
 		Username: "admin",
 		Password: "123456",
 	}
@@ -46,7 +46,7 @@ func main() {
 	versionClient := typedClient.Versions
 
 	// List versions (read-only resource)
-	versions, err := versionClient.List(&typed.VersionSearchParams{})
+	versions, err := versionClient.List(nil)
 	if err != nil {
 		log.Printf("Failed to list versions: %v", err)
 	} else {
@@ -86,34 +86,4 @@ func main() {
 	} else {
 		fmt.Printf("   Found %d VIP pools\n", len(vipPools))
 	}
-
-	// Example 5: Accessing untyped client when needed
-	fmt.Println("\n5. Using convenience methods:")
-	fmt.Println("   The typed client provides shorthand methods for common operations:")
-	
-	// Demonstrate GetSession shorthand
-	session := typedClient.GetSession()
-	sessionConfig := session.GetConfig()
-	fmt.Printf("   Session info: Host=%s, Username=%s\n", sessionConfig.Host, sessionConfig.Username)
-	
-	fmt.Println("\n6. Accessing untyped client when needed:")
-	fmt.Println("   You can always access the underlying untyped client:")
-	fmt.Printf("   Untyped client available at: typedClient.Untyped\n")
-	fmt.Printf("   This gives you access to all resources, even those without typed support\n")
-
-	// Example: Use untyped client for resources without typed support
-	users, err := typedClient.Untyped.Users.List(client.Params{})
-	if err != nil {
-		log.Printf("Failed to list users via untyped client: %v", err)
-	} else {
-		fmt.Printf("   Found %d users via untyped client\n", len(users))
-	}
-
-	fmt.Println("\n=== Demo completed successfully! ===")
-	fmt.Println("\nKey benefits of typed resources:")
-	fmt.Println("• Type safety: Compile-time checking of request/response structures")
-	fmt.Println("• IntelliSense: Better IDE support with auto-completion")
-	fmt.Println("• Documentation: Self-documenting code with typed structs")
-	fmt.Println("• Read-only protection: Compiler prevents modification of read-only resources")
-	fmt.Println("• Validation: Automatic validation of required fields")
 }
