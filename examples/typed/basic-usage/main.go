@@ -88,7 +88,15 @@ func main() {
 	}
 
 	// Example 5: Accessing untyped client when needed
-	fmt.Println("\n5. Accessing untyped client when needed:")
+	fmt.Println("\n5. Using convenience methods:")
+	fmt.Println("   The typed client provides shorthand methods for common operations:")
+	
+	// Demonstrate GetSession shorthand
+	session := typedClient.GetSession()
+	sessionConfig := session.GetConfig()
+	fmt.Printf("   Session info: Host=%s, Username=%s\n", sessionConfig.Host, sessionConfig.Username)
+	
+	fmt.Println("\n6. Accessing untyped client when needed:")
 	fmt.Println("   You can always access the underlying untyped client:")
 	fmt.Printf("   Untyped client available at: typedClient.Untyped\n")
 	fmt.Printf("   This gives you access to all resources, even those without typed support\n")

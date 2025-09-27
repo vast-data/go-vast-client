@@ -45,3 +45,9 @@ func NewTypedVMSRest(config *vast_client.VMSConfig) (*VMSRest, error) {
 func (r *VMSRest) SetCtx(ctx context.Context) {
 	r.Untyped.SetCtx(ctx)
 }
+
+// GetSession returns the REST session from the underlying untyped client
+// This is a convenience method to avoid having to call r.Untyped.Session
+func (r *VMSRest) GetSession() vast_client.RESTSession {
+	return r.Untyped.Session
+}
