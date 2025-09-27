@@ -64,6 +64,9 @@ type {{.Name}} struct {
 
 // Get retrieves a single {{.LowerName}} with typed request/response
 func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}Model, error) {
+	if req == nil {
+		req = &{{.Name}}SearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -84,6 +87,9 @@ func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}Model, error) {
 
 // GetWithContext retrieves a single {{.LowerName}} with typed request/response using provided context
 func (r *{{.Name}}) GetWithContext(ctx context.Context, req *{{.Name}}SearchParams) (*{{.Name}}Model, error) {
+	if req == nil {
+		req = &{{.Name}}SearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -134,6 +140,9 @@ func (r *{{.Name}}) GetByIdWithContext(ctx context.Context, id any) (*{{.Name}}M
 
 // List retrieves multiple {{.LowerName}}s with typed request/response
 func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}Model, error) {
+	if req == nil {
+		req = &{{.Name}}SearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -154,6 +163,9 @@ func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}Model, error) 
 
 // ListWithContext retrieves multiple {{.LowerName}}s with typed request/response using provided context
 func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchParams) ([]*{{.Name}}Model, error) {
+	if req == nil {
+		req = &{{.Name}}SearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -174,6 +186,9 @@ func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchPar
 
 // Exists checks if a {{.LowerName}} exists with the given search parameters
 func (r *{{.Name}}) Exists(req *{{.Name}}SearchParams) (bool, error) {
+	if req == nil {
+		req = &{{.Name}}SearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -184,6 +199,9 @@ func (r *{{.Name}}) Exists(req *{{.Name}}SearchParams) (bool, error) {
 
 // ExistsWithContext checks if a {{.LowerName}} exists with the given search parameters using provided context
 func (r *{{.Name}}) ExistsWithContext(ctx context.Context, req *{{.Name}}SearchParams) (bool, error) {
+	if req == nil {
+		req = &{{.Name}}SearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -194,6 +212,9 @@ func (r *{{.Name}}) ExistsWithContext(ctx context.Context, req *{{.Name}}SearchP
 
 // MustExists checks if a {{.LowerName}} exists with the given search parameters, panics on error
 func (r *{{.Name}}) MustExists(req *{{.Name}}SearchParams) bool {
+	if req == nil {
+		req = &{{.Name}}SearchParams{}
+	}
 	exists, err := r.Exists(req)
 	if err != nil {
 		panic(err)
@@ -203,6 +224,9 @@ func (r *{{.Name}}) MustExists(req *{{.Name}}SearchParams) bool {
 
 // MustExistsWithContext checks if a {{.LowerName}} exists with the given search parameters using provided context, panics on error
 func (r *{{.Name}}) MustExistsWithContext(ctx context.Context, req *{{.Name}}SearchParams) bool {
+	if req == nil {
+		req = &{{.Name}}SearchParams{}
+	}
 	exists, err := r.ExistsWithContext(ctx, req)
 	if err != nil {
 		panic(err)

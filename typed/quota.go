@@ -137,6 +137,9 @@ type Quota struct {
 
 // Get retrieves a single quota with typed request/response
 func (r *Quota) Get(req *QuotaSearchParams) (*QuotaModel, error) {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -157,6 +160,9 @@ func (r *Quota) Get(req *QuotaSearchParams) (*QuotaModel, error) {
 
 // GetWithContext retrieves a single quota with typed request/response using provided context
 func (r *Quota) GetWithContext(ctx context.Context, req *QuotaSearchParams) (*QuotaModel, error) {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -207,6 +213,9 @@ func (r *Quota) GetByIdWithContext(ctx context.Context, id any) (*QuotaModel, er
 
 // List retrieves multiple quotas with typed request/response
 func (r *Quota) List(req *QuotaSearchParams) ([]*QuotaModel, error) {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -227,6 +236,9 @@ func (r *Quota) List(req *QuotaSearchParams) ([]*QuotaModel, error) {
 
 // ListWithContext retrieves multiple quotas with typed request/response using provided context
 func (r *Quota) ListWithContext(ctx context.Context, req *QuotaSearchParams) ([]*QuotaModel, error) {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -327,6 +339,9 @@ func (r *Quota) UpdateWithContext(ctx context.Context, id any, req *QuotaCreateB
 
 // Delete deletes a quota with search parameters
 func (r *Quota) Delete(req *QuotaSearchParams) error {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return err
@@ -340,6 +355,9 @@ func (r *Quota) Delete(req *QuotaSearchParams) error {
 
 // DeleteWithContext deletes a quota with search parameters using provided context
 func (r *Quota) DeleteWithContext(ctx context.Context, req *QuotaSearchParams) error {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return err
@@ -371,6 +389,9 @@ func (r *Quota) DeleteByIdWithContext(ctx context.Context, id any) error {
 
 // Ensure ensures a quota exists with typed response
 func (r *Quota) Ensure(searchParams *QuotaSearchParams, body *QuotaCreateBody) (*QuotaModel, error) {
+	if searchParams == nil {
+		searchParams = &QuotaSearchParams{}
+	}
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -395,6 +416,9 @@ func (r *Quota) Ensure(searchParams *QuotaSearchParams, body *QuotaCreateBody) (
 
 // EnsureWithContext ensures a quota exists with typed response using provided context
 func (r *Quota) EnsureWithContext(ctx context.Context, searchParams *QuotaSearchParams, body *QuotaCreateBody) (*QuotaModel, error) {
+	if searchParams == nil {
+		searchParams = &QuotaSearchParams{}
+	}
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -459,6 +483,9 @@ func (r *Quota) EnsureByNameWithContext(ctx context.Context, name string, body *
 
 // Exists checks if a quota exists
 func (r *Quota) Exists(req *QuotaSearchParams) (bool, error) {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -468,6 +495,9 @@ func (r *Quota) Exists(req *QuotaSearchParams) (bool, error) {
 
 // ExistsWithContext checks if a quota exists using provided context
 func (r *Quota) ExistsWithContext(ctx context.Context, req *QuotaSearchParams) (bool, error) {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -477,6 +507,9 @@ func (r *Quota) ExistsWithContext(ctx context.Context, req *QuotaSearchParams) (
 
 // MustExists checks if a quota exists and panics if not
 func (r *Quota) MustExists(req *QuotaSearchParams) bool {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		panic(err)
@@ -486,6 +519,9 @@ func (r *Quota) MustExists(req *QuotaSearchParams) bool {
 
 // MustExistsWithContext checks if a quota exists and panics if not using provided context
 func (r *Quota) MustExistsWithContext(ctx context.Context, req *QuotaSearchParams) bool {
+	if req == nil {
+		req = &QuotaSearchParams{}
+	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		panic(err)

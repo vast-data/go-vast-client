@@ -130,6 +130,11 @@ func structToMap(item interface{}) map[string]interface{} {
 	reflectValue := reflect.ValueOf(item)
 	reflectValue = reflect.Indirect(reflectValue)
 
+	// Check if we have a zero value after indirection (happens with nil pointers)
+	if !reflectValue.IsValid() {
+		return res
+	}
+
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
