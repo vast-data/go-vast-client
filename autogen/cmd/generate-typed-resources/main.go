@@ -59,12 +59,16 @@ func (tr *TypeRegistry) RegisterType(name string, fields []Field) string {
 	return name
 }
 
-// GetTypes returns all registered types
+// GetTypes returns all registered types sorted by name for consistent generation
 func (tr *TypeRegistry) GetTypes() []*NestedType {
 	var types []*NestedType
 	for _, t := range tr.types {
 		types = append(types, t)
 	}
+	// Sort by name for consistent generation order
+	sort.Slice(types, func(i, j int) bool {
+		return types[i].Name < types[j].Name
+	})
 	return types
 }
 
@@ -112,6 +116,11 @@ func main() {
 		return
 	}
 
+	// Sort resources by name for consistent generation order
+	sort.Slice(resources, func(i, j int) bool {
+		return resources[i].Name < resources[j].Name
+	})
+
 	fmt.Printf("Found %d resources with APIBuilder markers:\n", len(resources))
 	for _, resource := range resources {
 		fmt.Printf("  - %s\n", resource.Name)
@@ -120,9 +129,6 @@ func main() {
 	// Generate template data
 	templateData := TemplateData{}
 	for _, resource := range resources {
-		// Create a type registry for this resource
-		registry := NewTypeRegistry()
-
 		resourceData := ResourceData{
 			Name:       resource.Name,
 			LowerName:  strings.ToLower(resource.Name),
@@ -130,10 +136,15 @@ func main() {
 			Resource:   &resource,
 		}
 
+		// Create separate registries for each generation phase to avoid type name conflicts
+		searchRegistry := NewTypeRegistry()
+		requestRegistry := NewTypeRegistry()
+		responseRegistry := NewTypeRegistry()
+
 		// Generate search params fields
 		if resource.HasSearchQuery("GET") {
 			searchURL := resource.GetSearchQuery("GET")
-			searchFields, err := generateSearchParamsFields(searchURL, "GET", registry)
+			searchFields, err := generateSearchParamsFields(searchURL, "GET", searchRegistry)
 			if err != nil {
 				log.Printf("Warning: Failed to generate search params fields for %s: %v", resource.Name, err)
 			} else {
@@ -141,7 +152,7 @@ func main() {
 			}
 		} else if resource.HasSearchQuery("SCHEMA") {
 			schemaName := resource.GetSearchQuery("SCHEMA")
-			searchFields, err := generateSearchParamsFromSchema(schemaName, registry)
+			searchFields, err := generateSearchParamsFromSchema(schemaName, searchRegistry)
 			if err != nil {
 				log.Printf("Warning: Failed to generate search params from schema for %s: %v", resource.Name, err)
 			} else {
@@ -152,7 +163,7 @@ func main() {
 		// Generate request body fields
 		if resource.HasRequestBody("POST") {
 			requestURL := resource.GetRequestBody("POST")
-			requestFields, err := generateRequestBodyFields(requestURL, "POST", registry)
+			requestFields, err := generateRequestBodyFields(requestURL, "POST", requestRegistry)
 			if err != nil {
 				log.Printf("Warning: Failed to generate request body fields for %s: %v", resource.Name, err)
 			} else {
@@ -160,7 +171,7 @@ func main() {
 			}
 		} else if resource.HasRequestBody("SCHEMA") {
 			schemaName := resource.GetRequestBody("SCHEMA")
-			requestFields, err := generateRequestBodyFromSchema(schemaName, registry)
+			requestFields, err := generateRequestBodyFromSchema(schemaName, requestRegistry)
 			if err != nil {
 				log.Printf("Warning: Failed to generate request body from schema for %s: %v", resource.Name, err)
 			} else {
@@ -171,7 +182,7 @@ func main() {
 		// Generate response body fields
 		if resource.HasResponseBody("POST") {
 			responseURL := resource.GetResponseBody("POST")
-			responseFields, err := generateResponseBodyFields(responseURL, "POST", registry)
+			responseFields, err := generateResponseBodyFields(responseURL, "POST", responseRegistry)
 			if err != nil {
 				log.Printf("Warning: Failed to generate response body fields for %s: %v", resource.Name, err)
 			} else {
@@ -179,7 +190,7 @@ func main() {
 			}
 		} else if resource.HasResponseBody("SCHEMA") {
 			schemaName := resource.GetResponseBody("SCHEMA")
-			responseFields, err := generateResponseBodyFromSchema(schemaName, registry)
+			responseFields, err := generateResponseBodyFromSchema(schemaName, responseRegistry)
 			if err != nil {
 				log.Printf("Warning: Failed to generate response body from schema for %s: %v", resource.Name, err)
 			} else {
@@ -187,8 +198,18 @@ func main() {
 			}
 		}
 
-		// Add nested types to the resource data
-		resourceData.NestedTypes = registry.GetTypes()
+		// Combine all nested types from all registries
+		var allNestedTypes []*NestedType
+		allNestedTypes = append(allNestedTypes, searchRegistry.GetTypes()...)
+		allNestedTypes = append(allNestedTypes, requestRegistry.GetTypes()...)
+		allNestedTypes = append(allNestedTypes, responseRegistry.GetTypes()...)
+		
+		// Sort combined nested types for consistent generation
+		sort.Slice(allNestedTypes, func(i, j int) bool {
+			return allNestedTypes[i].Name < allNestedTypes[j].Name
+		})
+		
+		resourceData.NestedTypes = allNestedTypes
 
 		templateData.Resources = append(templateData.Resources, resourceData)
 	}
@@ -571,7 +592,16 @@ func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, re
 	}
 
 	var fields []Field
-	for propName, propRef := range schema.Properties {
+
+	// Get property names and sort them for consistent generation order
+	var propNames []string
+	for propName := range schema.Properties {
+		propNames = append(propNames, propName)
+	}
+	sort.Strings(propNames)
+
+	for _, propName := range propNames {
+		propRef := schema.Properties[propName]
 		if propRef == nil || propRef.Value == nil {
 			continue
 		}

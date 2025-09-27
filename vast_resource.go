@@ -223,7 +223,7 @@ type Quota struct {
 
 // +apibuilder:searchQuery:GET=views
 // +apibuilder:requestBody:POST=views
-// +apibuilder:responseBody:POST=views
+// +apibuilder:responseBody:SCHEMA=View
 type View struct {
 	*VastResource
 }
