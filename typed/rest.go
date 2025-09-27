@@ -10,9 +10,9 @@ type VMSRest struct {
 	Untyped *vast_client.VMSRest
 
 	// Typed resources - only resources with apibuilder markers are included
-	Quotas *Quota
-	Views *View
-
+	Quotas   *Quota
+	Views    *View
+	VipPools *VipPool
 }
 
 // NewTypedVMSRest creates a new typed VMSRest client from configuration
@@ -29,7 +29,7 @@ func NewTypedVMSRest(config *vast_client.VMSConfig) (*VMSRest, error) {
 	// Initialize typed resources
 	typedRest.Quotas = &Quota{Untyped: rawClient}
 	typedRest.Views = &View{Untyped: rawClient}
-
+	typedRest.VipPools = &VipPool{Untyped: rawClient}
 
 	return typedRest, nil
 }

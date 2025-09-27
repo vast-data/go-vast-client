@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -142,23 +143,34 @@ func main() {
 		responseRegistry := NewTypeRegistry()
 
 		// Generate search params fields
+		var searchFields []Field
 		if resource.HasSearchQuery("GET") {
 			searchURL := resource.GetSearchQuery("GET")
-			searchFields, err := generateSearchParamsFields(searchURL, "GET", searchRegistry)
+			fields, err := generateSearchParamsFields(searchURL, "GET", searchRegistry)
 			if err != nil {
 				log.Printf("Warning: Failed to generate search params fields for %s: %v", resource.Name, err)
 			} else {
-				resourceData.SearchParamsFields = searchFields
+				searchFields = fields
 			}
 		} else if resource.HasSearchQuery("SCHEMA") {
 			schemaName := resource.GetSearchQuery("SCHEMA")
-			searchFields, err := generateSearchParamsFromSchema(schemaName, searchRegistry)
+			fields, err := generateSearchParamsFromSchema(schemaName, searchRegistry)
 			if err != nil {
 				log.Printf("Warning: Failed to generate search params from schema for %s: %v", resource.Name, err)
 			} else {
-				resourceData.SearchParamsFields = searchFields
+				searchFields = fields
 			}
 		}
+
+		// Add common searchable fields from response body if they exist
+		commonFields, err := extractCommonSearchableFields(&resource, searchRegistry)
+		if err != nil {
+			log.Printf("Warning: Failed to extract common searchable fields for %s: %v", resource.Name, err)
+		} else {
+			searchFields = mergeSearchFields(searchFields, commonFields)
+		}
+
+		resourceData.SearchParamsFields = searchFields
 
 		// Generate request body fields
 		if resource.HasRequestBody("POST") {
@@ -240,6 +252,13 @@ func main() {
 	for _, file := range generatedFiles {
 		fmt.Printf("  - %s: Typed resource implementation\n", file)
 	}
+
+	// Format all generated Go files
+	if err := formatGeneratedFiles(outputDir); err != nil {
+		log.Printf("Warning: Failed to format generated files: %v", err)
+	} else {
+		fmt.Printf("Formatted all generated Go files with go fmt\n")
+	}
 }
 
 // generateRestFile generates the rest.go file with typed VMSRest client
@@ -309,14 +328,44 @@ func toCamelCase(s string) string {
 func toSingularCamelCase(resourcePath string) string {
 	// Convert to CamelCase first
 	camelCase := toCamelCase(resourcePath)
-	
+
 	// Simple pluralization rules (can be extended as needed)
 	if strings.HasSuffix(camelCase, "s") && len(camelCase) > 1 {
 		// Remove trailing 's' for simple plurals
 		return camelCase[:len(camelCase)-1]
 	}
-	
+
 	return camelCase
+}
+
+// escapeQuotes escapes double quotes in strings to prevent breaking struct tags
+func escapeQuotes(s string) string {
+	return strings.ReplaceAll(s, `"`, `\"`)
+}
+
+// formatGeneratedFiles runs go fmt on all Go files in the specified directory
+func formatGeneratedFiles(dir string) error {
+	// Find all .go files in the directory
+	goFiles, err := filepath.Glob(filepath.Join(dir, "*.go"))
+	if err != nil {
+		return fmt.Errorf("failed to find Go files: %w", err)
+	}
+
+	if len(goFiles) == 0 {
+		return nil // No Go files to format
+	}
+
+	// Run go fmt on all Go files
+	args := append([]string{"fmt"}, goFiles...)
+	cmd := exec.Command("go", args...)
+	
+	// Set the working directory to the current directory (where the files are)
+	// This ensures go fmt can find the files correctly
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("go fmt failed: %w\nOutput: %s", err, string(output))
+	}
+
+	return nil
 }
 
 // isObject returns true if the schema represents an object type
@@ -480,6 +529,12 @@ func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePa
 			continue
 		}
 
+		// Skip fields with double underscores (Django-style query filters)
+		if strings.Contains(name, "__") {
+			log.Printf("Skipping Django-style query filter '%s' for resource %s", name, resourcePath)
+			continue
+		}
+
 		if p.Schema == nil || p.Schema.Value == nil || p.Schema.Value.Type == nil || len(*p.Schema.Value.Type) == 0 {
 			log.Printf("Skipping search param '%s' with invalid schema for resource %s", name, resourcePath)
 			continue
@@ -491,7 +546,7 @@ func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePa
 			JSONTag:     name,
 			YAMLTag:     name,
 			RequiredTag: "false", // Search parameters are typically optional
-			DocTag:      p.Description,
+			DocTag:      escapeQuotes(p.Description),
 		}
 
 		// Convert OpenAPI type to Go type (no pointers for search params - omitempty works with zero values)
@@ -565,6 +620,107 @@ func generateResponseBodyFields(resourcePath, method string, registry *TypeRegis
 	// Convert resource path to singular Go type name (e.g., "quotas" -> "Quota")
 	typeName := toSingularCamelCase(resourcePath) + "ResponseBody"
 	return generateFieldsFromSchema(schema.Value, typeName, registry, false)
+}
+
+// extractCommonSearchableFields extracts common searchable fields from response body schema
+func extractCommonSearchableFields(resource *vastparser.VastResource, registry *TypeRegistry) ([]Field, error) {
+	// Common searchable field names
+	commonSearchableFields := []string{
+		"name", "path", "bucket", "gid", "uid", "guid", "tenant_id",
+	}
+
+	var responseSchema *openapi3.SchemaRef
+	var err error
+
+	// Get response body schema
+	if resource.HasResponseBody("POST") {
+		responseURL := resource.GetResponseBody("POST")
+		responseSchema, err = api.GetSchema_POST_StatusOk(responseURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get POST response schema: %w", err)
+		}
+	} else if resource.HasResponseBody("SCHEMA") {
+		schemaName := resource.GetResponseBody("SCHEMA")
+		responseSchema, err = api.GetSchema_FromComponents(schemaName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get schema from components: %w", err)
+		}
+	} else {
+		// No response body schema available
+		return nil, nil
+	}
+
+	if responseSchema == nil || responseSchema.Value == nil || responseSchema.Value.Properties == nil {
+		return nil, nil
+	}
+
+	var fields []Field
+
+	// Check each common searchable field
+	for _, fieldName := range commonSearchableFields {
+		if propRef, exists := responseSchema.Value.Properties[fieldName]; exists {
+			if propRef == nil || propRef.Value == nil {
+				continue
+			}
+
+			// Only include primitive types for search params
+			if !isPrimitive(propRef.Value) {
+				log.Printf("Skipping non-primitive common searchable field '%s' for resource %s", fieldName, resource.Name)
+				continue
+			}
+
+			// Determine if field is required
+			isRequired := "false"
+			for _, requiredField := range responseSchema.Value.Required {
+				if requiredField == fieldName {
+					isRequired = "true"
+					break
+				}
+			}
+
+			// Get Go type for the field
+			goType := getGoTypeFromOpenAPI(propRef.Value, false)
+
+			field := Field{
+				Name:        toCamelCase(fieldName),
+				Type:        goType,
+				JSONTag:     fieldName,
+				YAMLTag:     fieldName,
+				RequiredTag: isRequired,
+				DocTag:      escapeQuotes(propRef.Value.Description),
+			}
+
+			fields = append(fields, field)
+			log.Printf("Added common searchable field '%s' to search params for resource %s", fieldName, resource.Name)
+		}
+	}
+
+	// Sort fields: required first, then non-required
+	sortFieldsByRequired(fields)
+
+	return fields, nil
+}
+
+// mergeSearchFields merges search fields from different sources, avoiding duplicates
+func mergeSearchFields(existing, additional []Field) []Field {
+	// Create a map to track existing field names
+	existingNames := make(map[string]bool)
+	for _, field := range existing {
+		existingNames[field.JSONTag] = true
+	}
+
+	// Add additional fields that don't already exist
+	result := existing
+	for _, field := range additional {
+		if !existingNames[field.JSONTag] {
+			result = append(result, field)
+		}
+	}
+
+	// Sort the final result: required first, then non-required
+	sortFieldsByRequired(result)
+
+	return result
 }
 
 // generateSearchParamsFromSchema generates search params fields from a schema component
@@ -651,7 +807,7 @@ func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, re
 			JSONTag:     propName,
 			YAMLTag:     propName,
 			RequiredTag: isRequired,
-			DocTag:      propRef.Value.Description,
+			DocTag:      escapeQuotes(propRef.Value.Description),
 		}
 
 		// Recursively determine Go type

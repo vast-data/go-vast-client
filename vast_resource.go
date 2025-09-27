@@ -230,6 +230,9 @@ type View struct {
 
 // ------------------------------------------------------
 
+// +apibuilder:searchQuery:GET=vippools
+// +apibuilder:requestBody:POST=vippools
+// +apibuilder:responseBody:POST=vippools
 type VipPool struct {
 	*VastResource
 }
