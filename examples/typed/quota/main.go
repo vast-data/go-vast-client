@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create typed client: %v", err)
 	}
-	typedClient.Untyped.SetCtx(ctx)
+	typedClient.SetCtx(ctx)
 
 	// Use typed quota resource
 	quotaClient := typedClient.Quotas
@@ -81,7 +81,7 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to update quota: %v", err)
 		} else {
-			fmt.Printf("Updated quota: ID=%d, Name=%s, HardLimit=%d\n", 
+			fmt.Printf("Updated quota: ID=%d, Name=%s, HardLimit=%d\n",
 				updatedQuota.Id, updatedQuota.Name, updatedQuota.HardLimit)
 		}
 

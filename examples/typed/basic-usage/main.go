@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create typed client: %v", err)
 	}
-	typedClient.Untyped.SetCtx(ctx)
+	typedClient.SetCtx(ctx)
 
 	fmt.Println("=== Typed VAST Client Basic Usage Demo ===")
 	fmt.Println()
@@ -98,7 +98,7 @@ func main() {
 	if err != nil {
 		log.Printf("Failed to list users via untyped client: %v", err)
 	} else {
-		fmt.Printf("   Found %d users via untyped client\n", len(users.Data))
+		fmt.Printf("   Found %d users via untyped client\n", len(users))
 	}
 
 	fmt.Println("\n=== Demo completed successfully! ===")

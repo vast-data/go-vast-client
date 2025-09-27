@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create typed client: %v", err)
 	}
-	typedClient.Untyped.SetCtx(ctx)
+	typedClient.SetCtx(ctx)
 
 	// Use typed view resource
 	viewClient := typedClient.Views
@@ -58,7 +58,7 @@ func main() {
 	if err != nil {
 		log.Printf("Failed to create view: %v", err)
 	} else {
-		fmt.Printf("Created view: ID=%d, Name=%s, Path=%s\n", 
+		fmt.Printf("Created view: ID=%d, Name=%s, Path=%s\n",
 			newView.Id, newView.Name, newView.Path)
 
 		// Example 3: Update the view
@@ -74,7 +74,7 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to update view: %v", err)
 		} else {
-			fmt.Printf("Updated view: ID=%d, Name=%s, Protocols=%v\n", 
+			fmt.Printf("Updated view: ID=%d, Name=%s, Protocols=%v\n",
 				updatedView.Id, updatedView.Name, updatedView.Protocols)
 		}
 
@@ -83,7 +83,7 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to get view by ID: %v", err)
 		} else {
-			fmt.Printf("Retrieved view: ID=%d, Name=%s\n", 
+			fmt.Printf("Retrieved view: ID=%d, Name=%s\n",
 				retrievedView.Id, retrievedView.Name)
 		}
 

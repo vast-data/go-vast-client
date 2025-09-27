@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create typed client: %v", err)
 	}
-	typedClient.Untyped.SetCtx(ctx)
+	typedClient.SetCtx(ctx)
 
 	// Use typed VipPool resource
 	vipPoolClient := typedClient.VipPools
@@ -39,7 +39,7 @@ func main() {
 		fmt.Printf("Found %d VIP pools\n", len(vipPools))
 		for _, pool := range vipPools {
 			if pool.Name != "" && pool.Id != 0 {
-				fmt.Printf("VIP Pool: ID=%d, Name=%s, StartIp=%s, EndIp=%s\n", 
+				fmt.Printf("VIP Pool: ID=%d, Name=%s, StartIp=%s, EndIp=%s\n",
 					pool.Id, pool.Name, pool.StartIp, pool.EndIp)
 			}
 		}
@@ -57,7 +57,7 @@ func main() {
 	if err != nil {
 		log.Printf("Failed to create VIP pool: %v", err)
 	} else {
-		fmt.Printf("Created VIP pool: ID=%d, Name=%s, StartIp=%s, EndIp=%s\n", 
+		fmt.Printf("Created VIP pool: ID=%d, Name=%s, StartIp=%s, EndIp=%s\n",
 			newVipPool.Id, newVipPool.Name, newVipPool.StartIp, newVipPool.EndIp)
 
 		// Example 3: Update the VIP pool
@@ -72,7 +72,7 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to update VIP pool: %v", err)
 		} else {
-			fmt.Printf("Updated VIP pool: ID=%d, Name=%s, EndIp=%s, SubnetCidr=%d\n", 
+			fmt.Printf("Updated VIP pool: ID=%d, Name=%s, EndIp=%s, SubnetCidr=%d\n",
 				updatedVipPool.Id, updatedVipPool.Name, updatedVipPool.EndIp, updatedVipPool.SubnetCidr)
 		}
 
@@ -81,7 +81,7 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to get VIP pool by ID: %v", err)
 		} else {
-			fmt.Printf("Retrieved VIP pool: ID=%d, Name=%s\n", 
+			fmt.Printf("Retrieved VIP pool: ID=%d, Name=%s\n",
 				retrievedPool.Id, retrievedPool.Name)
 		}
 

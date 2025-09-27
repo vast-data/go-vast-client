@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create typed client: %v", err)
 	}
-	typedClient.Untyped.SetCtx(ctx)
+	typedClient.SetCtx(ctx)
 
 	// Use typed version resource (read-only)
 	versionClient := typedClient.Versions

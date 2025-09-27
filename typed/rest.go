@@ -3,6 +3,8 @@
 package typed
 
 import (
+	"context"
+
 	vast_client "github.com/vast-data/go-vast-client"
 )
 
@@ -36,4 +38,10 @@ func NewTypedVMSRest(config *vast_client.VMSConfig) (*VMSRest, error) {
 	typedRest.VipPools = &VipPool{Untyped: rawClient}
 
 	return typedRest, nil
+}
+
+// SetCtx sets the context for the underlying untyped client
+// This is a convenience method to avoid having to call r.Untyped.SetCtx(ctx)
+func (r *VMSRest) SetCtx(ctx context.Context) {
+	r.Untyped.SetCtx(ctx)
 }

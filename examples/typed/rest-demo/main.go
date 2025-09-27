@@ -21,11 +21,11 @@ func main() {
 
 	// Method 1: Create typed client directly from config
 	fmt.Println("\n1. Creating typed client from config...")
-	typedClient, err := typed.NewTypedVMSRestFromConfig(config)
+	typedClient, err := typed.NewTypedVMSRest(config)
 	if err != nil {
 		log.Fatalf("Failed to create typed client: %v", err)
 	}
-	typedClient.Untyped.SetCtx(ctx)
+	typedClient.SetCtx(ctx)
 
 	fmt.Printf("✓ Typed client created successfully\n")
 	fmt.Printf("✓ Untyped client available at: typedClient.Untyped\n")

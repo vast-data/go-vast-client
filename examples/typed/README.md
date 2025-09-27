@@ -40,7 +40,7 @@ func main() {
     if err != nil {
         log.Fatalf("Failed to create typed client: %v", err)
     }
-    typedClient.Untyped.SetCtx(ctx)
+    typedClient.SetCtx(ctx)
     
     // Use typed resource
     resourceClient := typedClient.ResourceName
@@ -212,6 +212,19 @@ if err != nil {
     log.Printf("Failed to create quota: %v", err)
     return
 }
+```
+
+## Convenience Methods
+
+### Setting Context
+The typed client provides a shorthand method for setting context:
+
+```go
+// Shorthand method (recommended)
+typedClient.SetCtx(ctx)
+
+// Equivalent to:
+typedClient.Untyped.SetCtx(ctx)
 ```
 
 ## Context Support
