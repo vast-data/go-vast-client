@@ -1,0 +1,422 @@
+package typed
+
+import (
+	"context"
+
+	vast_client "github.com/vast-data/go-vast-client"
+)
+
+// -----------------------------------------------------
+// SEARCH PARAMS
+// -----------------------------------------------------
+
+// {{.Name}}SearchParams represents the search parameters for {{.Name}} operations
+{{if .Resource.HasSearchQuery "GET"}}// Generated from GET query parameters for resource: {{.Resource.GetSearchQuery "GET"}}{{else if .Resource.HasSearchQuery "SCHEMA"}}// Generated from schema: {{.Resource.GetSearchQuery "SCHEMA"}}{{end}}
+type {{.Name}}SearchParams struct {
+	{{range .SearchParamsFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
+	{{end}}
+}
+
+// -----------------------------------------------------
+// REQUEST BODY
+// -----------------------------------------------------
+
+// {{.Name}}RequestBody represents the request body for {{.Name}} operations
+{{if .Resource.HasRequestBody "POST"}}// Generated from POST request body for resource: {{.Resource.GetRequestBody "POST"}}{{else if .Resource.HasRequestBody "SCHEMA"}}// Generated from schema: {{.Resource.GetRequestBody "SCHEMA"}}{{end}}
+type {{.Name}}RequestBody struct {
+	{{range .RequestBodyFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
+	{{end}}
+}
+
+// -----------------------------------------------------
+// RESPONSE BODY
+// -----------------------------------------------------
+
+{{range .NestedTypes}}
+// {{.Name}} represents a nested type for response body
+type {{.Name}} struct {
+	{{range .Fields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
+	{{end}}
+}
+
+{{end}}
+// {{.Name}}ResponseBody represents the response data for {{.Name}} operations
+{{if .Resource.HasResponseBody "POST"}}// Generated from POST response body for resource: {{.Resource.GetResponseBody "POST"}}{{else if .Resource.HasResponseBody "SCHEMA"}}// Generated from schema: {{.Resource.GetResponseBody "SCHEMA"}}{{end}}
+type {{.Name}}ResponseBody struct {
+	{{range .ResponseBodyFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
+	{{end}}
+}
+
+// -----------------------------------------------------
+// RESOURCE METHODS
+// -----------------------------------------------------
+
+// {{.Name}} represents a typed resource for {{.LowerName}} operations
+type {{.Name}} struct {
+	Untyped *vast_client.VMSRest
+}
+
+// Get retrieves a single {{.LowerName}} with typed request/response
+func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}ResponseBody, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := r.Untyped.{{.PluralName}}.Get(params)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+// GetWithContext retrieves a single {{.LowerName}} with typed request/response using provided context
+func (r *{{.Name}}) GetWithContext(ctx context.Context, req *{{.Name}}SearchParams) (*{{.Name}}ResponseBody, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return nil, err
+	}
+	
+	record, err := r.Untyped.{{.PluralName}}.GetWithContext(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return &response, nil
+}
+
+// GetById retrieves a single {{.LowerName}} by ID
+func (r *{{.Name}}) GetById(id any) (*{{.Name}}ResponseBody, error) {
+	record, err := r.Untyped.{{.PluralName}}.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+// GetByIdWithContext retrieves a single {{.LowerName}} by ID using provided context
+func (r *{{.Name}}) GetByIdWithContext(ctx context.Context, id any) (*{{.Name}}ResponseBody, error) {
+	record, err := r.Untyped.{{.PluralName}}.GetByIdWithContext(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+// List retrieves multiple {{.LowerName}}s with typed request/response
+func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}ResponseBody, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return nil, err
+	}
+	
+	recordSet, err := r.Untyped.{{.PluralName}}.List(params)
+	if err != nil {
+		return nil, err
+	}
+
+	var response []*{{.Name}}ResponseBody
+	if err := recordSet.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return response, nil
+}
+
+// ListWithContext retrieves multiple {{.LowerName}}s with typed request/response using provided context
+func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchParams) ([]*{{.Name}}ResponseBody, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return nil, err
+	}
+	
+	recordSet, err := r.Untyped.{{.PluralName}}.ListWithContext(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var response []*{{.Name}}ResponseBody
+	if err := recordSet.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return response, nil
+}
+
+
+// Create creates a new {{.LowerName}} with typed request/response
+func (r *{{.Name}}) Create(req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := r.Untyped.{{.PluralName}}.Create(params)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return &response, nil
+}
+
+// CreateWithContext creates a new {{.LowerName}} with typed request/response using provided context
+func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := r.Untyped.{{.PluralName}}.CreateWithContext(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return &response, nil
+}
+
+
+// Update updates an existing {{.LowerName}} with typed request/response
+func (r *{{.Name}}) Update(id any, req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := r.Untyped.{{.PluralName}}.Update(id, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return &response, nil
+}
+
+// UpdateWithContext updates an existing {{.LowerName}} with typed request/response using provided context
+func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := r.Untyped.{{.PluralName}}.UpdateWithContext(ctx, id, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return &response, nil
+}
+
+
+
+// Delete deletes a {{.LowerName}} with search parameters
+func (r *{{.Name}}) Delete(req *{{.Name}}SearchParams) error {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return err
+	}
+	_, err = r.Untyped.{{.PluralName}}.Delete(params, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteWithContext deletes a {{.LowerName}} with search parameters using provided context
+func (r *{{.Name}}) DeleteWithContext(ctx context.Context, req *{{.Name}}SearchParams) error {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return err
+	}
+	_, err = r.Untyped.{{.PluralName}}.DeleteWithContext(ctx, params, nil, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteById deletes a {{.LowerName}} by ID
+func (r *{{.Name}}) DeleteById(id any) error {
+	_, err := r.Untyped.{{.PluralName}}.DeleteById(id, nil, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteByIdWithContext deletes a {{.LowerName}} by ID using provided context
+func (r *{{.Name}}) DeleteByIdWithContext(ctx context.Context, id any) error {
+	_, err := r.Untyped.{{.PluralName}}.DeleteByIdWithContext(ctx, id, nil, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
+// Ensure ensures a {{.LowerName}} exists with typed response
+func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
+	if err != nil {
+		return nil, err
+	}
+	bodyConverted, err := vast_client.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+	
+	record, err := r.Untyped.{{.PluralName}}.Ensure(searchParamsConverted, bodyConverted)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return &response, nil
+}
+
+// EnsureWithContext ensures a {{.LowerName}} exists with typed response using provided context
+func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name}}SearchParams, body *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
+	if err != nil {
+		return nil, err
+	}
+	bodyConverted, err := vast_client.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+	
+	record, err := r.Untyped.{{.PluralName}}.EnsureWithContext(ctx, searchParamsConverted, bodyConverted)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	
+	return &response, nil
+}
+
+// EnsureByName ensures a {{.LowerName}} exists by name with typed response
+func (r *{{.Name}}) EnsureByName(name string, body *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+	bodyConverted, err := vast_client.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+	
+	record, err := r.Untyped.{{.PluralName}}.EnsureByName(name, bodyConverted)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+// EnsureByNameWithContext ensures a {{.LowerName}} exists by name with typed response using provided context
+func (r *{{.Name}}) EnsureByNameWithContext(ctx context.Context, name string, body *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+	bodyConverted, err := vast_client.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+	
+	record, err := r.Untyped.{{.PluralName}}.EnsureByNameWithContext(ctx, name, bodyConverted)
+	if err != nil {
+		return nil, err
+	}
+
+	var response {{.Name}}ResponseBody
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+// Exists checks if a {{.LowerName}} exists
+func (r *{{.Name}}) Exists(req *{{.Name}}SearchParams) (bool, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return false, err
+	}
+	return r.Untyped.{{.PluralName}}.Exists(params)
+}
+
+// ExistsWithContext checks if a {{.LowerName}} exists using provided context
+func (r *{{.Name}}) ExistsWithContext(ctx context.Context, req *{{.Name}}SearchParams) (bool, error) {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		return false, err
+	}
+	return r.Untyped.{{.PluralName}}.ExistsWithContext(ctx, params)
+}
+
+// MustExists checks if a {{.LowerName}} exists and panics if not
+func (r *{{.Name}}) MustExists(req *{{.Name}}SearchParams) bool {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		panic(err)
+	}
+	return r.Untyped.{{.PluralName}}.MustExists(params)
+}
+
+// MustExistsWithContext checks if a {{.LowerName}} exists and panics if not using provided context
+func (r *{{.Name}}) MustExistsWithContext(ctx context.Context, req *{{.Name}}SearchParams) bool {
+	params, err := vast_client.NewParamsFromStruct(req)
+	if err != nil {
+		panic(err)
+	}
+	return r.Untyped.{{.PluralName}}.MustExistsWithContext(ctx, params)
+}
+
+

@@ -40,3 +40,6 @@ mkdocs_files
 
 # Examples build artifacts
 examples/bin/
+
+# Autogen build artifacts
+autogen/bin/

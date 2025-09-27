@@ -212,12 +212,18 @@ func (v *Version) CompareWith(other *version.Version) (int, error) {
 
 // ------------------------------------------------------
 
+// +apibuilder:searchQuery:GET=quotas
+// +apibuilder:requestBody:POST=quotas
+// +apibuilder:responseBody:POST=quotas
 type Quota struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apibuilder:searchQuery:GET=views
+// +apibuilder:requestBody:POST=views
+// +apibuilder:responseBody:POST=views
 type View struct {
 	*VastResource
 }

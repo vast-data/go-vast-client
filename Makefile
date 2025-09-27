@@ -22,7 +22,7 @@ COMMIT=$(shell git rev-parse --short HEAD)
 EXAMPLES_DIR=examples
 COVERAGE_DIR=coverage
 
-.PHONY: all build test clean deps lint fmt vet coverage examples help
+.PHONY: all build test clean deps lint fmt vet coverage examples help generate-typed
 
 all: clean deps fmt lint test build ## Run all main targets
 
@@ -105,3 +105,89 @@ docs-serve:
 
 docs-deploy:
 	$(MKDOCS) gh-deploy --force
+
+# Typed resource generation
+MAKEFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
+generate-typed: ## Generate all typed resources from APIBuilder markers
+	@echo "Generating typed resources..."
+	cd $(MAKEFILE_DIR)autogen && go build -tags tools -o bin/generate-typed-resources ./cmd/generate-typed-resources
+	cd $(MAKEFILE_DIR)autogen && ./bin/generate-typed-resources
+	@echo "Typed resources generated successfully!"
+
+# OpenAPI conversion targets
+
+ifeq (gen-openapi-tar, $(firstword $(MAKECMDGOALS)))
+  runargs := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
+  $(foreach arg,$(runargs),$(eval $(arg):;@true))
+endif
+
+ifeq (validate-api, $(firstword $(MAKECMDGOALS)))
+  runargs := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
+  $(foreach arg,$(runargs),$(eval $(arg):;@true))
+endif
+
+# Enhanced OpenAPI conversion with validation and auto-fixes
+#
+#   This target uses the enhanced Python converter that:
+#     - Validates Swagger schemas and identifies common issues
+#     - Automatically fixes known problems (null properties, missing types)  
+#     - Provides detailed debugging information
+#     - Converts to OpenAPI v3 using the Go converter
+#     - Creates final outputs: api.json and api.tar.gz
+#
+#   Usage:
+#     make gen-openapi-tar <path> [options]
+#
+#   Arguments:
+#     <path> - Required. Path to the Swagger/OpenAPI YAML file.
+#
+#   Options:
+#     --debug        - Enable detailed debugging output
+#     --no-auto-fix  - Disable automatic fixes (validation only)
+#     --output-dir   - Custom output directory for intermediate files
+#
+#   Examples:
+#     make gen-openapi-tar ./specs/swagger.yaml
+#     make gen-openapi-tar /tmp/vast-openapi.yaml --debug
+#     make gen-openapi-tar ./specs/swagger.yaml --no-auto-fix
+gen-openapi-tar: ## Convert Swagger/OpenAPI YAML to tarball with validation & auto-fixes
+	@set -e; \
+	args="$(runargs)"; \
+	if [ -z "$$args" ]; then \
+		echo "❌ Usage: make gen-openapi-tar <path> [options]"; \
+		echo "   Example: make gen-openapi-tar /path/to/swagger.yaml --debug"; \
+		echo "   Options: --debug --no-auto-fix --output-dir /custom/dir"; \
+		exit 1; \
+	fi; \
+	echo "🚀 Running enhanced OpenAPI conversion with validation and auto-fixes..."; \
+	python3 $(CURDIR)/misc/convert_swagger.py $$args --dest-dir $(CURDIR); \
+	echo "✅ Enhanced conversion completed!"
+
+# Validate Swagger/OpenAPI schema
+#
+# Usage: make validate-api <path> [options]
+#
+# Arguments:
+#   <path>         - Path to Swagger/OpenAPI YAML or JSON file
+#
+# Options:
+#   --debug        - Enable detailed debugging output
+#   --json-output  - Export JSON report to specified file
+#
+# Examples:
+#   make validate-api ./specs/swagger.yaml
+#   make validate-api /tmp/api.yaml --debug
+#   make validate-api ./api.yaml --json-output report.json
+validate-api: ## Validate Swagger/OpenAPI schema with detailed diagnostics
+	@set -e; \
+	args="$(runargs)"; \
+	if [ -z "$$args" ]; then \
+		echo "❌ Usage: make validate-api <path> [options]"; \
+		echo "   Example: make validate-api /path/to/swagger.yaml --debug"; \
+		echo "   Options: --debug --json-output <file>"; \
+		exit 1; \
+	fi; \
+	echo "🔍 Running Swagger/OpenAPI schema validation..."; \
+	python3 $(CURDIR)/misc/validate_swagger.py $$args; \
+	echo "✅ Validation completed!"

@@ -171,6 +171,60 @@ func (pr *Params) Without(keys ...string) {
 	}
 }
 
+// FromStruct converts any struct to Params while maintaining the json tags as keys.
+// This method uses reflection to directly extract struct fields and their json tags,
+// avoiding the overhead of JSON marshaling/unmarshaling.
+//
+// Example usage:
+//
+//	type MyRequest struct {
+//	    Name     string `json:"name"`
+//	    Age      int    `json:"age"`
+//	    Optional *bool  `json:"optional,omitempty"`
+//	}
+//
+//	req := MyRequest{Name: "John", Age: 30}
+//	params := make(Params)
+//	err := params.FromStruct(req)
+//	// params now contains: {"name": "John", "age": 30}
+//
+// Returns an error if the input is not a struct or pointer to struct.
+func (pr *Params) FromStruct(obj any) error {
+	if obj == nil {
+		return nil
+	}
+
+	structMap := structToMap(obj)
+
+	// Update the Params map with the new values
+	for key, value := range structMap {
+		(*pr)[key] = value
+	}
+
+	return nil
+}
+
+// NewParamsFromStruct creates a new Params map from any struct, respecting json tags.
+// This is a convenience function that creates a new Params and calls FromStruct on it.
+//
+// Example usage:
+//
+//	type MyRequest struct {
+//	    Name string `json:"name"`
+//	    Age  int    `json:"age"`
+//	}
+//
+//	req := MyRequest{Name: "John", Age: 30}
+//	params, err := NewParamsFromStruct(req)
+//	// params contains: {"name": "John", "age": 30}
+//
+// Returns a new Params map or an error if the conversion fails.
+func NewParamsFromStruct(obj any) (Params, error) {
+	params := make(Params)
+	err := params.FromStruct(obj)
+	return params, err
+}
+
 // listifyParams converts a slice of arbitrary structs into a slice of Params (map[string]any).
 // This is useful when constructing request bodies that require a list of objects, such as
 // bulk operations where each entry is a structured parameter set.
