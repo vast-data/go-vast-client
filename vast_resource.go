@@ -172,6 +172,9 @@ func (o *OpenAPI) FetchSchemaV3(ctx context.Context) (*openapi3.T, error) {
 
 // ------------------------------------------------------
 
+// +apibuilder:readOnly
+// +apibuilder:searchQuery:GET=versions
+// +apibuilder:model:SCHEMA=Version
 type Version struct {
 	*VastResource
 }

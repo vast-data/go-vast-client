@@ -9,15 +9,16 @@ import (
 
 // VastResource represents a parsed VastData resource with its APIBuilder markers
 type VastResource struct {
-	Name           string                    `json:"name"`
-	RequestURLs    []apibuilder.RequestURL   `json:"requestUrls,omitempty"`
-	ResponseURLs   []apibuilder.ResponseURL  `json:"responseUrls,omitempty"`
-	SearchQueries  []apibuilder.SearchQuery  `json:"searchQueries,omitempty"`
-	RequestBodies  []apibuilder.RequestBody  `json:"requestBodies,omitempty"`
-	ResponseBodies []apibuilder.ResponseBody `json:"responseBodies,omitempty"`
-	RequestModel   string                    `json:"requestModel,omitempty"`
-	ResponseModel  string                    `json:"responseModel,omitempty"`
-	AllMarkers     []markers.MarkerValue     `json:"allMarkers,omitempty"`
+	Name          string                    `json:"name"`
+	RequestURLs   []apibuilder.RequestURL   `json:"requestUrls,omitempty"`
+	ResponseURLs  []apibuilder.ResponseURL  `json:"responseUrls,omitempty"`
+	SearchQueries []apibuilder.SearchQuery  `json:"searchQueries,omitempty"`
+	CreateBodies  []apibuilder.RequestBody  `json:"createBodies,omitempty"` // Renamed from RequestBodies
+	Models        []apibuilder.ResponseBody `json:"models,omitempty"`       // Renamed from ResponseBodies
+	RequestModel  string                    `json:"requestModel,omitempty"`
+	ResponseModel string                    `json:"responseModel,omitempty"`
+	ReadOnly      bool                      `json:"readOnly,omitempty"` // New field
+	AllMarkers    []markers.MarkerValue     `json:"allMarkers,omitempty"`
 }
 
 // VastResourceParser parses VastData resource files
@@ -144,6 +145,32 @@ func (p *VastResourceParser) parseTypeInfo(typeInfo *markers.TypeInfo) *VastReso
 					resource.ResponseModel = model
 				}
 			}
+
+		case "apibuilder:readOnly":
+			resource.ReadOnly = true
+
+		// New marker names (createBody and model)
+		case "apibuilder:createBody:POST":
+			p.addRequestBody(resource, "POST", values)
+		case "apibuilder:createBody:PUT":
+			p.addRequestBody(resource, "PUT", values)
+		case "apibuilder:createBody:PATCH":
+			p.addRequestBody(resource, "PATCH", values)
+		case "apibuilder:createBody:SCHEMA":
+			p.addRequestBody(resource, "SCHEMA", values)
+
+		case "apibuilder:model:GET":
+			p.addResponseBody(resource, "GET", values)
+		case "apibuilder:model:POST":
+			p.addResponseBody(resource, "POST", values)
+		case "apibuilder:model:PUT":
+			p.addResponseBody(resource, "PUT", values)
+		case "apibuilder:model:DELETE":
+			p.addResponseBody(resource, "DELETE", values)
+		case "apibuilder:model:PATCH":
+			p.addResponseBody(resource, "PATCH", values)
+		case "apibuilder:model:SCHEMA":
+			p.addResponseBody(resource, "SCHEMA", values)
 		}
 	}
 
@@ -191,11 +218,11 @@ func (p *VastResourceParser) addSearchQuery(resource *VastResource, method strin
 	}
 }
 
-// addRequestBody adds a request body to the resource
+// addRequestBody adds a request body to the resource (now creates create body)
 func (p *VastResourceParser) addRequestBody(resource *VastResource, method string, values []interface{}) {
 	for _, value := range values {
 		if url, ok := value.(string); ok {
-			resource.RequestBodies = append(resource.RequestBodies, apibuilder.RequestBody{
+			resource.CreateBodies = append(resource.CreateBodies, apibuilder.RequestBody{
 				Method: method,
 				URL:    url,
 			})
@@ -203,11 +230,11 @@ func (p *VastResourceParser) addRequestBody(resource *VastResource, method strin
 	}
 }
 
-// addResponseBody adds a response body to the resource
+// addResponseBody adds a response body to the resource (now creates model)
 func (p *VastResourceParser) addResponseBody(resource *VastResource, method string, values []interface{}) {
 	for _, value := range values {
 		if url, ok := value.(string); ok {
-			resource.ResponseBodies = append(resource.ResponseBodies, apibuilder.ResponseBody{
+			resource.Models = append(resource.Models, apibuilder.ResponseBody{
 				Method: method,
 				URL:    url,
 			})
@@ -242,6 +269,18 @@ func isAPIBuilderMarker(markerName string) bool {
 		"apibuilder:responseBody:SCHEMA",
 		"apibuilder:requestModel",
 		"apibuilder:responseModel",
+		"apibuilder:readOnly",
+		// New marker names
+		"apibuilder:createBody:POST",
+		"apibuilder:createBody:PUT",
+		"apibuilder:createBody:PATCH",
+		"apibuilder:createBody:SCHEMA",
+		"apibuilder:model:GET",
+		"apibuilder:model:POST",
+		"apibuilder:model:PUT",
+		"apibuilder:model:DELETE",
+		"apibuilder:model:PATCH",
+		"apibuilder:model:SCHEMA",
 	}
 
 	for _, marker := range apiBuilderMarkers {
@@ -332,9 +371,9 @@ func (r *VastResource) HasSearchQuery(method string) bool {
 	return false
 }
 
-// HasRequestBody checks if the resource has a request body for the given method
-func (r *VastResource) HasRequestBody(method string) bool {
-	for _, body := range r.RequestBodies {
+// HasCreateBody checks if the resource has a create body for the given method
+func (r *VastResource) HasCreateBody(method string) bool {
+	for _, body := range r.CreateBodies {
 		if body.Method == method {
 			return true
 		}
@@ -342,14 +381,24 @@ func (r *VastResource) HasRequestBody(method string) bool {
 	return false
 }
 
-// HasResponseBody checks if the resource has a response body for the given method
-func (r *VastResource) HasResponseBody(method string) bool {
-	for _, body := range r.ResponseBodies {
+// HasModel checks if the resource has a model for the given method
+func (r *VastResource) HasModel(method string) bool {
+	for _, body := range r.Models {
 		if body.Method == method {
 			return true
 		}
 	}
 	return false
+}
+
+// HasRequestBody checks if the resource has a request body for the given method (deprecated, use HasCreateBody)
+func (r *VastResource) HasRequestBody(method string) bool {
+	return r.HasCreateBody(method)
+}
+
+// HasResponseBody checks if the resource has a response body for the given method (deprecated, use HasModel)
+func (r *VastResource) HasResponseBody(method string) bool {
+	return r.HasModel(method)
 }
 
 // GetSearchQuery returns the search query for the given method, or empty string if not found
@@ -362,9 +411,9 @@ func (r *VastResource) GetSearchQuery(method string) string {
 	return ""
 }
 
-// GetRequestBody returns the request body for the given method, or empty string if not found
-func (r *VastResource) GetRequestBody(method string) string {
-	for _, body := range r.RequestBodies {
+// GetCreateBody returns the create body for the given method, or empty string if not found
+func (r *VastResource) GetCreateBody(method string) string {
+	for _, body := range r.CreateBodies {
 		if body.Method == method {
 			return body.URL
 		}
@@ -372,12 +421,27 @@ func (r *VastResource) GetRequestBody(method string) string {
 	return ""
 }
 
-// GetResponseBody returns the response body for the given method, or empty string if not found
-func (r *VastResource) GetResponseBody(method string) string {
-	for _, body := range r.ResponseBodies {
+// GetModel returns the model for the given method, or empty string if not found
+func (r *VastResource) GetModel(method string) string {
+	for _, body := range r.Models {
 		if body.Method == method {
 			return body.URL
 		}
 	}
 	return ""
+}
+
+// GetRequestBody returns the request body for the given method, or empty string if not found (deprecated, use GetCreateBody)
+func (r *VastResource) GetRequestBody(method string) string {
+	return r.GetCreateBody(method)
+}
+
+// GetResponseBody returns the response body for the given method, or empty string if not found (deprecated, use GetModel)
+func (r *VastResource) GetResponseBody(method string) string {
+	return r.GetModel(method)
+}
+
+// IsReadOnly returns true if the resource is marked as read-only
+func (r *VastResource) IsReadOnly() bool {
+	return r.ReadOnly
 }

@@ -54,6 +54,10 @@ type ResponseModel struct {
 	Model string `marker:"model"`
 }
 
+// ReadOnly represents a read-only resource marker
+// Usage: +apibuilder:readOnly
+type ReadOnly struct {}
+
 // APIEndpoint represents a complete API endpoint configuration
 // This can be used to collect all related markers for an endpoint
 type APIEndpoint struct {

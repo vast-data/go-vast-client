@@ -133,6 +133,62 @@ func RegisterAPIBuilderMarkers(registry *markers.Registry) error {
 		return err
 	}
 
+	if err := registry.Register("apibuilder:readOnly", markers.DescribesType, "",
+		"Marks a resource as read-only (no create/update/delete operations)"); err != nil {
+		return err
+	}
+
+	// New marker names (createBody and model)
+	if err := registry.Register("apibuilder:createBody:POST", markers.DescribesType, "",
+		"Specifies POST create body for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:createBody:PUT", markers.DescribesType, "",
+		"Specifies PUT create body for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:createBody:PATCH", markers.DescribesType, "",
+		"Specifies PATCH create body for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:createBody:SCHEMA", markers.DescribesType, "",
+		"Specifies create body schema for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:model:GET", markers.DescribesType, "",
+		"Specifies GET model for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:model:POST", markers.DescribesType, "",
+		"Specifies POST model for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:model:PUT", markers.DescribesType, "",
+		"Specifies PUT model for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:model:DELETE", markers.DescribesType, "",
+		"Specifies DELETE model for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:model:PATCH", markers.DescribesType, "",
+		"Specifies PATCH model for this type"); err != nil {
+		return err
+	}
+
+	if err := registry.Register("apibuilder:model:SCHEMA", markers.DescribesType, "",
+		"Specifies model schema for this type"); err != nil {
+		return err
+	}
+
 	return nil
 }
 

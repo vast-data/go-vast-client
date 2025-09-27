@@ -20,32 +20,45 @@ type {{.Name}}SearchParams struct {
 }
 
 // -----------------------------------------------------
-// REQUEST BODY
-// -----------------------------------------------------
-
-// {{.Name}}RequestBody represents the request body for {{.Name}} operations
-{{if .Resource.HasRequestBody "POST"}}// Generated from POST request body for resource: {{.Resource.GetRequestBody "POST"}}{{else if .Resource.HasRequestBody "SCHEMA"}}// Generated from schema: {{.Resource.GetRequestBody "SCHEMA"}}{{end}}
-type {{.Name}}RequestBody struct {
-	{{range .RequestBodyFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
-	{{end}}
-}
-
-// -----------------------------------------------------
-// RESPONSE BODY
+// CREATE BODY
 // -----------------------------------------------------
 
 {{range .NestedTypes}}
-// {{.Name}} represents a nested type for response body
+{{if eq .Section "CREATE BODY"}}
+// {{.Name}} represents a nested type for create body
 type {{.Name}} struct {
 	{{range .Fields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
 	{{end}}
 }
 
 {{end}}
-// {{.Name}}ResponseBody represents the response data for {{.Name}} operations
-{{if .Resource.HasResponseBody "POST"}}// Generated from POST response body for resource: {{.Resource.GetResponseBody "POST"}}{{else if .Resource.HasResponseBody "SCHEMA"}}// Generated from schema: {{.Resource.GetResponseBody "SCHEMA"}}{{end}}
-type {{.Name}}ResponseBody struct {
-	{{range .ResponseBodyFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
+{{end}}
+
+// {{.Name}}CreateBody represents the create body for {{.Name}} operations
+{{if .Resource.HasCreateBody "POST"}}// Generated from POST request body for resource: {{.Resource.GetCreateBody "POST"}}{{else if .Resource.HasCreateBody "SCHEMA"}}// Generated from schema: {{.Resource.GetCreateBody "SCHEMA"}}{{end}}
+type {{.Name}}CreateBody struct {
+	{{range .CreateBodyFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
+	{{end}}
+}
+
+// -----------------------------------------------------
+// MODEL
+// -----------------------------------------------------
+
+{{range .NestedTypes}}
+{{if eq .Section "MODEL"}}
+// {{.Name}} represents a nested type for model
+type {{.Name}} struct {
+	{{range .Fields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
+	{{end}}
+}
+
+{{end}}
+{{end}}
+// {{.Name}}Model represents the model data for {{.Name}} operations
+{{if .Resource.HasModel "POST"}}// Generated from POST response body for resource: {{.Resource.GetModel "POST"}}{{else if .Resource.HasModel "SCHEMA"}}// Generated from schema: {{.Resource.GetModel "SCHEMA"}}{{end}}
+type {{.Name}}Model struct {
+	{{range .ModelFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
 	{{end}}
 }
 
@@ -59,7 +72,7 @@ type {{.Name}} struct {
 }
 
 // Get retrieves a single {{.LowerName}} with typed request/response
-func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -70,7 +83,7 @@ func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}ResponseBody, err
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -79,7 +92,7 @@ func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}ResponseBody, err
 }
 
 // GetWithContext retrieves a single {{.LowerName}} with typed request/response using provided context
-func (r *{{.Name}}) GetWithContext(ctx context.Context, req *{{.Name}}SearchParams) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) GetWithContext(ctx context.Context, req *{{.Name}}SearchParams) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -90,7 +103,7 @@ func (r *{{.Name}}) GetWithContext(ctx context.Context, req *{{.Name}}SearchPara
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -99,13 +112,13 @@ func (r *{{.Name}}) GetWithContext(ctx context.Context, req *{{.Name}}SearchPara
 }
 
 // GetById retrieves a single {{.LowerName}} by ID
-func (r *{{.Name}}) GetById(id any) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) GetById(id any) (*{{.Name}}Model, error) {
 	record, err := r.Untyped.{{.PluralName}}.GetById(id)
 	if err != nil {
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -114,13 +127,13 @@ func (r *{{.Name}}) GetById(id any) (*{{.Name}}ResponseBody, error) {
 }
 
 // GetByIdWithContext retrieves a single {{.LowerName}} by ID using provided context
-func (r *{{.Name}}) GetByIdWithContext(ctx context.Context, id any) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) GetByIdWithContext(ctx context.Context, id any) (*{{.Name}}Model, error) {
 	record, err := r.Untyped.{{.PluralName}}.GetByIdWithContext(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -129,7 +142,7 @@ func (r *{{.Name}}) GetByIdWithContext(ctx context.Context, id any) (*{{.Name}}R
 }
 
 // List retrieves multiple {{.LowerName}}s with typed request/response
-func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -140,7 +153,7 @@ func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}ResponseBody, 
 		return nil, err
 	}
 
-	var response []*{{.Name}}ResponseBody
+	var response []*{{.Name}}Model
 	if err := recordSet.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -149,7 +162,7 @@ func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}ResponseBody, 
 }
 
 // ListWithContext retrieves multiple {{.LowerName}}s with typed request/response using provided context
-func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchParams) ([]*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchParams) ([]*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -160,7 +173,7 @@ func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchPar
 		return nil, err
 	}
 
-	var response []*{{.Name}}ResponseBody
+	var response []*{{.Name}}Model
 	if err := recordSet.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -170,7 +183,7 @@ func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchPar
 
 
 // Create creates a new {{.LowerName}} with typed request/response
-func (r *{{.Name}}) Create(req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) Create(req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -181,7 +194,7 @@ func (r *{{.Name}}) Create(req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, e
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -190,7 +203,7 @@ func (r *{{.Name}}) Create(req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, e
 }
 
 // CreateWithContext creates a new {{.LowerName}} with typed request/response using provided context
-func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -201,7 +214,7 @@ func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}Request
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -211,7 +224,7 @@ func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}Request
 
 
 // Update updates an existing {{.LowerName}} with typed request/response
-func (r *{{.Name}}) Update(id any, req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) Update(id any, req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -222,7 +235,7 @@ func (r *{{.Name}}) Update(id any, req *{{.Name}}RequestBody) (*{{.Name}}Respons
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -231,7 +244,7 @@ func (r *{{.Name}}) Update(id any, req *{{.Name}}RequestBody) (*{{.Name}}Respons
 }
 
 // UpdateWithContext updates an existing {{.LowerName}} with typed request/response using provided context
-func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -242,7 +255,7 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -298,7 +311,7 @@ func (r *{{.Name}}) DeleteByIdWithContext(ctx context.Context, id any) error {
 
 
 // Ensure ensures a {{.LowerName}} exists with typed response
-func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -313,7 +326,7 @@ func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}R
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -322,7 +335,7 @@ func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}R
 }
 
 // EnsureWithContext ensures a {{.LowerName}} exists with typed response using provided context
-func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name}}SearchParams, body *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name}}SearchParams, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -337,7 +350,7 @@ func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -346,7 +359,7 @@ func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name
 }
 
 // EnsureByName ensures a {{.LowerName}} exists by name with typed response
-func (r *{{.Name}}) EnsureByName(name string, body *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) EnsureByName(name string, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 	bodyConverted, err := vast_client.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -357,7 +370,7 @@ func (r *{{.Name}}) EnsureByName(name string, body *{{.Name}}RequestBody) (*{{.N
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -366,7 +379,7 @@ func (r *{{.Name}}) EnsureByName(name string, body *{{.Name}}RequestBody) (*{{.N
 }
 
 // EnsureByNameWithContext ensures a {{.LowerName}} exists by name with typed response using provided context
-func (r *{{.Name}}) EnsureByNameWithContext(ctx context.Context, name string, body *{{.Name}}RequestBody) (*{{.Name}}ResponseBody, error) {
+func (r *{{.Name}}) EnsureByNameWithContext(ctx context.Context, name string, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 	bodyConverted, err := vast_client.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -377,7 +390,7 @@ func (r *{{.Name}}) EnsureByNameWithContext(ctx context.Context, name string, bo
 		return nil, err
 	}
 
-	var response {{.Name}}ResponseBody
+	var response {{.Name}}Model
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}

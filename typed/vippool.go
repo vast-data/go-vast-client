@@ -25,12 +25,12 @@ type VipPoolSearchParams struct {
 }
 
 // -----------------------------------------------------
-// REQUEST BODY
+// CREATE BODY
 // -----------------------------------------------------
 
-// VipPoolRequestBody represents the request body for VipPool operations
+// VipPoolCreateBody represents the create body for VipPool operations
 // Generated from POST request body for resource: vippools
-type VipPoolRequestBody struct {
+type VipPoolCreateBody struct {
 	SubnetCidr              int64      `json:"subnet_cidr,omitempty" yaml:"subnet_cidr,omitempty" required:"true" doc:"The subnet expressed as a CIDR index (number of bits in each IP that belong to the subnet)"`
 	BgpConfigId             int64      `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"The ID of the BGP configuration to use for layer 3 connectivity configuration"`
 	ClusterId               int64      `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
@@ -57,12 +57,12 @@ type VipPoolRequestBody struct {
 }
 
 // -----------------------------------------------------
-// RESPONSE BODY
+// MODEL
 // -----------------------------------------------------
 
-// VipPoolResponseBody represents the response data for VipPool operations
+// VipPoolModel represents the model data for VipPool operations
 // Generated from POST response body for resource: vippools
-type VipPoolResponseBody struct {
+type VipPoolModel struct {
 	ActiveCnodeIds          []int64    `json:"active_cnode_ids,omitempty" yaml:"active_cnode_ids,omitempty" required:"false" doc:"IDs of active CNodes"`
 	ActiveInterfaces        int64      `json:"active_interfaces,omitempty" yaml:"active_interfaces,omitempty" required:"false" doc:"Number of active interfaces"`
 	BgpConfigId             int64      `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"The ID of the BGP configuration applied for L3 connectivity"`
@@ -110,7 +110,7 @@ type VipPool struct {
 }
 
 // Get retrieves a single vippool with typed request/response
-func (r *VipPool) Get(req *VipPoolSearchParams) (*VipPoolResponseBody, error) {
+func (r *VipPool) Get(req *VipPoolSearchParams) (*VipPoolModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (r *VipPool) Get(req *VipPoolSearchParams) (*VipPoolResponseBody, error) {
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (r *VipPool) Get(req *VipPoolSearchParams) (*VipPoolResponseBody, error) {
 }
 
 // GetWithContext retrieves a single vippool with typed request/response using provided context
-func (r *VipPool) GetWithContext(ctx context.Context, req *VipPoolSearchParams) (*VipPoolResponseBody, error) {
+func (r *VipPool) GetWithContext(ctx context.Context, req *VipPoolSearchParams) (*VipPoolModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func (r *VipPool) GetWithContext(ctx context.Context, req *VipPoolSearchParams) 
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -150,13 +150,13 @@ func (r *VipPool) GetWithContext(ctx context.Context, req *VipPoolSearchParams) 
 }
 
 // GetById retrieves a single vippool by ID
-func (r *VipPool) GetById(id any) (*VipPoolResponseBody, error) {
+func (r *VipPool) GetById(id any) (*VipPoolModel, error) {
 	record, err := r.Untyped.VipPools.GetById(id)
 	if err != nil {
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -165,13 +165,13 @@ func (r *VipPool) GetById(id any) (*VipPoolResponseBody, error) {
 }
 
 // GetByIdWithContext retrieves a single vippool by ID using provided context
-func (r *VipPool) GetByIdWithContext(ctx context.Context, id any) (*VipPoolResponseBody, error) {
+func (r *VipPool) GetByIdWithContext(ctx context.Context, id any) (*VipPoolModel, error) {
 	record, err := r.Untyped.VipPools.GetByIdWithContext(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (r *VipPool) GetByIdWithContext(ctx context.Context, id any) (*VipPoolRespo
 }
 
 // List retrieves multiple vippools with typed request/response
-func (r *VipPool) List(req *VipPoolSearchParams) ([]*VipPoolResponseBody, error) {
+func (r *VipPool) List(req *VipPoolSearchParams) ([]*VipPoolModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -191,7 +191,7 @@ func (r *VipPool) List(req *VipPoolSearchParams) ([]*VipPoolResponseBody, error)
 		return nil, err
 	}
 
-	var response []*VipPoolResponseBody
+	var response []*VipPoolModel
 	if err := recordSet.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (r *VipPool) List(req *VipPoolSearchParams) ([]*VipPoolResponseBody, error)
 }
 
 // ListWithContext retrieves multiple vippools with typed request/response using provided context
-func (r *VipPool) ListWithContext(ctx context.Context, req *VipPoolSearchParams) ([]*VipPoolResponseBody, error) {
+func (r *VipPool) ListWithContext(ctx context.Context, req *VipPoolSearchParams) ([]*VipPoolModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -211,7 +211,7 @@ func (r *VipPool) ListWithContext(ctx context.Context, req *VipPoolSearchParams)
 		return nil, err
 	}
 
-	var response []*VipPoolResponseBody
+	var response []*VipPoolModel
 	if err := recordSet.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func (r *VipPool) ListWithContext(ctx context.Context, req *VipPoolSearchParams)
 }
 
 // Create creates a new vippool with typed request/response
-func (r *VipPool) Create(req *VipPoolRequestBody) (*VipPoolResponseBody, error) {
+func (r *VipPool) Create(req *VipPoolCreateBody) (*VipPoolModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -231,7 +231,7 @@ func (r *VipPool) Create(req *VipPoolRequestBody) (*VipPoolResponseBody, error) 
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (r *VipPool) Create(req *VipPoolRequestBody) (*VipPoolResponseBody, error) 
 }
 
 // CreateWithContext creates a new vippool with typed request/response using provided context
-func (r *VipPool) CreateWithContext(ctx context.Context, req *VipPoolRequestBody) (*VipPoolResponseBody, error) {
+func (r *VipPool) CreateWithContext(ctx context.Context, req *VipPoolCreateBody) (*VipPoolModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -251,7 +251,7 @@ func (r *VipPool) CreateWithContext(ctx context.Context, req *VipPoolRequestBody
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (r *VipPool) CreateWithContext(ctx context.Context, req *VipPoolRequestBody
 }
 
 // Update updates an existing vippool with typed request/response
-func (r *VipPool) Update(id any, req *VipPoolRequestBody) (*VipPoolResponseBody, error) {
+func (r *VipPool) Update(id any, req *VipPoolCreateBody) (*VipPoolModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -271,7 +271,7 @@ func (r *VipPool) Update(id any, req *VipPoolRequestBody) (*VipPoolResponseBody,
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -280,7 +280,7 @@ func (r *VipPool) Update(id any, req *VipPoolRequestBody) (*VipPoolResponseBody,
 }
 
 // UpdateWithContext updates an existing vippool with typed request/response using provided context
-func (r *VipPool) UpdateWithContext(ctx context.Context, id any, req *VipPoolRequestBody) (*VipPoolResponseBody, error) {
+func (r *VipPool) UpdateWithContext(ctx context.Context, id any, req *VipPoolCreateBody) (*VipPoolModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -291,7 +291,7 @@ func (r *VipPool) UpdateWithContext(ctx context.Context, id any, req *VipPoolReq
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -344,7 +344,7 @@ func (r *VipPool) DeleteByIdWithContext(ctx context.Context, id any) error {
 }
 
 // Ensure ensures a vippool exists with typed response
-func (r *VipPool) Ensure(searchParams *VipPoolSearchParams, body *VipPoolRequestBody) (*VipPoolResponseBody, error) {
+func (r *VipPool) Ensure(searchParams *VipPoolSearchParams, body *VipPoolCreateBody) (*VipPoolModel, error) {
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -359,7 +359,7 @@ func (r *VipPool) Ensure(searchParams *VipPoolSearchParams, body *VipPoolRequest
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -368,7 +368,7 @@ func (r *VipPool) Ensure(searchParams *VipPoolSearchParams, body *VipPoolRequest
 }
 
 // EnsureWithContext ensures a vippool exists with typed response using provided context
-func (r *VipPool) EnsureWithContext(ctx context.Context, searchParams *VipPoolSearchParams, body *VipPoolRequestBody) (*VipPoolResponseBody, error) {
+func (r *VipPool) EnsureWithContext(ctx context.Context, searchParams *VipPoolSearchParams, body *VipPoolCreateBody) (*VipPoolModel, error) {
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -383,7 +383,7 @@ func (r *VipPool) EnsureWithContext(ctx context.Context, searchParams *VipPoolSe
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -392,7 +392,7 @@ func (r *VipPool) EnsureWithContext(ctx context.Context, searchParams *VipPoolSe
 }
 
 // EnsureByName ensures a vippool exists by name with typed response
-func (r *VipPool) EnsureByName(name string, body *VipPoolRequestBody) (*VipPoolResponseBody, error) {
+func (r *VipPool) EnsureByName(name string, body *VipPoolCreateBody) (*VipPoolModel, error) {
 	bodyConverted, err := vast_client.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -403,7 +403,7 @@ func (r *VipPool) EnsureByName(name string, body *VipPoolRequestBody) (*VipPoolR
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
@@ -412,7 +412,7 @@ func (r *VipPool) EnsureByName(name string, body *VipPoolRequestBody) (*VipPoolR
 }
 
 // EnsureByNameWithContext ensures a vippool exists by name with typed response using provided context
-func (r *VipPool) EnsureByNameWithContext(ctx context.Context, name string, body *VipPoolRequestBody) (*VipPoolResponseBody, error) {
+func (r *VipPool) EnsureByNameWithContext(ctx context.Context, name string, body *VipPoolCreateBody) (*VipPoolModel, error) {
 	bodyConverted, err := vast_client.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -423,7 +423,7 @@ func (r *VipPool) EnsureByNameWithContext(ctx context.Context, name string, body
 		return nil, err
 	}
 
-	var response VipPoolResponseBody
+	var response VipPoolModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}

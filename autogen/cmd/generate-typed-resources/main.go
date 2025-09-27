@@ -30,8 +30,9 @@ type Field struct {
 
 // NestedType represents a nested struct type that needs to be generated
 type NestedType struct {
-	Name   string
-	Fields []Field
+	Name    string
+	Fields  []Field
+	Section string // Section where this type belongs (e.g., "SEARCH PARAMS", "CREATE BODY", "MODEL")
 }
 
 // TypeRegistry keeps track of generated types to avoid duplicates
@@ -46,15 +47,16 @@ func NewTypeRegistry() *TypeRegistry {
 }
 
 // RegisterType adds a new nested type to the registry
-func (tr *TypeRegistry) RegisterType(name string, fields []Field) string {
+func (tr *TypeRegistry) RegisterType(name string, fields []Field, section string) string {
 	if existing, exists := tr.types[name]; exists {
 		// Type already exists, return existing name
 		return existing.Name
 	}
 
 	nestedType := &NestedType{
-		Name:   name,
-		Fields: fields,
+		Name:    name,
+		Fields:  fields,
+		Section: section,
 	}
 	tr.types[name] = nestedType
 	return name
@@ -79,8 +81,8 @@ type ResourceData struct {
 	LowerName          string
 	PluralName         string
 	SearchParamsFields []Field
-	RequestBodyFields  []Field
-	ResponseBodyFields []Field
+	CreateBodyFields   []Field // Renamed from RequestBodyFields
+	ModelFields        []Field // Renamed from ResponseBodyFields
 	NestedTypes        []*NestedType
 	Resource           *vastparser.VastResource
 }
@@ -130,6 +132,12 @@ func main() {
 	// Generate template data
 	templateData := TemplateData{}
 	for _, resource := range resources {
+		// Validate required markers
+		if err := validateResourceMarkers(&resource); err != nil {
+			log.Printf("Error: Resource %s validation failed: %v", resource.Name, err)
+			continue
+		}
+
 		resourceData := ResourceData{
 			Name:       resource.Name,
 			LowerName:  strings.ToLower(resource.Name),
@@ -172,41 +180,43 @@ func main() {
 
 		resourceData.SearchParamsFields = searchFields
 
-		// Generate request body fields
-		if resource.HasRequestBody("POST") {
-			requestURL := resource.GetRequestBody("POST")
-			requestFields, err := generateRequestBodyFields(requestURL, "POST", requestRegistry)
-			if err != nil {
-				log.Printf("Warning: Failed to generate request body fields for %s: %v", resource.Name, err)
-			} else {
-				resourceData.RequestBodyFields = requestFields
-			}
-		} else if resource.HasRequestBody("SCHEMA") {
-			schemaName := resource.GetRequestBody("SCHEMA")
-			requestFields, err := generateRequestBodyFromSchema(schemaName, requestRegistry)
-			if err != nil {
-				log.Printf("Warning: Failed to generate request body from schema for %s: %v", resource.Name, err)
-			} else {
-				resourceData.RequestBodyFields = requestFields
+		// Generate create body fields (only for non-read-only resources)
+		if !resource.IsReadOnly() {
+			if resource.HasCreateBody("POST") {
+				createURL := resource.GetCreateBody("POST")
+				createFields, err := generateCreateBodyFields(createURL, "POST", requestRegistry)
+				if err != nil {
+					log.Printf("Warning: Failed to generate create body fields for %s: %v", resource.Name, err)
+				} else {
+					resourceData.CreateBodyFields = createFields
+				}
+			} else if resource.HasCreateBody("SCHEMA") {
+				schemaName := resource.GetCreateBody("SCHEMA")
+				createFields, err := generateCreateBodyFromSchema(schemaName, requestRegistry)
+				if err != nil {
+					log.Printf("Warning: Failed to generate create body from schema for %s: %v", resource.Name, err)
+				} else {
+					resourceData.CreateBodyFields = createFields
+				}
 			}
 		}
 
-		// Generate response body fields
-		if resource.HasResponseBody("POST") {
-			responseURL := resource.GetResponseBody("POST")
-			responseFields, err := generateResponseBodyFields(responseURL, "POST", responseRegistry)
+		// Generate model fields
+		if resource.HasModel("POST") {
+			modelURL := resource.GetModel("POST")
+			modelFields, err := generateModelFields(modelURL, "POST", responseRegistry)
 			if err != nil {
-				log.Printf("Warning: Failed to generate response body fields for %s: %v", resource.Name, err)
+				log.Printf("Warning: Failed to generate model fields for %s: %v", resource.Name, err)
 			} else {
-				resourceData.ResponseBodyFields = responseFields
+				resourceData.ModelFields = modelFields
 			}
-		} else if resource.HasResponseBody("SCHEMA") {
-			schemaName := resource.GetResponseBody("SCHEMA")
-			responseFields, err := generateResponseBodyFromSchema(schemaName, responseRegistry)
+		} else if resource.HasModel("SCHEMA") {
+			schemaName := resource.GetModel("SCHEMA")
+			modelFields, err := generateModelFromSchema(schemaName, responseRegistry)
 			if err != nil {
-				log.Printf("Warning: Failed to generate response body from schema for %s: %v", resource.Name, err)
+				log.Printf("Warning: Failed to generate model from schema for %s: %v", resource.Name, err)
 			} else {
-				resourceData.ResponseBodyFields = responseFields
+				resourceData.ModelFields = modelFields
 			}
 		}
 
@@ -283,7 +293,13 @@ func generateRestFile(filename string, data TemplateData) error {
 
 // generateResourceFile generates a single resource file with typed resource implementation
 func generateResourceFile(filename string, data ResourceData) error {
-	tmpl, err := template.ParseFiles("templates/resource.tpl")
+	// Choose template based on whether resource is read-only
+	templateFile := "templates/resource.tpl"
+	if data.Resource.IsReadOnly() {
+		templateFile = "templates/readonly-resource.tpl"
+	}
+
+	tmpl, err := template.ParseFiles(templateFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse resource template: %w", err)
 	}
@@ -309,7 +325,7 @@ func generateRequestFields(resourcePath string, registry *TypeRegistry) ([]Field
 		return nil, fmt.Errorf("failed to get query params schema: %w", err)
 	}
 
-	return generateFieldsFromSchema(schema.Value, resourcePath+"Request", registry, false)
+	return generateFieldsFromSchema(schema.Value, resourcePath+"Request", registry, false, "REQUEST")
 }
 
 // toCamelCase converts snake_case to CamelCase
@@ -341,6 +357,28 @@ func toSingularCamelCase(resourcePath string) string {
 // escapeQuotes escapes double quotes in strings to prevent breaking struct tags
 func escapeQuotes(s string) string {
 	return strings.ReplaceAll(s, `"`, `\"`)
+}
+
+// validateResourceMarkers validates that a resource has all required markers
+func validateResourceMarkers(resource *vastparser.VastResource) error {
+	// All resources must have searchQuery
+	if !resource.HasSearchQuery("GET") && !resource.HasSearchQuery("SCHEMA") {
+		return fmt.Errorf("missing required searchQuery marker (GET or SCHEMA)")
+	}
+
+	// All resources must have model (responseBody)
+	if !resource.HasModel("POST") && !resource.HasModel("SCHEMA") {
+		return fmt.Errorf("missing required model marker (POST or SCHEMA)")
+	}
+
+	// Non-read-only resources must have createBody (requestBody)
+	if !resource.IsReadOnly() {
+		if !resource.HasCreateBody("POST") && !resource.HasCreateBody("SCHEMA") {
+			return fmt.Errorf("non-read-only resource missing required createBody marker (POST or SCHEMA)")
+		}
+	}
+
+	return nil
 }
 
 // formatGeneratedFiles runs go fmt on all Go files in the specified directory
@@ -487,7 +525,7 @@ func generateResponseFields(resourcePath string, registry *TypeRegistry) ([]Fiel
 		return nil, fmt.Errorf("failed to get response schema: %w", err)
 	}
 
-	return generateFieldsFromSchema(schema.Value, resourcePath+"Response", registry, false)
+	return generateFieldsFromSchema(schema.Value, resourcePath+"Response", registry, false, "RESPONSE")
 }
 
 // generateSearchParamsFields generates search params fields using method-based resolution
@@ -562,8 +600,8 @@ func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePa
 	return fields, nil
 }
 
-// generateRequestBodyFields generates request body fields using method-based resolution
-func generateRequestBodyFields(resourcePath, method string, registry *TypeRegistry) ([]Field, error) {
+// generateCreateBodyFields generates create body fields using method-based resolution
+func generateCreateBodyFields(resourcePath, method string, registry *TypeRegistry) ([]Field, error) {
 	var schema *openapi3.SchemaRef
 	var err error
 
@@ -588,12 +626,12 @@ func generateRequestBodyFields(resourcePath, method string, registry *TypeRegist
 	}
 
 	// Convert resource path to singular Go type name (e.g., "quotas" -> "Quota")
-	typeName := toSingularCamelCase(resourcePath) + "RequestBody"
-	return generateFieldsFromSchema(schema.Value, typeName, registry, false)
+	typeName := toSingularCamelCase(resourcePath) + "CreateBody"
+	return generateFieldsFromSchema(schema.Value, typeName, registry, false, "CREATE BODY")
 }
 
-// generateResponseBodyFields generates response body fields using method-based resolution
-func generateResponseBodyFields(resourcePath, method string, registry *TypeRegistry) ([]Field, error) {
+// generateModelFields generates model fields using method-based resolution
+func generateModelFields(resourcePath, method string, registry *TypeRegistry) ([]Field, error) {
 	var schema *openapi3.SchemaRef
 	var err error
 
@@ -618,8 +656,8 @@ func generateResponseBodyFields(resourcePath, method string, registry *TypeRegis
 	}
 
 	// Convert resource path to singular Go type name (e.g., "quotas" -> "Quota")
-	typeName := toSingularCamelCase(resourcePath) + "ResponseBody"
-	return generateFieldsFromSchema(schema.Value, typeName, registry, false)
+	typeName := toSingularCamelCase(resourcePath) + "Model"
+	return generateFieldsFromSchema(schema.Value, typeName, registry, false, "MODEL")
 }
 
 // extractCommonSearchableFields extracts common searchable fields from response body schema
@@ -731,33 +769,33 @@ func generateSearchParamsFromSchema(schemaName string, registry *TypeRegistry) (
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
 
-	return generateFieldsFromSchema(schema.Value, schemaName+"SearchParams", registry, true)
+	return generateFieldsFromSchema(schema.Value, schemaName+"SearchParams", registry, true, "SEARCH PARAMS")
 }
 
-// generateRequestBodyFromSchema generates request body fields from a schema component
-func generateRequestBodyFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
+// generateCreateBodyFromSchema generates create body fields from a schema component
+func generateCreateBodyFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
 	// Get schema from components
 	schema, err := api.GetSchema_FromComponents(schemaName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
 
-	return generateFieldsFromSchema(schema.Value, schemaName+"RequestBody", registry, false)
+	return generateFieldsFromSchema(schema.Value, schemaName+"CreateBody", registry, false, "CREATE BODY")
 }
 
-// generateResponseBodyFromSchema generates response body fields from a schema component
-func generateResponseBodyFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
+// generateModelFromSchema generates model fields from a schema component
+func generateModelFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
 	// Get schema from components
 	schema, err := api.GetSchema_FromComponents(schemaName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
 
-	return generateFieldsFromSchema(schema.Value, schemaName+"ResponseBody", registry, false)
+	return generateFieldsFromSchema(schema.Value, schemaName+"Model", registry, false, "MODEL")
 }
 
 // generateFieldsFromSchema recursively generates fields from an OpenAPI schema
-func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, registry *TypeRegistry, usePointers bool) ([]Field, error) {
+func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, registry *TypeRegistry, usePointers bool, section string) ([]Field, error) {
 	if schema == nil || schema.Properties == nil {
 		return nil, nil
 	}
@@ -811,7 +849,7 @@ func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, re
 		}
 
 		// Recursively determine Go type
-		goType, err := getGoTypeFromOpenAPIRecursive(propRef.Value, parentTypeName+"_"+toCamelCase(propName), registry, usePointers)
+		goType, err := getGoTypeFromOpenAPIRecursive(propRef.Value, parentTypeName+"_"+toCamelCase(propName), registry, usePointers, section)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate type for field %s: %w", propName, err)
 		}
@@ -827,7 +865,7 @@ func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, re
 }
 
 // getGoTypeFromOpenAPIRecursive recursively converts OpenAPI schema to Go type, generating nested structs as needed
-func getGoTypeFromOpenAPIRecursive(schema *openapi3.Schema, typeName string, registry *TypeRegistry, usePointers bool) (string, error) {
+func getGoTypeFromOpenAPIRecursive(schema *openapi3.Schema, typeName string, registry *TypeRegistry, usePointers bool, section string) (string, error) {
 	if schema == nil || schema.Type == nil || len(*schema.Type) == 0 {
 		if usePointers {
 			return "*string", nil // default fallback
@@ -859,7 +897,7 @@ func getGoTypeFromOpenAPIRecursive(schema *openapi3.Schema, typeName string, reg
 		if schema.Items == nil || schema.Items.Value == nil {
 			goType = "[]interface{}" // fallback for arrays without items
 		} else {
-			itemType, err := getGoTypeFromOpenAPIRecursive(schema.Items.Value, typeName+"Item", registry, false)
+			itemType, err := getGoTypeFromOpenAPIRecursive(schema.Items.Value, typeName+"Item", registry, false, section)
 			if err != nil {
 				return "", fmt.Errorf("failed to generate array item type: %w", err)
 			}
@@ -869,7 +907,7 @@ func getGoTypeFromOpenAPIRecursive(schema *openapi3.Schema, typeName string, reg
 		if schema.Properties == nil || len(schema.Properties) == 0 {
 			// Empty object or map with additionalProperties
 			if schema.AdditionalProperties.Schema != nil {
-				valueType, err := getGoTypeFromOpenAPIRecursive(schema.AdditionalProperties.Schema.Value, typeName+"Value", registry, false)
+				valueType, err := getGoTypeFromOpenAPIRecursive(schema.AdditionalProperties.Schema.Value, typeName+"Value", registry, false, section)
 				if err != nil {
 					return "", fmt.Errorf("failed to generate map value type: %w", err)
 				}
@@ -879,13 +917,13 @@ func getGoTypeFromOpenAPIRecursive(schema *openapi3.Schema, typeName string, reg
 			}
 		} else {
 			// Object with defined properties - generate a nested struct
-			nestedFields, err := generateFieldsFromSchema(schema, typeName, registry, false)
+			nestedFields, err := generateFieldsFromSchema(schema, typeName, registry, false, section)
 			if err != nil {
 				return "", fmt.Errorf("failed to generate nested fields: %w", err)
 			}
 
 			// Register the nested type
-			registry.RegisterType(typeName, nestedFields)
+			registry.RegisterType(typeName, nestedFields, section)
 			goType = typeName
 		}
 	default:
