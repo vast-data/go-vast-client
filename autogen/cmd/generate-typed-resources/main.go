@@ -203,12 +203,12 @@ func main() {
 		allNestedTypes = append(allNestedTypes, searchRegistry.GetTypes()...)
 		allNestedTypes = append(allNestedTypes, requestRegistry.GetTypes()...)
 		allNestedTypes = append(allNestedTypes, responseRegistry.GetTypes()...)
-		
+
 		// Sort combined nested types for consistent generation
 		sort.Slice(allNestedTypes, func(i, j int) bool {
 			return allNestedTypes[i].Name < allNestedTypes[j].Name
 		})
-		
+
 		resourceData.NestedTypes = allNestedTypes
 
 		templateData.Resources = append(templateData.Resources, resourceData)
@@ -571,7 +571,7 @@ func generateRequestBodyFromSchema(schemaName string, registry *TypeRegistry) ([
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
 
-	return generateFieldsFromSchema(schema.Value, schemaName+"RequestBody", registry, true)
+	return generateFieldsFromSchema(schema.Value, schemaName+"RequestBody", registry, false)
 }
 
 // generateResponseBodyFromSchema generates response body fields from a schema component
@@ -582,7 +582,7 @@ func generateResponseBodyFromSchema(schemaName string, registry *TypeRegistry) (
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
 
-	return generateFieldsFromSchema(schema.Value, schemaName+"ResponseBody", registry, true)
+	return generateFieldsFromSchema(schema.Value, schemaName+"ResponseBody", registry, false)
 }
 
 // generateFieldsFromSchema recursively generates fields from an OpenAPI schema
