@@ -54,9 +54,6 @@ type Version struct {
 
 // Get retrieves a single version with typed request/response
 func (r *Version) Get(req *VersionSearchParams) (*VersionModel, error) {
-	if req == nil {
-		req = &VersionSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -77,9 +74,6 @@ func (r *Version) Get(req *VersionSearchParams) (*VersionModel, error) {
 
 // GetWithContext retrieves a single version with typed request/response using provided context
 func (r *Version) GetWithContext(ctx context.Context, req *VersionSearchParams) (*VersionModel, error) {
-	if req == nil {
-		req = &VersionSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -130,9 +124,6 @@ func (r *Version) GetByIdWithContext(ctx context.Context, id any) (*VersionModel
 
 // List retrieves multiple versions with typed request/response
 func (r *Version) List(req *VersionSearchParams) ([]*VersionModel, error) {
-	if req == nil {
-		req = &VersionSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -153,9 +144,6 @@ func (r *Version) List(req *VersionSearchParams) ([]*VersionModel, error) {
 
 // ListWithContext retrieves multiple versions with typed request/response using provided context
 func (r *Version) ListWithContext(ctx context.Context, req *VersionSearchParams) ([]*VersionModel, error) {
-	if req == nil {
-		req = &VersionSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -176,9 +164,6 @@ func (r *Version) ListWithContext(ctx context.Context, req *VersionSearchParams)
 
 // Exists checks if a version exists with the given search parameters
 func (r *Version) Exists(req *VersionSearchParams) (bool, error) {
-	if req == nil {
-		req = &VersionSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -189,9 +174,6 @@ func (r *Version) Exists(req *VersionSearchParams) (bool, error) {
 
 // ExistsWithContext checks if a version exists with the given search parameters using provided context
 func (r *Version) ExistsWithContext(ctx context.Context, req *VersionSearchParams) (bool, error) {
-	if req == nil {
-		req = &VersionSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -202,9 +184,6 @@ func (r *Version) ExistsWithContext(ctx context.Context, req *VersionSearchParam
 
 // MustExists checks if a version exists with the given search parameters, panics on error
 func (r *Version) MustExists(req *VersionSearchParams) bool {
-	if req == nil {
-		req = &VersionSearchParams{}
-	}
 	exists, err := r.Exists(req)
 	if err != nil {
 		panic(err)
@@ -214,9 +193,6 @@ func (r *Version) MustExists(req *VersionSearchParams) bool {
 
 // MustExistsWithContext checks if a version exists with the given search parameters using provided context, panics on error
 func (r *Version) MustExistsWithContext(ctx context.Context, req *VersionSearchParams) bool {
-	if req == nil {
-		req = &VersionSearchParams{}
-	}
 	exists, err := r.ExistsWithContext(ctx, req)
 	if err != nil {
 		panic(err)

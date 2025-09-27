@@ -12,7 +12,7 @@ import (
 func main() {
 	ctx := context.Background()
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1",
+		Host:     "l101",
 		Username: "admin",
 		Password: "123456",
 	}
@@ -75,6 +75,7 @@ func main() {
 			Path:      "/example",
 			TenantId:  1,
 			HardLimit: 2 * 1024 * 1024 * 1024, // 2GB
+			CreateDir: true,
 		}
 
 		updatedQuota, err := quotaClient.Update(newQuota.Id, updateBody)

@@ -249,9 +249,6 @@ type View struct {
 
 // Get retrieves a single view with typed request/response
 func (r *View) Get(req *ViewSearchParams) (*ViewModel, error) {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -272,9 +269,6 @@ func (r *View) Get(req *ViewSearchParams) (*ViewModel, error) {
 
 // GetWithContext retrieves a single view with typed request/response using provided context
 func (r *View) GetWithContext(ctx context.Context, req *ViewSearchParams) (*ViewModel, error) {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -325,9 +319,6 @@ func (r *View) GetByIdWithContext(ctx context.Context, id any) (*ViewModel, erro
 
 // List retrieves multiple views with typed request/response
 func (r *View) List(req *ViewSearchParams) ([]*ViewModel, error) {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -348,9 +339,6 @@ func (r *View) List(req *ViewSearchParams) ([]*ViewModel, error) {
 
 // ListWithContext retrieves multiple views with typed request/response using provided context
 func (r *View) ListWithContext(ctx context.Context, req *ViewSearchParams) ([]*ViewModel, error) {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -451,9 +439,6 @@ func (r *View) UpdateWithContext(ctx context.Context, id any, req *ViewCreateBod
 
 // Delete deletes a view with search parameters
 func (r *View) Delete(req *ViewSearchParams) error {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return err
@@ -467,9 +452,6 @@ func (r *View) Delete(req *ViewSearchParams) error {
 
 // DeleteWithContext deletes a view with search parameters using provided context
 func (r *View) DeleteWithContext(ctx context.Context, req *ViewSearchParams) error {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return err
@@ -501,9 +483,6 @@ func (r *View) DeleteByIdWithContext(ctx context.Context, id any) error {
 
 // Ensure ensures a view exists with typed response
 func (r *View) Ensure(searchParams *ViewSearchParams, body *ViewCreateBody) (*ViewModel, error) {
-	if searchParams == nil {
-		searchParams = &ViewSearchParams{}
-	}
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -528,9 +507,6 @@ func (r *View) Ensure(searchParams *ViewSearchParams, body *ViewCreateBody) (*Vi
 
 // EnsureWithContext ensures a view exists with typed response using provided context
 func (r *View) EnsureWithContext(ctx context.Context, searchParams *ViewSearchParams, body *ViewCreateBody) (*ViewModel, error) {
-	if searchParams == nil {
-		searchParams = &ViewSearchParams{}
-	}
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -595,9 +571,6 @@ func (r *View) EnsureByNameWithContext(ctx context.Context, name string, body *V
 
 // Exists checks if a view exists
 func (r *View) Exists(req *ViewSearchParams) (bool, error) {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -607,9 +580,6 @@ func (r *View) Exists(req *ViewSearchParams) (bool, error) {
 
 // ExistsWithContext checks if a view exists using provided context
 func (r *View) ExistsWithContext(ctx context.Context, req *ViewSearchParams) (bool, error) {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -619,9 +589,6 @@ func (r *View) ExistsWithContext(ctx context.Context, req *ViewSearchParams) (bo
 
 // MustExists checks if a view exists and panics if not
 func (r *View) MustExists(req *ViewSearchParams) bool {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		panic(err)
@@ -631,9 +598,6 @@ func (r *View) MustExists(req *ViewSearchParams) bool {
 
 // MustExistsWithContext checks if a view exists and panics if not using provided context
 func (r *View) MustExistsWithContext(ctx context.Context, req *ViewSearchParams) bool {
-	if req == nil {
-		req = &ViewSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		panic(err)

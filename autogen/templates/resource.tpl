@@ -73,9 +73,6 @@ type {{.Name}} struct {
 
 // Get retrieves a single {{.LowerName}} with typed request/response
 func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}Model, error) {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -96,9 +93,6 @@ func (r *{{.Name}}) Get(req *{{.Name}}SearchParams) (*{{.Name}}Model, error) {
 
 // GetWithContext retrieves a single {{.LowerName}} with typed request/response using provided context
 func (r *{{.Name}}) GetWithContext(ctx context.Context, req *{{.Name}}SearchParams) (*{{.Name}}Model, error) {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -149,9 +143,6 @@ func (r *{{.Name}}) GetByIdWithContext(ctx context.Context, id any) (*{{.Name}}M
 
 // List retrieves multiple {{.LowerName}}s with typed request/response
 func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}Model, error) {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -172,9 +163,6 @@ func (r *{{.Name}}) List(req *{{.Name}}SearchParams) ([]*{{.Name}}Model, error) 
 
 // ListWithContext retrieves multiple {{.LowerName}}s with typed request/response using provided context
 func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchParams) ([]*{{.Name}}Model, error) {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -279,9 +267,6 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}
 
 // Delete deletes a {{.LowerName}} with search parameters
 func (r *{{.Name}}) Delete(req *{{.Name}}SearchParams) error {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return err
@@ -295,9 +280,6 @@ func (r *{{.Name}}) Delete(req *{{.Name}}SearchParams) error {
 
 // DeleteWithContext deletes a {{.LowerName}} with search parameters using provided context
 func (r *{{.Name}}) DeleteWithContext(ctx context.Context, req *{{.Name}}SearchParams) error {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return err
@@ -330,9 +312,6 @@ func (r *{{.Name}}) DeleteByIdWithContext(ctx context.Context, id any) error {
 
 // Ensure ensures a {{.LowerName}} exists with typed response
 func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
-	if searchParams == nil {
-		searchParams = &{{.Name}}SearchParams{}
-	}
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -357,9 +336,6 @@ func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}C
 
 // EnsureWithContext ensures a {{.LowerName}} exists with typed response using provided context
 func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name}}SearchParams, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
-	if searchParams == nil {
-		searchParams = &{{.Name}}SearchParams{}
-	}
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -424,9 +400,6 @@ func (r *{{.Name}}) EnsureByNameWithContext(ctx context.Context, name string, bo
 
 // Exists checks if a {{.LowerName}} exists
 func (r *{{.Name}}) Exists(req *{{.Name}}SearchParams) (bool, error) {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -436,9 +409,6 @@ func (r *{{.Name}}) Exists(req *{{.Name}}SearchParams) (bool, error) {
 
 // ExistsWithContext checks if a {{.LowerName}} exists using provided context
 func (r *{{.Name}}) ExistsWithContext(ctx context.Context, req *{{.Name}}SearchParams) (bool, error) {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -448,9 +418,6 @@ func (r *{{.Name}}) ExistsWithContext(ctx context.Context, req *{{.Name}}SearchP
 
 // MustExists checks if a {{.LowerName}} exists and panics if not
 func (r *{{.Name}}) MustExists(req *{{.Name}}SearchParams) bool {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		panic(err)
@@ -460,9 +427,6 @@ func (r *{{.Name}}) MustExists(req *{{.Name}}SearchParams) bool {
 
 // MustExistsWithContext checks if a {{.LowerName}} exists and panics if not using provided context
 func (r *{{.Name}}) MustExistsWithContext(ctx context.Context, req *{{.Name}}SearchParams) bool {
-	if req == nil {
-		req = &{{.Name}}SearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		panic(err)

@@ -221,6 +221,12 @@ func (pr *Params) FromStruct(obj any) error {
 // Returns a new Params map or an error if the conversion fails.
 func NewParamsFromStruct(obj any) (Params, error) {
 	params := make(Params)
+	
+	// Return empty params if obj is nil
+	if obj == nil {
+		return params, nil
+	}
+	
 	err := params.FromStruct(obj)
 	return params, err
 }

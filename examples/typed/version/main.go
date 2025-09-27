@@ -12,7 +12,7 @@ import (
 func main() {
 	ctx := context.Background()
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1",
+		Host:     "l101",
 		Username: "admin",
 		Password: "123456",
 	}
@@ -64,20 +64,4 @@ func main() {
 		fmt.Printf("Version '4.7.0' exists: %t\n", exists)
 	}
 
-	// Example 4: Search for versions by name pattern
-	if len(versions) > 0 {
-		firstVersionName := versions[0].Name
-		namedVersions, err := versionClient.List(&typed.VersionSearchParams{
-			Name: firstVersionName,
-		})
-		if err != nil {
-			log.Printf("Failed to search versions by name: %v", err)
-		} else {
-			fmt.Printf("Found %d versions matching name '%s'\n", len(namedVersions), firstVersionName)
-		}
-	}
-
-	// Note: Version is a read-only resource, so no Create/Update/Delete methods are available
-	// This demonstrates the power of typed resources - the compiler prevents you from
-	// accidentally trying to modify read-only resources
 }

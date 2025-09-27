@@ -12,7 +12,7 @@ import (
 func main() {
 	ctx := context.Background()
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1", // replace with your VAST IP
+		Host:     "l101", // replace with your VAST IP
 		Username: "admin",
 		Password: "123456",
 	}

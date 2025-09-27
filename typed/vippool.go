@@ -111,9 +111,6 @@ type VipPool struct {
 
 // Get retrieves a single vippool with typed request/response
 func (r *VipPool) Get(req *VipPoolSearchParams) (*VipPoolModel, error) {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -134,9 +131,6 @@ func (r *VipPool) Get(req *VipPoolSearchParams) (*VipPoolModel, error) {
 
 // GetWithContext retrieves a single vippool with typed request/response using provided context
 func (r *VipPool) GetWithContext(ctx context.Context, req *VipPoolSearchParams) (*VipPoolModel, error) {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -187,9 +181,6 @@ func (r *VipPool) GetByIdWithContext(ctx context.Context, id any) (*VipPoolModel
 
 // List retrieves multiple vippools with typed request/response
 func (r *VipPool) List(req *VipPoolSearchParams) ([]*VipPoolModel, error) {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -210,9 +201,6 @@ func (r *VipPool) List(req *VipPoolSearchParams) ([]*VipPoolModel, error) {
 
 // ListWithContext retrieves multiple vippools with typed request/response using provided context
 func (r *VipPool) ListWithContext(ctx context.Context, req *VipPoolSearchParams) ([]*VipPoolModel, error) {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -313,9 +301,6 @@ func (r *VipPool) UpdateWithContext(ctx context.Context, id any, req *VipPoolCre
 
 // Delete deletes a vippool with search parameters
 func (r *VipPool) Delete(req *VipPoolSearchParams) error {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return err
@@ -329,9 +314,6 @@ func (r *VipPool) Delete(req *VipPoolSearchParams) error {
 
 // DeleteWithContext deletes a vippool with search parameters using provided context
 func (r *VipPool) DeleteWithContext(ctx context.Context, req *VipPoolSearchParams) error {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return err
@@ -363,9 +345,6 @@ func (r *VipPool) DeleteByIdWithContext(ctx context.Context, id any) error {
 
 // Ensure ensures a vippool exists with typed response
 func (r *VipPool) Ensure(searchParams *VipPoolSearchParams, body *VipPoolCreateBody) (*VipPoolModel, error) {
-	if searchParams == nil {
-		searchParams = &VipPoolSearchParams{}
-	}
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -390,9 +369,6 @@ func (r *VipPool) Ensure(searchParams *VipPoolSearchParams, body *VipPoolCreateB
 
 // EnsureWithContext ensures a vippool exists with typed response using provided context
 func (r *VipPool) EnsureWithContext(ctx context.Context, searchParams *VipPoolSearchParams, body *VipPoolCreateBody) (*VipPoolModel, error) {
-	if searchParams == nil {
-		searchParams = &VipPoolSearchParams{}
-	}
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -457,9 +433,6 @@ func (r *VipPool) EnsureByNameWithContext(ctx context.Context, name string, body
 
 // Exists checks if a vippool exists
 func (r *VipPool) Exists(req *VipPoolSearchParams) (bool, error) {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -469,9 +442,6 @@ func (r *VipPool) Exists(req *VipPoolSearchParams) (bool, error) {
 
 // ExistsWithContext checks if a vippool exists using provided context
 func (r *VipPool) ExistsWithContext(ctx context.Context, req *VipPoolSearchParams) (bool, error) {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return false, err
@@ -481,9 +451,6 @@ func (r *VipPool) ExistsWithContext(ctx context.Context, req *VipPoolSearchParam
 
 // MustExists checks if a vippool exists and panics if not
 func (r *VipPool) MustExists(req *VipPoolSearchParams) bool {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		panic(err)
@@ -493,9 +460,6 @@ func (r *VipPool) MustExists(req *VipPoolSearchParams) bool {
 
 // MustExistsWithContext checks if a vippool exists and panics if not using provided context
 func (r *VipPool) MustExistsWithContext(ctx context.Context, req *VipPoolSearchParams) bool {
-	if req == nil {
-		req = &VipPoolSearchParams{}
-	}
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		panic(err)
