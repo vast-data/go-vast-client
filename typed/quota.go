@@ -59,8 +59,8 @@ type QuotaRequestBody struct {
 // -----------------------------------------------------
 
 
-// QuotasResponseBody_DefaultUserQuota represents a nested type for response body
-type QuotasResponseBody_DefaultUserQuota struct {
+// QuotasResponseBody_DefaultGroupQuota represents a nested type for response body
+type QuotasResponseBody_DefaultGroupQuota struct {
 	GracePeriod string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
 	HardLimit int64 `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
 	HardLimitInodes int64 `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
@@ -71,8 +71,8 @@ type QuotasResponseBody_DefaultUserQuota struct {
 }
 
 
-// QuotasResponseBody_DefaultGroupQuota represents a nested type for response body
-type QuotasResponseBody_DefaultGroupQuota struct {
+// QuotasResponseBody_DefaultUserQuota represents a nested type for response body
+type QuotasResponseBody_DefaultUserQuota struct {
 	GracePeriod string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
 	HardLimit int64 `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
 	HardLimitInodes int64 `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`

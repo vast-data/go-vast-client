@@ -100,6 +100,38 @@ type ViewsRequestBody_BucketLogging struct {
 }
 
 
+// ViewsRequestBody_CreateDirAclItem represents a nested type for response body
+type ViewsRequestBody_CreateDirAclItem struct {
+	Grantee string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"true" doc:"type of grantee"`
+	Perm string `json:"perm,omitempty" yaml:"perm,omitempty" required:"true" doc:"The type of permission to grant to the grantee"`
+	GroupType string `json:"group_type,omitempty" yaml:"group_type,omitempty" required:"false" doc:""`
+	SidStr string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"SID attribute of grantee. Specify this attribute or another for the grantee."`
+	UidOrGid string `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"UID of user type grantee or GID of group type grantee. Specify this attribute or another attribute for the grantee."`
+	VidOrVaid string `json:"vid_or_vaid,omitempty" yaml:"vid_or_vaid,omitempty" required:"false" doc:"VID of user type grantee or VAID of group type grantee. This is a VAST user or group attribute. Specify this attribute or another attribute for the guarantee."`
+	
+}
+
+
+// ViewsRequestBody_ShareAcl represents a nested type for response body
+type ViewsRequestBody_ShareAcl struct {
+	Acl []ViewsRequestBody_ShareAcl_AclItem `json:"acl,omitempty" yaml:"acl,omitempty" required:"false" doc:"Share-level ACL"`
+	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if Share ACL is enabled on the view, otherwise False"`
+	
+}
+
+
+// ViewsRequestBody_ShareAcl_AclItem represents a nested type for response body
+type ViewsRequestBody_ShareAcl_AclItem struct {
+	Fqdn string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"false" doc:"FQDN of the grantee"`
+	Grantee string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"false" doc:"Type of grantee"`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the grantee"`
+	Perm string `json:"perm,omitempty" yaml:"perm,omitempty" required:"false" doc:"Permission to grant to the grantee"`
+	SidStr string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"Grantee’s SID"`
+	UidOrGid int64 `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"Grantee’s uid (if user) or gid (if group)"`
+	
+}
+
+
 // ViewsRequestBody_UserImpersonation represents a nested type for response body
 type ViewsRequestBody_UserImpersonation struct {
 	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if user impersonation is enabled"`
@@ -111,9 +143,30 @@ type ViewsRequestBody_UserImpersonation struct {
 }
 
 
-// ViewsRequestBody_ShareAcl represents a nested type for response body
-type ViewsRequestBody_ShareAcl struct {
-	Acl []ViewsRequestBody_ShareAcl_AclItem `json:"acl,omitempty" yaml:"acl,omitempty" required:"false" doc:"Share-level ACL"`
+// ViewsResponseBody_BucketLogging represents a nested type for response body
+type ViewsResponseBody_BucketLogging struct {
+	DestinationId int64 `json:"destination_id,omitempty" yaml:"destination_id,omitempty" required:"false" doc:"The ID of the S3 bucket view configured as the bucket logging destination, to store S3 bucket logs for the view. If destination_id is configured, S3 bucket logging is enabled."`
+	KeyFormat string `json:"key_format,omitempty" yaml:"key_format,omitempty" required:"false" doc:"The format for log object keys. SIMPLE_PREFIX=[DestinationPrefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString], PARTITIONED_PREFIX_EVENT_TIME=[DestinationPrefix][SourceUsername]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString] where the partitioning is done based on the time when the logged events occurred, PARTITIONED_PREFIX_DELIVERY_TIME=[DestinationPrefix][SourceUsername]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString] where the partitioning is done based on the time when the log object has been delivered to the destination bucket. Default: SIMPLE_PREFIX"`
+	Prefix string `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"A prefix that is prepended to each key of a log object uploaded to the destination bucket. This prefix can be used to categorize log objects if, for example, you use the same destination bucket for multiple source buckets. The prefix can be up to 128 characters and must follow S3 object naming rules."`
+	
+}
+
+
+// ViewsResponseBody_EventNotificationsItem represents a nested type for response body
+type ViewsResponseBody_EventNotificationsItem struct {
+	BrokerId int64 `json:"broker_id,omitempty" yaml:"broker_id,omitempty" required:"false" doc:"Event broker ID"`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Event unique name"`
+	PrefixFilter string `json:"prefix_filter,omitempty" yaml:"prefix_filter,omitempty" required:"false" doc:"Event prefix filter"`
+	SuffixFilter string `json:"suffix_filter,omitempty" yaml:"suffix_filter,omitempty" required:"false" doc:"Event suffix filter"`
+	Topic string `json:"topic,omitempty" yaml:"topic,omitempty" required:"false" doc:"Event topic"`
+	Triggers []string `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:"Event triggers"`
+	
+}
+
+
+// ViewsResponseBody_ShareAcl represents a nested type for response body
+type ViewsResponseBody_ShareAcl struct {
+	Acl []ViewsResponseBody_ShareAcl_AclItem `json:"acl,omitempty" yaml:"acl,omitempty" required:"false" doc:"Share-level ACL"`
 	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if Share ACL is enabled on the view, otherwise False"`
 	
 }
@@ -131,39 +184,6 @@ type ViewsResponseBody_ShareAcl_AclItem struct {
 }
 
 
-// ViewsResponseBody_BucketLogging represents a nested type for response body
-type ViewsResponseBody_BucketLogging struct {
-	DestinationId int64 `json:"destination_id,omitempty" yaml:"destination_id,omitempty" required:"false" doc:"The ID of the S3 bucket view configured as the bucket logging destination, to store S3 bucket logs for the view. If destination_id is configured, S3 bucket logging is enabled."`
-	KeyFormat string `json:"key_format,omitempty" yaml:"key_format,omitempty" required:"false" doc:"The format for log object keys. SIMPLE_PREFIX=[DestinationPrefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString], PARTITIONED_PREFIX_EVENT_TIME=[DestinationPrefix][SourceUsername]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString] where the partitioning is done based on the time when the logged events occurred, PARTITIONED_PREFIX_DELIVERY_TIME=[DestinationPrefix][SourceUsername]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString] where the partitioning is done based on the time when the log object has been delivered to the destination bucket. Default: SIMPLE_PREFIX"`
-	Prefix string `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"A prefix that is prepended to each key of a log object uploaded to the destination bucket. This prefix can be used to categorize log objects if, for example, you use the same destination bucket for multiple source buckets. The prefix can be up to 128 characters and must follow S3 object naming rules."`
-	
-}
-
-
-// ViewsRequestBody_CreateDirAclItem represents a nested type for response body
-type ViewsRequestBody_CreateDirAclItem struct {
-	Grantee string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"true" doc:"type of grantee"`
-	Perm string `json:"perm,omitempty" yaml:"perm,omitempty" required:"true" doc:"The type of permission to grant to the grantee"`
-	GroupType string `json:"group_type,omitempty" yaml:"group_type,omitempty" required:"false" doc:""`
-	SidStr string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"SID attribute of grantee. Specify this attribute or another for the grantee."`
-	UidOrGid string `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"UID of user type grantee or GID of group type grantee. Specify this attribute or another attribute for the grantee."`
-	VidOrVaid string `json:"vid_or_vaid,omitempty" yaml:"vid_or_vaid,omitempty" required:"false" doc:"VID of user type grantee or VAID of group type grantee. This is a VAST user or group attribute. Specify this attribute or another attribute for the guarantee."`
-	
-}
-
-
-// ViewsRequestBody_ShareAcl_AclItem represents a nested type for response body
-type ViewsRequestBody_ShareAcl_AclItem struct {
-	Fqdn string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"false" doc:"FQDN of the grantee"`
-	Grantee string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"false" doc:"Type of grantee"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the grantee"`
-	Perm string `json:"perm,omitempty" yaml:"perm,omitempty" required:"false" doc:"Permission to grant to the grantee"`
-	SidStr string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"Grantee’s SID"`
-	UidOrGid int64 `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"Grantee’s uid (if user) or gid (if group)"`
-	
-}
-
-
 // ViewsResponseBody_UserImpersonation represents a nested type for response body
 type ViewsResponseBody_UserImpersonation struct {
 	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if user impersonation is enabled"`
@@ -171,26 +191,6 @@ type ViewsResponseBody_UserImpersonation struct {
 	IdentifierType string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:"The identifier type of the specified identifier."`
 	LoginName string `json:"login_name,omitempty" yaml:"login_name,omitempty" required:"false" doc:"Full username of user to impersonate, including domain name"`
 	Username string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:"The username of the user to impersonate"`
-	
-}
-
-
-// ViewsResponseBody_ShareAcl represents a nested type for response body
-type ViewsResponseBody_ShareAcl struct {
-	Acl []ViewsResponseBody_ShareAcl_AclItem `json:"acl,omitempty" yaml:"acl,omitempty" required:"false" doc:"Share-level ACL"`
-	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if Share ACL is enabled on the view, otherwise False"`
-	
-}
-
-
-// ViewsResponseBody_EventNotificationsItem represents a nested type for response body
-type ViewsResponseBody_EventNotificationsItem struct {
-	BrokerId int64 `json:"broker_id,omitempty" yaml:"broker_id,omitempty" required:"false" doc:"Event broker ID"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Event unique name"`
-	PrefixFilter string `json:"prefix_filter,omitempty" yaml:"prefix_filter,omitempty" required:"false" doc:"Event prefix filter"`
-	SuffixFilter string `json:"suffix_filter,omitempty" yaml:"suffix_filter,omitempty" required:"false" doc:"Event suffix filter"`
-	Topic string `json:"topic,omitempty" yaml:"topic,omitempty" required:"false" doc:"Event topic"`
-	Triggers []string `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:"Event triggers"`
 	
 }
 
