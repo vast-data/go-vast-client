@@ -358,7 +358,7 @@ func formatGeneratedFiles(dir string) error {
 	// Run go fmt on all Go files
 	args := append([]string{"fmt"}, goFiles...)
 	cmd := exec.Command("go", args...)
-	
+
 	// Set the working directory to the current directory (where the files are)
 	// This ensures go fmt can find the files correctly
 	if output, err := cmd.CombinedOutput(); err != nil {
