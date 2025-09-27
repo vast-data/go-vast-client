@@ -30,7 +30,7 @@ func main() {
 	// Example 1: List quotas with typed search parameters
 	searchParams := &typed.QuotaSearchParams{
 		TenantId: 1,
-		// Note: PageSize is excluded from search params as it's a common pagination parameter
+		// Note: Common pagination parameters like page, page_size are excluded from search params
 	}
 
 	quotas, err := quotaClient.List(searchParams)
@@ -55,22 +55,51 @@ func main() {
 		}
 	}
 
-	// Example 3: Create a new quota with typed request body
-	requestBody := &typed.QuotaRequestBody{
+	// Example 3: Create a new quota with typed create body
+	createBody := &typed.QuotaCreateBody{
 		Name:      "typed-example-quota",
 		Path:      "/example",
 		TenantId:  1,
 		HardLimit: 1024 * 1024 * 1024, // 1GB
 	}
 
-	newQuota, err := quotaClient.Create(requestBody)
+	newQuota, err := quotaClient.Create(createBody)
 	if err != nil {
 		log.Printf("Failed to create quota: %v", err)
 	} else {
 		fmt.Printf("Created quota: ID=%d, Name=%s\n", newQuota.Id, newQuota.Name)
 
+		// Example 4: Update the quota
+		updateBody := &typed.QuotaCreateBody{
+			Name:      "typed-example-quota-updated",
+			Path:      "/example",
+			TenantId:  1,
+			HardLimit: 2 * 1024 * 1024 * 1024, // 2GB
+		}
+
+		updatedQuota, err := quotaClient.Update(newQuota.Id, updateBody)
+		if err != nil {
+			log.Printf("Failed to update quota: %v", err)
+		} else {
+			fmt.Printf("Updated quota: ID=%d, Name=%s, HardLimit=%d\n", 
+				updatedQuota.Id, updatedQuota.Name, updatedQuota.HardLimit)
+		}
+
+		// Example 5: Check if quota exists
+		exists, err := quotaClient.Exists(&typed.QuotaSearchParams{
+			Name: "typed-example-quota-updated",
+		})
+		if err != nil {
+			log.Printf("Failed to check quota existence: %v", err)
+		} else {
+			fmt.Printf("Quota exists: %t\n", exists)
+		}
+
 		// Clean up: delete the created quota
-		if err := quotaClient.DeleteById(newQuota.Id); err != nil {
+		deleteParams := &typed.QuotaSearchParams{
+			Name: "typed-example-quota-updated",
+		}
+		if err := quotaClient.Delete(deleteParams); err != nil {
 			log.Printf("Failed to delete quota: %v", err)
 		} else {
 			fmt.Println("Successfully deleted the example quota")
