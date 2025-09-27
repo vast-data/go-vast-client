@@ -47,10 +47,10 @@ type ViewRequestBody struct {
 	Bucket string `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"A name for the S3 bucket name. Must be specified if S3 bucket is specified in protocols."`
 	BucketCreators []string `json:"bucket_creators,omitempty" yaml:"bucket_creators,omitempty" required:"false" doc:"For S3 endpoint views, specify a list of users, by user name, whose bucket create requests use this view. Any request to create an S3 bucket that is sent by S3 API by a specified user will use this S3 Endpoint view. Users should not be specified as bucket creators in more than one S3 Endpoint view. Naming a user as a bucket creator in two S3 Endpoint views will fail the creation of the view with an error."`
 	BucketCreatorsGroups []string `json:"bucket_creators_groups,omitempty" yaml:"bucket_creators_groups,omitempty" required:"false" doc:"For S3 endpoint views, specify a list of groups, by group name, whose bucket create requests use this view. Any request to create an S3 bucket that is sent by S3 API by a user who belongs to a group listed here will use this S3 Endpoint view. Take extra care not to duplicate bucket creators through groups: If you specify a group as a bucket creator group in one view and you also specify a user who belongs to that group as a bucket creator user in another view, view creation will not fail. Yet, there is a conflict between the two configurations and the selection of a view for configuring the user's buckets is not predictable."`
-	BucketLogging ViewsRequestBody_BucketLogging `json:"bucket_logging,omitempty" yaml:"bucket_logging,omitempty" required:"false" doc:""`
+	BucketLogging ViewRequestBody_BucketLogging `json:"bucket_logging,omitempty" yaml:"bucket_logging,omitempty" required:"false" doc:""`
 	BucketOwner string `json:"bucket_owner,omitempty" yaml:"bucket_owner,omitempty" required:"false" doc:"Specifies a user to be the bucket owner. Specify as user name. Must be specified if S3 Bucket is included in protocols."`
 	ClusterId int64 `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"Cluster ID"`
-	CreateDirAcl []ViewsRequestBody_CreateDirAclItem `json:"create_dir_acl,omitempty" yaml:"create_dir_acl,omitempty" required:"false" doc:"Define ACL for the newly created dir"`
+	CreateDirAcl []ViewRequestBody_CreateDirAclItem `json:"create_dir_acl,omitempty" yaml:"create_dir_acl,omitempty" required:"false" doc:"Define ACL for the newly created dir"`
 	CreateDirMode int64 `json:"create_dir_mode,omitempty" yaml:"create_dir_mode,omitempty" required:"false" doc:"Unix permissions mode for the new dir"`
 	DefaultRetentionPeriod string `json:"default_retention_period,omitempty" yaml:"default_retention_period,omitempty" required:"false" doc:"Relevant if locking is enabled. Required if s3_locks_retention_mode is set to governance or compliance. Specifies a default retention period for objects in the bucket. If set, object versions that are placed in the bucket are automatically protected with the specified retention lock. Otherwise, by default, each object version has no automatic protection but can be configured with a retention period or legal hold. Specify as an integer followed by h for hours, d for days, m for months, or y for years. For example: 2d or 1y."`
 	FilesRetentionMode string `json:"files_retention_mode,omitempty" yaml:"files_retention_mode,omitempty" required:"false" doc:"Applicable if locking is enabled. The retention mode for new files. For views enabled for NFSv3 or SMB, if locking is enabled, files_retention_mode must be set to GOVERNANCE or COMPLIANCE. If the view is enabled for S3 and not for NFSv3 or SMB, files_retention_mode can be set to NONE. If GOVERNANCE, locked files cannot be deleted or changed. The Retention settings can be shortened or extended by users with sufficient permissions. If COMPLIANCE, locked files cannot be deleted or changed. Retention settings can be extended, but not shortened, by users with sufficient permissions. If NONE (S3 only), the retention mode is not set for the view; it is set individually for each object."`
@@ -80,15 +80,67 @@ type ViewRequestBody struct {
 	S3Versioning bool `json:"s3_versioning,omitempty" yaml:"s3_versioning,omitempty" required:"false" doc:"Enable S3 Versioning if S3 bucket. Versioning cannot be disabled after the view is created."`
 	SelectForLiveMonitoring bool `json:"select_for_live_monitoring,omitempty" yaml:"select_for_live_monitoring,omitempty" required:"false" doc:"Enables live monitoring on the view. Live monitoring can be enabled for up to ten views at one time. Analytics data for views is polled every 5 minutes by default and every 10 seconds with live monitoring."`
 	Share string `json:"share,omitempty" yaml:"share,omitempty" required:"false" doc:"SMB share name. Must be specified if SMB is specified in protocols."`
-	ShareAcl ViewsRequestBody_ShareAcl `json:"share_acl,omitempty" yaml:"share_acl,omitempty" required:"false" doc:"Share-level ACL details"`
+	ShareAcl ViewRequestBody_ShareAcl `json:"share_acl,omitempty" yaml:"share_acl,omitempty" required:"false" doc:"Share-level ACL details"`
 	TenantId int64 `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Associates the specified tenant with the view."`
-	UserImpersonation ViewsRequestBody_UserImpersonation `json:"user_impersonation,omitempty" yaml:"user_impersonation,omitempty" required:"false" doc:""`
+	UserImpersonation ViewRequestBody_UserImpersonation `json:"user_impersonation,omitempty" yaml:"user_impersonation,omitempty" required:"false" doc:""`
 	
 }
 
 // -----------------------------------------------------
 // RESPONSE BODY
 // -----------------------------------------------------
+
+
+// ViewRequestBody_BucketLogging represents a nested type for response body
+type ViewRequestBody_BucketLogging struct {
+	DestinationId int64 `json:"destination_id,omitempty" yaml:"destination_id,omitempty" required:"true" doc:"Specifies a view ID as the destination bucket for S3 bucket logging. The specified view must have the S3 bucket protocol enabled, must be on the same tenant as the view itself (the source view), must have the same bucket owner, and cannot be the same view as the source view. It also must not have S3 object locking enabled.  In bucket logging, a log entry is created in AWS log format for each request made to the source bucket. The log entries are periodically uploaded to the destination bucket. Configuring destination_id enables S3 bucket logging for the view."`
+	KeyFormat string `json:"key_format,omitempty" yaml:"key_format,omitempty" required:"false" doc:"The format for the S3 bucket logging object keys. SIMPLE_PREFIX=[DestinationPrefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString], PARTITIONED_PREFIX_EVENT_TIME=[DestinationPrefix][SourceUsername]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString] where the partitioning is done based on the time when the logged events occurred, PARTITIONED_PREFIX_DELIVERY_TIME=[DestinationPrefix][SourceUsername]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString] where the partitioning is done based on the time when the log object has been delivered to the destination bucket. Default: SIMPLE_PREFIX"`
+	Prefix string `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Specifies a prefix to be prepended to each key of a log object uploaded to the destination bucket. This prefix can be used to categorize log objects; for example, if you use the same destination bucket for multiple source buckets. The prefix can be up to 128 characters and must follow S3 object naming rules."`
+	
+}
+
+
+// ViewRequestBody_CreateDirAclItem represents a nested type for response body
+type ViewRequestBody_CreateDirAclItem struct {
+	Grantee string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"true" doc:"type of grantee"`
+	Perm string `json:"perm,omitempty" yaml:"perm,omitempty" required:"true" doc:"The type of permission to grant to the grantee"`
+	GroupType string `json:"group_type,omitempty" yaml:"group_type,omitempty" required:"false" doc:""`
+	SidStr string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"SID attribute of grantee. Specify this attribute or another for the grantee."`
+	UidOrGid string `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"UID of user type grantee or GID of group type grantee. Specify this attribute or another attribute for the grantee."`
+	VidOrVaid string `json:"vid_or_vaid,omitempty" yaml:"vid_or_vaid,omitempty" required:"false" doc:"VID of user type grantee or VAID of group type grantee. This is a VAST user or group attribute. Specify this attribute or another attribute for the guarantee."`
+	
+}
+
+
+// ViewRequestBody_ShareAcl represents a nested type for response body
+type ViewRequestBody_ShareAcl struct {
+	Acl []ViewRequestBody_ShareAcl_AclItem `json:"acl,omitempty" yaml:"acl,omitempty" required:"false" doc:"Share-level ACL"`
+	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if Share ACL is enabled on the view, otherwise False"`
+	
+}
+
+
+// ViewRequestBody_ShareAcl_AclItem represents a nested type for response body
+type ViewRequestBody_ShareAcl_AclItem struct {
+	Fqdn string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"false" doc:"FQDN of the grantee"`
+	Grantee string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"false" doc:"Type of grantee"`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the grantee"`
+	Perm string `json:"perm,omitempty" yaml:"perm,omitempty" required:"false" doc:"Permission to grant to the grantee"`
+	SidStr string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"Grantee’s SID"`
+	UidOrGid int64 `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"Grantee’s uid (if user) or gid (if group)"`
+	
+}
+
+
+// ViewRequestBody_UserImpersonation represents a nested type for response body
+type ViewRequestBody_UserImpersonation struct {
+	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if user impersonation is enabled"`
+	Identifier string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:"Identifier of the user to impersonate"`
+	IdentifierType string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:"The identifier type of the specified identifier."`
+	LoginName string `json:"login_name,omitempty" yaml:"login_name,omitempty" required:"false" doc:"Full username of user to impersonate, including domain name"`
+	Username string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:"The username of the user to impersonate"`
+	
+}
 
 
 // ViewResponseBody_BucketLogging represents a nested type for response body
@@ -134,58 +186,6 @@ type ViewResponseBody_ShareAcl_AclItem struct {
 
 // ViewResponseBody_UserImpersonation represents a nested type for response body
 type ViewResponseBody_UserImpersonation struct {
-	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if user impersonation is enabled"`
-	Identifier string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:"Identifier of the user to impersonate"`
-	IdentifierType string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:"The identifier type of the specified identifier."`
-	LoginName string `json:"login_name,omitempty" yaml:"login_name,omitempty" required:"false" doc:"Full username of user to impersonate, including domain name"`
-	Username string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:"The username of the user to impersonate"`
-	
-}
-
-
-// ViewsRequestBody_BucketLogging represents a nested type for response body
-type ViewsRequestBody_BucketLogging struct {
-	DestinationId int64 `json:"destination_id,omitempty" yaml:"destination_id,omitempty" required:"true" doc:"Specifies a view ID as the destination bucket for S3 bucket logging. The specified view must have the S3 bucket protocol enabled, must be on the same tenant as the view itself (the source view), must have the same bucket owner, and cannot be the same view as the source view. It also must not have S3 object locking enabled.  In bucket logging, a log entry is created in AWS log format for each request made to the source bucket. The log entries are periodically uploaded to the destination bucket. Configuring destination_id enables S3 bucket logging for the view."`
-	KeyFormat string `json:"key_format,omitempty" yaml:"key_format,omitempty" required:"false" doc:"The format for the S3 bucket logging object keys. SIMPLE_PREFIX=[DestinationPrefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString], PARTITIONED_PREFIX_EVENT_TIME=[DestinationPrefix][SourceUsername]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString] where the partitioning is done based on the time when the logged events occurred, PARTITIONED_PREFIX_DELIVERY_TIME=[DestinationPrefix][SourceUsername]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString] where the partitioning is done based on the time when the log object has been delivered to the destination bucket. Default: SIMPLE_PREFIX"`
-	Prefix string `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Specifies a prefix to be prepended to each key of a log object uploaded to the destination bucket. This prefix can be used to categorize log objects; for example, if you use the same destination bucket for multiple source buckets. The prefix can be up to 128 characters and must follow S3 object naming rules."`
-	
-}
-
-
-// ViewsRequestBody_CreateDirAclItem represents a nested type for response body
-type ViewsRequestBody_CreateDirAclItem struct {
-	Grantee string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"true" doc:"type of grantee"`
-	Perm string `json:"perm,omitempty" yaml:"perm,omitempty" required:"true" doc:"The type of permission to grant to the grantee"`
-	GroupType string `json:"group_type,omitempty" yaml:"group_type,omitempty" required:"false" doc:""`
-	SidStr string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"SID attribute of grantee. Specify this attribute or another for the grantee."`
-	UidOrGid string `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"UID of user type grantee or GID of group type grantee. Specify this attribute or another attribute for the grantee."`
-	VidOrVaid string `json:"vid_or_vaid,omitempty" yaml:"vid_or_vaid,omitempty" required:"false" doc:"VID of user type grantee or VAID of group type grantee. This is a VAST user or group attribute. Specify this attribute or another attribute for the guarantee."`
-	
-}
-
-
-// ViewsRequestBody_ShareAcl represents a nested type for response body
-type ViewsRequestBody_ShareAcl struct {
-	Acl []ViewsRequestBody_ShareAcl_AclItem `json:"acl,omitempty" yaml:"acl,omitempty" required:"false" doc:"Share-level ACL"`
-	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if Share ACL is enabled on the view, otherwise False"`
-	
-}
-
-
-// ViewsRequestBody_ShareAcl_AclItem represents a nested type for response body
-type ViewsRequestBody_ShareAcl_AclItem struct {
-	Fqdn string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"false" doc:"FQDN of the grantee"`
-	Grantee string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"false" doc:"Type of grantee"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the grantee"`
-	Perm string `json:"perm,omitempty" yaml:"perm,omitempty" required:"false" doc:"Permission to grant to the grantee"`
-	SidStr string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"Grantee’s SID"`
-	UidOrGid int64 `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"Grantee’s uid (if user) or gid (if group)"`
-	
-}
-
-
-// ViewsRequestBody_UserImpersonation represents a nested type for response body
-type ViewsRequestBody_UserImpersonation struct {
 	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if user impersonation is enabled"`
 	Identifier string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:"Identifier of the user to impersonate"`
 	IdentifierType string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:"The identifier type of the specified identifier."`

@@ -214,7 +214,7 @@ func (v *Version) CompareWith(other *version.Version) (int, error) {
 
 // +apibuilder:searchQuery:GET=quotas
 // +apibuilder:requestBody:POST=quotas
-// +apibuilder:responseBody:POST=quotas
+// +apibuilder:responseBody:SCHEMA=Quota
 type Quota struct {
 	*VastResource
 }

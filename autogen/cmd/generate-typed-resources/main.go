@@ -304,6 +304,21 @@ func toCamelCase(s string) string {
 	return strings.Join(parts, "")
 }
 
+// toSingularCamelCase converts plural resource paths to singular CamelCase
+// e.g., "quotas" -> "Quota", "views" -> "View"
+func toSingularCamelCase(resourcePath string) string {
+	// Convert to CamelCase first
+	camelCase := toCamelCase(resourcePath)
+	
+	// Simple pluralization rules (can be extended as needed)
+	if strings.HasSuffix(camelCase, "s") && len(camelCase) > 1 {
+		// Remove trailing 's' for simple plurals
+		return camelCase[:len(camelCase)-1]
+	}
+	
+	return camelCase
+}
+
 // isObject returns true if the schema represents an object type
 func isObject(prop *openapi3.Schema) bool {
 	return prop.Type != nil && len(*prop.Type) > 0 && (*prop.Type)[0] == openapi3.TypeObject
@@ -517,8 +532,8 @@ func generateRequestBodyFields(resourcePath, method string, registry *TypeRegist
 		return nil, fmt.Errorf("request body schema is empty for resource %q", resourcePath)
 	}
 
-	// Convert resource path to proper Go type name (e.g., "quotas" -> "Quotas")
-	typeName := toCamelCase(resourcePath) + "RequestBody"
+	// Convert resource path to singular Go type name (e.g., "quotas" -> "Quota")
+	typeName := toSingularCamelCase(resourcePath) + "RequestBody"
 	return generateFieldsFromSchema(schema.Value, typeName, registry, false)
 }
 
@@ -547,8 +562,8 @@ func generateResponseBodyFields(resourcePath, method string, registry *TypeRegis
 		return nil, fmt.Errorf("response body schema is empty for resource %q", resourcePath)
 	}
 
-	// Convert resource path to proper Go type name (e.g., "quotas" -> "Quotas")
-	typeName := toCamelCase(resourcePath) + "ResponseBody"
+	// Convert resource path to singular Go type name (e.g., "quotas" -> "Quota")
+	typeName := toSingularCamelCase(resourcePath) + "ResponseBody"
 	return generateFieldsFromSchema(schema.Value, typeName, registry, false)
 }
 

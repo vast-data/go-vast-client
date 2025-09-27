@@ -59,8 +59,8 @@ type QuotaRequestBody struct {
 // -----------------------------------------------------
 
 
-// QuotasResponseBody_DefaultGroupQuota represents a nested type for response body
-type QuotasResponseBody_DefaultGroupQuota struct {
+// QuotaResponseBody_DefaultGroupQuota represents a nested type for response body
+type QuotaResponseBody_DefaultGroupQuota struct {
 	GracePeriod string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
 	HardLimit int64 `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
 	HardLimitInodes int64 `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
@@ -71,8 +71,8 @@ type QuotasResponseBody_DefaultGroupQuota struct {
 }
 
 
-// QuotasResponseBody_DefaultUserQuota represents a nested type for response body
-type QuotasResponseBody_DefaultUserQuota struct {
+// QuotaResponseBody_DefaultUserQuota represents a nested type for response body
+type QuotaResponseBody_DefaultUserQuota struct {
 	GracePeriod string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
 	HardLimit int64 `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
 	HardLimitInodes int64 `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
@@ -84,13 +84,13 @@ type QuotasResponseBody_DefaultUserQuota struct {
 
 
 // QuotaResponseBody represents the response data for Quota operations
-// Generated from POST response body for resource: quotas
+// Generated from schema: Quota
 type QuotaResponseBody struct {
 	Cluster string `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
 	ClusterId int64 `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"Parent Cluster ID"`
 	DefaultEmail string `json:"default_email,omitempty" yaml:"default_email,omitempty" required:"false" doc:"The default email for sending user quota alert emails. This is used if no suffix is set and no address is found on providers."`
-	DefaultGroupQuota QuotasResponseBody_DefaultGroupQuota `json:"default_group_quota,omitempty" yaml:"default_group_quota,omitempty" required:"false" doc:""`
-	DefaultUserQuota QuotasResponseBody_DefaultUserQuota `json:"default_user_quota,omitempty" yaml:"default_user_quota,omitempty" required:"false" doc:""`
+	DefaultGroupQuota QuotaResponseBody_DefaultGroupQuota `json:"default_group_quota,omitempty" yaml:"default_group_quota,omitempty" required:"false" doc:""`
+	DefaultUserQuota QuotaResponseBody_DefaultUserQuota `json:"default_user_quota,omitempty" yaml:"default_user_quota,omitempty" required:"false" doc:""`
 	EnableAlarms bool `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enable alarms when users or groups are exceeding their limit"`
 	EnableEmailProviders bool `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Enable this setting to query Active Directory and LDAP services for user emails when sending userquota alert emails. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global email suffix is used if configured in cluster settings. If no suffix is set, default_email is used."`
 	GracePeriod string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
