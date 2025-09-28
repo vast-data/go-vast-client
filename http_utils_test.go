@@ -468,23 +468,23 @@ type mockRESTSession struct {
 	config *VMSConfig
 }
 
-func (m *mockRESTSession) Get(context.Context, string, Params) (Renderable, error) {
+func (m *mockRESTSession) Get(ctx context.Context, url string, params Params, headers []http.Header) (Renderable, error) {
 	return Record{}, nil
 }
 
-func (m *mockRESTSession) Post(context.Context, string, Params) (Renderable, error) {
+func (m *mockRESTSession) Post(ctx context.Context, url string, params Params, headers []http.Header) (Renderable, error) {
 	return Record{}, nil
 }
 
-func (m *mockRESTSession) Put(context.Context, string, Params) (Renderable, error) {
+func (m *mockRESTSession) Put(ctx context.Context, url string, params Params, headers []http.Header) (Renderable, error) {
 	return Record{}, nil
 }
 
-func (m *mockRESTSession) Patch(context.Context, string, Params) (Renderable, error) {
+func (m *mockRESTSession) Patch(ctx context.Context, url string, params Params, headers []http.Header) (Renderable, error) {
 	return Record{}, nil
 }
 
-func (m *mockRESTSession) Delete(context.Context, string, Params) (Renderable, error) {
+func (m *mockRESTSession) Delete(ctx context.Context, url string, params Params, headers []http.Header) (Renderable, error) {
 	return EmptyRecord{}, nil
 }
 
@@ -499,4 +499,165 @@ func (m *mockRESTSession) GetAuthenticator() Authenticator {
 // Helper function for tests
 func parseURL(urlStr string) (*url.URL, error) {
 	return url.Parse(urlStr)
+}
+
+// Tests for header consolidation and multipart detection
+
+func TestConsolidateHeaders_NoCustomHeaders(t *testing.T) {
+	session := &mockRESTSession{config: &VMSConfig{UserAgent: "TestAgent/1.0"}}
+
+	result := consolidateHeaders(session, nil)
+
+	// Check default headers are set
+	if result.Get(HeaderAccept) != ContentTypeJSON {
+		t.Errorf("Expected Accept header to be %s, got %s", ContentTypeJSON, result.Get(HeaderAccept))
+	}
+
+	if result.Get(HeaderContentType) != ContentTypeJSON {
+		t.Errorf("Expected Content-Type header to be %s, got %s", ContentTypeJSON, result.Get(HeaderContentType))
+	}
+
+	if result.Get(HeaderUserAgent) != "TestAgent/1.0" {
+		t.Errorf("Expected User-Agent header to be TestAgent/1.0, got %s", result.Get(HeaderUserAgent))
+	}
+}
+
+func TestConsolidateHeaders_CustomHeadersOverrideDefaults(t *testing.T) {
+	session := &mockRESTSession{config: &VMSConfig{UserAgent: "TestAgent/1.0"}}
+
+	customHeaders := []http.Header{{
+		HeaderContentType: []string{ContentTypeMultipartForm},
+		HeaderAccept:      []string{ContentTypeTextPlain},
+		"X-Custom":        []string{"CustomValue"},
+	}}
+
+	result := consolidateHeaders(session, customHeaders)
+
+	// Check custom headers override defaults
+	if result.Get(HeaderContentType) != ContentTypeMultipartForm {
+		t.Errorf("Expected Content-Type to be overridden to %s, got %s", ContentTypeMultipartForm, result.Get(HeaderContentType))
+	}
+
+	if result.Get(HeaderAccept) != ContentTypeTextPlain {
+		t.Errorf("Expected Accept to be overridden to %s, got %s", ContentTypeTextPlain, result.Get(HeaderAccept))
+	}
+
+	// Check default is still applied for non-overridden headers
+	if result.Get(HeaderUserAgent) != "TestAgent/1.0" {
+		t.Errorf("Expected User-Agent default to be preserved, got %s", result.Get(HeaderUserAgent))
+	}
+
+	// Check custom header is preserved
+	if result.Get("X-Custom") != "CustomValue" {
+		t.Errorf("Expected X-Custom header to be CustomValue, got %s", result.Get("X-Custom"))
+	}
+}
+
+func TestMultipartDetection_MultipartFormData(t *testing.T) {
+	session := &mockRESTSession{config: &VMSConfig{UserAgent: "TestAgent/1.0"}}
+
+	customHeaders := []http.Header{{
+		HeaderContentType: []string{ContentTypeMultipartForm},
+	}}
+
+	result := consolidateHeaders(session, customHeaders)
+	contentType := result.Get(HeaderContentType)
+	useMultipart := strings.Contains(strings.ToLower(contentType), ContentTypeMultipartForm)
+
+	if !useMultipart {
+		t.Errorf("Expected multipart to be detected for Content-Type: %s", contentType)
+	}
+}
+
+func TestMultipartDetection_NonMultipart(t *testing.T) {
+	session := &mockRESTSession{config: &VMSConfig{UserAgent: "TestAgent/1.0"}}
+
+	customHeaders := []http.Header{{
+		HeaderContentType: []string{ContentTypeJSON},
+	}}
+
+	result := consolidateHeaders(session, customHeaders)
+	contentType := result.Get(HeaderContentType)
+	useMultipart := strings.Contains(strings.ToLower(contentType), ContentTypeMultipartForm)
+
+	if useMultipart {
+		t.Errorf("Expected multipart NOT to be detected for Content-Type: %s", contentType)
+	}
+}
+
+func TestMultipartDetection_WithBoundary(t *testing.T) {
+	session := &mockRESTSession{config: &VMSConfig{UserAgent: "TestAgent/1.0"}}
+
+	customHeaders := []http.Header{{
+		HeaderContentType: []string{"multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"},
+	}}
+
+	result := consolidateHeaders(session, customHeaders)
+	contentType := result.Get(HeaderContentType)
+	useMultipart := strings.Contains(strings.ToLower(contentType), ContentTypeMultipartForm)
+
+	if !useMultipart {
+		t.Errorf("Expected multipart to be detected for Content-Type with boundary: %s", contentType)
+	}
+}
+
+func TestConsolidateHeaders_MultipleHeaderBlocks(t *testing.T) {
+	session := &mockRESTSession{config: &VMSConfig{UserAgent: "TestAgent/1.0"}}
+
+	customHeaders := []http.Header{
+		{
+			HeaderAccept: []string{ContentTypeJSON},
+			"X-First":    []string{"FirstValue"},
+		},
+		{
+			HeaderContentType: []string{ContentTypeMultipartForm},
+			"X-Second":        []string{"SecondValue"},
+		},
+	}
+
+	result := consolidateHeaders(session, customHeaders)
+
+	// Check all custom headers are applied
+	if result.Get(HeaderAccept) != ContentTypeJSON {
+		t.Errorf("Expected Accept to be %s, got %s", ContentTypeJSON, result.Get(HeaderAccept))
+	}
+
+	if result.Get(HeaderContentType) != ContentTypeMultipartForm {
+		t.Errorf("Expected Content-Type to be %s, got %s", ContentTypeMultipartForm, result.Get(HeaderContentType))
+	}
+
+	if result.Get("X-First") != "FirstValue" {
+		t.Errorf("Expected X-First to be FirstValue, got %s", result.Get("X-First"))
+	}
+
+	if result.Get("X-Second") != "SecondValue" {
+		t.Errorf("Expected X-Second to be SecondValue, got %s", result.Get("X-Second"))
+	}
+
+	// Default should still be applied
+	if result.Get(HeaderUserAgent) != "TestAgent/1.0" {
+		t.Errorf("Expected User-Agent default to be TestAgent/1.0, got %s", result.Get(HeaderUserAgent))
+	}
+}
+
+func TestConsolidateHeaders_EmptyCustomHeaders(t *testing.T) {
+	session := &mockRESTSession{config: &VMSConfig{UserAgent: "TestAgent/1.0"}}
+
+	// Empty slice should behave same as nil
+	customHeaders := []http.Header{}
+
+	result := consolidateHeaders(session, customHeaders)
+
+	// Should get all defaults
+	if result.Get(HeaderAccept) != ContentTypeJSON {
+		t.Errorf("Expected Accept header to be %s, got %s", ContentTypeJSON, result.Get(HeaderAccept))
+	}
+
+	if result.Get(HeaderContentType) != ContentTypeJSON {
+		t.Errorf("Expected Content-Type header to be %s, got %s", ContentTypeJSON, result.Get(HeaderContentType))
+	}
+
+	if result.Get(HeaderUserAgent) != "TestAgent/1.0" {
+		t.Errorf("Expected User-Agent header to be TestAgent/1.0, got %s", result.Get(HeaderUserAgent))
+	}
 }

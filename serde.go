@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"reflect"
 	"sort"
@@ -20,22 +21,25 @@ const (
 
 var empty = struct{}{}
 var printableAttrs = map[string]struct{}{
-	"id":             empty,
-	"name":           empty,
-	"sys_version":    empty,
-	"path":           empty,
-	"tenant_id":      empty,
-	"nqn":            empty,
-	"ip_ranges":      empty,
-	"volumes":        empty,
-	"nguid":          empty,
-	"subsystem_name": empty,
-	"size":           empty,
-	"block_host":     empty,
-	"volume":         empty,
-	"state":          empty,
-	"access_key":     empty,
-	"secret_key":     empty,
+	"id":                 empty,
+	"name":               empty,
+	"sys_version":        empty,
+	"path":               empty,
+	"tenant_id":          empty,
+	"nqn":                empty,
+	"ip_ranges":          empty,
+	"volumes":            empty,
+	"nguid":              empty,
+	"subsystem_name":     empty,
+	"size":               empty,
+	"block_host":         empty,
+	"volume":             empty,
+	"state":              empty,
+	"access_key":         empty,
+	"secret_key":         empty,
+	"kadmin_servers":     empty,
+	"service_principals": empty,
+	"kdc":                empty,
 }
 
 type FillFunc func(Record, any) error
@@ -56,6 +60,12 @@ var fillFunc FillFunc = func(r Record, container any) error {
 // used for constructing query strings or request bodies.
 type Params map[string]any
 
+// FileData represents a file to be uploaded in multipart form data
+type FileData struct {
+	Filename string
+	Content  []byte
+}
+
 // ToQuery serializes the Params into a URL-encoded query string.
 // This is useful for GET requests where parameters are passed via the URL.
 func (pr *Params) ToQuery() string {
@@ -70,6 +80,57 @@ func (pr *Params) ToBody() (io.Reader, error) {
 		return nil, err
 	}
 	return bytes.NewReader(buffer), nil
+}
+
+// MultipartFormData represents the result of ToMultipartFormData()
+type MultipartFormData struct {
+	Body        io.Reader
+	ContentType string
+}
+
+// ToMultipartFormData serializes the Params into multipart/form-data format.
+// Files should be provided as FileData values in the Params map.
+// Returns a MultipartFormData struct containing the body and content type.
+func (pr *Params) ToMultipartFormData() (*MultipartFormData, error) {
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	for key, value := range *pr {
+		switch v := value.(type) {
+		case FileData:
+			// Handle file uploads
+			fileWriter, err := writer.CreateFormFile(key, v.Filename)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create form file for %s: %w", key, err)
+			}
+			if _, err := fileWriter.Write(v.Content); err != nil {
+				return nil, fmt.Errorf("failed to write file content for %s: %w", key, err)
+			}
+		case []byte:
+			// Handle raw byte data as file without filename
+			fileWriter, err := writer.CreateFormFile(key, key)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create form file for %s: %w", key, err)
+			}
+			if _, err := fileWriter.Write(v); err != nil {
+				return nil, fmt.Errorf("failed to write byte content for %s: %w", key, err)
+			}
+		default:
+			// Handle regular form fields
+			if err := writer.WriteField(key, fmt.Sprintf("%v", value)); err != nil {
+				return nil, fmt.Errorf("failed to write field %s: %w", key, err)
+			}
+		}
+	}
+
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
+	}
+
+	return &MultipartFormData{
+		Body:        &body,
+		ContentType: writer.FormDataContentType(),
+	}, nil
 }
 
 // Update merges another Params map into the original Params.

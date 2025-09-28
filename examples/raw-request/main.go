@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	client "github.com/vast-data/go-vast-client"
 	"io"
 	"log"
 	"net/http"
+
+	client "github.com/vast-data/go-vast-client"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 
 	// Get View by name
 	path := "views?name=myview"
-	result, err := rest.Session.Get(ctx, path, nil)
+	result, err := rest.Session.Get(ctx, path, nil, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +43,7 @@ func main() {
 		firstRecord := recordSet[0]
 		// Get View by id
 		path = fmt.Sprintf("views/%d", firstRecord.RecordID())
-		result, err = rest.Session.Get(ctx, path, nil)
+		result, err = rest.Session.Get(ctx, path, nil, nil)
 		if err != nil {
 			panic(err)
 		}

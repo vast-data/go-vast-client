@@ -20,11 +20,11 @@ const (
 )
 
 type RESTSession interface {
-	Get(context.Context, string, Params) (Renderable, error)
-	Post(context.Context, string, Params) (Renderable, error)
-	Put(context.Context, string, Params) (Renderable, error)
-	Patch(context.Context, string, Params) (Renderable, error)
-	Delete(context.Context, string, Params) (Renderable, error)
+	Get(context.Context, string, Params, []http.Header) (Renderable, error)
+	Post(context.Context, string, Params, []http.Header) (Renderable, error)
+	Put(context.Context, string, Params, []http.Header) (Renderable, error)
+	Patch(context.Context, string, Params, []http.Header) (Renderable, error)
+	Delete(context.Context, string, Params, []http.Header) (Renderable, error)
 	GetConfig() *VMSConfig
 	GetAuthenticator() Authenticator
 }
@@ -87,7 +87,7 @@ type VMSSession struct {
 	auth   Authenticator
 }
 
-type VMSSessionMethod func(context.Context, string, Params) (Renderable, error)
+type VMSSessionMethod func(context.Context, string, Params, []http.Header) (Renderable, error)
 
 func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
 	//Create a new session object
@@ -113,6 +113,16 @@ func request[T RecordUnion](
 	r VastResourceAPIWithContext,
 	verb, path, apiVer string,
 	params, body Params,
+) (T, error) {
+	return requestWithHeaders[T](ctx, r, verb, path, apiVer, params, body, nil)
+}
+
+func requestWithHeaders[T RecordUnion](
+	ctx context.Context,
+	r VastResourceAPIWithContext,
+	verb, path, apiVer string,
+	params, body Params,
+	headers []http.Header,
 ) (T, error) {
 	var (
 		vmsMethod VMSSessionMethod
@@ -148,7 +158,7 @@ func request[T RecordUnion](
 		return nil, err
 	}
 
-	response, err := vmsMethod(ctx, url, body)
+	response, err := vmsMethod(ctx, url, body, headers)
 	if err != nil {
 		return nil, err
 	}
@@ -192,24 +202,24 @@ func request[T RecordUnion](
 	return resultVal, nil
 }
 
-func (s *VMSSession) Get(ctx context.Context, url string, _ Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodGet, url, nil, nil)
+func (s *VMSSession) Get(ctx context.Context, url string, _ Params, headers []http.Header) (Renderable, error) {
+	return doRequestWithRetries(ctx, s, http.MethodGet, url, nil, headers)
 }
 
-func (s *VMSSession) Post(ctx context.Context, url string, body Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodPost, url, body, nil)
+func (s *VMSSession) Post(ctx context.Context, url string, body Params, headers []http.Header) (Renderable, error) {
+	return doRequestWithRetries(ctx, s, http.MethodPost, url, body, headers)
 }
 
-func (s *VMSSession) Put(ctx context.Context, url string, body Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodPut, url, body, nil)
+func (s *VMSSession) Put(ctx context.Context, url string, body Params, headers []http.Header) (Renderable, error) {
+	return doRequestWithRetries(ctx, s, http.MethodPut, url, body, headers)
 }
 
-func (s *VMSSession) Patch(ctx context.Context, url string, body Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodPatch, url, body, nil)
+func (s *VMSSession) Patch(ctx context.Context, url string, body Params, headers []http.Header) (Renderable, error) {
+	return doRequestWithRetries(ctx, s, http.MethodPatch, url, body, headers)
 }
 
-func (s *VMSSession) Delete(ctx context.Context, url string, body Params) (Renderable, error) {
-	return doRequestWithRetries(ctx, s, http.MethodDelete, url, body, nil)
+func (s *VMSSession) Delete(ctx context.Context, url string, body Params, headers []http.Header) (Renderable, error) {
+	return doRequestWithRetries(ctx, s, http.MethodDelete, url, body, headers)
 }
 
 // fetchSchema retrieves the OpenAPI schema using Basic Auth and custom headers
@@ -222,8 +232,8 @@ func (s *VMSSession) fetchSchema(ctx context.Context) (Renderable, error) {
 	authStr := s.config.Username + ":" + s.config.Password
 	encoded := base64.StdEncoding.EncodeToString([]byte(authStr))
 	headers := []http.Header{{
-		"Authorization": []string{"Basic " + encoded},
-		"Accept":        []string{"application/openapi+json"},
+		HeaderAuthorization: []string{AuthTypeBasic + " " + encoded},
+		HeaderAccept:        []string{ContentTypeOpenAPI},
 	}}
 	return doRequest(ctx, s, http.MethodGet, url+"?format=openapi", nil, headers)
 }
@@ -235,11 +245,45 @@ func (s *VMSSession) GetAuthenticator() Authenticator {
 	return s.auth
 }
 
-func setupHeaders(s RESTSession, r *http.Request) error {
+func consolidateHeaders(s RESTSession, customHeaders []http.Header) http.Header {
+	finalHeaders := make(http.Header)
+
+	// Apply custom headers first
+	for _, header := range customHeaders {
+		for key, values := range header {
+			for _, value := range values {
+				finalHeaders.Add(key, value)
+			}
+		}
+	}
+
+	// Set default headers only if not already provided
+	if finalHeaders.Get(HeaderAccept) == "" {
+		finalHeaders.Set(HeaderAccept, ContentTypeJSON)
+	}
+
+	if finalHeaders.Get(HeaderContentType) == "" {
+		finalHeaders.Set(HeaderContentType, ContentTypeJSON)
+	}
+
+	if finalHeaders.Get(HeaderUserAgent) == "" {
+		finalHeaders.Set(HeaderUserAgent, s.GetConfig().UserAgent)
+	}
+
+	return finalHeaders
+}
+
+func setupHeaders(s RESTSession, r *http.Request, headers http.Header) error {
+	// Always set authentication headers
 	s.GetAuthenticator().setAuthHeader(&r.Header)
-	r.Header.Add("Accept", ApplicationJson)
-	r.Header.Add("Content-type", ApplicationJson)
-	r.Header.Set("User-Agent", s.GetConfig().UserAgent)
+
+	// Apply all consolidated headers in one pass
+	for key, values := range headers {
+		for _, value := range values {
+			r.Header.Add(key, value)
+		}
+	}
+
 	return nil
 }
 
@@ -267,34 +311,56 @@ func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params
 	if url, err = pathToUrl(s, url); err != nil {
 		return nil, err
 	}
+
+	// Consolidate headers
+	finalHeaders := consolidateHeaders(s, headers)
+
+	// Determine if multipart/form-data is being used
+	contentType := finalHeaders.Get(HeaderContentType)
+	useMultipart := strings.Contains(strings.ToLower(contentType), ContentTypeMultipartForm)
+
 	if body == nil {
 		requestData = bytes.NewReader(nil)
 	} else {
-		if requestData, err = body.ToBody(); err != nil {
-			return nil, err
+		if useMultipart {
+			// Use multipart form data
+			multipartData, err := body.ToMultipartFormData()
+			if err != nil {
+				return nil, fmt.Errorf("failed to create multipart form data: %w", err)
+			}
+			requestData = multipartData.Body
+
+			// Update the Content-Type header with the proper boundary
+			finalHeaders.Set(HeaderContentType, multipartData.ContentType)
+		} else {
+			// Use regular JSON body
+			if requestData, err = body.ToBody(); err != nil {
+				return nil, err
+			}
 		}
 	}
 	req, err := http.NewRequestWithContext(ctx, verb, url, requestData)
 	if err != nil {
 		return nil, err
 	}
-	if beforeRequestData, err = body.ToBody(); err != nil {
-		return nil, err
-	}
-	if headers != nil {
-		// Setup custom headers if provided
-		for _, header := range headers {
-			for key, values := range header {
-				for _, value := range values {
-					req.Header.Add(key, value)
-				}
+	// Prepare beforeRequestData for interceptors
+	if body != nil {
+		if useMultipart {
+			// For multipart data, create a fresh copy for the interceptor
+			multipartData, err := body.ToMultipartFormData()
+			if err != nil {
+				return nil, fmt.Errorf("failed to create multipart form data for interceptor: %w", err)
+			}
+			beforeRequestData = multipartData.Body
+		} else {
+			if beforeRequestData, err = body.ToBody(); err != nil {
+				return nil, err
 			}
 		}
-	} else {
-		// Setup default headers
-		if err = setupHeaders(s, req); err != nil {
-			return nil, err
-		}
+	}
+	// Setup headers (both custom and defaults)
+	if err = setupHeaders(s, req, finalHeaders); err != nil {
+		return nil, err
 	}
 
 	// before request interceptor

@@ -42,7 +42,7 @@ func main() {
 	// Proper URL with manually encoded multi-param `prop_list`
 	urlWithQuery := "monitors/ad_hoc_query?" + values.Encode()
 
-	res, err := session.Get(ctx, urlWithQuery, nil)
+	res, err := session.Get(ctx, urlWithQuery, nil, nil)
 	if err != nil {
 		panic(err)
 	}

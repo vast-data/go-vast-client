@@ -64,7 +64,8 @@ type VastResourceType interface {
 		LocalProvider |
 		LocalS3Key |
 		EncryptionGroup |
-		SamlConfig
+		SamlConfig |
+		Kerberos
 }
 
 // ------------------------------------------------------
@@ -1119,3 +1120,43 @@ func (sc *SamlConfig) DeleteConfig(vmsId any, idpName string) (EmptyRecord, erro
 }
 
 // ------------------------------------------------------
+
+type Kerberos struct {
+	*VastResource
+}
+
+// GenerateKeytabWithContext generates a keytab for a specific Kerberos configuration
+// Requires admin_username and admin_password in params
+func (k *Kerberos) GenerateKeytabWithContext(ctx context.Context, kerberosId any, params Params) (Record, error) {
+	path := buildResourcePathWithID(k.resourcePath, kerberosId, "keytab")
+	return request[Record](ctx, k, http.MethodPost, path, k.apiVersion, nil, params)
+}
+
+func (k *Kerberos) GenerateKeytab(kerberosId any, params Params) (Record, error) {
+	return k.GenerateKeytabWithContext(k.rest.ctx, kerberosId, params)
+}
+
+// UploadKeytabWithContext uploads a keytab file for a specific Kerberos configuration
+// This method uses multipart/form-data for file upload
+func (k *Kerberos) UploadKeytabWithContext(ctx context.Context, kerberosId any, keytabFile []byte, filename string) (Record, error) {
+	path := buildResourcePathWithID(k.resourcePath, kerberosId, "keytab")
+
+	// Prepare multipart form data using Params
+	params := Params{
+		"keytab_file": FileData{
+			Filename: filename,
+			Content:  keytabFile,
+		},
+	}
+
+	// Create headers to indicate multipart/form-data
+	headers := []http.Header{{
+		HeaderContentType: []string{ContentTypeMultipartForm},
+	}}
+
+	return requestWithHeaders[Record](ctx, k, http.MethodPut, path, k.apiVersion, nil, params, headers)
+}
+
+func (k *Kerberos) UploadKeytab(kerberosId any, keytabFile []byte, filename string) (Record, error) {
+	return k.UploadKeytabWithContext(k.rest.ctx, kerberosId, keytabFile, filename)
+}

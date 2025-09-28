@@ -105,9 +105,9 @@ func (auth *JWTAuthenticator) refreshToken(client *http.Client) (*http.Response,
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(HeaderContentType, ContentTypeJSON)
 	if auth.Tenant != "" {
-		req.Header.Set("X-Tenant-Name", auth.Tenant)
+		req.Header.Set(HeaderXTenantName, auth.Tenant)
 	}
 
 	return client.Do(req)
@@ -131,9 +131,9 @@ func (auth *JWTAuthenticator) acquireToken(client *http.Client) (*http.Response,
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(HeaderContentType, ContentTypeJSON)
 	if auth.Tenant != "" {
-		req.Header.Set("X-Tenant-Name", auth.Tenant)
+		req.Header.Set(HeaderXTenantName, auth.Tenant)
 	}
 
 	return client.Do(req)
@@ -186,9 +186,9 @@ func (auth *JWTAuthenticator) authorize() error {
 }
 
 func (auth *JWTAuthenticator) setAuthHeader(headers *http.Header) {
-	headers.Add("Authorization", "Bearer "+auth.Token.Access)
+	headers.Add(HeaderAuthorization, AuthTypeBearer+" "+auth.Token.Access)
 	if auth.Tenant != "" {
-		headers.Add("X-Tenant-Name", auth.Tenant)
+		headers.Add(HeaderXTenantName, auth.Tenant)
 	}
 }
 
@@ -225,7 +225,7 @@ func (auth *ApiRTokenAuthenticator) authorize() error {
 func (auth *ApiRTokenAuthenticator) setAuthHeader(headers *http.Header) {
 	headers.Add("Authorization", "Api-Token "+auth.Token)
 	if auth.Tenant != "" {
-		headers.Add("X-Tenant-Name", auth.Tenant)
+		headers.Add(HeaderXTenantName, auth.Tenant)
 	}
 }
 

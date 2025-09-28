@@ -5,7 +5,6 @@ import (
 	"net"
 )
 
-const ApplicationJson = "application/json"
 
 func toInt(val any) (int64, error) {
 	var idInt int64
