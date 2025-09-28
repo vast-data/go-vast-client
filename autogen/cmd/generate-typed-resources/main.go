@@ -18,6 +18,53 @@ import (
 	"github.com/vast-data/go-vast-client/autogen/vastparser"
 )
 
+// isAmbiguousArray checks if a schema represents an array of ambiguous objects
+func isAmbiguousArray(schema *openapi3.Schema) bool {
+	if schema == nil || schema.Type == nil || len(*schema.Type) == 0 {
+		return false
+	}
+
+	// Check if it's an array type
+	for _, t := range *schema.Type {
+		if t == "array" {
+			// Check if the array items are ambiguous objects
+			if schema.Items != nil && schema.Items.Value != nil {
+				return isAmbiguousObject(schema.Items.Value)
+			}
+		}
+	}
+
+	return false
+}
+
+// pluralize converts a resource name to its plural form used in the untyped client
+func pluralize(name string) string {
+	// Handle special cases that don't follow simple "s" pluralization
+	specialCases := map[string]string{
+		"ActiveDirectory":    "ActiveDirectories",
+		"Dns":                "Dns",                // DNS is already plural-like (Domain Name System)
+		"Nis":                "Nis",                // NIS is already plural-like (Network Information Service)
+		"ProtectionPolicy":   "ProtectionPolicies", // Policy -> Policies
+		"QosPolicy":          "QosPolicies",        // Policy -> Policies
+		"ViewPolicy":         "ViewPolies",         // Note: ViewPolies appears to be a typo in rest.go
+		"S3Policy":           "S3Policies",         // Policy -> Policies
+		"ReplicationPeers":   "ReplicationPeers",   // Already plural
+		"S3replicationPeers": "S3replicationPeers", // Already plural
+		"UserKey":            "UserKeys",           // Key -> Keys
+		"NonLocalUserKey":    "NonLocalUserKeys",   // Key -> Keys
+		"LocalS3Key":         "LocalS3Keys",        // Key -> Keys
+		"Vms":                "Vms",                // VMS is already plural-like (Virtual Machine System)
+		// Add other irregular plurals as needed
+	}
+
+	if plural, exists := specialCases[name]; exists {
+		return plural
+	}
+
+	// Default case: simple "s" addition
+	return name + "s"
+}
+
 // Field represents a struct field
 type Field struct {
 	Name        string
@@ -81,7 +128,7 @@ type ResourceData struct {
 	LowerName          string
 	PluralName         string
 	SearchParamsFields []Field
-	CreateBodyFields   []Field // Renamed from RequestBodyFields
+	RequestBodyFields  []Field
 	ModelFields        []Field // Renamed from ResponseBodyFields
 	NestedTypes        []*NestedType
 	Resource           *vastparser.VastResource
@@ -132,16 +179,19 @@ func main() {
 	// Generate template data
 	templateData := TemplateData{}
 	for _, resource := range resources {
+		// Print resource header
+		fmt.Printf("\n%s:\n", resource.Name)
+
 		// Validate required markers
 		if err := validateResourceMarkers(&resource); err != nil {
-			log.Printf("Error: Resource %s validation failed: %v", resource.Name, err)
+			fmt.Printf("  ❌ Error: Resource validation failed: %v\n", err)
 			continue
 		}
 
 		resourceData := ResourceData{
 			Name:       resource.Name,
 			LowerName:  strings.ToLower(resource.Name),
-			PluralName: resource.Name + "s", // Simple pluralization
+			PluralName: pluralize(resource.Name),
 			Resource:   &resource,
 		}
 
@@ -156,7 +206,7 @@ func main() {
 			searchURL := resource.GetSearchQuery("GET")
 			fields, err := generateSearchParamsFields(searchURL, "GET", searchRegistry)
 			if err != nil {
-				log.Printf("Warning: Failed to generate search params fields for %s: %v", resource.Name, err)
+				fmt.Printf("  ⚠️  Warning: Failed to generate search params fields: %v\n", err)
 			} else {
 				searchFields = fields
 			}
@@ -164,7 +214,7 @@ func main() {
 			schemaName := resource.GetSearchQuery("SCHEMA")
 			fields, err := generateSearchParamsFromSchema(schemaName, searchRegistry)
 			if err != nil {
-				log.Printf("Warning: Failed to generate search params from schema for %s: %v", resource.Name, err)
+				fmt.Printf("  ⚠️  Warning: Failed to generate search params from schema: %v\n", err)
 			} else {
 				searchFields = fields
 			}
@@ -173,30 +223,30 @@ func main() {
 		// Add common searchable fields from response body if they exist
 		commonFields, err := extractCommonSearchableFields(&resource, searchRegistry)
 		if err != nil {
-			log.Printf("Warning: Failed to extract common searchable fields for %s: %v", resource.Name, err)
+			fmt.Printf("  ⚠️  Warning: Failed to extract common searchable fields: %v\n", err)
 		} else {
 			searchFields = mergeSearchFields(searchFields, commonFields)
 		}
 
 		resourceData.SearchParamsFields = searchFields
 
-		// Generate create body fields (only for non-read-only resources)
+		// Generate request body fields (only for non-read-only resources)
 		if !resource.IsReadOnly() {
-			if resource.HasCreateBody("POST") {
-				createURL := resource.GetCreateBody("POST")
-				createFields, err := generateCreateBodyFields(createURL, "POST", requestRegistry)
+			if resource.HasRequestBody("POST") {
+				requestURL := resource.GetRequestBody("POST")
+				requestFields, err := generateRequestBodyFields(requestURL, "POST", requestRegistry)
 				if err != nil {
-					log.Printf("Warning: Failed to generate create body fields for %s: %v", resource.Name, err)
+					fmt.Printf("  ⚠️  Warning: Failed to generate request body fields: %v\n", err)
 				} else {
-					resourceData.CreateBodyFields = createFields
+					resourceData.RequestBodyFields = requestFields
 				}
-			} else if resource.HasCreateBody("SCHEMA") {
-				schemaName := resource.GetCreateBody("SCHEMA")
-				createFields, err := generateCreateBodyFromSchema(schemaName, requestRegistry)
+			} else if resource.HasRequestBody("SCHEMA") {
+				schemaName := resource.GetRequestBody("SCHEMA")
+				requestFields, err := generateRequestBodyFromSchema(schemaName, requestRegistry)
 				if err != nil {
-					log.Printf("Warning: Failed to generate create body from schema for %s: %v", resource.Name, err)
+					fmt.Printf("  ⚠️  Warning: Failed to generate request body from schema: %v\n", err)
 				} else {
-					resourceData.CreateBodyFields = createFields
+					resourceData.RequestBodyFields = requestFields
 				}
 			}
 		}
@@ -206,7 +256,7 @@ func main() {
 			modelURL := resource.GetModel("POST")
 			modelFields, err := generateModelFields(modelURL, "POST", responseRegistry)
 			if err != nil {
-				log.Printf("Warning: Failed to generate model fields for %s: %v", resource.Name, err)
+				fmt.Printf("  ⚠️  Warning: Failed to generate model fields: %v\n", err)
 			} else {
 				resourceData.ModelFields = modelFields
 			}
@@ -214,7 +264,7 @@ func main() {
 			schemaName := resource.GetModel("SCHEMA")
 			modelFields, err := generateModelFromSchema(schemaName, responseRegistry)
 			if err != nil {
-				log.Printf("Warning: Failed to generate model from schema for %s: %v", resource.Name, err)
+				fmt.Printf("  ⚠️  Warning: Failed to generate model from schema: %v\n", err)
 			} else {
 				resourceData.ModelFields = modelFields
 			}
@@ -330,6 +380,8 @@ func generateRequestFields(resourcePath string, registry *TypeRegistry) ([]Field
 
 // toCamelCase converts snake_case to CamelCase
 func toCamelCase(s string) string {
+	// Replace hyphens with underscores first, then split on underscores
+	s = strings.ReplaceAll(s, "-", "_")
 	parts := strings.Split(s, "_")
 	for i, part := range parts {
 		if len(part) > 0 {
@@ -356,7 +408,17 @@ func toSingularCamelCase(resourcePath string) string {
 
 // escapeQuotes escapes double quotes in strings to prevent breaking struct tags
 func escapeQuotes(s string) string {
-	return strings.ReplaceAll(s, `"`, `\"`)
+	// Escape quotes, backticks, and newlines for Go struct tags
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	s = strings.ReplaceAll(s, "`", "'") // Replace backticks with single quotes
+	s = strings.ReplaceAll(s, "\n", " ")
+	s = strings.ReplaceAll(s, "\r", " ")
+	s = strings.ReplaceAll(s, "\t", " ")
+	// Collapse multiple spaces into single space
+	for strings.Contains(s, "  ") {
+		s = strings.ReplaceAll(s, "  ", " ")
+	}
+	return strings.TrimSpace(s)
 }
 
 // validateResourceMarkers validates that a resource has all required markers
@@ -371,10 +433,10 @@ func validateResourceMarkers(resource *vastparser.VastResource) error {
 		return fmt.Errorf("missing required model marker (POST or SCHEMA)")
 	}
 
-	// Non-read-only resources must have createBody (requestBody)
+	// Non-read-only resources must have requestBody
 	if !resource.IsReadOnly() {
-		if !resource.HasCreateBody("POST") && !resource.HasCreateBody("SCHEMA") {
-			return fmt.Errorf("non-read-only resource missing required createBody marker (POST or SCHEMA)")
+		if !resource.HasRequestBody("POST") && !resource.HasRequestBody("SCHEMA") {
+			return fmt.Errorf("non-read-only resource missing required requestBody marker (POST or SCHEMA)")
 		}
 	}
 
@@ -504,14 +566,15 @@ func getGoTypeFromOpenAPI(schema *openapi3.Schema, usePointers bool) string {
 	case "boolean":
 		goType = "bool"
 	case "array":
-		goType = "[]interface{}" // generic array type
+		goType = "*[]interface{}" // pointer to slice for proper omitempty handling
 	case "object":
 		goType = "map[string]interface{}" // generic object type
 	default:
 		goType = "interface{}" // fallback for unknown types
 	}
 
-	if usePointers && baseType != "array" && baseType != "object" {
+	// Only use pointers for objects, arrays are already pointers, primitives stay as-is
+	if usePointers && baseType == "object" {
 		return "*" + goType
 	}
 	return goType
@@ -557,24 +620,24 @@ func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePa
 		// Apply filtering logic from terraform provider
 		if !isPrimitive(p.Schema.Value) {
 			// We search only for primitive types
-			log.Printf("Skipping non-primitive search param '%s' for resource %s", p.Name, resourcePath)
+			fmt.Printf("    ⏭️  Skipping non-primitive search param '%s'\n", p.Name)
 			continue
 		}
 
 		name := p.Name
 		if contains(excludeSearchParams, name) {
-			log.Printf("Skipping excluded search param '%s' for resource %s", name, resourcePath)
+			fmt.Printf("    ⏭️  Skipping excluded search param '%s'\n", name)
 			continue
 		}
 
 		// Skip fields with double underscores (Django-style query filters)
 		if strings.Contains(name, "__") {
-			log.Printf("Skipping Django-style query filter '%s' for resource %s", name, resourcePath)
+			fmt.Printf("    ⏭️  Skipping Django-style query filter '%s'\n", name)
 			continue
 		}
 
 		if p.Schema == nil || p.Schema.Value == nil || p.Schema.Value.Type == nil || len(*p.Schema.Value.Type) == 0 {
-			log.Printf("Skipping search param '%s' with invalid schema for resource %s", name, resourcePath)
+			fmt.Printf("    ⏭️  Skipping search param '%s' with invalid schema\n", name)
 			continue
 		}
 
@@ -600,8 +663,8 @@ func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePa
 	return fields, nil
 }
 
-// generateCreateBodyFields generates create body fields using method-based resolution
-func generateCreateBodyFields(resourcePath, method string, registry *TypeRegistry) ([]Field, error) {
+// generateRequestBodyFields generates request body fields using method-based resolution
+func generateRequestBodyFields(resourcePath, method string, registry *TypeRegistry) ([]Field, error) {
 	var schema *openapi3.SchemaRef
 	var err error
 
@@ -626,8 +689,8 @@ func generateCreateBodyFields(resourcePath, method string, registry *TypeRegistr
 	}
 
 	// Convert resource path to singular Go type name (e.g., "quotas" -> "Quota")
-	typeName := toSingularCamelCase(resourcePath) + "CreateBody"
-	return generateFieldsFromSchema(schema.Value, typeName, registry, false, "CREATE BODY")
+	typeName := toSingularCamelCase(resourcePath) + "RequestBody"
+	return generateFieldsFromSchema(schema.Value, typeName, registry, false, "REQUEST BODY")
 }
 
 // generateModelFields generates model fields using method-based resolution
@@ -703,7 +766,7 @@ func extractCommonSearchableFields(resource *vastparser.VastResource, registry *
 
 			// Only include primitive types for search params
 			if !isPrimitive(propRef.Value) {
-				log.Printf("Skipping non-primitive common searchable field '%s' for resource %s", fieldName, resource.Name)
+				fmt.Printf("    ⏭️  Skipping non-primitive common searchable field '%s'\n", fieldName)
 				continue
 			}
 
@@ -729,7 +792,7 @@ func extractCommonSearchableFields(resource *vastparser.VastResource, registry *
 			}
 
 			fields = append(fields, field)
-			log.Printf("Added common searchable field '%s' to search params for resource %s", fieldName, resource.Name)
+			fmt.Printf("    ✅ Added common searchable field '%s'\n", fieldName)
 		}
 	}
 
@@ -772,15 +835,15 @@ func generateSearchParamsFromSchema(schemaName string, registry *TypeRegistry) (
 	return generateFieldsFromSchema(schema.Value, schemaName+"SearchParams", registry, true, "SEARCH PARAMS")
 }
 
-// generateCreateBodyFromSchema generates create body fields from a schema component
-func generateCreateBodyFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
+// generateRequestBodyFromSchema generates request body fields from a schema component
+func generateRequestBodyFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
 	// Get schema from components
 	schema, err := api.GetSchema_FromComponents(schemaName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
 
-	return generateFieldsFromSchema(schema.Value, schemaName+"CreateBody", registry, false, "CREATE BODY")
+	return generateFieldsFromSchema(schema.Value, schemaName+"RequestBody", registry, false, "REQUEST BODY")
 }
 
 // generateModelFromSchema generates model fields from a schema component
@@ -817,7 +880,13 @@ func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, re
 
 		// Skip ambiguous objects (objects without properties) like terraform provider
 		if isAmbiguousObject(propRef.Value) {
-			log.Printf("Warning: Skipping ambiguous object field '%s' (object without properties)", propName)
+			fmt.Printf("    ⚠️  Skipping ambiguous object field '%s' (object without properties)\n", propName)
+			continue
+		}
+
+		// Skip ambiguous arrays (arrays of objects without properties)
+		if isAmbiguousArray(propRef.Value) {
+			fmt.Printf("    ⚠️  Skipping ambiguous array field '%s' (array of objects without properties)\n", propName)
 			continue
 		}
 
@@ -895,13 +964,13 @@ func getGoTypeFromOpenAPIRecursive(schema *openapi3.Schema, typeName string, reg
 		goType = "bool"
 	case "array":
 		if schema.Items == nil || schema.Items.Value == nil {
-			goType = "[]interface{}" // fallback for arrays without items
+			goType = "*[]interface{}" // pointer to slice for proper omitempty handling
 		} else {
 			itemType, err := getGoTypeFromOpenAPIRecursive(schema.Items.Value, typeName+"Item", registry, false, section)
 			if err != nil {
 				return "", fmt.Errorf("failed to generate array item type: %w", err)
 			}
-			goType = "[]" + itemType
+			goType = "*[]" + itemType // pointer to slice for proper omitempty handling
 		}
 	case "object":
 		if schema.Properties == nil || len(schema.Properties) == 0 {
@@ -930,7 +999,8 @@ func getGoTypeFromOpenAPIRecursive(schema *openapi3.Schema, typeName string, reg
 		goType = "interface{}" // fallback for unknown types
 	}
 
-	if usePointers && baseType != "array" && baseType != "object" {
+	// Only use pointers for objects (nested structs), arrays are already pointers
+	if usePointers && baseType == "object" {
 		return "*" + goType, nil
 	}
 	return goType, nil

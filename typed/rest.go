@@ -14,10 +14,43 @@ type VMSRest struct {
 	Untyped *vast_client.VMSRest
 
 	// Typed resources - only resources with apibuilder markers are included
-	Quotas   *Quota
-	Versions *Version
-	Views    *View
-	VipPools *VipPool
+	ActiveDirectories      *ActiveDirectory
+	ApiTokens              *ApiToken
+	BGPConfigs             *BGPConfig
+	BlockHosts             *BlockHost
+	Cnodes                 *Cnode
+	Dns                    *Dns
+	EncryptionGroups       *EncryptionGroup
+	EventDefinitions       *EventDefinition
+	EventDefinitionConfigs *EventDefinitionConfig
+	GlobalSnapshotStreams  *GlobalSnapshotStream
+	Groups                 *Group
+	KafkaBrokers           *KafkaBroker
+	Ldaps                  *Ldap
+	LocalProviders         *LocalProvider
+	LocalS3Keys            *LocalS3Key
+	Managers               *Manager
+	Nis                    *Nis
+	ProtectedPaths         *ProtectedPath
+	ProtectionPolicies     *ProtectionPolicy
+	QosPolicies            *QosPolicy
+	Quotas                 *Quota
+	Realms                 *Realm
+	ReplicationPeers       *ReplicationPeers
+	Roles                  *Role
+	S3LifeCycleRules       *S3LifeCycleRule
+	S3Policies             *S3Policy
+	S3replicationPeers     *S3replicationPeers
+	Snapshots              *Snapshot
+	Tenants                *Tenant
+	Topics                 *Topic
+	Users                  *User
+	Versions               *Version
+	Views                  *View
+	ViewPolies             *ViewPolicy
+	VipPools               *VipPool
+	Vms                    *Vms
+	Volumes                *Volume
 }
 
 // NewTypedVMSRest creates a new typed VMSRest client from configuration
@@ -32,10 +65,43 @@ func NewTypedVMSRest(config *vast_client.VMSConfig) (*VMSRest, error) {
 	}
 
 	// Initialize typed resources
+	typedRest.ActiveDirectories = &ActiveDirectory{Untyped: rawClient}
+	typedRest.ApiTokens = &ApiToken{Untyped: rawClient}
+	typedRest.BGPConfigs = &BGPConfig{Untyped: rawClient}
+	typedRest.BlockHosts = &BlockHost{Untyped: rawClient}
+	typedRest.Cnodes = &Cnode{Untyped: rawClient}
+	typedRest.Dns = &Dns{Untyped: rawClient}
+	typedRest.EncryptionGroups = &EncryptionGroup{Untyped: rawClient}
+	typedRest.EventDefinitions = &EventDefinition{Untyped: rawClient}
+	typedRest.EventDefinitionConfigs = &EventDefinitionConfig{Untyped: rawClient}
+	typedRest.GlobalSnapshotStreams = &GlobalSnapshotStream{Untyped: rawClient}
+	typedRest.Groups = &Group{Untyped: rawClient}
+	typedRest.KafkaBrokers = &KafkaBroker{Untyped: rawClient}
+	typedRest.Ldaps = &Ldap{Untyped: rawClient}
+	typedRest.LocalProviders = &LocalProvider{Untyped: rawClient}
+	typedRest.LocalS3Keys = &LocalS3Key{Untyped: rawClient}
+	typedRest.Managers = &Manager{Untyped: rawClient}
+	typedRest.Nis = &Nis{Untyped: rawClient}
+	typedRest.ProtectedPaths = &ProtectedPath{Untyped: rawClient}
+	typedRest.ProtectionPolicies = &ProtectionPolicy{Untyped: rawClient}
+	typedRest.QosPolicies = &QosPolicy{Untyped: rawClient}
 	typedRest.Quotas = &Quota{Untyped: rawClient}
+	typedRest.Realms = &Realm{Untyped: rawClient}
+	typedRest.ReplicationPeers = &ReplicationPeers{Untyped: rawClient}
+	typedRest.Roles = &Role{Untyped: rawClient}
+	typedRest.S3LifeCycleRules = &S3LifeCycleRule{Untyped: rawClient}
+	typedRest.S3Policies = &S3Policy{Untyped: rawClient}
+	typedRest.S3replicationPeers = &S3replicationPeers{Untyped: rawClient}
+	typedRest.Snapshots = &Snapshot{Untyped: rawClient}
+	typedRest.Tenants = &Tenant{Untyped: rawClient}
+	typedRest.Topics = &Topic{Untyped: rawClient}
+	typedRest.Users = &User{Untyped: rawClient}
 	typedRest.Versions = &Version{Untyped: rawClient}
 	typedRest.Views = &View{Untyped: rawClient}
+	typedRest.ViewPolies = &ViewPolicy{Untyped: rawClient}
 	typedRest.VipPools = &VipPool{Untyped: rawClient}
+	typedRest.Vms = &Vms{Untyped: rawClient}
+	typedRest.Volumes = &Volume{Untyped: rawClient}
 
 	return typedRest, nil
 }

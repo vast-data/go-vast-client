@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	client "github.com/vast-data/go-vast-client"
 	"io"
 	"log"
 	"net/http"
+
+	client "github.com/vast-data/go-vast-client"
 )
 
 func main() {
@@ -16,25 +17,31 @@ func main() {
 		Username: "admin",
 		Password: "123456",
 		BeforeRequestFn: func(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error {
-			// Example of BeforeRequest interceptor.
-			// Interceptor takes copy of body so you can use it safely.
-			log.Printf("Sending request: verb=%s, url=%s", verb, url)
+			// Improved BeforeRequest interceptor that handles null bodies properly
+			log.Printf("➤ Sending request: [%s] %s", verb, url)
+
 			if body != nil {
 				bodyBytes, err := io.ReadAll(body)
 				if err != nil {
+					log.Printf("ERROR: failed to read request body: %v", err)
 					return err
 				}
-				var pretty bytes.Buffer
-				if err = json.Indent(&pretty, bodyBytes, "", "  "); err == nil {
-					log.Printf("Request JSON:\n%s", pretty.String())
-				} else {
-					log.Printf("Request Body:\n%s", string(bodyBytes))
+
+				trimmed := bytes.TrimSpace(bodyBytes)
+				// Skip logging if body is empty or just "null"
+				if len(trimmed) > 0 && !bytes.Equal(trimmed, []byte("null")) {
+					var compact bytes.Buffer
+					if err := json.Compact(&compact, trimmed); err == nil {
+						log.Printf("Request body: %s", compact.String())
+					} else {
+						log.Printf("Request body (raw): %s", string(trimmed))
+					}
 				}
 			}
 			return nil
 		},
 		AfterRequestFn: func(ctx context.Context, response client.Renderable) (client.Renderable, error) {
-			log.Printf("Result:\n%s", response.PrettyTable())
+			log.Printf("✓ Response received:\n%s", response.PrettyTable())
 			return response, nil
 		},
 	}

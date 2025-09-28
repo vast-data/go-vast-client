@@ -138,24 +138,24 @@ func RegisterAPIBuilderMarkers(registry *markers.Registry) error {
 		return err
 	}
 
-	// New marker names (createBody and model)
-	if err := registry.Register("apibuilder:createBody:POST", markers.DescribesType, "",
-		"Specifies POST create body for this type"); err != nil {
+	// New marker names (requestBody and model)
+	if err := registry.Register("apibuilder:requestBody:POST", markers.DescribesType, "",
+		"Specifies POST request body for this type"); err != nil {
 		return err
 	}
 
-	if err := registry.Register("apibuilder:createBody:PUT", markers.DescribesType, "",
-		"Specifies PUT create body for this type"); err != nil {
+	if err := registry.Register("apibuilder:requestBody:PUT", markers.DescribesType, "",
+		"Specifies PUT request body for this type"); err != nil {
 		return err
 	}
 
-	if err := registry.Register("apibuilder:createBody:PATCH", markers.DescribesType, "",
-		"Specifies PATCH create body for this type"); err != nil {
+	if err := registry.Register("apibuilder:requestBody:PATCH", markers.DescribesType, "",
+		"Specifies PATCH request body for this type"); err != nil {
 		return err
 	}
 
-	if err := registry.Register("apibuilder:createBody:SCHEMA", markers.DescribesType, "",
-		"Specifies create body schema for this type"); err != nil {
+	if err := registry.Register("apibuilder:requestBody:SCHEMA", markers.DescribesType, "",
+		"Specifies request body schema for this type"); err != nil {
 		return err
 	}
 

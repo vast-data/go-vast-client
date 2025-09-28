@@ -172,9 +172,9 @@ func (o *OpenAPI) FetchSchemaV3(ctx context.Context) (*openapi3.T, error) {
 
 // ------------------------------------------------------
 
-// +apibuilder:readOnly
-// +apibuilder:searchQuery:GET=versions
-// +apibuilder:model:SCHEMA=Version
+// +apityped:readOnly
+// +apityped:searchQuery:GET=versions
+// +apityped:model:SCHEMA=Version
 type Version struct {
 	*VastResource
 }
@@ -215,27 +215,27 @@ func (v *Version) CompareWith(other *version.Version) (int, error) {
 
 // ------------------------------------------------------
 
-// +apibuilder:searchQuery:GET=quotas
-// +apibuilder:requestBody:POST=quotas
-// +apibuilder:responseBody:SCHEMA=Quota
+// +apityped:searchQuery:GET=quotas
+// +apityped:requestBody:POST=quotas
+// +apityped:model:SCHEMA=Quota
 type Quota struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
-// +apibuilder:searchQuery:GET=views
-// +apibuilder:requestBody:POST=views
-// +apibuilder:responseBody:SCHEMA=View
+// +apityped:searchQuery:GET=views
+// +apityped:requestBody:POST=views
+// +apityped:model:SCHEMA=View
 type View struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
-// +apibuilder:searchQuery:GET=vippools
-// +apibuilder:requestBody:POST=vippools
-// +apibuilder:responseBody:POST=vippools
+// +apityped:searchQuery:GET=vippools
+// +apityped:requestBody:POST=vippools
+// +apityped:model:POST=vippools
 type VipPool struct {
 	*VastResource
 }
@@ -260,6 +260,9 @@ func (v *VipPool) IpRangeFor(name string) ([]string, error) {
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=users
+// +apityped:requestBody:POST=users
+// +apityped:model:SCHEMA=User
 type User struct {
 	*VastResource
 }
@@ -386,6 +389,9 @@ type NonLocalUserKey struct {
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=cnodes
+// +apityped:requestBody:POST=cnodes
+// +apityped:model:SCHEMA=CNode
 type Cnode struct {
 	*VastResource
 }
@@ -435,36 +441,54 @@ func (c *Cnode) UpdateBgpConfig(cnodeId any, params Params) (EmptyRecord, error)
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=qospolicies
+// +apityped:requestBody:POST=qospolicies
+// +apityped:model:SCHEMA=QOSPolicy
 type QosPolicy struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=dns
+// +apityped:requestBody:POST=dns
+// +apityped:model:SCHEMA=DNS
 type Dns struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=viewpolicies
+// +apityped:requestBody:POST=viewpolicies
+// +apityped:model:SCHEMA=ViewPolicy
 type ViewPolicy struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=groups
+// +apityped:requestBody:POST=groups
+// +apityped:model:SCHEMA=Group
 type Group struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=nis
+// +apityped:requestBody:POST=nis
+// +apityped:model:SCHEMA=NIS
 type Nis struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=tenants
+// +apityped:requestBody:POST=tenants
+// +apityped:model:SCHEMA=Tenant
 type Tenant struct {
 	*VastResource
 }
@@ -579,36 +603,54 @@ func (t *Tenant) RemoveNfs4Deleg(tenantId any, params Params) (EmptyRecord, erro
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=ldaps
+// +apityped:requestBody:POST=ldaps
+// +apityped:model:SCHEMA=Ldap
 type Ldap struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=s3lifecyclerules
+// +apityped:requestBody:POST=s3lifecyclerules
+// +apityped:model:SCHEMA=S3LifeCycleRule
 type S3LifeCycleRule struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=activedirectory
+// +apityped:requestBody:POST=activedirectory
+// +apityped:model:SCHEMA=ActiveDirectory
 type ActiveDirectory struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=s3policies
+// +apityped:requestBody:POST=s3policies
+// +apityped:model:SCHEMA=S3Policy
 type S3Policy struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=protectedpaths
+// +apityped:requestBody:POST=protectedpaths
+// +apityped:model:SCHEMA=ProtectedPath
 type ProtectedPath struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=globalsnapstreams
+// +apityped:requestBody:POST=globalsnapstreams
+// +apityped:model:SCHEMA=GlobalSnapStream
 type GlobalSnapshotStream struct {
 	*VastResource
 }
@@ -689,42 +731,63 @@ func (gss *GlobalSnapshotStream) EnsureCloneSnapshotDeleted(searchParams Params)
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=nativereplicationremotetargets
+// +apityped:requestBody:POST=nativereplicationremotetargets
+// +apityped:model:SCHEMA=NativeReplicationRemoteTarget
 type ReplicationPeers struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=protectionpolicies
+// +apityped:requestBody:POST=protectionpolicies
+// +apityped:model:SCHEMA=ProtectionPolicy
 type ProtectionPolicy struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=replicationtargets
+// +apityped:requestBody:POST=replicationtargets
+// +apityped:model:SCHEMA=ReplicationTarget
 type S3replicationPeers struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=realms
+// +apityped:requestBody:POST=realms
+// +apityped:model:SCHEMA=Realm
 type Realm struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=roles
+// +apityped:requestBody:POST=roles
+// +apityped:model:SCHEMA=Role
 type Role struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=snapshots
+// +apityped:requestBody:POST=snapshots
+// +apityped:model:SCHEMA=Snapshot
 type Snapshot struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=blockhosts
+// +apityped:requestBody:POST=blockhosts
+// +apityped:model:SCHEMA=BlockHost
 type BlockHost struct {
 	*VastResource
 }
@@ -747,6 +810,9 @@ func (bh *BlockHost) EnsureBlockHost(name string, tenantId int, nqn string) (Rec
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=volumes
+// +apityped:requestBody:POST=volumes
+// +apityped:model:SCHEMA=Volume
 type Volume struct {
 	*VastResource
 }
@@ -958,6 +1024,9 @@ func (g *NonLocalGroup) UpdateNonLocalGroup(data Params) (Record, error) {
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=apitokens
+// +apityped:requestBody:POST=apitokens
+// +apityped:model:SCHEMA=ApiToken
 type ApiToken struct {
 	*VastResource
 }
@@ -973,12 +1042,18 @@ func (a *ApiToken) Revoke(tokenId string) (EmptyRecord, error) {
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=kafkabrokers
+// +apityped:requestBody:POST=kafkabrokers
+// +apityped:model:SCHEMA=KafkaBrokerConfig
 type KafkaBroker struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=managers
+// +apityped:requestBody:POST=managers
+// +apityped:model:SCHEMA=Manager
 type Manager struct {
 	*VastResource
 }
@@ -1097,24 +1172,36 @@ func (f *Folder) DeleteReadOnly(data Params) (EmptyRecord, error) {
 
 // ------------------------------------------------------
 
+// +apityped:readOnly
+// +apityped:searchQuery:GET=eventdefinitions
+// +apityped:model:SCHEMA=EventDefinition
 type EventDefinition struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:readOnly
+// +apityped:searchQuery:GET=eventdefinitionconfigs
+// +apityped:model:SCHEMA=EventDefinitionConfig
 type EventDefinitionConfig struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=bgpconfigs
+// +apityped:requestBody:POST=bgpconfigs
+// +apityped:model:SCHEMA=BGPConfig
 type BGPConfig struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:readOnly
+// +apityped:searchQuery:GET=vms
+// +apityped:model:SCHEMA=Vms
 type Vms struct {
 	*VastResource
 }
@@ -1148,6 +1235,9 @@ func (v *Vms) GetConfiguredIdPs(vmsId any) ([]string, error) {
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=topics
+// +apityped:requestBody:POST=topics
+// +apityped:model:SCHEMA=Topic
 type Topic struct {
 	*VastResource
 }
@@ -1172,18 +1262,27 @@ func (t *Topic) DeleteTopic(params Params) (EmptyRecord, error) {
 
 // ------------------------------------------------------
 
+// +apityped:searchQuery:GET=localproviders
+// +apityped:requestBody:POST=localproviders
+// +apityped:model:SCHEMA=LocalProvider
 type LocalProvider struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:readOnly
+// +apityped:searchQuery:GET=locals3keys
+// +apityped:model:SCHEMA=S3Key
 type LocalS3Key struct {
 	*VastResource
 }
 
 // ------------------------------------------------------
 
+// +apityped:readOnly
+// +apityped:searchQuery:GET=encryptiongroups
+// +apityped:model:SCHEMA=EncryptionGroup
 type EncryptionGroup struct {
 	*VastResource
 }

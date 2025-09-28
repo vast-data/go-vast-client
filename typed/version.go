@@ -4,6 +4,9 @@ package typed
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"reflect"
 
 	vast_client "github.com/vast-data/go-vast-client"
 )
@@ -198,4 +201,37 @@ func (r *Version) MustExistsWithContext(ctx context.Context, req *VersionSearchP
 		panic(err)
 	}
 	return exists
+}
+
+// -----------------------------------------------------
+// RENDERABLE INTERFACE METHODS
+// -----------------------------------------------------
+
+// PrettyTable returns a formatted table representation of the VersionModel
+func (m *VersionModel) PrettyTable() string {
+	return m.toRecord().PrettyTable()
+}
+
+// PrettyJson returns a JSON representation of the VersionModel
+func (m *VersionModel) PrettyJson(indent ...string) string {
+	return m.toRecord().PrettyJson(indent...)
+}
+
+// toRecord converts the VersionModel to a Record (map[string]any) with @resourceType
+func (m *VersionModel) toRecord() vast_client.Record {
+	// Convert struct to map using JSON marshaling
+	jsonBytes, err := json.Marshal(m)
+	if err != nil {
+		return vast_client.Record{"error": fmt.Sprintf("failed to marshal struct: %v", err)}
+	}
+
+	var record vast_client.Record
+	if err := json.Unmarshal(jsonBytes, &record); err != nil {
+		return vast_client.Record{"error": fmt.Sprintf("failed to unmarshal to record: %v", err)}
+	}
+
+	// Add resource type using reflection
+	record["@resourceType"] = reflect.TypeOf(*m).Name()
+
+	return record
 }

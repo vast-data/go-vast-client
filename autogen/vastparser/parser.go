@@ -13,8 +13,8 @@ type VastResource struct {
 	RequestURLs   []apibuilder.RequestURL   `json:"requestUrls,omitempty"`
 	ResponseURLs  []apibuilder.ResponseURL  `json:"responseUrls,omitempty"`
 	SearchQueries []apibuilder.SearchQuery  `json:"searchQueries,omitempty"`
-	CreateBodies  []apibuilder.RequestBody  `json:"createBodies,omitempty"` // Renamed from RequestBodies
-	Models        []apibuilder.ResponseBody `json:"models,omitempty"`       // Renamed from ResponseBodies
+	RequestBodies []apibuilder.RequestBody  `json:"requestBodies,omitempty"`
+	Models        []apibuilder.ResponseBody `json:"models,omitempty"` // Renamed from ResponseBodies
 	RequestModel  string                    `json:"requestModel,omitempty"`
 	ResponseModel string                    `json:"responseModel,omitempty"`
 	ReadOnly      bool                      `json:"readOnly,omitempty"` // New field
@@ -110,15 +110,6 @@ func (p *VastResourceParser) parseTypeInfo(typeInfo *markers.TypeInfo) *VastReso
 		case "apibuilder:searchQuery:SCHEMA":
 			p.addSearchQuery(resource, "SCHEMA", values)
 
-		case "apibuilder:requestBody:POST":
-			p.addRequestBody(resource, "POST", values)
-		case "apibuilder:requestBody:PUT":
-			p.addRequestBody(resource, "PUT", values)
-		case "apibuilder:requestBody:PATCH":
-			p.addRequestBody(resource, "PATCH", values)
-		case "apibuilder:requestBody:SCHEMA":
-			p.addRequestBody(resource, "SCHEMA", values)
-
 		case "apibuilder:responseBody:GET":
 			p.addResponseBody(resource, "GET", values)
 		case "apibuilder:responseBody:POST":
@@ -149,14 +140,14 @@ func (p *VastResourceParser) parseTypeInfo(typeInfo *markers.TypeInfo) *VastReso
 		case "apibuilder:readOnly":
 			resource.ReadOnly = true
 
-		// New marker names (createBody and model)
-		case "apibuilder:createBody:POST":
+		// New marker names (requestBody and model)
+		case "apibuilder:requestBody:POST":
 			p.addRequestBody(resource, "POST", values)
-		case "apibuilder:createBody:PUT":
+		case "apibuilder:requestBody:PUT":
 			p.addRequestBody(resource, "PUT", values)
-		case "apibuilder:createBody:PATCH":
+		case "apibuilder:requestBody:PATCH":
 			p.addRequestBody(resource, "PATCH", values)
-		case "apibuilder:createBody:SCHEMA":
+		case "apibuilder:requestBody:SCHEMA":
 			p.addRequestBody(resource, "SCHEMA", values)
 
 		case "apibuilder:model:GET":
@@ -222,7 +213,7 @@ func (p *VastResourceParser) addSearchQuery(resource *VastResource, method strin
 func (p *VastResourceParser) addRequestBody(resource *VastResource, method string, values []interface{}) {
 	for _, value := range values {
 		if url, ok := value.(string); ok {
-			resource.CreateBodies = append(resource.CreateBodies, apibuilder.RequestBody{
+			resource.RequestBodies = append(resource.RequestBodies, apibuilder.RequestBody{
 				Method: method,
 				URL:    url,
 			})
@@ -271,10 +262,10 @@ func isAPIBuilderMarker(markerName string) bool {
 		"apibuilder:responseModel",
 		"apibuilder:readOnly",
 		// New marker names
-		"apibuilder:createBody:POST",
-		"apibuilder:createBody:PUT",
-		"apibuilder:createBody:PATCH",
-		"apibuilder:createBody:SCHEMA",
+		"apibuilder:requestBody:POST",
+		"apibuilder:requestBody:PUT",
+		"apibuilder:requestBody:PATCH",
+		"apibuilder:requestBody:SCHEMA",
 		"apibuilder:model:GET",
 		"apibuilder:model:POST",
 		"apibuilder:model:PUT",
@@ -371,9 +362,9 @@ func (r *VastResource) HasSearchQuery(method string) bool {
 	return false
 }
 
-// HasCreateBody checks if the resource has a create body for the given method
-func (r *VastResource) HasCreateBody(method string) bool {
-	for _, body := range r.CreateBodies {
+// HasRequestBody checks if the resource has a request body for the given method
+func (r *VastResource) HasRequestBody(method string) bool {
+	for _, body := range r.RequestBodies {
 		if body.Method == method {
 			return true
 		}
@@ -391,9 +382,9 @@ func (r *VastResource) HasModel(method string) bool {
 	return false
 }
 
-// HasRequestBody checks if the resource has a request body for the given method (deprecated, use HasCreateBody)
-func (r *VastResource) HasRequestBody(method string) bool {
-	return r.HasCreateBody(method)
+// HasCreateBody checks if the resource has a create body for the given method (deprecated, use HasRequestBody)
+func (r *VastResource) HasCreateBody(method string) bool {
+	return r.HasRequestBody(method)
 }
 
 // HasResponseBody checks if the resource has a response body for the given method (deprecated, use HasModel)
@@ -411,9 +402,9 @@ func (r *VastResource) GetSearchQuery(method string) string {
 	return ""
 }
 
-// GetCreateBody returns the create body for the given method, or empty string if not found
-func (r *VastResource) GetCreateBody(method string) string {
-	for _, body := range r.CreateBodies {
+// GetRequestBody returns the request body for the given method, or empty string if not found
+func (r *VastResource) GetRequestBody(method string) string {
+	for _, body := range r.RequestBodies {
 		if body.Method == method {
 			return body.URL
 		}
@@ -431,9 +422,9 @@ func (r *VastResource) GetModel(method string) string {
 	return ""
 }
 
-// GetRequestBody returns the request body for the given method, or empty string if not found (deprecated, use GetCreateBody)
-func (r *VastResource) GetRequestBody(method string) string {
-	return r.GetCreateBody(method)
+// GetCreateBody returns the create body for the given method, or empty string if not found (deprecated, use GetRequestBody)
+func (r *VastResource) GetCreateBody(method string) string {
+	return r.GetRequestBody(method)
 }
 
 // GetResponseBody returns the response body for the given method, or empty string if not found (deprecated, use GetModel)

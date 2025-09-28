@@ -56,7 +56,7 @@ func main() {
 	}
 
 	// Example 3: Create a new quota with typed create body
-	createBody := &typed.QuotaCreateBody{
+	createBody := &typed.QuotaRequestBody{
 		Name:      "typed-example-quota",
 		Path:      "/example",
 		TenantId:  1,
@@ -70,7 +70,7 @@ func main() {
 		fmt.Printf("Created quota: ID=%d, Name=%s\n", newQuota.Id, newQuota.Name)
 
 		// Example 4: Update the quota
-		updateBody := &typed.QuotaCreateBody{
+		updateBody := &typed.QuotaRequestBody{
 			Name:      "typed-example-quota-updated",
 			Path:      "/example",
 			TenantId:  1,

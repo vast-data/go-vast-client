@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// Example 2: Create a new VIP pool with typed create body
-	createBody := &typed.VipPoolCreateBody{
+	createBody := &typed.VipPoolRequestBody{
 		Name:       "typed-example-vippool",
 		StartIp:    "20.0.0.1",
 		EndIp:      "20.0.0.16",
@@ -61,7 +61,7 @@ func main() {
 			newVipPool.Id, newVipPool.Name, newVipPool.StartIp, newVipPool.EndIp)
 
 		// Example 3: Update the VIP pool
-		updateBody := &typed.VipPoolCreateBody{
+		updateBody := &typed.VipPoolRequestBody{
 			Name:       "typed-example-vippool-updated",
 			StartIp:    "20.0.0.1",
 			EndIp:      "20.0.0.32", // Expand the range

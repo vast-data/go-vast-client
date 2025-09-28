@@ -4,6 +4,9 @@ package typed
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"reflect"
 
 	vast_client "github.com/vast-data/go-vast-client"
 )
@@ -28,31 +31,31 @@ type QuotaSearchParams struct {
 }
 
 // -----------------------------------------------------
-// CREATE BODY
+// REQUEST BODY
 // -----------------------------------------------------
 
-// QuotaCreateBody represents the create body for Quota operations
+// QuotaRequestBody represents the request body for Quota operations
 // Generated from POST request body for resource: quotas
-type QuotaCreateBody struct {
-	CreateDir            bool     `json:"create_dir,omitempty" yaml:"create_dir,omitempty" required:"false" doc:"Set to true to create the directory if the directory was not created yet."`
-	CreateDirMode        int64    `json:"create_dir_mode,omitempty" yaml:"create_dir_mode,omitempty" required:"false" doc:"Unix permissions mode for the new directory"`
-	DefaultEmail         string   `json:"default_email,omitempty" yaml:"default_email,omitempty" required:"false" doc:"Emails are sent to users if and when they exceed their user/group quota limits. default_email is a default email address that is used instead of a user's email address in the event that no email address is found for the user on a provider and no email suffix is set."`
-	DefaultGroupQuota    string   `json:"default_group_quota,omitempty" yaml:"default_group_quota,omitempty" required:"false" doc:""`
-	DefaultUserQuota     string   `json:"default_user_quota,omitempty" yaml:"default_user_quota,omitempty" required:"false" doc:""`
-	EnableAlarms         bool     `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enables alarms on relevant events for user and group quotas. Applicable only if is_user_quota is true. Raises alarms reporting the number of users that exceed their quotas and when one or more users is/are blocked from writing to the quota directory."`
-	EnableEmailProviders bool     `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Set to true to enable querying Active Directory and LDAP services for user emails when sending user notifications to users if they exceed their user/group quota limits. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global suffix is used to form an email. If no suffix is set, default_email is used."`
-	GracePeriod          string   `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period. An alarm is triggered and write operations are blocked if storage usage continues to exceed the soft limit for the grace period. Format: [DD] [HH:[MM:]]ss"`
-	GroupQuotas          []string `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:"An array of group quota rule objects. A group quota rule overrides a default group quota rule for the specified group."`
-	HardLimit            int64    `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage usage limit beyond which no writes will be allowed."`
-	HardLimitInodes      int64    `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
-	InheritAcl           bool     `json:"inherit_acl,omitempty" yaml:"inherit_acl,omitempty" required:"false" doc:"Indicates whether the directory should inherit ACLs from its parent directory"`
-	IsUserQuota          bool     `json:"is_user_quota,omitempty" yaml:"is_user_quota,omitempty" required:"false" doc:"Set to true to enable user and group quotas. False by default. Cannot be disabled later."`
-	Name                 string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the quota"`
-	Path                 string   `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"The directory path on which to enforce the quota"`
-	SoftLimit            int64    `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Storage usage limit at which warnings of exceeding the quota are issued."`
-	SoftLimitInodes      int64    `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path at which warnings of exceeding the quota will be issued. A file with multiple hardlinks is counted only once."`
-	TenantId             int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
-	UserQuotas           []string `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
+type QuotaRequestBody struct {
+	CreateDir            bool      `json:"create_dir,omitempty" yaml:"create_dir,omitempty" required:"false" doc:"Set to true to create the directory if the directory was not created yet."`
+	CreateDirMode        int64     `json:"create_dir_mode,omitempty" yaml:"create_dir_mode,omitempty" required:"false" doc:"Unix permissions mode for the new directory"`
+	DefaultEmail         string    `json:"default_email,omitempty" yaml:"default_email,omitempty" required:"false" doc:"Emails are sent to users if and when they exceed their user/group quota limits. default_email is a default email address that is used instead of a user's email address in the event that no email address is found for the user on a provider and no email suffix is set."`
+	DefaultGroupQuota    string    `json:"default_group_quota,omitempty" yaml:"default_group_quota,omitempty" required:"false" doc:""`
+	DefaultUserQuota     string    `json:"default_user_quota,omitempty" yaml:"default_user_quota,omitempty" required:"false" doc:""`
+	EnableAlarms         bool      `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enables alarms on relevant events for user and group quotas. Applicable only if is_user_quota is true. Raises alarms reporting the number of users that exceed their quotas and when one or more users is/are blocked from writing to the quota directory."`
+	EnableEmailProviders bool      `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Set to true to enable querying Active Directory and LDAP services for user emails when sending user notifications to users if they exceed their user/group quota limits. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global suffix is used to form an email. If no suffix is set, default_email is used."`
+	GracePeriod          string    `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period. An alarm is triggered and write operations are blocked if storage usage continues to exceed the soft limit for the grace period. Format: [DD] [HH:[MM:]]ss"`
+	GroupQuotas          *[]string `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:"An array of group quota rule objects. A group quota rule overrides a default group quota rule for the specified group."`
+	HardLimit            int64     `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage usage limit beyond which no writes will be allowed."`
+	HardLimitInodes      int64     `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
+	InheritAcl           bool      `json:"inherit_acl,omitempty" yaml:"inherit_acl,omitempty" required:"false" doc:"Indicates whether the directory should inherit ACLs from its parent directory"`
+	IsUserQuota          bool      `json:"is_user_quota,omitempty" yaml:"is_user_quota,omitempty" required:"false" doc:"Set to true to enable user and group quotas. False by default. Cannot be disabled later."`
+	Name                 string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the quota"`
+	Path                 string    `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"The directory path on which to enforce the quota"`
+	SoftLimit            int64     `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Storage usage limit at which warnings of exceeding the quota are issued."`
+	SoftLimitInodes      int64     `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path at which warnings of exceeding the quota will be issued. A file with multiple hardlinks is counted only once."`
+	TenantId             int64     `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	UserQuotas           *[]string `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
 }
 
 // -----------------------------------------------------
@@ -90,7 +93,7 @@ type QuotaModel struct {
 	EnableAlarms                bool                         `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enable alarms when users or groups are exceeding their limit"`
 	EnableEmailProviders        bool                         `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Enable this setting to query Active Directory and LDAP services for user emails when sending userquota alert emails. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global email suffix is used if configured in cluster settings. If no suffix is set, default_email is used."`
 	GracePeriod                 string                       `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
-	GroupQuotas                 []string                     `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:""`
+	GroupQuotas                 *[]string                    `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:""`
 	Guid                        string                       `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
 	HardLimit                   int64                        `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage space usage limit beyond which no writes are allowed."`
 	HardLimitInodes             int64                        `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
@@ -123,7 +126,7 @@ type QuotaModel struct {
 	UsedEffectiveCapacityTb     float32                      `json:"used_effective_capacity_tb,omitempty" yaml:"used_effective_capacity_tb,omitempty" required:"false" doc:"Used effective capacity in TB"`
 	UsedInodes                  int64                        `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path"`
 	UsedLimitedCapacity         int64                        `json:"used_limited_capacity,omitempty" yaml:"used_limited_capacity,omitempty" required:"false" doc:""`
-	UserQuotas                  []string                     `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
+	UserQuotas                  *[]string                    `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
 }
 
 // -----------------------------------------------------
@@ -246,7 +249,7 @@ func (r *Quota) ListWithContext(ctx context.Context, req *QuotaSearchParams) ([]
 }
 
 // Create creates a new quota with typed request/response
-func (r *Quota) Create(req *QuotaCreateBody) (*QuotaModel, error) {
+func (r *Quota) Create(req *QuotaRequestBody) (*QuotaModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -266,7 +269,7 @@ func (r *Quota) Create(req *QuotaCreateBody) (*QuotaModel, error) {
 }
 
 // CreateWithContext creates a new quota with typed request/response using provided context
-func (r *Quota) CreateWithContext(ctx context.Context, req *QuotaCreateBody) (*QuotaModel, error) {
+func (r *Quota) CreateWithContext(ctx context.Context, req *QuotaRequestBody) (*QuotaModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -286,7 +289,7 @@ func (r *Quota) CreateWithContext(ctx context.Context, req *QuotaCreateBody) (*Q
 }
 
 // Update updates an existing quota with typed request/response
-func (r *Quota) Update(id any, req *QuotaCreateBody) (*QuotaModel, error) {
+func (r *Quota) Update(id any, req *QuotaRequestBody) (*QuotaModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -306,7 +309,7 @@ func (r *Quota) Update(id any, req *QuotaCreateBody) (*QuotaModel, error) {
 }
 
 // UpdateWithContext updates an existing quota with typed request/response using provided context
-func (r *Quota) UpdateWithContext(ctx context.Context, id any, req *QuotaCreateBody) (*QuotaModel, error) {
+func (r *Quota) UpdateWithContext(ctx context.Context, id any, req *QuotaRequestBody) (*QuotaModel, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -370,7 +373,7 @@ func (r *Quota) DeleteByIdWithContext(ctx context.Context, id any) error {
 }
 
 // Ensure ensures a quota exists with typed response
-func (r *Quota) Ensure(searchParams *QuotaSearchParams, body *QuotaCreateBody) (*QuotaModel, error) {
+func (r *Quota) Ensure(searchParams *QuotaSearchParams, body *QuotaRequestBody) (*QuotaModel, error) {
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -394,7 +397,7 @@ func (r *Quota) Ensure(searchParams *QuotaSearchParams, body *QuotaCreateBody) (
 }
 
 // EnsureWithContext ensures a quota exists with typed response using provided context
-func (r *Quota) EnsureWithContext(ctx context.Context, searchParams *QuotaSearchParams, body *QuotaCreateBody) (*QuotaModel, error) {
+func (r *Quota) EnsureWithContext(ctx context.Context, searchParams *QuotaSearchParams, body *QuotaRequestBody) (*QuotaModel, error) {
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -418,7 +421,7 @@ func (r *Quota) EnsureWithContext(ctx context.Context, searchParams *QuotaSearch
 }
 
 // EnsureByName ensures a quota exists by name with typed response
-func (r *Quota) EnsureByName(name string, body *QuotaCreateBody) (*QuotaModel, error) {
+func (r *Quota) EnsureByName(name string, body *QuotaRequestBody) (*QuotaModel, error) {
 	bodyConverted, err := vast_client.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -438,7 +441,7 @@ func (r *Quota) EnsureByName(name string, body *QuotaCreateBody) (*QuotaModel, e
 }
 
 // EnsureByNameWithContext ensures a quota exists by name with typed response using provided context
-func (r *Quota) EnsureByNameWithContext(ctx context.Context, name string, body *QuotaCreateBody) (*QuotaModel, error) {
+func (r *Quota) EnsureByNameWithContext(ctx context.Context, name string, body *QuotaRequestBody) (*QuotaModel, error) {
 	bodyConverted, err := vast_client.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -491,4 +494,37 @@ func (r *Quota) MustExistsWithContext(ctx context.Context, req *QuotaSearchParam
 		panic(err)
 	}
 	return r.Untyped.Quotas.MustExistsWithContext(ctx, params)
+}
+
+// -----------------------------------------------------
+// RENDERABLE INTERFACE METHODS
+// -----------------------------------------------------
+
+// PrettyTable returns a formatted table representation of the QuotaModel
+func (m *QuotaModel) PrettyTable() string {
+	return m.toRecord().PrettyTable()
+}
+
+// PrettyJson returns a JSON representation of the QuotaModel
+func (m *QuotaModel) PrettyJson(indent ...string) string {
+	return m.toRecord().PrettyJson(indent...)
+}
+
+// toRecord converts the QuotaModel to a Record (map[string]any) with @resourceType
+func (m *QuotaModel) toRecord() vast_client.Record {
+	// Convert struct to map using JSON marshaling
+	jsonBytes, err := json.Marshal(m)
+	if err != nil {
+		return vast_client.Record{"error": fmt.Sprintf("failed to marshal struct: %v", err)}
+	}
+
+	var record vast_client.Record
+	if err := json.Unmarshal(jsonBytes, &record); err != nil {
+		return vast_client.Record{"error": fmt.Sprintf("failed to unmarshal to record: %v", err)}
+	}
+
+	// Add resource type using reflection
+	record["@resourceType"] = reflect.TypeOf(*m).Name()
+
+	return record
 }

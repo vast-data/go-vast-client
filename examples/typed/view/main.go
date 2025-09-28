@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// Example 2: Create a new view with typed create body
-	createBody := &typed.ViewCreateBody{
+	createBody := &typed.ViewRequestBody{
 		Name:      "typed-example-view",
 		Path:      "/typed-example-view",
 		CreateDir: true,
@@ -62,7 +62,7 @@ func main() {
 			newView.Id, newView.Name, newView.Path)
 
 		// Example 3: Update the view
-		updateBody := &typed.ViewCreateBody{
+		updateBody := &typed.ViewRequestBody{
 			Name:      "typed-example-view-updated",
 			Path:      "/typed-example-view",
 			CreateDir: true,

@@ -4,6 +4,9 @@ package typed
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"reflect"
 
 	vast_client "github.com/vast-data/go-vast-client"
 )
@@ -20,12 +23,12 @@ type {{.Name}}SearchParams struct {
 }
 
 // -----------------------------------------------------
-// CREATE BODY
+// REQUEST BODY
 // -----------------------------------------------------
 
 {{range .NestedTypes}}
-{{if eq .Section "CREATE BODY"}}
-// {{.Name}} represents a nested type for create body
+{{if eq .Section "REQUEST BODY"}}
+// {{.Name}} represents a nested type for request body
 type {{.Name}} struct {
 	{{range .Fields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
 	{{end}}
@@ -34,10 +37,10 @@ type {{.Name}} struct {
 {{end}}
 {{end}}
 
-// {{.Name}}CreateBody represents the create body for {{.Name}} operations
-{{if .Resource.HasCreateBody "POST"}}// Generated from POST request body for resource: {{.Resource.GetCreateBody "POST"}}{{else if .Resource.HasCreateBody "SCHEMA"}}// Generated from schema: {{.Resource.GetCreateBody "SCHEMA"}}{{end}}
-type {{.Name}}CreateBody struct {
-	{{range .CreateBodyFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
+// {{.Name}}RequestBody represents the request body for {{.Name}} operations
+{{if .Resource.HasRequestBody "POST"}}// Generated from POST request body for resource: {{.Resource.GetRequestBody "POST"}}{{else if .Resource.HasRequestBody "SCHEMA"}}// Generated from schema: {{.Resource.GetRequestBody "SCHEMA"}}{{end}}
+type {{.Name}}RequestBody struct {
+	{{range .RequestBodyFields}}{{.Name}} {{.Type}} `json:"{{.JSONTag}},omitempty" yaml:"{{.YAMLTag}},omitempty" required:"{{.RequiredTag}}"{{if .DocTag}} doc:"{{.DocTag}}"{{else}} doc:""{{end}}`
 	{{end}}
 }
 
@@ -183,7 +186,7 @@ func (r *{{.Name}}) ListWithContext(ctx context.Context, req *{{.Name}}SearchPar
 
 
 // Create creates a new {{.LowerName}} with typed request/response
-func (r *{{.Name}}) Create(req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
+func (r *{{.Name}}) Create(req *{{.Name}}RequestBody) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -203,7 +206,7 @@ func (r *{{.Name}}) Create(req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
 }
 
 // CreateWithContext creates a new {{.LowerName}} with typed request/response using provided context
-func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
+func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}RequestBody) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -224,7 +227,7 @@ func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}CreateB
 
 
 // Update updates an existing {{.LowerName}} with typed request/response
-func (r *{{.Name}}) Update(id any, req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
+func (r *{{.Name}}) Update(id any, req *{{.Name}}RequestBody) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -244,7 +247,7 @@ func (r *{{.Name}}) Update(id any, req *{{.Name}}CreateBody) (*{{.Name}}Model, e
 }
 
 // UpdateWithContext updates an existing {{.LowerName}} with typed request/response using provided context
-func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
+func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}}RequestBody) (*{{.Name}}Model, error) {
 	params, err := vast_client.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -311,7 +314,7 @@ func (r *{{.Name}}) DeleteByIdWithContext(ctx context.Context, id any) error {
 
 
 // Ensure ensures a {{.LowerName}} exists with typed response
-func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
+func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}RequestBody) (*{{.Name}}Model, error) {
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -335,7 +338,7 @@ func (r *{{.Name}}) Ensure(searchParams *{{.Name}}SearchParams, body *{{.Name}}C
 }
 
 // EnsureWithContext ensures a {{.LowerName}} exists with typed response using provided context
-func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name}}SearchParams, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
+func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name}}SearchParams, body *{{.Name}}RequestBody) (*{{.Name}}Model, error) {
 	searchParamsConverted, err := vast_client.NewParamsFromStruct(searchParams)
 	if err != nil {
 		return nil, err
@@ -359,7 +362,7 @@ func (r *{{.Name}}) EnsureWithContext(ctx context.Context, searchParams *{{.Name
 }
 
 // EnsureByName ensures a {{.LowerName}} exists by name with typed response
-func (r *{{.Name}}) EnsureByName(name string, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
+func (r *{{.Name}}) EnsureByName(name string, body *{{.Name}}RequestBody) (*{{.Name}}Model, error) {
 	bodyConverted, err := vast_client.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -379,7 +382,7 @@ func (r *{{.Name}}) EnsureByName(name string, body *{{.Name}}CreateBody) (*{{.Na
 }
 
 // EnsureByNameWithContext ensures a {{.LowerName}} exists by name with typed response using provided context
-func (r *{{.Name}}) EnsureByNameWithContext(ctx context.Context, name string, body *{{.Name}}CreateBody) (*{{.Name}}Model, error) {
+func (r *{{.Name}}) EnsureByNameWithContext(ctx context.Context, name string, body *{{.Name}}RequestBody) (*{{.Name}}Model, error) {
 	bodyConverted, err := vast_client.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -432,6 +435,39 @@ func (r *{{.Name}}) MustExistsWithContext(ctx context.Context, req *{{.Name}}Sea
 		panic(err)
 	}
 	return r.Untyped.{{.PluralName}}.MustExistsWithContext(ctx, params)
+}
+
+// -----------------------------------------------------
+// RENDERABLE INTERFACE METHODS
+// -----------------------------------------------------
+
+// PrettyTable returns a formatted table representation of the {{.Name}}Model
+func (m *{{.Name}}Model) PrettyTable() string {
+	return m.toRecord().PrettyTable()
+}
+
+// PrettyJson returns a JSON representation of the {{.Name}}Model
+func (m *{{.Name}}Model) PrettyJson(indent ...string) string {
+	return m.toRecord().PrettyJson(indent...)
+}
+
+// toRecord converts the {{.Name}}Model to a Record (map[string]any) with @resourceType
+func (m *{{.Name}}Model) toRecord() vast_client.Record {
+	// Convert struct to map using JSON marshaling
+	jsonBytes, err := json.Marshal(m)
+	if err != nil {
+		return vast_client.Record{"error": fmt.Sprintf("failed to marshal struct: %v", err)}
+	}
+	
+	var record vast_client.Record
+	if err := json.Unmarshal(jsonBytes, &record); err != nil {
+		return vast_client.Record{"error": fmt.Sprintf("failed to unmarshal to record: %v", err)}
+	}
+	
+	// Add resource type using reflection
+	record["@resourceType"] = reflect.TypeOf(*m).Name()
+	
+	return record
 }
 
 
