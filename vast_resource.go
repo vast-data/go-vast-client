@@ -20,52 +20,53 @@ import (
 
 type VastResourceType interface {
 	Dummy |
-		Version |
-		Quota |
-		View |
-		VipPool |
-		User |
-		UserKey |
-		Snapshot |
-		BlockHost |
-		Volume |
-		VTask |
-		BlockHostMapping |
-		Cnode |
-		QosPolicy |
-		Dns |
-		ViewPolicy |
-		Group |
-		Nis |
-		Tenant |
-		Ldap |
-		S3LifeCycleRule |
-		ActiveDirectory |
-		S3Policy |
-		ProtectedPath |
-		GlobalSnapshotStream |
-		ReplicationPeers |
-		ProtectionPolicy |
-		S3replicationPeers |
-		Realm |
-		Role |
-		NonLocalUser |
-		NonLocalGroup |
-		NonLocalUserKey |
-		ApiToken |
-		KafkaBroker |
-		Manager |
-		Folder |
-		EventDefinition |
-		EventDefinitionConfig |
-		BGPConfig |
-		Vms |
-		Topic |
-		LocalProvider |
-		LocalS3Key |
-		EncryptionGroup |
-		SamlConfig |
-		Kerberos
+	Version |
+	Quota |
+	View |
+	VipPool |
+	User |
+	UserKey |
+	Snapshot |
+	BlockHost |
+	Volume |
+	VTask |
+	BlockHostMapping |
+	Cnode |
+	QosPolicy |
+	Dns |
+	ViewPolicy |
+	Group |
+	Nis |
+	Tenant |
+	Ldap |
+	S3LifeCycleRule |
+	ActiveDirectory |
+	S3Policy |
+	ProtectedPath |
+	GlobalSnapshotStream |
+	ReplicationPeers |
+	ProtectionPolicy |
+	S3replicationPeers |
+	Realm |
+	Role |
+	NonLocalUser |
+	NonLocalGroup |
+	NonLocalUserKey |
+	ApiToken |
+	KafkaBroker |
+	Manager |
+	Folder |
+	EventDefinition |
+	EventDefinitionConfig |
+	BGPConfig |
+	Vms |
+	Topic |
+	LocalProvider |
+	LocalS3Key |
+	EncryptionGroup |
+	SamlConfig |
+	Kerberos |
+	Cluster
 }
 
 // ------------------------------------------------------
@@ -1160,3 +1161,20 @@ func (k *Kerberos) UploadKeytabWithContext(ctx context.Context, kerberosId any, 
 func (k *Kerberos) UploadKeytab(kerberosId any, keytabFile []byte, filename string) (Record, error) {
 	return k.UploadKeytabWithContext(k.rest.ctx, kerberosId, keytabFile, filename)
 }
+
+// ------------------------------------------------------
+
+type Cluster struct {
+	*VastResource
+}
+
+func (c *Cluster) AddEkmWithContext(ctx context.Context, clusterId any, createParams Params) (EmptyRecord, error) {
+	path := buildResourcePathWithID(c.resourcePath, clusterId, "add_ekm")
+	return request[EmptyRecord](ctx, c, http.MethodPost, path, c.apiVersion, nil, createParams)
+}
+
+func (c *Cluster) AddEkm(clusterId any, createParams Params) (EmptyRecord, error) {
+	return c.AddEkmWithContext(c.rest.ctx, clusterId, createParams)
+}
+
+// ------------------------------------------------------

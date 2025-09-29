@@ -67,7 +67,8 @@ type VMSRest struct {
 	LocalS3Keys            *LocalS3Key
 	EncryptionGroups       *EncryptionGroup
 	SamlConfigs            *SamlConfig
-	Kerberos        	   *Kerberos
+	Kerberos               *Kerberos
+	Clusters               *Cluster
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -140,6 +141,7 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.EncryptionGroups = newResource[EncryptionGroup](rest, "encryptiongroups", dummyClusterVersion)
 	rest.SamlConfigs = newResource[SamlConfig](rest, "vms/%d/saml_config", dummyClusterVersion)
 	rest.Kerberos = newResource[Kerberos](rest, "kerberos", dummyClusterVersion)
+	rest.Clusters = newResource[Cluster](rest, "clusters", dummyClusterVersion)
 
 	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
 	rest.OpenAPI = &OpenAPI{session: rest.Session}
