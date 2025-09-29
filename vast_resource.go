@@ -20,54 +20,55 @@ import (
 
 type VastResourceType interface {
 	Dummy |
-	Version |
-	Quota |
-	View |
-	VipPool |
-	User |
-	UserKey |
-	Snapshot |
-	BlockHost |
-	Volume |
-	VTask |
-	BlockHostMapping |
-	Cnode |
-	QosPolicy |
-	Dns |
-	ViewPolicy |
-	Group |
-	Nis |
-	Tenant |
-	Ldap |
-	S3LifeCycleRule |
-	ActiveDirectory |
-	S3Policy |
-	ProtectedPath |
-	GlobalSnapshotStream |
-	ReplicationPeers |
-	ProtectionPolicy |
-	S3replicationPeers |
-	Realm |
-	Role |
-	NonLocalUser |
-	NonLocalGroup |
-	NonLocalUserKey |
-	ApiToken |
-	KafkaBroker |
-	Manager |
-	Folder |
-	EventDefinition |
-	EventDefinitionConfig |
-	BGPConfig |
-	Vms |
-	Topic |
-	LocalProvider |
-	LocalS3Key |
-	EncryptionGroup |
-	SamlConfig |
-	Kerberos |
-	Cluster |
-	SupportedDrivers
+		Version |
+		Quota |
+		View |
+		VipPool |
+		User |
+		UserKey |
+		Snapshot |
+		BlockHost |
+		Volume |
+		VTask |
+		BlockHostMapping |
+		Cnode |
+		QosPolicy |
+		Dns |
+		ViewPolicy |
+		Group |
+		Nis |
+		Tenant |
+		Ldap |
+		S3LifeCycleRule |
+		ActiveDirectory |
+		S3Policy |
+		ProtectedPath |
+		GlobalSnapshotStream |
+		ReplicationPeers |
+		ProtectionPolicy |
+		S3replicationPeers |
+		Realm |
+		Role |
+		NonLocalUser |
+		NonLocalGroup |
+		NonLocalUserKey |
+		ApiToken |
+		KafkaBroker |
+		Manager |
+		Folder |
+		EventDefinition |
+		EventDefinitionConfig |
+		BGPConfig |
+		Vms |
+		Topic |
+		LocalProvider |
+		LocalS3Key |
+		EncryptionGroup |
+		SamlConfig |
+		Kerberos |
+		Cluster |
+		SupportedDrivers |
+		Rack
 }
 
 // ------------------------------------------------------
@@ -369,6 +370,49 @@ type NonLocalUserKey struct {
 
 type Cnode struct {
 	*VastResource
+}
+
+// GetBgpConfigWithContext retrieves the BGP configuration for a specific CNode using the provided context.
+// This method calls the GET /cnodes/{id}/bgpconfig endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - cnodeId: the ID of the CNode to get BGP configuration for
+//
+// Returns:
+//   - Record: the BGP configuration data
+//   - error: if the request fails
+func (c *Cnode) GetBgpConfigWithContext(ctx context.Context, cnodeId any) (Record, error) {
+	path := buildResourcePathWithID(c.resourcePath, cnodeId, "bgpconfig")
+	return request[Record](ctx, c, http.MethodGet, path, c.apiVersion, nil, nil)
+}
+
+// GetBgpConfig retrieves the BGP configuration for a specific CNode.
+// This is a convenience method that uses the resource's default context.
+func (c *Cnode) GetBgpConfig(cnodeId any) (Record, error) {
+	return c.GetBgpConfigWithContext(c.rest.ctx, cnodeId)
+}
+
+// UpdateBgpConfigWithContext updates the BGP configuration for a specific CNode using the provided context.
+// This method calls the PATCH /cnodes/{id}/bgpconfig endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - cnodeId: the ID of the CNode to update BGP configuration for
+//   - params: the BGP configuration parameters to update
+//
+// Returns:
+//   - EmptyRecord: empty response for successful 204 No Content
+//   - error: if the request fails
+func (c *Cnode) UpdateBgpConfigWithContext(ctx context.Context, cnodeId any, params Params) (EmptyRecord, error) {
+	path := buildResourcePathWithID(c.resourcePath, cnodeId, "bgpconfig")
+	return request[EmptyRecord](ctx, c, http.MethodPatch, path, c.apiVersion, nil, params)
+}
+
+// UpdateBgpConfig updates the BGP configuration for a specific CNode.
+// This is a convenience method that uses the resource's default context.
+func (c *Cnode) UpdateBgpConfig(cnodeId any, params Params) (EmptyRecord, error) {
+	return c.UpdateBgpConfigWithContext(c.rest.ctx, cnodeId, params)
 }
 
 // ------------------------------------------------------
@@ -1183,3 +1227,33 @@ func (c *Cluster) AddEkm(clusterId any, createParams Params) (EmptyRecord, error
 type SupportedDrivers struct {
 	*VastResource
 }
+
+// ------------------------------------------------------
+
+type Rack struct {
+	*VastResource
+}
+
+// UpdateBgpConfigWithContext bulk updates the BGP configuration on all CNodes in a specific Rack using the provided context.
+// This method calls the POST /racks/{id}/bgpconfig/ endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - rackId: the ID of the Rack to update BGP configuration for
+//   - params: the BGP configuration parameters to apply to all CNodes in the rack
+//
+// Returns:
+//   - EmptyRecord: empty response for successful 204 No Content
+//   - error: if the request fails
+func (r *Rack) UpdateBgpConfigWithContext(ctx context.Context, rackId any, params Params) (EmptyRecord, error) {
+	path := buildResourcePathWithID(r.resourcePath, rackId, "bgpconfig")
+	return request[EmptyRecord](ctx, r, http.MethodPost, path, r.apiVersion, nil, params)
+}
+
+// UpdateBgpConfig bulk updates the BGP configuration on all CNodes in a specific Rack.
+// This is a convenience method that uses the resource's default context.
+func (r *Rack) UpdateBgpConfig(rackId any, params Params) (EmptyRecord, error) {
+	return r.UpdateBgpConfigWithContext(r.rest.ctx, rackId, params)
+}
+
+// ------------------------------------------------------
