@@ -71,6 +71,9 @@ type VMSRest struct {
 	Clusters               *Cluster
 	SupportedDrivers       *SupportedDrivers
 	Racks                  *Rack
+	Fans                   *Fan
+	Nics                   *Nic
+	NicPorts               *NicPort
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -146,6 +149,9 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.Clusters = newResource[Cluster](rest, "clusters", dummyClusterVersion)
 	rest.SupportedDrivers = newResource[SupportedDrivers](rest, "supporteddrives", dummyClusterVersion)
 	rest.Racks = newResource[Rack](rest, "racks", dummyClusterVersion)
+	rest.Fans = newResource[Fan](rest, "fans", dummyClusterVersion)
+	rest.Nics = newResource[Nic](rest, "nics", dummyClusterVersion)
+	rest.NicPorts = newResource[NicPort](rest, "nicports", dummyClusterVersion)
 
 	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
 	rest.OpenAPI = &OpenAPI{session: rest.Session}

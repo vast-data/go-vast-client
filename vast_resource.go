@@ -68,7 +68,10 @@ type VastResourceType interface {
 		Kerberos |
 		Cluster |
 		SupportedDrivers |
-		Rack
+		Rack |
+		Fan |
+		Nic |
+		NicPort
 }
 
 // ------------------------------------------------------
@@ -1257,3 +1260,50 @@ func (r *Rack) UpdateBgpConfig(rackId any, params Params) (EmptyRecord, error) {
 }
 
 // ------------------------------------------------------
+
+type Fan struct {
+	*VastResource
+}
+
+// ------------------------------------------------------
+
+type Nic struct {
+	*VastResource
+}
+
+// ------------------------------------------------------
+
+type NicPort struct {
+	*VastResource
+}
+
+// GetRelatedNicPortsWithContext retrieves IDs of all NICPorts that are logically the same physical port as the specified NICPort using the provided context.
+// This method calls the GET /nicports/{id}/related_nicports/ endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - nicPortId: the ID of the NICPort to get related NICPorts for
+//
+// Returns:
+//   - []int64: array of NICPort IDs that are logically the same physical port
+//   - error: if the request fails
+func (np *NicPort) GetRelatedNicPortsWithContext(ctx context.Context, nicPortId any) ([]int64, error) {
+	var result = make([]int64, 0)
+	path := buildResourcePathWithID(np.resourcePath, nicPortId, "related_nicports")
+	recordSet, err := request[RecordSet](ctx, np, http.MethodGet, path, np.apiVersion, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, record := range recordSet {
+		if id, ok := record["@raw"].(float64); ok {
+			result = append(result, int64(id))
+		}
+	}
+	return result, nil
+}
+
+// GetRelatedNicPorts retrieves IDs of all NICPorts that are logically the same physical port as the specified NICPort.
+// This is a convenience method that uses the resource's default context.
+func (np *NicPort) GetRelatedNicPorts(nicPortId any) ([]int64, error) {
+	return np.GetRelatedNicPortsWithContext(np.rest.ctx, nicPortId)
+}
