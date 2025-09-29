@@ -924,6 +924,49 @@ type Manager struct {
 	*VastResource
 }
 
+// UpdatePasswordWithContext changes the password for the requesting user using the provided context.
+// This method calls the PATCH /managers/password endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - password: the new password to set
+//
+// Returns:
+//   - EmptyRecord: empty response for successful 204 No Content
+//   - error: if the request fails
+func (m *Manager) UpdatePasswordWithContext(ctx context.Context, password string) (EmptyRecord, error) {
+	path := fmt.Sprintf("%s/password", m.resourcePath)
+	params := Params{"password": password}
+	return request[EmptyRecord](ctx, m, http.MethodPatch, path, m.apiVersion, nil, params)
+}
+
+// UpdatePassword changes the password for the requesting user.
+// This is a convenience method that uses the resource's default context.
+func (m *Manager) UpdatePassword(password string) (EmptyRecord, error) {
+	return m.UpdatePasswordWithContext(m.rest.ctx, password)
+}
+
+// GetAuthorizedStatusWithContext gets the authorized status for the requested user using the provided context.
+// This method calls the GET /managers/authorized_status/ endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - params: the authorization check parameters (leading_vid, bucket_name, object_path, action, owner_vid, tenant_id)
+//
+// Returns:
+//   - Record: the authorization status response containing code and other properties
+//   - error: if the request fails
+func (m *Manager) GetAuthorizedStatusWithContext(ctx context.Context, params Params) (Record, error) {
+	path := fmt.Sprintf("%s/authorized_status", m.resourcePath)
+	return request[Record](ctx, m, http.MethodGet, path, m.apiVersion, params, nil)
+}
+
+// GetAuthorizedStatus gets the authorized status for the requested user.
+// This is a convenience method that uses the resource's default context.
+func (m *Manager) GetAuthorizedStatus(params Params) (Record, error) {
+	return m.GetAuthorizedStatusWithContext(m.rest.ctx, params)
+}
+
 // ------------------------------------------------------
 
 type Folder struct {
