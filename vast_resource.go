@@ -66,7 +66,8 @@ type VastResourceType interface {
 	EncryptionGroup |
 	SamlConfig |
 	Kerberos |
-	Cluster
+	Cluster |
+	SupportedDrivers
 }
 
 // ------------------------------------------------------
@@ -1178,3 +1179,7 @@ func (c *Cluster) AddEkm(clusterId any, createParams Params) (EmptyRecord, error
 }
 
 // ------------------------------------------------------
+
+type SupportedDrivers struct {
+	*VastResource
+}

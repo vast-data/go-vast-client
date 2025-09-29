@@ -69,6 +69,7 @@ type VMSRest struct {
 	SamlConfigs            *SamlConfig
 	Kerberos               *Kerberos
 	Clusters               *Cluster
+	SupportedDrivers       *SupportedDrivers
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -142,6 +143,7 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.SamlConfigs = newResource[SamlConfig](rest, "vms/%d/saml_config", dummyClusterVersion)
 	rest.Kerberos = newResource[Kerberos](rest, "kerberos", dummyClusterVersion)
 	rest.Clusters = newResource[Cluster](rest, "clusters", dummyClusterVersion)
+	rest.SupportedDrivers = newResource[SupportedDrivers](rest, "supporteddrives", dummyClusterVersion)
 
 	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
 	rest.OpenAPI = &OpenAPI{session: rest.Session}
