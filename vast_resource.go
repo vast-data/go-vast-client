@@ -518,6 +518,50 @@ func (t *Tenant) UpdateClientMetrics(tenantId any, params Params) (Record, error
 	return t.UpdateClientMetricsWithContext(t.rest.ctx, tenantId, params)
 }
 
+// ListNfs4DelegsWithContext queries the list of NFSv4 delegations for a specific tenant using the provided context.
+// This method calls the GET /tenants/{id}/nfs4_delegs/ endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - tenantId: the ID of the tenant to query NFSv4 delegations for
+//   - params: query parameters (file_path required, xeystore_pagination_next_client_id optional)
+//
+// Returns:
+//   - Record: the NFSv4 delegations list response
+//   - error: if the request fails
+func (t *Tenant) ListNfs4DelegsWithContext(ctx context.Context, tenantId any, params Params) (Record, error) {
+	path := buildResourcePathWithID(t.resourcePath, tenantId, "nfs4_delegs")
+	return request[Record](ctx, t, http.MethodGet, path, t.apiVersion, params, nil)
+}
+
+// ListNfs4Delegs queries the list of NFSv4 delegations for a specific tenant.
+// This is a convenience method that uses the resource's default context.
+func (t *Tenant) ListNfs4Delegs(tenantId any, params Params) (Record, error) {
+	return t.ListNfs4DelegsWithContext(t.rest.ctx, tenantId, params)
+}
+
+// RemoveNfs4DelegWithContext removes an NFSv4 delegation for a specific tenant using the provided context.
+// This method calls the DELETE /tenants/{id}/nfs4_deleg/ endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - tenantId: the ID of the tenant to remove NFSv4 delegation from
+//   - params: query parameters (file_path, client_id, delegation_stateid all required)
+//
+// Returns:
+//   - EmptyRecord: empty response for successful 204 No Content
+//   - error: if the request fails
+func (t *Tenant) RemoveNfs4DelegWithContext(ctx context.Context, tenantId any, params Params) (EmptyRecord, error) {
+	path := buildResourcePathWithID(t.resourcePath, tenantId, "nfs4_deleg")
+	return request[EmptyRecord](ctx, t, http.MethodDelete, path, t.apiVersion, params, nil)
+}
+
+// RemoveNfs4Deleg removes an NFSv4 delegation for a specific tenant.
+// This is a convenience method that uses the resource's default context.
+func (t *Tenant) RemoveNfs4Deleg(tenantId any, params Params) (EmptyRecord, error) {
+	return t.RemoveNfs4DelegWithContext(t.rest.ctx, tenantId, params)
+}
+
 // ------------------------------------------------------
 
 type Ldap struct {
