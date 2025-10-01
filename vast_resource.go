@@ -71,7 +71,10 @@ type VastResourceType interface {
 		Rack |
 		Fan |
 		Nic |
-		NicPort
+		NicPort |
+		IamRole |
+		Oidc |
+		Vip
 }
 
 // ------------------------------------------------------
@@ -1393,4 +1396,95 @@ func (np *NicPort) GetRelatedNicPortsWithContext(ctx context.Context, nicPortId 
 // This is a convenience method that uses the resource's default context.
 func (np *NicPort) GetRelatedNicPorts(nicPortId any) ([]int64, error) {
 	return np.GetRelatedNicPortsWithContext(np.rest.ctx, nicPortId)
+}
+
+// ------------------------------------------------------
+
+type IamRole struct {
+	*VastResource
+}
+
+// RevokeAccessKeysWithContext revokes access keys of a specified IAM Role using the provided context.
+// This method calls the PATCH /iamroles/{id}/revoke_access_keys endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - iamRoleId: the ID of the IAM Role to revoke access keys for
+//
+// Returns:
+//   - EmptyRecord: empty response for successful 204 No Content
+//   - error: if the request fails
+func (ir *IamRole) RevokeAccessKeysWithContext(ctx context.Context, iamRoleId any) (EmptyRecord, error) {
+	path := buildResourcePathWithID(ir.resourcePath, iamRoleId, "revoke_access_keys")
+	return request[EmptyRecord](ctx, ir, http.MethodPatch, path, ir.apiVersion, nil, nil)
+}
+
+// RevokeAccessKeys revokes access keys of a specified IAM Role.
+// This is a convenience method that uses the resource's default context.
+func (ir *IamRole) RevokeAccessKeys(iamRoleId any) (EmptyRecord, error) {
+	return ir.RevokeAccessKeysWithContext(ir.rest.ctx, iamRoleId)
+}
+
+// GetCredentialsWithContext gets STS credentials of a specified IAM Role using the provided context.
+// This method calls the GET /iamroles/{id}/credentials endpoint.
+//
+// Parameters:
+//   - ctx: context for the request
+//   - iamRoleId: the ID of the IAM Role to get credentials for
+//   - accessKey: the access key parameter (required query parameter)
+//
+// Returns:
+//   - Record: the IAM Role credentials information
+//   - error: if the request fails
+func (ir *IamRole) GetCredentialsWithContext(ctx context.Context, iamRoleId any, accessKey string) (Record, error) {
+	path := buildResourcePathWithID(ir.resourcePath, iamRoleId, "credentials")
+	params := Params{"access_key": accessKey}
+	return request[Record](ctx, ir, http.MethodGet, path, ir.apiVersion, params, nil)
+}
+
+// GetCredentials gets STS credentials of a specified IAM Role.
+// This is a convenience method that uses the resource's default context.
+func (ir *IamRole) GetCredentials(iamRoleId any, accessKey string) (Record, error) {
+	return ir.GetCredentialsWithContext(ir.rest.ctx, iamRoleId, accessKey)
+}
+
+// ------------------------------------------------------
+
+type Oidc struct {
+	*VastResource
+}
+
+// RefreshKeysWithContext refreshes the keys from OIDC provider using the provided context.
+// This method calls the PATCH /oidcs/{id}/refresh_keys endpoint.
+func (o *Oidc) RefreshKeysWithContext(ctx context.Context, oidcId any) (Record, error) {
+	path := buildResourcePathWithID(o.resourcePath, oidcId, "refresh_keys")
+	return request[Record](ctx, o, http.MethodPatch, path, o.apiVersion, nil, nil)
+}
+
+// RefreshKeys refreshes the keys from OIDC provider.
+// This is a convenience method that uses the resource's default context.
+func (o *Oidc) RefreshKeys(oidcId any) (Record, error) {
+	return o.RefreshKeysWithContext(o.rest.ctx, oidcId)
+}
+
+// ------------------------------------------------------
+
+type Vip struct {
+	*VastResource
+}
+
+// GetVastDbVipsWithContext gets a list of DB access VIPs using the provided context.
+// This method calls the GET /vastdb/vips/ endpoint.
+// Returns:
+//   - RecordSet: array of VastDBVip records
+//   - error: if the request fails
+func (v *Vip) GetVastDbVipsWithContext(ctx context.Context, params Params) (RecordSet, error) {
+	path := "/vastdb/vips/"
+	return request[RecordSet](ctx, v, http.MethodGet, path, v.apiVersion, params, nil)
+}
+
+// GetVastDbVips gets a list of DB access VIPs.
+// This is a convenience method that uses the resource's default context.
+func (v *Vip) GetVastDbVips(params Params) (RecordSet, error) {
+	return v.GetVastDbVipsWithContext(v.rest.ctx, params)
 }

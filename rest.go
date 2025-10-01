@@ -74,6 +74,9 @@ type VMSRest struct {
 	Fans                   *Fan
 	Nics                   *Nic
 	NicPorts               *NicPort
+	IamRoles               *IamRole
+	Oidcs                  *Oidc
+	Vips                   *Vip
 }
 
 func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
@@ -152,6 +155,9 @@ func NewVMSRest(config *VMSConfig) (*VMSRest, error) {
 	rest.Fans = newResource[Fan](rest, "fans", dummyClusterVersion)
 	rest.Nics = newResource[Nic](rest, "nics", dummyClusterVersion)
 	rest.NicPorts = newResource[NicPort](rest, "nicports", dummyClusterVersion)
+	rest.IamRoles = newResource[IamRole](rest, "iamroles", dummyClusterVersion)
+	rest.Oidcs = newResource[Oidc](rest, "oidcs", dummyClusterVersion)
+	rest.Vips = newResource[Vip](rest, "vips", dummyClusterVersion)
 
 	// OpenAPI is a special resource that does not have a path, it is used to fetch OpenAPI spec
 	rest.OpenAPI = &OpenAPI{session: rest.Session}
