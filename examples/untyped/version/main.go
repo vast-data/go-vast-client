@@ -1,7 +1,10 @@
+//go:build examples
+
 package main
 
 import (
 	"fmt"
+
 	client "github.com/vast-data/go-vast-client"
 )
 
@@ -11,7 +14,7 @@ func main() {
 		Username: "admin",
 		Password: "123456",
 	}
-	rest, err := client.NewVMSRest(config)
+	rest, err := client.NewUntypedVMSRest(config)
 	if err != nil {
 		panic(err)
 	}

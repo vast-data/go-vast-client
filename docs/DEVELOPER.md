@@ -113,10 +113,10 @@ type VMSRest struct {
 
 ```go
 ....
-rest.Quotas = newResource[Quota](rest, "quotas", dummyClusterVersion)
-rest.Views = newResource[View](rest, "views", dummyClusterVersion)
-rest.VipPools = newResource[VipPool](rest, "vippools", dummyClusterVersion)
-rest.Users = newResource[User](rest, "users", dummyClusterVersion) // <- Here
+rest.Quotas = newResource[Quota](rest, "quotas")
+rest.Views = newResource[View](rest, "views")
+rest.VipPools = newResource[VipPool](rest, "vippools")
+rest.Users = newResource[User](rest, "users") // <- Here
 ....
 ```
 
@@ -187,14 +187,14 @@ type UserKey struct {
 	*VastResource
 }
 
-func (uk *UserKey) CreateKey(context.Context, userId int64) (Record, error) {
-	path := fmt.Sprintf(uk.resourcePath, userId)
-	return request[Record](ctx, uk, http.MethodPost, path, uk.apiVersion, nil, nil)
+func (r *UserKey) CreateKey(context.Context, userId int64) (Record, error) {
+	path := fmt.Sprintf(r.resourcePath, userId)
+	return request[Record](ctx, r, http.MethodPost, path, nil, nil)
 }
 
-func (uk *UserKey) DeleteKey(context.Context, userId int64, accessKey string) (EmptyRecord, error) {
-	path := fmt.Sprintf(uk.resourcePath, userId)
-	return request[EmptyRecord](ctx, uk, http.MethodDelete, path, uk.apiVersion, nil, Params{"access_key": accessKey})
+func (r *UserKey) DeleteKey(context.Context, userId int64, accessKey string) (EmptyRecord, error) {
+	path := fmt.Sprintf(r.resourcePath, userId)
+	return request[EmptyRecord](ctx, r, http.MethodDelete, path, nil, Params{"access_key": accessKey})
 }
 ```
 

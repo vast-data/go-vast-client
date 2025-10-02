@@ -22,7 +22,7 @@ COMMIT=$(shell git rev-parse --short HEAD)
 EXAMPLES_DIR=examples
 COVERAGE_DIR=coverage
 
-.PHONY: all build test clean deps lint fmt vet coverage examples help generate-typed
+.PHONY: all build build-examples test clean deps lint fmt vet coverage help autogen generate-typed generate-untyped
 
 all: clean deps fmt lint test build ## Run all main targets
 
@@ -106,14 +106,32 @@ docs-serve:
 docs-deploy:
 	$(MKDOCS) gh-deploy --force
 
-# Typed resource generation
+# Code generation
 MAKEFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-generate-typed: ## Generate all typed resources from APIBuilder markers
+autogen: ## Generate all typed and untyped resources (runs both generate-typed and generate-untyped)
+	@echo "========================================="
+	@echo "Starting code generation..."
+	@echo "========================================="
+	@$(MAKE) generate-typed
+	@echo ""
+	@$(MAKE) generate-untyped
+	@echo ""
+	@echo "========================================="
+	@echo "All code generation completed!"
+	@echo "========================================="
+
+generate-typed: ## Generate all typed resources from apityped markers
 	@echo "Generating typed resources..."
-	cd $(MAKEFILE_DIR)autogen && go build -tags tools -o bin/generate-typed-resources ./cmd/generate-typed-resources
-	cd $(MAKEFILE_DIR)autogen && ./bin/generate-typed-resources
+	cd $(MAKEFILE_DIR)codegen && go build -tags tools -o bin/generate-typed-resources ./cmd/generate-typed-resources
+	cd $(MAKEFILE_DIR)codegen && ./bin/generate-typed-resources
 	@echo "Typed resources generated successfully!"
+
+generate-untyped: ## Generate extra methods for untyped resources from apiuntyped markers
+	@echo "Generating untyped extra methods..."
+	cd $(MAKEFILE_DIR)codegen && go build -tags tools -o bin/generate-untyped-resources ./cmd/generate-untyped-resources
+	cd $(MAKEFILE_DIR)codegen && ./bin/generate-untyped-resources
+	@echo "Untyped extra methods generated successfully!"
 
 # OpenAPI conversion targets
 

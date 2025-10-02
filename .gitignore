@@ -42,4 +42,4 @@ mkdocs_files
 examples/bin/
 
 # Autogen build artifacts
-autogen/bin/
+/codegen/bin/
