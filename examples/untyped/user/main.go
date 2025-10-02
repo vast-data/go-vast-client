@@ -2,22 +2,21 @@ package main
 
 import (
 	"fmt"
+
 	client "github.com/vast-data/go-vast-client"
+	"github.com/vast-data/go-vast-client/resources/typed"
 )
 
-type UserContainer struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
 func main() {
+	var user typed.UserDetailsModel
+
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1", // replace with your VAST address
+		Host:     "l101", // replace with your VAST address
 		Username: "admin",
 		Password: "123456",
 	}
 
-	rest, err := client.NewVMSRest(config)
+	rest, err := client.NewUntypedVMSRest(config)
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +26,7 @@ func main() {
 		"name": "myUser",
 		"uid":  9999,
 	}
-	_, err = rest.Users.Create(createParams)
+	result, err := rest.Users.Create(createParams)
 	if err != nil {
 		panic(fmt.Errorf("failed to create user: %w", err))
 	}
@@ -37,21 +36,20 @@ func main() {
 	updateParams := client.Params{
 		"uid": 10000,
 	}
-	_, err = rest.Users.Update(1, updateParams) // replace `1` with the correct user ID
+	_, err = rest.Users.Update(result.RecordID(), updateParams)
 	if err != nil {
 		panic(fmt.Errorf("failed to update user: %w", err))
 	}
 	fmt.Println("User updated successfully.")
 
 	// --- GET + DESERIALIZE ---
-	result, err := rest.Users.Get(client.Params{
+	result, err = rest.Users.Get(client.Params{
 		"name": "myUser",
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get user: %w", err))
 	}
 
-	var user UserContainer
 	if err := result.Fill(&user); err != nil {
 		panic(fmt.Errorf("failed to fill UserContainer: %w", err))
 	}

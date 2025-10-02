@@ -1,103 +1,166 @@
-After configuration, you can use VMSRest in two ways: **untyped** (traditional) or **typed** (new).
+# REST Clients
 
-## Untyped REST Client
+After configuration, you can use one of two REST client types:
 
-The traditional approach uses `vast_client.VMSRest` with untyped parameters and responses:
+## Client Types
 
-```go
-rest.Views.Create(...)
-rest.Quotas.DeleteById(...)
-rest.Volumes.Ensure(...)
-```
+### Typed REST Client
 
-## Typed REST Client
-
-> **Note**: The typed REST client is still evolving and new features are being added regularly.
-
-The typed approach uses `typed.VMSRest` with strongly-typed request and response structs:
+The typed client provides strongly-typed structs for all requests and responses:
 
 ```go
-import "github.com/vast-data/go-vast-client/typed"
+import (
+    client "github.com/vast-data/go-vast-client"
+    "github.com/vast-data/go-vast-client/resources/typed"
+)
 
 // Initialize typed client
-typedRest, err := typed.NewTypedVMSRest(config)
+rest, err := client.NewTypedVMSRest(config)
 if err != nil {
     log.Fatal(err)
 }
 
 // Use typed structs for requests and responses
-quota := &typed.QuotaRequestBody{
+searchParams := &typed.QuotaSearchParams{
+    Name: "my-quota",
+}
+
+body := &typed.QuotaRequestBody{
     Name:      "my-quota",
     Path:      "/data",
     HardLimit: 1099511627776, // 1TB
 }
 
-result, err := typedRest.Quotas.Create(quota)
+quota, err := rest.Quotas.Ensure(searchParams, body)
 if err != nil {
     log.Fatal(err)
 }
 ```
 
-### Accessing Untyped Client from Typed
-
-You can always access the underlying untyped client via the `Untyped` property:
-
-```go
-// Access untyped methods when needed
-record, err := typedRest.Untyped.Quotas.GetWithContext(ctx, params)
-```
-
-### Benefits of Typed Client
-
+**Benefits:**
 - **Type Safety**: Compile-time checking of request/response structures
 - **IDE Support**: Better autocomplete and documentation
-- **Validation**: Automatic validation of required fields
-- **Convenience**: No need to manually construct `Params` maps
+- **Clear Contracts**: Explicit field types and requirements
+- **Reduced Errors**: Invalid field names caught at compile time
+
+### Untyped REST Client
+
+The untyped client uses flexible `map[string]any` for parameters and responses:
+
+```go
+import client "github.com/vast-data/go-vast-client"
+
+// Initialize untyped client
+rest, err := client.NewUntypedVMSRest(config)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Use Params maps for requests
+result, err := rest.Quotas.Create(client.Params{
+    "name":       "my-quota",
+    "path":       "/data",
+    "hard_limit": 1099511627776, // 1TB
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+**Use Cases:**
+- Dynamic scenarios where field names are not known at compile time
+- Prototyping and experimentation
+- Working with custom or undocumented API fields
+
+### Accessing Untyped Client from Typed
+
+If you're using the typed client but need untyped access for specific operations, you can access the underlying untyped client:
+
+```go
+rest, err := client.NewTypedVMSRest(config)
+
+// Access untyped client when needed
+untypedRest := rest.Untyped
+record, err := untypedRest.Quotas.GetWithContext(ctx, client.Params{"name": "my-quota"})
+```
 
 ## Standard Resource Methods
 
-Both typed and untyped clients support the following standard methods for each resource:
+Both typed and untyped clients support standard CRUD methods for each resource (subject to API permissions):
 
-- `List`
-- `Get`
-- `Delete`
-- `Update`
-- `Create`
-- `Ensure`
-- `EnsureByName`
-- `GetById`
-- `DeleteById`
+### Basic Methods
 
-For context-aware usage, the following variants are available:
+- `List` / `ListWithContext` - List all resources
+- `Get` / `GetWithContext` - Get a resource by search parameters
+- `Create` / `CreateWithContext` - Create a new resource
+- `Update` / `UpdateWithContext` - Update an existing resource
+- `Delete` / `DeleteWithContext` - Delete a resource
+- `Ensure` / `EnsureWithContext` - Create if doesn't exist, return if exists
 
-- `ListWithContext`
-- `GetWithContext`
-- `DeleteWithContext`
-- `UpdateWithContext`
-- `CreateWithContext`
-- `EnsureWithContext`
-- `EnsureByNameWithContext`
-- `GetByIdWithContext`
-- `DeleteByIdWithContext`
+### Context-Aware Methods
 
-These variants are especially useful when you need to:
+All methods have `WithContext` variants that accept a `context.Context` as the first parameter. These are useful when you need to:
 
-- Set custom timeouts
-- Cancel long-running requests
-- Propagate tracing or logging via `context.Context`
+- Set custom timeouts per request
+- Cancel long-running operations
+- Propagate request-scoped values (tracing, logging, etc.)
 
-
-## Example Usage
-
-### Untyped Client
 ```go
-// Using untyped client with Params
-user, err := rest.Users.GetWithContext(ctx, vast_client.Params{"name": "admin"})
+// Example: Request with timeout
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+
+view, err := rest.Views.GetWithContext(ctx, searchParams)
 ```
 
-### Typed Client
+
+## Example Usage Comparison
+
+### Creating a View
+
+**Typed Client:**
 ```go
-// Using typed client with structs
-searchParams := &typed.UserSearchParams{Name: "admin"}
-user, err := typedRest.Users.GetWithContext(ctx, searchParams)
+import (
+    client "github.com/vast-data/go-vast-client"
+    "github.com/vast-data/go-vast-client/resources/typed"
+)
+
+rest, _ := client.NewTypedVMSRest(config)
+
+body := &typed.ViewRequestBody{
+    Name:      "myview",
+    Path:      "/myview",
+    Protocols: &[]string{"NFS"},
+    PolicyId:  1,
+    CreateDir: true,
+}
+
+view, err := rest.Views.Create(body)
+```
+
+**Untyped Client:**
+```go
+import client "github.com/vast-data/go-vast-client"
+
+rest, _ := client.NewUntypedVMSRest(config)
+
+result, err := rest.Views.Create(client.Params{
+    "name":       "myview",
+    "path":       "/myview",
+    "protocols":  []string{"NFS"},
+    "policy_id":  1,
+    "create_dir": true,
+})
+```
+
+### Getting a User
+
+**Typed Client:**
+```go
+user, err := rest.Users.Get(&typed.UserSearchParams{Name: "admin"})
+```
+
+**Untyped Client:**
+```go
+user, err := rest.Users.Get(client.Params{"name": "admin"})
 ```

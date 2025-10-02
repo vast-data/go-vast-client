@@ -2,33 +2,29 @@ package main
 
 import (
 	"fmt"
+
 	client "github.com/vast-data/go-vast-client"
+	"github.com/vast-data/go-vast-client/resources/typed"
 )
 
-type ViewContainer struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Path     string `json:"path"`
-	TenantID int64  `json:"tenant_id"`
-}
-
 func main() {
-	var view ViewContainer
+	var view typed.ViewUpsertModel
+
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1", // replace with your VAST address
+		Host:     "l101", // replace with your VAST address
 		Username: "admin",
 		Password: "123456",
 	}
 
-	rest, err := client.NewVMSRest(config)
+	rest, err := client.NewUntypedVMSRest(config)
 	if err != nil {
 		panic(err)
 	}
 
 	// --- CREATE ---
 	createParams := client.Params{
-		"name":       "myview",
-		"path":       "/myview",
+		"name":       "go-client-testview",
+		"path":       "/go-client-testview",
 		"create_dir": true,
 		"policy_id":  1,
 		"protocols":  []string{"NFS"},
@@ -46,7 +42,7 @@ func main() {
 	updateParams := client.Params{
 		"protocols": []string{"NFS", "NFS4"},
 	}
-	_, err = rest.Views.Update(view.ID, updateParams)
+	_, err = rest.Views.Update(view.Id, updateParams)
 	if err != nil {
 		panic(fmt.Errorf("failed to update view: %w", err))
 	}
@@ -54,7 +50,7 @@ func main() {
 
 	// --- DELETE ---
 	_, err = rest.Views.Delete(client.Params{
-		"path__endswith": "view",
+		"path__endswith": "go-client-testview",
 	}, nil)
 	if err != nil {
 		panic(fmt.Errorf("failed to delete view: %w", err))

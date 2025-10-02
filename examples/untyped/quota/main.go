@@ -1,55 +1,64 @@
 package main
 
 import (
-	"context"
 	"fmt"
+
 	client "github.com/vast-data/go-vast-client"
+	"github.com/vast-data/go-vast-client/resources/typed"
 )
 
-const KiB = 1024
-
-type QuotaContainer struct {
-	ID        int64  `json:"id"`
-	Name      string `json:"name"`
-	Path      string `json:"path"`
-	TenantID  int64  `json:"tenant_id"`
-	HardLimit int64  `json:"hard_limit"`
-}
-
 func main() {
-	var cn QuotaContainer
-	ctx := context.Background()
+	var quota typed.QuotaUpsertModel
+
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1",
+		Host:     "l101", // replace with your VAST address
 		Username: "admin",
 		Password: "123456",
 	}
-	rest, err := client.NewVMSRest(config)
+
+	rest, err := client.NewUntypedVMSRest(config)
 	if err != nil {
 		panic(err)
 	}
-	rest.SetCtx(ctx)
 
-	result, err := rest.Quotas.Create(client.Params{
-		"name":       "myquota",
-		"path":       "/myview",
-		"tenant_id":  1,
-		"hard_limit": 10 * KiB,
+	// --- CREATE ---
+	createParams := client.Params{
+		"name":       "test-quota",
+		"path":       "/go-client-test-quota",
+		"create_dir": true,
+		"hard_limit": 1073741824, // 1GB
+	}
+	result, err := rest.Quotas.Create(createParams)
+	if err != nil {
+		panic(fmt.Errorf("failed to create quota: %w", err))
+	}
+	fmt.Println("Quota created successfully.")
+	if err := result.Fill(&quota); err != nil {
+		panic(fmt.Errorf("failed to fill QuotaUpsertModel: %w", err))
+	}
+
+	// --- LIST ---
+	quotas, err := rest.Quotas.List(client.Params{})
+	if err != nil {
+		panic(fmt.Errorf("failed to list quotas: %w", err))
+	}
+	fmt.Printf("Found %d quota(s)\n", len(quotas))
+
+	// --- GET ---
+	fetchedQuota, err := rest.Quotas.Get(client.Params{
+		"path": "/go-client-test-quota",
 	})
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to get quota: %w", err))
 	}
+	fmt.Printf("Fetched quota: %v (Hard Limit: %v)\n", fetchedQuota["path"], fetchedQuota["hard_limit"])
 
-	if err = result.Fill(&cn); err != nil {
-		panic(err)
+	// --- DELETE ---
+	_, err = rest.Quotas.Delete(client.Params{
+		"path": "/go-client-test-quota",
+	}, nil)
+	if err != nil {
+		panic(fmt.Errorf("failed to delete quota: %w", err))
 	}
-	fmt.Println(cn)
-
-	if _, err = rest.Quotas.Update(cn.ID, client.Params{"hard_limit": 20 * KiB}); err != nil {
-		panic(err)
-	}
-
-	if _, err = rest.Quotas.Delete(client.Params{"name": "myquota"}, nil); err != nil {
-		panic(err)
-	}
+	fmt.Println("Quota deleted successfully.")
 }

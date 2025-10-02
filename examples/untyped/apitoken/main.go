@@ -2,17 +2,18 @@ package main
 
 import (
 	"fmt"
+
 	client "github.com/vast-data/go-vast-client"
 )
 
 func main() {
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1", // replace with your VAST address
+		Host:     "l101", // replace with your VAST address
 		Username: "admin",
 		Password: "123456",
 	}
 
-	rest, err := client.NewVMSRest(config)
+	rest, err := client.NewUntypedVMSRest(config)
 	if err != nil {
 		panic(err)
 	}

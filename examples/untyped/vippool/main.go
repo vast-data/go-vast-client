@@ -2,26 +2,21 @@ package main
 
 import (
 	"fmt"
+
 	client "github.com/vast-data/go-vast-client"
+	"github.com/vast-data/go-vast-client/resources/typed"
 )
 
-type VippoolContainer struct {
-	ID      int64  `json:"id"`
-	Name    string `json:"name"`
-	Role    string `json:"role"`
-	StartIp string `json:"start_ip"`
-	EndIp   string `json:"end_ip"`
-}
-
 func main() {
-	var pool VippoolContainer
+	var pool typed.ViewUpsertModel
+
 	config := &client.VMSConfig{
-		Host:     "10.27.40.1", // replace with your VAST IP
+		Host:     "l101", // replace with your VAST IP
 		Username: "admin",
 		Password: "123456",
 	}
 
-	rest, err := client.NewVMSRest(config)
+	rest, err := client.NewUntypedVMSRest(config)
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +41,7 @@ func main() {
 	updateParams := client.Params{
 		"subnet_cidr": 22,
 	}
-	_, err = rest.VipPools.Update(pool.ID, updateParams) // replace `3` with the correct pool ID
+	_, err = rest.VipPools.Update(pool.Id, updateParams)
 	if err != nil {
 		panic(fmt.Errorf("failed to update VIP pool: %w", err))
 	}

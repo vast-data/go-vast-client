@@ -1,109 +1,62 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
 
 	client "github.com/vast-data/go-vast-client"
-	"github.com/vast-data/go-vast-client/typed"
+	"github.com/vast-data/go-vast-client/resources/typed"
 )
 
 func main() {
-	ctx := context.Background()
 	config := &client.VMSConfig{
-		Host:     "l101",
+		Host:     "l101", // replace with your VAST address
 		Username: "admin",
 		Password: "123456",
 	}
 
-	// Create typed client directly from config
-	typedClient, err := typed.NewTypedVMSRest(config)
+	rest, err := client.NewTypedVMSRest(config)
 	if err != nil {
-		log.Fatalf("Failed to create typed client: %v", err)
+		panic(err)
 	}
-	typedClient.SetCtx(ctx)
 
-	// Use typed quota resource
-	quotaClient := typedClient.Quotas
+	// --- CREATE ---
+	createParams := &typed.QuotaRequestBody{
+		Name:      "test-quota",
+		Path:      "/go-client-test-quota",
+		CreateDir: true,
+		HardLimit: 1073741824, // 1GB
+	}
 
-	// Example 1: List quotas with typed search parameters
+	quota, err := rest.Quotas.Create(createParams)
+	if err != nil {
+		panic(fmt.Errorf("failed to create quota: %w", err))
+	}
+	fmt.Printf("Quota created successfully: %s (ID: %d)\n", quota.Path, quota.Id)
+
+	// --- LIST ---
+	quotas, err := rest.Quotas.List(&typed.QuotaSearchParams{})
+	if err != nil {
+		panic(fmt.Errorf("failed to list quotas: %w", err))
+	}
+	fmt.Printf("Found %d quota(s)\n", len(quotas))
+
+	// --- GET ---
+	fetchedQuota, err := rest.Quotas.Get(&typed.QuotaSearchParams{
+		Path: "/go-client-test-quota",
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to get quota: %w", err))
+	}
+	fmt.Printf("Fetched quota: %s (Hard Limit: %d)\n", fetchedQuota.Path, fetchedQuota.HardLimit)
+
+	// --- DELETE ---
 	searchParams := &typed.QuotaSearchParams{
-		TenantId: 1,
-		// Note: Common pagination parameters like page, page_size are excluded from search params
+		Path: "/go-client-test-quota",
 	}
 
-	quotas, err := quotaClient.List(searchParams)
+	err = rest.Quotas.Delete(searchParams)
 	if err != nil {
-		log.Fatalf("Failed to list quotas: %v", err)
+		panic(fmt.Errorf("failed to delete quota: %w", err))
 	}
-
-	fmt.Printf("Found %d quotas\n", len(quotas))
-	for _, quota := range quotas {
-		if quota.Name != "" && quota.Id != 0 {
-			fmt.Printf("Quota: ID=%d, Name=%s\n", quota.Id, quota.Name)
-		}
-	}
-
-	// Example 2: Get a specific quota by ID (if any exist)
-	if len(quotas) > 0 && quotas[0].Id != 0 {
-		quota, err := quotaClient.GetById(quotas[0].Id)
-		if err != nil {
-			log.Printf("Failed to get quota: %v", err)
-		} else {
-			fmt.Printf("Retrieved quota: %+v\n", quota)
-		}
-	}
-
-	// Example 3: Create a new quota with typed create body
-	createBody := &typed.QuotaRequestBody{
-		Name:      "typed-example-quota",
-		Path:      "/example",
-		TenantId:  1,
-		HardLimit: 1024 * 1024 * 1024, // 1GB
-	}
-
-	newQuota, err := quotaClient.Create(createBody)
-	if err != nil {
-		log.Printf("Failed to create quota: %v", err)
-	} else {
-		fmt.Printf("Created quota: ID=%d, Name=%s\n", newQuota.Id, newQuota.Name)
-
-		// Example 4: Update the quota
-		updateBody := &typed.QuotaRequestBody{
-			Name:      "typed-example-quota-updated",
-			Path:      "/example",
-			TenantId:  1,
-			HardLimit: 2 * 1024 * 1024 * 1024, // 2GB
-			CreateDir: true,
-		}
-
-		updatedQuota, err := quotaClient.Update(newQuota.Id, updateBody)
-		if err != nil {
-			log.Printf("Failed to update quota: %v", err)
-		} else {
-			fmt.Printf("Updated quota: ID=%d, Name=%s, HardLimit=%d\n",
-				updatedQuota.Id, updatedQuota.Name, updatedQuota.HardLimit)
-		}
-
-		// Example 5: Check if quota exists
-		exists, err := quotaClient.Exists(&typed.QuotaSearchParams{
-			Name: "typed-example-quota-updated",
-		})
-		if err != nil {
-			log.Printf("Failed to check quota existence: %v", err)
-		} else {
-			fmt.Printf("Quota exists: %t\n", exists)
-		}
-
-		// Clean up: delete the created quota
-		deleteParams := &typed.QuotaSearchParams{
-			Name: "typed-example-quota-updated",
-		}
-		if err := quotaClient.Delete(deleteParams); err != nil {
-			log.Printf("Failed to delete quota: %v", err)
-		} else {
-			fmt.Println("Successfully deleted the example quota")
-		}
-	}
+	fmt.Println("Quota deleted successfully.")
 }

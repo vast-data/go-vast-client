@@ -1,108 +1,111 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
 
 	client "github.com/vast-data/go-vast-client"
-	"github.com/vast-data/go-vast-client/typed"
+	"github.com/vast-data/go-vast-client/resources/typed"
 )
 
 func main() {
-	ctx := context.Background()
 	config := &client.VMSConfig{
-		Host:     "l101", // replace with your VAST IP
+		Host:     "l101", // replace with your VAST address
 		Username: "admin",
 		Password: "123456",
 	}
 
-	// Create typed client
-	typedClient, err := typed.NewTypedVMSRest(config)
+	rest, err := client.NewTypedVMSRest(config)
 	if err != nil {
-		log.Fatalf("Failed to create typed client: %v", err)
+		panic(err)
 	}
-	typedClient.SetCtx(ctx)
 
-	// Use typed VipPool resource
-	vipPoolClient := typedClient.VipPools
+	// --- CREATE ---
+	ipRanges := [][]string{
+		{"192.168.1.100", "192.168.1.110"},
+		{"192.168.1.200", "192.168.1.210"},
+	}
 
-	// Example 1: List VIP pools with typed search parameters
+	createParams := &typed.VipPoolRequestBody{
+		Name:           "go-client-testvippool",
+		SubnetCidr:     24,
+		IpRanges:       &ipRanges,
+		Role:           "PROTOCOLS",
+		PortMembership: "ALL",
+		Vlan:           100,
+	}
+
+	vippool, err := rest.VipPools.Create(createParams)
+	if err != nil {
+		panic(fmt.Errorf("failed to create vippool: %w", err))
+	}
+	fmt.Printf("VipPool created successfully: %s (ID: %d)\n", vippool.Name, vippool.Id)
+
+	// --- LIST ---
+	fmt.Println("\n--- Listing VipPools ---")
 	searchParams := &typed.VipPoolSearchParams{
-		TenantId: 1,
+		// You can filter by various fields
+		// StartIp: "192.168.1.100",
+		// PortMembership: 1,
 	}
 
-	vipPools, err := vipPoolClient.List(searchParams)
+	vippools, err := rest.VipPools.List(searchParams)
 	if err != nil {
-		log.Printf("Failed to list VIP pools: %v", err)
-	} else {
-		fmt.Printf("Found %d VIP pools\n", len(vipPools))
-		for _, pool := range vipPools {
-			if pool.Name != "" && pool.Id != 0 {
-				fmt.Printf("VIP Pool: ID=%d, Name=%s, StartIp=%s, EndIp=%s\n",
-					pool.Id, pool.Name, pool.StartIp, pool.EndIp)
-			}
-		}
+		panic(fmt.Errorf("failed to list vippools: %w", err))
+	}
+	fmt.Printf("Found %d vippools\n", len(vippools))
+	for _, vp := range vippools {
+		fmt.Printf("  - %s (ID: %d, Role: %s)\n", vp.Name, vp.Id, vp.Role)
 	}
 
-	// Example 2: Create a new VIP pool with typed create body
-	createBody := &typed.VipPoolRequestBody{
-		Name:       "typed-example-vippool",
-		StartIp:    "20.0.0.1",
-		EndIp:      "20.0.0.16",
-		SubnetCidr: 24,
-	}
-
-	newVipPool, err := vipPoolClient.Create(createBody)
+	// --- GET BY ID ---
+	fmt.Println("\n--- Getting VipPool by ID ---")
+	retrievedVipPool, err := rest.VipPools.GetById(vippool.Id)
 	if err != nil {
-		log.Printf("Failed to create VIP pool: %v", err)
-	} else {
-		fmt.Printf("Created VIP pool: ID=%d, Name=%s, StartIp=%s, EndIp=%s\n",
-			newVipPool.Id, newVipPool.Name, newVipPool.StartIp, newVipPool.EndIp)
+		panic(fmt.Errorf("failed to get vippool by ID: %w", err))
+	}
+	fmt.Printf("Retrieved VipPool: %s\n", retrievedVipPool.Name)
 
-		// Example 3: Update the VIP pool
-		updateBody := &typed.VipPoolRequestBody{
-			Name:       "typed-example-vippool-updated",
-			StartIp:    "20.0.0.1",
-			EndIp:      "20.0.0.32", // Expand the range
-			SubnetCidr: 22,          // Change subnet
-		}
+	// --- UPDATE ---
+	fmt.Println("\n--- Updating VipPool ---")
+	newIpRanges := [][]string{
+		{"192.168.1.100", "192.168.1.120"}, // Extended range
+	}
 
-		updatedVipPool, err := vipPoolClient.Update(newVipPool.Id, updateBody)
+	updateParams := &typed.VipPoolRequestBody{
+		IpRanges: &newIpRanges,
+		Vlan:     200, // Change VLAN
+	}
+
+	_, err = rest.VipPools.Update(vippool.Id, updateParams)
+	if err != nil {
+		panic(fmt.Errorf("failed to update vippool: %w", err))
+	}
+	fmt.Println("VipPool updated successfully.")
+
+	// --- CHECK IF EXISTS ---
+	fmt.Println("\n--- Checking if VipPool exists ---")
+	exists, err := rest.VipPools.Exists(&typed.VipPoolSearchParams{
+		StartIp: "192.168.1.100",
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to check vippool existence: %w", err))
+	}
+	fmt.Printf("VipPool with start IP 192.168.1.100 exists: %t\n", exists)
+
+	// --- DELETE ---
+	fmt.Println("\n--- Deleting VipPool ---")
+	deleteParams := &typed.VipPoolSearchParams{
+		// Delete by name
+		// Note: You can also use rest.VipPools.DeleteById(vippool.Id)
+	}
+
+	err = rest.VipPools.Delete(deleteParams)
+	if err != nil {
+		// Try by ID if search deletion fails
+		err = rest.VipPools.DeleteById(vippool.Id)
 		if err != nil {
-			log.Printf("Failed to update VIP pool: %v", err)
-		} else {
-			fmt.Printf("Updated VIP pool: ID=%d, Name=%s, EndIp=%s, SubnetCidr=%d\n",
-				updatedVipPool.Id, updatedVipPool.Name, updatedVipPool.EndIp, updatedVipPool.SubnetCidr)
-		}
-
-		// Example 4: Get VIP pool by ID
-		retrievedPool, err := vipPoolClient.GetById(newVipPool.Id)
-		if err != nil {
-			log.Printf("Failed to get VIP pool by ID: %v", err)
-		} else {
-			fmt.Printf("Retrieved VIP pool: ID=%d, Name=%s\n",
-				retrievedPool.Id, retrievedPool.Name)
-		}
-
-		// Example 5: Check if VIP pool exists
-		exists, err := vipPoolClient.Exists(&typed.VipPoolSearchParams{
-			Name: "typed-example-vippool-updated",
-		})
-		if err != nil {
-			log.Printf("Failed to check VIP pool existence: %v", err)
-		} else {
-			fmt.Printf("VIP pool exists: %t\n", exists)
-		}
-
-		// Clean up: delete the created VIP pool
-		deleteParams := &typed.VipPoolSearchParams{
-			Name: "typed-example-vippool-updated",
-		}
-		if err := vipPoolClient.Delete(deleteParams); err != nil {
-			log.Printf("Failed to delete VIP pool: %v", err)
-		} else {
-			fmt.Println("Successfully deleted the example VIP pool")
+			panic(fmt.Errorf("failed to delete vippool: %w", err))
 		}
 	}
+	fmt.Println("VipPool deleted successfully.")
 }
