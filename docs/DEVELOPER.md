@@ -113,10 +113,10 @@ type VMSRest struct {
 
 ```go
 ....
-rest.Quotas = newResource[Quota](rest, "quotas", dummyClusterVersion)
-rest.Views = newResource[View](rest, "views", dummyClusterVersion)
-rest.VipPools = newResource[VipPool](rest, "vippools", dummyClusterVersion)
-rest.Users = newResource[User](rest, "users", dummyClusterVersion) // <- Here
+rest.Quotas = newResource[Quota](rest, "quotas")
+rest.Views = newResource[View](rest, "views")
+rest.VipPools = newResource[VipPool](rest, "vippools")
+rest.Users = newResource[User](rest, "users") // <- Here
 ....
 ```
 
@@ -187,14 +187,14 @@ type UserKey struct {
 	*VastResource
 }
 
-func (uk *UserKey) CreateKey(context.Context, userId int64) (Record, error) {
-	path := fmt.Sprintf(uk.resourcePath, userId)
-	return request[Record](ctx, uk, http.MethodPost, path, uk.apiVersion, nil, nil)
+func (r *UserKey) CreateKey(context.Context, userId int64) (Record, error) {
+	path := fmt.Sprintf(r.resourcePath, userId)
+	return request[Record](ctx, r, http.MethodPost, path, nil, nil)
 }
 
-func (uk *UserKey) DeleteKey(context.Context, userId int64, accessKey string) (EmptyRecord, error) {
-	path := fmt.Sprintf(uk.resourcePath, userId)
-	return request[EmptyRecord](ctx, uk, http.MethodDelete, path, uk.apiVersion, nil, Params{"access_key": accessKey})
+func (r *UserKey) DeleteKey(context.Context, userId int64, accessKey string) (EmptyRecord, error) {
+	path := fmt.Sprintf(r.resourcePath, userId)
+	return request[EmptyRecord](ctx, r, http.MethodDelete, path, nil, Params{"access_key": accessKey})
 }
 ```
 
@@ -275,6 +275,228 @@ Here in case of `RecordSet` (List endpoint) list of snapshot records are returne
 
 So make sense to get `results` value and return only it to avoid additional parsing of returned Record.
 
+---
+
+## Typed Resources Auto-Generation
+
+The go-vast-client supports automatic generation of typed resources that provide compile-time type safety and better IDE support. This system uses APIBuilder markers to define how to generate typed structs and methods.
+
+### Generating Typed Resources
+
+To generate all typed resources:
+
+```bash
+make generate-typed
+```
+
+This command:
+1. Scans `vast_resource.go` for resources with APIBuilder markers
+2. Generates typed structs based on OpenAPI schema
+3. Creates typed methods with proper request/response types
+4. Formats the generated code with `go fmt`
+
+Generated files are placed in the `typed/` directory:
+- `rest.go` - Typed VMSRest client
+- `<resource>.go` - Individual typed resource implementations (e.g., `quota.go`, `user.go`)
+
+### APIBuilder Markers
+
+APIBuilder markers are Go comments that define how to generate typed resources. They must be placed directly above the resource struct definition.
+
+#### Required Markers
+
+Every resource must have:
+
+1. **Search Query Marker** - Defines how to search/list resources
+2. **Model Marker** - Defines the response structure
+
+Non-read-only resources also need:
+
+3. **Request Body Marker** - Defines the structure for create/update operations
+
+#### Search Query Markers
+
+Define how to generate search parameters for listing and filtering resources:
+
+```go
+// +apityped:searchQuery:GET=<endpoint>
+// +apityped:searchQuery:SCHEMA=<SchemaName>
+```
+
+**Examples:**
+```go
+// Use GET endpoint parameters
+// +apityped:searchQuery:GET=quotas
+
+// Use specific OpenAPI schema
+// +apityped:searchQuery:SCHEMA=QuotaSearchParams
+```
+
+**Generated:** `<Resource>SearchParams` struct with fields for filtering.
+
+#### Request Body Markers
+
+Define the structure for create and update operations:
+
+```go
+// +apityped:requestBody:POST=<endpoint>
+// +apityped:requestBody:PUT=<endpoint>  
+// +apityped:requestBody:PATCH=<endpoint>
+// +apityped:requestBody:SCHEMA=<SchemaName>
+```
+
+**Examples:**
+```go
+// Use POST endpoint request body
+// +apityped:requestBody:POST=quotas
+
+// Use specific OpenAPI schema
+// +apityped:requestBody:SCHEMA=QuotaCreateRequest
+```
+
+**Generated:** `<Resource>RequestBody` struct for create/update operations.
+
+#### Model Markers
+
+Define the response structure for API operations:
+
+```go
+// +apityped:model:GET=<endpoint>
+// +apityped:model:POST=<endpoint>
+// +apityped:model:PUT=<endpoint>
+// +apityped:model:DELETE=<endpoint>
+// +apityped:model:PATCH=<endpoint>
+// +apityped:model:SCHEMA=<SchemaName>
+```
+
+**Examples:**
+```go
+// Use POST endpoint response
+// +apityped:model:POST=quotas
+
+// Use specific OpenAPI schema  
+// +apityped:model:SCHEMA=Quota
+```
+
+**Generated:** `<Resource>Model` struct for API responses.
+
+#### Read-Only Marker
+
+For resources that don't support create/update/delete operations:
+
+```go
+// +apityped:readOnly
+```
+
+Read-only resources only generate `Get*`, `List*`, `Exists*`, and `MustExists*` methods.
+
+### Complete Resource Examples
+
+#### Full CRUD Resource
+
+```go
+// +apityped:searchQuery:GET=quotas
+// +apityped:requestBody:POST=quotas  
+// +apityped:model:SCHEMA=Quota
+type Quota struct {
+    *VastResource
+}
+```
+
+**Generates:**
+- `QuotaSearchParams` - for filtering/searching
+- `QuotaRequestBody` - for create/update operations
+- `QuotaModel` - for API responses
+- Full CRUD methods: `Create`, `Update`, `Delete`, `Get`, `List`, `Ensure`, etc.
+
+#### Read-Only Resource
+
+```go
+// +apityped:readOnly
+// +apityped:searchQuery:GET=versions
+// +apityped:model:SCHEMA=Version
+type Version struct {
+    *VastResource  
+}
+```
+
+**Generates:**
+- `VersionSearchParams` - for filtering/searching
+- `VersionModel` - for API responses  
+- Read-only methods: `Get`, `List`, `Exists`, `MustExists` (no Create/Update/Delete)
+
+#### Using Schema References
+
+```go
+// +apityped:searchQuery:SCHEMA=UserSearchCriteria
+// +apityped:requestBody:SCHEMA=UserCreateRequest
+// +apityped:model:SCHEMA=User
+type User struct {
+    *VastResource
+}
+```
+
+This approach uses specific OpenAPI schema definitions instead of endpoint-derived schemas.
+
+### Generated Struct Features
+
+All generated structs include:
+
+- **JSON Tags**: For serialization (`json:"field_name,omitempty"`)
+- **YAML Tags**: For YAML support (`yaml:"field_name,omitempty"`)  
+- **Required Tags**: Field requirement info (`required:"true/false"`)
+- **Doc Tags**: Field documentation (`doc:"Field description"`)
+- **Type Safety**: Proper Go types (string, int64, bool, etc.)
+- **Nested Structs**: For complex object fields
+- **Pointer Fields**: For arrays and objects to handle `omitempty` correctly
+
+### Generated Methods
+
+Typed resources provide the same methods as untyped resources but with typed parameters:
+
+**Standard Methods:**
+- `Get(req *SearchParams) (*Model, error)`
+- `List(req *SearchParams) ([]*Model, error)`  
+- `Create(req *RequestBody) (*Model, error)`
+- `Update(id any, req *RequestBody) (*Model, error)`
+- `Delete(req *SearchParams) error`
+- `Ensure(searchParams *SearchParams, body *RequestBody) (*Model, error)`
+
+**Context Methods:**
+- `GetWithContext(ctx context.Context, req *SearchParams) (*Model, error)`
+- `ListWithContext(ctx context.Context, req *SearchParams) ([]*Model, error)`
+- And so on...
+
+### Accessing Untyped Methods
+
+From any typed resource, you can access the underlying untyped client:
+
+```go
+// Access untyped methods when needed
+record, err := typedRest.Untyped.Quotas.GetWithContext(ctx, params)
+```
+
+### Troubleshooting Generation
+
+**Common Issues:**
+
+1. **Missing Markers**: Ensure all required markers are present
+2. **Invalid Schema Names**: Verify schema names exist in OpenAPI spec
+3. **Compilation Errors**: Check generated code for syntax issues
+4. **Missing Fields**: Verify OpenAPI schema completeness
+
+**Debug Generation:**
+```bash
+# Verbose generation output
+cd autogen && go run ./cmd/generate-typed-resources
+```
+
+### Adding New Resources for Typed Generation
+
+1. Add APIBuilder markers to your resource in `vast_resource.go`
+2. Ensure the resource exists in the untyped `VMSRest` struct
+3. Run `make generate-typed`
+4. Verify generated code compiles: `go build ./typed/...`
 
 ### Release new version of the client
 
