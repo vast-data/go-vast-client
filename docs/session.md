@@ -1,54 +1,123 @@
-Resources can be queried using session if you need more control over request endpoints, headers, or other parameters. 
-Or if endpoint is not present in the VMSRest object.
+# Session API
 
-Session implements 5 methods
+The Session API provides low-level HTTP access when you need more control over requests or need to access endpoints not exposed through the typed/untyped resource clients.
 
-- **Get**
-- **Post**
-- **Put**
-- **Patch**
-- **Delete**
+## When to Use Session
 
-Example:
+- Custom or undocumented API endpoints
+- Direct control over HTTP methods and paths
+- Custom request headers or parameters
+- Endpoints not yet available in resource clients
+
+## Available Methods
+
+Session implements 5 HTTP methods:
+
+- **Get** - Retrieve resources
+- **Post** - Create resources
+- **Put** - Replace resources
+- **Patch** - Update resources
+- **Delete** - Remove resources
+
+## Accessing Session
+
+Both typed and untyped clients provide access to the Session API:
 
 ```go
-ctx := context.Background()
-config := &client.VMSConfig{
-    Host:     "10.27.40.1",
-    Username: "admin",
-    Password: "123456",
-    BeforeRequestFn: func(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error {
-        log.Printf("Sending request: verb=%s, url=%s", verb, url)
-        return nil
-    },
-    AfterRequestFn: func(ctx context.Context, response client.Renderable) (client.Renderable, error) {
-        log.Printf("Result:\n%s", response.PrettyTable())
-        return response, nil
-    },
-}
+// From typed client
+typedRest, _ := client.NewTypedVMSRest(config)
+session := typedRest.GetSession()
 
-rest, err := client.NewVMSRest(config)
-if err != nil {
-    panic(err)
-}
+// From untyped client
+untypedRest, _ := client.NewUntypedVMSRest(config)
+session := untypedRest.GetSession()
+```
 
-// Get View by name
-path := "views?name=myview"
-result, err := rest.Session.Get(ctx, path, nil)
-if err != nil {
-    log.Fatal(err)
-}
+> **Note:** Session methods always return untyped data (`core.Record`, `core.RecordSet`, or `core.EmptyRecord`), even when accessed from a typed client.
 
-recordSet := result.(client.RecordSet)
-if !recordSet.Empty() {
-    firstRecord := recordSet[0]
-    // Get View by id
-    path = fmt.Sprintf("views/%d", firstRecord.RecordID())
-    result, err = rest.Session.Get(ctx, path, nil)
+## Example Usage
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    client "github.com/vast-data/go-vast-client"
+    "github.com/vast-data/go-vast-client/core"
+)
+
+func main() {
+    config := &client.VMSConfig{
+        Host:     "10.27.40.1",
+        Username: "admin",
+        Password: "123456",
+    }
+
+    // Can use either typed or untyped client
+    rest, err := client.NewUntypedVMSRest(config)
     if err != nil {
         panic(err)
     }
-} else {
-    log.Println("No records found")
+
+    ctx := context.Background()
+
+    // Get view by name using query parameter
+    path := "views?name=myview"
+    result, err := rest.Session.Get(ctx, path, nil, nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Session returns untyped data
+    recordSet := result.(core.RecordSet)
+    if !recordSet.Empty() {
+        firstRecord := recordSet[0]
+        viewID := firstRecord.RecordID()
+        
+        // Get view by ID
+        path = fmt.Sprintf("views/%d", viewID)
+        result, err = rest.Session.Get(ctx, path, nil, nil)
+        if err != nil {
+            panic(err)
+        }
+        
+        record := result.(core.Record)
+        fmt.Printf("View name: %s\n", record["name"])
+    } else {
+        log.Println("No records found")
+    }
 }
+```
+
+## Custom Headers and Parameters
+
+You can pass custom parameters and headers to Session methods:
+
+```go
+// Using query parameters (note: for GET, params go in the URL, not as separate arg)
+result, err := session.Get(ctx, "views?name=myview&limit=10&offset=0", nil, nil)
+
+// POST with request body
+body := client.Params{
+    "name": "newview",
+    "path": "/newview",
+}
+result, err := session.Post(ctx, "views", body, nil)
+
+// PATCH to update
+updateBody := client.Params{
+    "protocols": []string{"NFS", "SMB"},
+}
+result, err := session.Patch(ctx, "views/123", updateBody, nil)
+
+// DELETE
+result, err := session.Delete(ctx, "views/123", nil, nil)
+
+// Using custom headers
+customHeaders := []http.Header{
+    {"X-Custom-Header": []string{"value"}},
+}
+result, err := session.Get(ctx, "views", nil, customHeaders)
 ```

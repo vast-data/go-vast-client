@@ -1,16 +1,84 @@
-All API operations return a **Response** object that supports rendering, inspection, and optional conversion into Go structs.
+# API Responses
 
-A response is one of the following:
+API operations return different response types depending on whether you're using the typed or untyped client.
 
-- A **single record**: key-value map (`Record`)
-- A **list of records**: array of maps (`RecordSet`)
-- An **empty result**: used in operations like `DELETE`
+## Response Types by Client
 
-These types implement the `DisplayableRecord` interface, which includes formatting and data-extraction methods.
+### Typed Client Responses
+
+The typed client returns **strongly-typed structs** for all operations:
+
+```go
+rest, _ := client.NewTypedVMSRest(config)
+
+// Returns *typed.ViewUpsertModel
+view, err := rest.Views.Create(body)
+
+// Returns []typed.ViewDetailsModel
+views, err := rest.Views.List(nil)
+
+// Returns *typed.ViewDetailsModel
+view, err := rest.Views.Get(searchParams)
+```
+
+**Benefits:**
+- Compile-time type safety
+- IDE autocomplete for all fields
+- Clear struct definitions
+- No need for type assertions or manual unmarshaling
+
+### Untyped Client Responses
+
+The untyped client returns **flexible map-based types**:
+
+- **`core.Record`**: Single record (key-value map: `map[string]any`)
+- **`core.RecordSet`**: List of records (`[]map[string]any`)
+- **`core.EmptyRecord`**: Empty result (used in operations like DELETE)
+
+```go
+rest, _ := client.NewUntypedVMSRest(config)
+
+// Returns core.Record
+record, err := rest.Views.Create(params)
+
+// Returns core.RecordSet
+recordSet, err := rest.Views.List(params)
+```
+
+These types implement the `core.Renderable` interface with formatting and data-extraction methods.
 
 ---
 
-## Common Methods
+## Working with Typed Responses
+
+Typed responses are Go structs with strongly-typed fields:
+
+```go
+rest, _ := client.NewTypedVMSRest(config)
+
+view, err := rest.Views.Get(&typed.ViewSearchParams{Name: "myview"})
+if err != nil {
+    log.Fatal(err)
+}
+
+// Direct field access with type safety
+fmt.Printf("View ID: %d\n", view.Id)
+fmt.Printf("View Name: %s\n", view.Name)
+fmt.Printf("View Path: %s\n", view.Path)
+
+// Work with nested structs
+if view.Protocols != nil {
+    for _, protocol := range *view.Protocols {
+        fmt.Printf("Protocol: %s\n", protocol)
+    }
+}
+```
+
+---
+
+## Working with Untyped Responses
+
+Untyped responses provide helper methods for display and data extraction.
 
 ### Display Output
 
@@ -19,14 +87,21 @@ These types implement the `DisplayableRecord` interface, which includes formatti
 | `PrettyTable()`  | Render response as a formatted table     | Grid-like CLI table    |
 | `PrettyJson()`   | Render response as pretty-printed JSON   | Indented/compact JSON  |
 
-#### Example
+**Example:**
 
 ```go
-fmt.Println(response.PrettyTable())
-fmt.Println(response.PrettyJson("  "))
+rest, _ := client.NewUntypedVMSRest(config)
+
+record, err := rest.Views.Get(client.Params{"name": "myview"})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println(record.PrettyTable())
+fmt.Println(record.PrettyJson("  "))
 ```
 
-#### Common attributes access
+### Common Attribute Access
 
 You can extract frequently used fields directly from a response object:
 
@@ -40,64 +115,68 @@ You can extract frequently used fields directly from a response object:
 
 
 
-#### Fill Struct
+**Example:**
 
-Response objects can populate a typed Go struct using .Fill()
+```go
+rest, _ := client.NewUntypedVMSRest(config)
+
+record, err := rest.Views.Get(client.Params{"name": "myview"})
+if err != nil {
+    log.Fatal(err)
+}
+
+// Direct map access
+viewID := record.RecordID()
+viewName := record.RecordName()
+fmt.Printf("View: %s (ID: %d)\n", viewName, viewID)
+```
+
+### Converting Untyped to Typed with Fill()
+
+Untyped responses can be converted to Go structs using the `Fill()` method:
 
 ```go
 package main
 
 import (
-	"fmt"
-	"log"
-
-	"vast_client"
+    "fmt"
+    "log"
+    client "github.com/vast-data/go-vast-client"
 )
 
-// ViewContainer is a typed struct that mirrors the expected API response.
-type ViewContainer struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Path     string `json:"path"`
-	TenantID int64  `json:"tenant_id"`
+// Custom struct that mirrors the expected API response
+type ViewData struct {
+    ID       int64  `json:"id"`
+    Name     string `json:"name"`
+    Path     string `json:"path"`
+    TenantID int64  `json:"tenant_id"`
 }
 
 func main() {
-	// Prepare API client configuration
-	config := &vast_client.VMSConfig{
-		Host:     "10.27.40.1",
-		Username: "admin",
-		Password: "123456",
-	}
+    config := &client.VMSConfig{
+        Host:     "10.27.40.1",
+        Username: "admin",
+        Password: "123456",
+    }
 
-	// Create REST client
-	rest, err := vast_client.NewVMSRest(config)
-	if err != nil {
-		log.Fatalf("failed to create REST client: %v", err)
-	}
+    // Use untyped client
+    rest, err := client.NewUntypedVMSRest(config)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	// Call EnsureByName or any API method returning a Record
-	response, err := rest.Views.EnsureByName("myvolume", vast_client.Params{
-		"path":      "/myblock",
-		"protocols": []string{"BLOCK"},
-		"policy_id": 1,
-	})
-	if err != nil {
-		log.Fatalf("API error: %v", err)
-	}
+    // Get untyped response
+    record, err := rest.Views.Get(client.Params{"name": "myview"})
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	// Define a variable of the target struct and fill it with response data
-	var view ViewContainer
-	if err := response.Fill(&view); err != nil {
-		log.Fatalf("failed to fill struct: %v", err)
-	}
+    // Fill custom struct from untyped response
+    var view ViewData
+    if err := record.Fill(&view); err != nil {
+        log.Fatalf("failed to fill struct: %v", err)
+    }
 
-	// Print structured output
-	fmt.Println("✅ View created:")
-	fmt.Printf("  ID:        %d\n", view.ID)
-	fmt.Printf("  Name:      %s\n", view.Name)
-	fmt.Printf("  Path:      %s\n", view.Path)
-	fmt.Printf("  Tenant ID: %d\n", view.TenantID)
+    fmt.Printf("View: %s (ID: %d, Path: %s)\n", view.Name, view.ID, view.Path)
 }
 ```
-

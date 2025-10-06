@@ -6,14 +6,19 @@
 [![Coverage Status](https://coveralls.io/repos/github/vast-data/go-vast-client/badge.svg?branch=main)](https://coveralls.io/github/vast-data/go-vast-client?branch=main)
 [![Go Reference](https://pkg.go.dev/badge/github.com/vast-data/go-vast-client.svg)](https://pkg.go.dev/github.com/vast-data/go-vast-client)
 
-The VAST Go client provides a typed interface to the VAST Data REST API. It wraps low-level HTTP calls in structured methods, allowing you to interact with volumes, views, quotas, and other resources easily.
+The VAST Go client provides an interface to the VAST Data REST API. It wraps low-level HTTP calls in structured methods, allowing you to interact with volumes, views, quotas, and other resources easily.
 
 ---
+
+> **NOTE:** Since version 0.100.0, the REST client has been split into two distinct client types:
+>
+> - **Typed Client** (`NewTypedVMSRest`): Provides strongly-typed structs for requests and responses. Offers compile-time type safety, IDE auto-completion, and clear API contracts. Recommended for most use cases.
+> - **Untyped Client** (`NewUntypedVMSRest`): Uses flexible `map[string]any` for data handling. Useful for dynamic scenarios and prototyping.
 
 ## Installation
 
 ```bash
-go get github.com/vast-data/go-vast-client@v0.40.0  # Replace with the latest available tag
+go get github.com/vast-data/go-vast-client@v0.100.0  # Replace with the latest available tag
 ```
 
 Import it in your Go code:
@@ -28,8 +33,9 @@ import client "github.com/vast-data/go-vast-client"
 package main
 
 import (
-    "log"
+    "fmt"
     client "github.com/vast-data/go-vast-client"
+    "github.com/vast-data/go-vast-client/resources/typed"
 )
 
 func main() {
@@ -39,22 +45,31 @@ func main() {
         Password: "123456",
     }
 
-    rest, err := client.NewVMSRest(config)
+    rest, err := client.NewTypedVMSRest(config)
     if err != nil {
         panic(err)
     }
 
-    result, err := rest.Views.EnsureByName("myview", client.Params{
-        "path":      "/myblock",
-        "protocols": []string{"BLOCK"},
-        "policy_id": 1,
-    })
-    if err != nil {
-        log.Fatal(err)
+    searchParams := &typed.ViewSearchParams{
+        Path: "/myview",
+    }
+    
+    body := &typed.ViewRequestBody{
+        Name:      "myview",
+        Path:      "/myview",
+        Protocols: &[]string{"NFS"},
+        PolicyId:  1,
+        CreateDir: true,
     }
 
-    log.Println(result.PrettyTable())
+    view, err := rest.Views.Ensure(searchParams, body)
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("View: %s (ID: %d)\n", view.Name, view.Id)
 }
 ```
+
 
 
