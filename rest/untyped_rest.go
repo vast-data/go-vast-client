@@ -40,8 +40,8 @@ type UntypedVMSRest struct {
 	// +apiall:extraMethod:POST=/activedirectory/{id}/change_machine_account_password/
 	ActiveDirectories *untyped.ActiveDirectory
 	// +apiall:extraMethod:PATCH=/alarms/clear/
-	Alarms      *untyped.Alarm
-	Analyticses *untyped.Analytics
+	Alarms    *untyped.Alarm
+	Analytics *untyped.Analytics
 	// +apiall:extraMethod:PATCH=/apitokens/{id}/revoke/
 	ApiTokens     *untyped.ApiToken
 	BasicSettings *untyped.BasicSettings
@@ -52,7 +52,7 @@ type UntypedVMSRest struct {
 	BigCatalogConfigs *untyped.BigCatalogConfig
 	// +apiall:extraMethod:PATCH=/bigcatalogindexedcolumns/add/
 	// +apiall:extraMethod:DELETE=/bigcatalogindexedcolumns/remove/
-	BigCatalogIndexedColumnses *untyped.BigCatalogIndexedColumns
+	BigCatalogIndexedColumns *untyped.BigCatalogIndexedColumns
 	// +apiall:extraMethod:PATCH=/blockhosts/{id}/set_volumes/
 	// +apiall:extraMethod:PATCH=/blockhosts/{id}/update_volumes/
 	// +apiall:extraMethod:DELETE=/blockhosts/bulk/
@@ -412,12 +412,12 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	// Fill in each resource, pointing back to the same rest
 	rest.ActiveDirectories = newUntypedResource[untyped.ActiveDirectory](rest, "activedirectory", C, L, R, U, D)
 	rest.Alarms = newUntypedResource[untyped.Alarm](rest, "alarms", L, R, U, D)
-	rest.Analyticses = newUntypedResource[untyped.Analytics](rest, "analytics", L)
+	rest.Analytics = newUntypedResource[untyped.Analytics](rest, "analytics", L)
 	rest.ApiTokens = newUntypedResource[untyped.ApiToken](rest, "apitokens", C, L, R, U)
 	rest.BasicSettings = newUntypedResource[untyped.BasicSettings](rest, "basicsettings", L)
 	rest.BGPConfigs = newUntypedResource[untyped.BGPConfig](rest, "bgpconfigs", C, L, R, U, D)
 	rest.BigCatalogConfigs = newUntypedResource[untyped.BigCatalogConfig](rest, "bigcatalogconfig", C, L, R, U, D)
-	rest.BigCatalogIndexedColumnses = newUntypedResource[untyped.BigCatalogIndexedColumns](rest, "bigcatalogindexedcolumns", L)
+	rest.BigCatalogIndexedColumns = newUntypedResource[untyped.BigCatalogIndexedColumns](rest, "bigcatalogindexedcolumns", L)
 	rest.BlockHosts = newUntypedResource[untyped.BlockHost](rest, "blockhosts", C, L, R, U, D)
 	rest.BlockHostMappings = newUntypedResource[untyped.BlockHostMapping](rest, "blockhostvolumes", L)
 	rest.CallhomeConfigs = newUntypedResource[untyped.CallhomeConfigs](rest, "callhomeconfigs", C, L, R, U)

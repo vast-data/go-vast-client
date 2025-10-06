@@ -19,113 +19,113 @@ type TypedVastResourceType interface {
 type TypedVMSRest struct {
 	Untyped *UntypedVMSRest
 
-	ActiveDirectories          *typed.ActiveDirectory
-	Alarms                     *typed.Alarm
-	Analyticses                *typed.Analytics
-	ApiTokens                  *typed.ApiToken
-	BGPConfigs                 *typed.BGPConfig
-	BasicSettingses            *typed.BasicSettings
-	BigCatalogConfigs          *typed.BigCatalogConfig
-	BigCatalogIndexedColumnses *typed.BigCatalogIndexedColumns
-	BlockHosts                 *typed.BlockHost
-	BlockHostMappings          *typed.BlockHostMapping
-	CallhomeConfigses          *typed.CallhomeConfigs
-	Capacities                 *typed.Capacity
-	Carriers                   *typed.Carrier
-	Cboxes                     *typed.Cbox
-	Certificates               *typed.Certificate
-	ChallengeTokenses          *typed.ChallengeTokens
-	Clusters                   *typed.Cluster
-	Cnodes                     *typed.Cnode
-	CnodeGroups                *typed.CnodeGroup
-	Columns                    *typed.Column
-	Configs                    *typed.Config
-	Dboxes                     *typed.Dbox
-	Deltas                     *typed.Delta
-	Dnodes                     *typed.Dnode
-	Dnses                      *typed.Dns
-	Dtrays                     *typed.Dtray
-	Eboxes                     *typed.Ebox
-	EncryptedPaths             *typed.EncryptedPath
-	EncryptionGroups           *typed.EncryptionGroup
-	Envs                       *typed.Env
-	Events                     *typed.Event
-	EventDefinitions           *typed.EventDefinition
-	EventDefinitionConfigs     *typed.EventDefinitionConfig
-	Fans                       *typed.Fan
-	Folders                    *typed.Folder
-	Filesystems                *typed.Filesystem
-	GlobalSnapshotStreams      *typed.GlobalSnapshotStream
-	Groups                     *typed.Group
-	IamRoles                   *typed.IamRole
-	Injectionses               *typed.Injections
-	Indestructibility          *typed.Indestructibility
-	IoDatas                    *typed.IoData
-	KafkaBrokers               *typed.KafkaBroker
-	Kerberos                   *typed.Kerberos
-	Ldaps                      *typed.Ldap
-	Licenses                   *typed.License
-	LocalProviders             *typed.LocalProvider
-	LocalS3Keys                *typed.LocalS3Key
-	ManageApplicationses       *typed.ManageApplications
-	Managers                   *typed.Manager
-	Metricses                  *typed.Metrics
-	Modules                    *typed.Module
-	Monitors                   *typed.Monitor
-	Nics                       *typed.Nic
-	NicPorts                   *typed.NicPort
-	Nises                      *typed.Nis
-	Nvrams                     *typed.Nvram
-	Oidc                       *typed.Oidc
-	Permissionses              *typed.Permissions
-	Ports                      *typed.Port
-	Projections                *typed.Projection
-	ProjectionColumns          *typed.ProjectionColumn
-	PrometheusMetricses        *typed.PrometheusMetrics
-	ProtectedPaths             *typed.ProtectedPath
-	ProtectionPolicies         *typed.ProtectionPolicy
-	Psus                       *typed.Psu
-	QosPolicies                *typed.QosPolicy
-	Quotas                     *typed.Quota
-	QuotaEntityInfos           *typed.QuotaEntityInfo
-	Racks                      *typed.Rack
-	Realms                     *typed.Realm
-	ReplicationPeerses         *typed.ReplicationPeers
-	ReplicationPolicies        *typed.ReplicationPolicy
-	ReplicationRestorePoints   *typed.ReplicationRestorePoint
-	ReplicationStreams         *typed.ReplicationStream
-	Roles                      *typed.Role
-	S3Keyses                   *typed.S3Keys
-	S3LifeCycleRules           *typed.S3LifeCycleRule
-	S3Policies                 *typed.S3Policy
-	S3replicationPeerses       *typed.S3replicationPeers
-	Schemas                    *typed.Schema
-	SettingDiffs               *typed.SettingDiff
-	Snapshots                  *typed.Snapshot
-	SnapshotPolicies           *typed.SnapshotPolicy
-	Ssds                       *typed.Ssd
-	SubnetManagers             *typed.SubnetManager
-	SupportBundleses           *typed.SupportBundles
-	SupportedDrivers           *typed.SupportedDrivers
-	Switches                   *typed.Switch
-	Tables                     *typed.Table
-	Tenants                    *typed.Tenant
-	Topics                     *typed.Topic
-	Users                      *typed.User
-	UserQuotas                 *typed.UserQuota
-	VTasks                     *typed.VTask
-	VastAuditLogs              *typed.VastAuditLog
-	Versions                   *typed.Version
-	Views                      *typed.View
-	ViewPolicies               *typed.ViewPolicy
-	Vips                       *typed.Vip
-	VipPools                   *typed.VipPool
-	Vmses                      *typed.Vms
-	Volumes                    *typed.Volume
-	VpnTunnels                 *typed.VpnTunnel
-	WebHooks                   *typed.WebHook
-	Hosts                      *typed.Host
-	VirtualMachines            *typed.VirtualMachine
+	ActiveDirectories        *typed.ActiveDirectory
+	Alarms                   *typed.Alarm
+	Analytics                *typed.Analytics
+	ApiTokens                *typed.ApiToken
+	BGPConfigs               *typed.BGPConfig
+	BasicSettings            *typed.BasicSettings
+	BigCatalogConfigs        *typed.BigCatalogConfig
+	BigCatalogIndexedColumns *typed.BigCatalogIndexedColumns
+	BlockHosts               *typed.BlockHost
+	BlockHostMappings        *typed.BlockHostMapping
+	CallhomeConfigs          *typed.CallhomeConfigs
+	Capacities               *typed.Capacity
+	Carriers                 *typed.Carrier
+	Cboxes                   *typed.Cbox
+	Certificates             *typed.Certificate
+	ChallengeTokens          *typed.ChallengeTokens
+	Clusters                 *typed.Cluster
+	Cnodes                   *typed.Cnode
+	CnodeGroups              *typed.CnodeGroup
+	Columns                  *typed.Column
+	Configs                  *typed.Config
+	Dboxes                   *typed.Dbox
+	Deltas                   *typed.Delta
+	Dnodes                   *typed.Dnode
+	Dnses                    *typed.Dns
+	Dtrays                   *typed.Dtray
+	Eboxes                   *typed.Ebox
+	EncryptedPaths           *typed.EncryptedPath
+	EncryptionGroups         *typed.EncryptionGroup
+	Envs                     *typed.Env
+	Events                   *typed.Event
+	EventDefinitions         *typed.EventDefinition
+	EventDefinitionConfigs   *typed.EventDefinitionConfig
+	Fans                     *typed.Fan
+	Folders                  *typed.Folder
+	Filesystems              *typed.Filesystem
+	GlobalSnapshotStreams    *typed.GlobalSnapshotStream
+	Groups                   *typed.Group
+	IamRoles                 *typed.IamRole
+	Injectionses             *typed.Injections
+	Indestructibility        *typed.Indestructibility
+	IoDatas                  *typed.IoData
+	KafkaBrokers             *typed.KafkaBroker
+	Kerberos                 *typed.Kerberos
+	Ldaps                    *typed.Ldap
+	Licenses                 *typed.License
+	LocalProviders           *typed.LocalProvider
+	LocalS3Keys              *typed.LocalS3Key
+	ManageApplications       *typed.ManageApplications
+	Managers                 *typed.Manager
+	Metrics                  *typed.Metrics
+	Modules                  *typed.Module
+	Monitors                 *typed.Monitor
+	Nics                     *typed.Nic
+	NicPorts                 *typed.NicPort
+	Nises                    *typed.Nis
+	Nvrams                   *typed.Nvram
+	Oidc                     *typed.Oidc
+	Permissions              *typed.Permissions
+	Ports                    *typed.Port
+	Projections              *typed.Projection
+	ProjectionColumns        *typed.ProjectionColumn
+	PrometheusMetrics        *typed.PrometheusMetrics
+	ProtectedPaths           *typed.ProtectedPath
+	ProtectionPolicies       *typed.ProtectionPolicy
+	Psus                     *typed.Psu
+	QosPolicies              *typed.QosPolicy
+	Quotas                   *typed.Quota
+	QuotaEntityInfos         *typed.QuotaEntityInfo
+	Racks                    *typed.Rack
+	Realms                   *typed.Realm
+	ReplicationPeers         *typed.ReplicationPeers
+	ReplicationPolicies      *typed.ReplicationPolicy
+	ReplicationRestorePoints *typed.ReplicationRestorePoint
+	ReplicationStreams       *typed.ReplicationStream
+	Roles                    *typed.Role
+	S3Keys                   *typed.S3Keys
+	S3LifeCycleRules         *typed.S3LifeCycleRule
+	S3Policies               *typed.S3Policy
+	S3ReplicationPeers       *typed.S3replicationPeers
+	Schemas                  *typed.Schema
+	SettingDiffs             *typed.SettingDiff
+	Snapshots                *typed.Snapshot
+	SnapshotPolicies         *typed.SnapshotPolicy
+	Ssds                     *typed.Ssd
+	SubnetManagers           *typed.SubnetManager
+	SupportBundles           *typed.SupportBundles
+	SupportedDrivers         *typed.SupportedDrivers
+	Switches                 *typed.Switch
+	Tables                   *typed.Table
+	Tenants                  *typed.Tenant
+	Topics                   *typed.Topic
+	Users                    *typed.User
+	UserQuotas               *typed.UserQuota
+	VTasks                   *typed.VTask
+	VastAuditLogs            *typed.VastAuditLog
+	Versions                 *typed.Version
+	Views                    *typed.View
+	ViewPolicies             *typed.ViewPolicy
+	Vips                     *typed.Vip
+	VipPools                 *typed.VipPool
+	Vmses                    *typed.Vms
+	Volumes                  *typed.Volume
+	VpnTunnels               *typed.VpnTunnel
+	WebHooks                 *typed.WebHook
+	Hosts                    *typed.Host
+	VirtualMachines          *typed.VirtualMachine
 }
 
 func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
@@ -145,20 +145,20 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 
 	rest.ActiveDirectories = newTypedResource[typed.ActiveDirectory](rest)
 	rest.Alarms = newTypedResource[typed.Alarm](rest)
-	rest.Analyticses = newTypedResource[typed.Analytics](rest)
+	rest.Analytics = newTypedResource[typed.Analytics](rest)
 	rest.ApiTokens = newTypedResource[typed.ApiToken](rest)
 	rest.BGPConfigs = newTypedResource[typed.BGPConfig](rest)
-	rest.BasicSettingses = newTypedResource[typed.BasicSettings](rest)
+	rest.BasicSettings = newTypedResource[typed.BasicSettings](rest)
 	rest.BigCatalogConfigs = newTypedResource[typed.BigCatalogConfig](rest)
-	rest.BigCatalogIndexedColumnses = newTypedResource[typed.BigCatalogIndexedColumns](rest)
+	rest.BigCatalogIndexedColumns = newTypedResource[typed.BigCatalogIndexedColumns](rest)
 	rest.BlockHosts = newTypedResource[typed.BlockHost](rest)
 	rest.BlockHostMappings = newTypedResource[typed.BlockHostMapping](rest)
-	rest.CallhomeConfigses = newTypedResource[typed.CallhomeConfigs](rest)
+	rest.CallhomeConfigs = newTypedResource[typed.CallhomeConfigs](rest)
 	rest.Capacities = newTypedResource[typed.Capacity](rest)
 	rest.Carriers = newTypedResource[typed.Carrier](rest)
 	rest.Cboxes = newTypedResource[typed.Cbox](rest)
 	rest.Certificates = newTypedResource[typed.Certificate](rest)
-	rest.ChallengeTokenses = newTypedResource[typed.ChallengeTokens](rest)
+	rest.ChallengeTokens = newTypedResource[typed.ChallengeTokens](rest)
 	rest.Clusters = newTypedResource[typed.Cluster](rest)
 	rest.Cnodes = newTypedResource[typed.Cnode](rest)
 	rest.CnodeGroups = newTypedResource[typed.CnodeGroup](rest)
@@ -191,9 +191,9 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 	rest.Licenses = newTypedResource[typed.License](rest)
 	rest.LocalProviders = newTypedResource[typed.LocalProvider](rest)
 	rest.LocalS3Keys = newTypedResource[typed.LocalS3Key](rest)
-	rest.ManageApplicationses = newTypedResource[typed.ManageApplications](rest)
+	rest.ManageApplications = newTypedResource[typed.ManageApplications](rest)
 	rest.Managers = newTypedResource[typed.Manager](rest)
-	rest.Metricses = newTypedResource[typed.Metrics](rest)
+	rest.Metrics = newTypedResource[typed.Metrics](rest)
 	rest.Modules = newTypedResource[typed.Module](rest)
 	rest.Monitors = newTypedResource[typed.Monitor](rest)
 	rest.Nics = newTypedResource[typed.Nic](rest)
@@ -201,11 +201,11 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 	rest.Nises = newTypedResource[typed.Nis](rest)
 	rest.Nvrams = newTypedResource[typed.Nvram](rest)
 	rest.Oidc = newTypedResource[typed.Oidc](rest)
-	rest.Permissionses = newTypedResource[typed.Permissions](rest)
+	rest.Permissions = newTypedResource[typed.Permissions](rest)
 	rest.Ports = newTypedResource[typed.Port](rest)
 	rest.Projections = newTypedResource[typed.Projection](rest)
 	rest.ProjectionColumns = newTypedResource[typed.ProjectionColumn](rest)
-	rest.PrometheusMetricses = newTypedResource[typed.PrometheusMetrics](rest)
+	rest.PrometheusMetrics = newTypedResource[typed.PrometheusMetrics](rest)
 	rest.ProtectedPaths = newTypedResource[typed.ProtectedPath](rest)
 	rest.ProtectionPolicies = newTypedResource[typed.ProtectionPolicy](rest)
 	rest.Psus = newTypedResource[typed.Psu](rest)
@@ -214,22 +214,22 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 	rest.QuotaEntityInfos = newTypedResource[typed.QuotaEntityInfo](rest)
 	rest.Racks = newTypedResource[typed.Rack](rest)
 	rest.Realms = newTypedResource[typed.Realm](rest)
-	rest.ReplicationPeerses = newTypedResource[typed.ReplicationPeers](rest)
+	rest.ReplicationPeers = newTypedResource[typed.ReplicationPeers](rest)
 	rest.ReplicationPolicies = newTypedResource[typed.ReplicationPolicy](rest)
 	rest.ReplicationRestorePoints = newTypedResource[typed.ReplicationRestorePoint](rest)
 	rest.ReplicationStreams = newTypedResource[typed.ReplicationStream](rest)
 	rest.Roles = newTypedResource[typed.Role](rest)
-	rest.S3Keyses = newTypedResource[typed.S3Keys](rest)
+	rest.S3Keys = newTypedResource[typed.S3Keys](rest)
 	rest.S3LifeCycleRules = newTypedResource[typed.S3LifeCycleRule](rest)
 	rest.S3Policies = newTypedResource[typed.S3Policy](rest)
-	rest.S3replicationPeerses = newTypedResource[typed.S3replicationPeers](rest)
+	rest.S3ReplicationPeers = newTypedResource[typed.S3replicationPeers](rest)
 	rest.Schemas = newTypedResource[typed.Schema](rest)
 	rest.SettingDiffs = newTypedResource[typed.SettingDiff](rest)
 	rest.Snapshots = newTypedResource[typed.Snapshot](rest)
 	rest.SnapshotPolicies = newTypedResource[typed.SnapshotPolicy](rest)
 	rest.Ssds = newTypedResource[typed.Ssd](rest)
 	rest.SubnetManagers = newTypedResource[typed.SubnetManager](rest)
-	rest.SupportBundleses = newTypedResource[typed.SupportBundles](rest)
+	rest.SupportBundles = newTypedResource[typed.SupportBundles](rest)
 	rest.SupportedDrivers = newTypedResource[typed.SupportedDrivers](rest)
 	rest.Switches = newTypedResource[typed.Switch](rest)
 	rest.Tables = newTypedResource[typed.Table](rest)
