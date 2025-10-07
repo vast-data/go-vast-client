@@ -9,27 +9,6 @@ import (
 	"github.com/vast-data/go-vast-client/core"
 )
 
-// MonitorAdHocQueryWithContext_GET
-// method: GET
-// url: /monitors/ad_hoc_query/
-// summary: Query Analytics with Ad Hoc Query Parameters
-func (m *Monitor) MonitorAdHocQueryWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
-	resourcePath := "/monitors/ad_hoc_query/"
-	result, err := core.Request[core.Record](ctx, m, http.MethodGet, resourcePath, params, nil)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// MonitorAdHocQuery_GET
-// method: GET
-// url: /monitors/ad_hoc_query/
-// summary: Query Analytics with Ad Hoc Query Parameters
-func (m *Monitor) MonitorAdHocQuery_GET(params core.Params) (core.Record, error) {
-	return m.MonitorAdHocQueryWithContext_GET(m.Rest.GetCtx(), params)
-}
-
 // MonitorQueryWithContext_GET
 // method: GET
 // url: /monitors/{id}/query/

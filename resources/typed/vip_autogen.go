@@ -5,8 +5,6 @@ package typed
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
 )
@@ -165,55 +163,4 @@ func (r *Vip) MustExistsWithContext(ctx context.Context, req *VipSearchParams) b
 		panic(err)
 	}
 	return r.Untyped.GetResourceMap()[r.GetResourceType()].MustExistsWithContext(ctx, params)
-}
-
-// -----------------------------------------------------
-// EXTRA METHODS
-// -----------------------------------------------------
-
-// VipVipsItem represents a nested type for Vip extra method response
-type VipVipsItem struct {
-	Port int64  `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"DB access port"`
-	Vip  string `json:"vip,omitempty" yaml:"vip,omitempty" required:"false" doc:"DB access VIP"`
-}
-
-// VipVips_GET_Body represents the request body for VipVips
-type VipVips_GET_Body struct {
-	TenantId int64 `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
-}
-
-// VipVipsWithContext_GET
-// method: GET
-// url: /vastdb/vips/
-// summary: Get a list of DB access VIPs
-func (r *Vip) VipVipsWithContext_GET(ctx context.Context, params *VipVips_GET_Body) ([]VipVipsItem, error) {
-	resourcePath := "/vastdb/vips/"
-
-	reqParams, err := core.NewParamsFromStruct(params)
-	if err != nil {
-		return nil, err
-	}
-	var reqBody core.Params
-
-	record, err := core.Request[core.RecordSet](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
-	if err != nil {
-		return nil, err
-	}
-	// Convert RecordSet ([]core.Record) to typed array ([]VipVipsItem)
-	result := make([]VipVipsItem, len(record))
-	for i, item := range record {
-		if err := item.Fill(&result[i]); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal array item %d: %w", i, err)
-		}
-	}
-	return result, nil
-
-}
-
-// VipVips_GET
-// method: GET
-// url: /vastdb/vips/
-// summary: Get a list of DB access VIPs
-func (r *Vip) VipVips_GET(params *VipVips_GET_Body) ([]VipVipsItem, error) {
-	return r.VipVipsWithContext_GET(r.Untyped.GetCtx(), params)
 }

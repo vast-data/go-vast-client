@@ -295,7 +295,6 @@ func (r *Monitor) MustExistsWithContext(ctx context.Context, req *MonitorSearchP
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method GET /monitors/ad_hoc_query/ skipped: GET /monitors/ad_hoc_query/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method GET /monitors/topn/ skipped: GET /monitors/topn/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method GET /monitors/{id}/query/ skipped: GET /monitors/{id}/query/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - UPDATE operation excluded: PATCH/PUT /monitors/{id}/ has no response schema and doesn't return 204 NO CONTENT

@@ -6,14 +6,22 @@ import (
 )
 
 type (
-	VMSConfig = core.VMSConfig
-	Params    = core.Params
+	VMSConfig                    = core.VMSConfig
+	Params                       = core.Params
+	Record                       = core.Record
+	RecordSet                    = core.RecordSet
+	Renderable                   = core.Renderable
+	TypedVMSRest                 = rest.TypedVMSRest
+	UntypedVMSRest               = rest.UntypedVMSRest
+	VastResourceAPI              = core.VastResourceAPI
+	VastResourceAPIWithContext   = core.VastResourceAPIWithContext
+	InterceptableVastResourceAPI = core.InterceptableVastResourceAPI
 )
 
-func NewTypedVMSRest(config *VMSConfig) (*rest.TypedVMSRest, error) {
+func NewTypedVMSRest(config *VMSConfig) (*TypedVMSRest, error) {
 	return rest.NewTypedVMSRest(config)
 }
 
-func NewUntypedVMSRest(config *VMSConfig) (*rest.UntypedVMSRest, error) {
+func NewUntypedVMSRest(config *VMSConfig) (*UntypedVMSRest, error) {
 	return rest.NewUntypedVMSRest(config)
 }

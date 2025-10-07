@@ -115,6 +115,7 @@ type TypedVMSRest struct {
 	UserQuotas               *typed.UserQuota
 	VTasks                   *typed.VTask
 	VastAuditLogs            *typed.VastAuditLog
+	VastDb                   *typed.VastDb
 	Versions                 *typed.Version
 	Views                    *typed.View
 	ViewPolicies             *typed.ViewPolicy
@@ -239,6 +240,7 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 	rest.UserQuotas = newTypedResource[typed.UserQuota](rest)
 	rest.VTasks = newTypedResource[typed.VTask](rest)
 	rest.VastAuditLogs = newTypedResource[typed.VastAuditLog](rest)
+	rest.VastDb = newTypedResource[typed.VastDb](rest)
 	rest.Versions = newTypedResource[typed.Version](rest)
 	rest.Views = newTypedResource[typed.View](rest)
 	rest.ViewPolicies = newTypedResource[typed.ViewPolicy](rest)

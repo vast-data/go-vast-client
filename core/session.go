@@ -308,7 +308,7 @@ func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params
 	)
 	originResource, resourceExist := ctx.Value(caller).(InterceptableVastResourceAPI)
 	if !resourceExist {
-		resourceCaller = new(Dummy)
+		resourceCaller = NewDummy(ctx, s)
 	} else {
 		resourceCaller = originResource
 	}
