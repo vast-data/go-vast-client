@@ -25,15 +25,17 @@ type VastResource struct {
 	Rest         VastRest
 	mu           *KeyLocker
 	resourceOps  ResourceOps
+	parent       any // Reference to the parent resource that embeds this VastResource
 }
 
-func NewVastResource(resourcePath string, resourceType string, rest VastRest, resourceOps ResourceOps) *VastResource {
+func NewVastResource(resourcePath string, resourceType string, rest VastRest, resourceOps ResourceOps, parent any) *VastResource {
 	return &VastResource{
 		resourcePath: resourcePath,
 		resourceType: resourceType,
 		Rest:         rest,
 		mu:           NewKeyLocker(),
 		resourceOps:  resourceOps,
+		parent:       parent,
 	}
 }
 
@@ -258,44 +260,6 @@ func (e *VastResource) Lock(keys ...any) func() {
 	return e.mu.Lock(keys...)
 }
 
-//  ######################################################
-//              TYPED VAST RESOURCE
-//  ######################################################
-
-type TypedVastResource struct {
-	resourceType string
-	Untyped      VastRest
-}
-
-func NewTypedVastResource(resourceType string, rest VastRest) *TypedVastResource {
-	return &TypedVastResource{
-		resourceType: resourceType,
-		Untyped:      rest,
-	}
-}
-
-// Session returns the current VMSSession associated with the resource.
-func (e *TypedVastResource) getUntypedVastResource() VastResourceAPI {
-	return e.Untyped.GetResourceMap()[e.resourceType]
-}
-
-// Session returns the current VMSSession associated with the resource.
-func (e *TypedVastResource) Session() RESTSession {
-	return e.getUntypedVastResource().Session()
-}
-
-func (e *TypedVastResource) GetResourceType() string {
-	return e.resourceType
-}
-
-// Lock acquires the resource-level mutex and returns a function to release it.
-// This allows for convenient deferring of unlock operations:
-//
-//	defer resource.Lock()()
-func (e *TypedVastResource) Lock(keys ...any) func() {
-	return e.getUntypedVastResource().Lock(keys...)
-}
-
 // ExtraMethodInfo holds metadata about extra methods
 type ExtraMethodInfo struct {
 	Name     string // Method name (e.g., "ViewCheckPermissionsTemplates_POST")
@@ -343,6 +307,15 @@ func (e *VastResource) discoverExtraMethods(parentResource interface{}) []ExtraM
 	return discovered
 }
 
+func (e *VastResource) String() string {
+	// Use parent if available, otherwise fallback to self
+	target := e.parent
+	if target == nil {
+		target = e
+	}
+	return e.describeResourceFrom(target)
+}
+
 // inferPathFromMethodName attempts to infer the URL path from a method name
 // e.g., HostDiscoveredHosts -> /hosts/discovered_hosts/
 func (e *VastResource) inferPathFromMethodName(methodName string) string {
@@ -356,9 +329,7 @@ func (e *VastResource) inferPathFromMethodName(methodName string) string {
 	if len(e.resourceType) > 0 {
 		resourceNameTitle = strings.ToUpper(e.resourceType[:1]) + e.resourceType[1:]
 	}
-	if strings.HasPrefix(methodName, resourceNameTitle) {
-		methodName = strings.TrimPrefix(methodName, resourceNameTitle)
-	}
+	methodName = strings.TrimPrefix(methodName, resourceNameTitle)
 
 	if methodName == "" {
 		// This is a standard CRUD method, not an extra method
@@ -391,95 +362,134 @@ func (e *VastResource) inferPathFromMethodName(methodName string) string {
 func (e *VastResource) describeResourceFrom(parentResource any) string {
 	var sb strings.Builder
 
-	// Group endpoints by path
-	endpointMap := make(map[string][]string)
+	// Build header with resource name and operation flags
+	opsStr := e.resourceOps.String()
+	if opsStr == "-" {
+		sb.WriteString(fmt.Sprintf("| %s [-]\n", e.resourceType))
+	} else {
+		// Expand operation flags to full names
+		var opNames []string
+		if e.resourceOps.isCreatable() {
+			opNames = append(opNames, "CREATE")
+		}
+		if e.resourceOps.isListable() {
+			opNames = append(opNames, "LIST")
+		}
+		if e.resourceOps.isReadable() {
+			opNames = append(opNames, "DETAILS")
+		}
+		if e.resourceOps.isUpdatable() {
+			opNames = append(opNames, "UPDATE")
+		}
+		if e.resourceOps.isDeletable() {
+			opNames = append(opNames, "DELETE")
+		}
+		sb.WriteString(fmt.Sprintf("| %s [%s]\n", e.resourceType, strings.Join(opNames, " ")))
+	}
 
-	// Add standard CRUD endpoints
-	basePath := e.GetResourcePath()
-	detailPath := strings.TrimSuffix(basePath, "/") + "/{id}/"
+	// Collect standard CRUD methods
+	var standardMethods []string
 
 	if e.resourceOps.isListable() {
-		endpointMap[basePath] = append(endpointMap[basePath],
-			"List() / ListWithContext()",
-			"Get() / GetWithContext()",
-			"Exists() / ExistsWithContext()",
+		standardMethods = append(standardMethods,
+			"List / ListWithContext",
+			"Get / GetWithContext",
+			"Exists / ExistsWithContext",
 		)
 	}
 
 	if e.resourceOps.isReadable() {
-		endpointMap[detailPath] = append(endpointMap[detailPath],
-			"GetById() / GetByIdWithContext()",
+		standardMethods = append(standardMethods,
+			"GetById / GetByIdWithContext",
 		)
 	}
 
 	if e.resourceOps.isCreatable() {
-		endpointMap[basePath] = append(endpointMap[basePath],
-			"Create() / CreateWithContext()",
+		standardMethods = append(standardMethods,
+			"Create / CreateWithContext",
 		)
 		if e.resourceOps.isListable() {
-			endpointMap[basePath] = append(endpointMap[basePath],
-				"Ensure() / EnsureWithContext()",
+			standardMethods = append(standardMethods,
+				"Ensure / EnsureWithContext",
 			)
 		}
 	}
 
 	if e.resourceOps.isUpdatable() {
-		endpointMap[detailPath] = append(endpointMap[detailPath],
-			"Update() / UpdateWithContext()",
+		standardMethods = append(standardMethods,
+			"Update / UpdateWithContext",
 		)
 	}
 
 	if e.resourceOps.isDeletable() {
-		endpointMap[detailPath] = append(endpointMap[detailPath],
-			"Delete() / DeleteWithContext()",
-			"DeleteById() / DeleteByIdWithContext()",
+		standardMethods = append(standardMethods,
+			"Delete / DeleteWithContext",
+			"DeleteById / DeleteByIdWithContext",
 		)
 	}
 
-	// Add extra methods (discovered via reflection)
-	extraMethods := e.discoverExtraMethods(parentResource)
-	for _, extra := range extraMethods {
-		if extra.Path != "" { // Skip if path inference failed
-			methodDesc := fmt.Sprintf("%s [%s]", extra.Name, extra.HTTPVerb)
-			endpointMap[extra.Path] = append(endpointMap[extra.Path], methodDesc)
+	// Print supported operations section
+	if len(standardMethods) > 0 {
+		sb.WriteString("| supported operations:\n")
+		for _, method := range standardMethods {
+			sb.WriteString(fmt.Sprintf("|    - %s\n", method))
 		}
 	}
 
-	// Sort and format output (deterministic ordering)
-	// First, collect all paths and sort them
-	var paths []string
-	for path := range endpointMap {
-		paths = append(paths, path)
-	}
-	// Sort paths: base path first, then detail path, then alphabetically
-	sortPaths := func(paths []string) {
-		for i := 0; i < len(paths); i++ {
-			for j := i + 1; j < len(paths); j++ {
-				// Base path comes first
-				if paths[i] == detailPath && paths[j] == basePath {
-					paths[i], paths[j] = paths[j], paths[i]
-				} else if paths[i] != basePath && paths[i] != detailPath && (paths[j] == basePath || paths[j] == detailPath) {
-					paths[i], paths[j] = paths[j], paths[i]
-				} else if paths[i] > paths[j] && paths[i] != basePath && paths[j] != basePath && paths[i] != detailPath && paths[j] != detailPath {
-					paths[i], paths[j] = paths[j], paths[i]
-				}
+	// Discover and print extra methods
+	extraMethods := e.discoverExtraMethods(parentResource)
+	if len(extraMethods) > 0 {
+		sb.WriteString("| extra methods:\n")
+		for _, extra := range extraMethods {
+			if extra.Path != "" {
+				sb.WriteString(fmt.Sprintf("|    - %s [%s]\n", extra.Name, extra.Path))
 			}
 		}
 	}
-	sortPaths(paths)
-
-	for _, path := range paths {
-		methods := endpointMap[path]
-		sb.WriteString(fmt.Sprintf("  %s\n", path))
-		for _, method := range methods {
-			sb.WriteString(fmt.Sprintf("    • %s\n", method))
-		}
-		sb.WriteString("\n")
-	}
-
-	sb.WriteString(fmt.Sprintf("Supported Operations: %s\n", e.resourceOps.String()))
 
 	return sb.String()
+}
+
+//  ######################################################
+//              TYPED VAST RESOURCE
+//  ######################################################
+
+type TypedVastResource struct {
+	resourceType string
+	Untyped      VastRest
+}
+
+func NewTypedVastResource(resourceType string, rest VastRest) *TypedVastResource {
+	return &TypedVastResource{
+		resourceType: resourceType,
+		Untyped:      rest,
+	}
+}
+
+// Session returns the current VMSSession associated with the resource.
+func (e *TypedVastResource) getUntypedVastResource() VastResourceAPI {
+	return e.Untyped.GetResourceMap()[e.resourceType]
+}
+
+// Session returns the current VMSSession associated with the resource.
+func (e *TypedVastResource) Session() RESTSession {
+	return e.getUntypedVastResource().Session()
+}
+
+func (e *TypedVastResource) GetResourceType() string {
+	return e.resourceType
+}
+
+// Lock acquires the resource-level mutex and returns a function to release it.
+// This allows for convenient deferring of unlock operations:
+//
+//	defer resource.Lock()()
+func (e *TypedVastResource) Lock(keys ...any) func() {
+	return e.getUntypedVastResource().Lock(keys...)
+}
+
+func (e *TypedVastResource) String() string {
+	return fmt.Sprintf("%s", e.getUntypedVastResource())
 }
 
 //  ######################################################

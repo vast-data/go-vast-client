@@ -335,7 +335,9 @@ type UntypedVMSRest struct {
 	// +apiall:extraMethod:GET=/vastauditlog/columns/
 	// +apiall:extraMethod:GET=/vastauditlog/stats/
 	VastAuditLogs *untyped.VastAuditLog
-	Versions      *untyped.Version
+	// +apiall:extraMethod:GET=/vastdb/vips/
+	VastDb   *untyped.VastDb
+	Versions *untyped.Version
 	// +apiall:extraMethod:GET=/views/list_open_smb_handles/
 	// +apiall:extraMethod:DELETE=/views/close_smb_handle/
 	// +apiall:extraMethod:GET=/views/list_seamless_peers/
@@ -346,9 +348,8 @@ type UntypedVMSRest struct {
 	// +apiall:extraMethod:PATCH=/viewpolicies/{id}/refresh_netgroups/
 	// +apiall:extraMethod:POST|DELETE=/viewpolicies/{id}/remote_mapping/
 	ViewPolicies *untyped.ViewPolicy
-	// +apiall:extraMethod:GET=/vastdb/vips/
-	Vips     *untyped.Vip
-	VipPools *untyped.VipPool
+	Vips         *untyped.Vip
+	VipPools     *untyped.VipPool
 	// +apiall:extraMethod:PATCH=/vms/{id}/set_certificate/
 	// +apiall:extraMethod:GET|PATCH=/vms/{id}/network_settings/
 	// +apiall:extraMethod:POST=/vms/{id}/network_settings_summary/
@@ -505,6 +506,7 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	rest.Users = newUntypedResource[untyped.User](rest, "users", C, L, R, U, D)
 	rest.UserQuotas = newUntypedResource[untyped.UserQuota](rest, "userquotas", C, L, R, U, D)
 	rest.VastAuditLogs = newUntypedResource[untyped.VastAuditLog](rest, "vastauditlog", C, L)
+	rest.VastDb = newUntypedResource[untyped.VastDb](rest, "vastdb")
 	rest.Versions = newUntypedResource[untyped.Version](rest, "versions", L, R)
 	rest.Views = newUntypedResource[untyped.View](rest, "views", C, L, R, U, D)
 	rest.ViewPolicies = newUntypedResource[untyped.ViewPolicy](rest, "viewpolicies", C, L, R, U, D)
@@ -554,7 +556,8 @@ func newUntypedResource[T UntypedVastResourceType](rest *UntypedVMSRest, resourc
 		panic(fmt.Sprintf("Failed to convert instance to type *%s", resourceType))
 	}
 
-	resource := core.NewVastResource(resourcePath, resourceType, rest, core.NewResourceOps(resourceOps...))
+	// Create VastResource with parent reference for method discovery via reflection
+	resource := core.NewVastResource(resourcePath, resourceType, rest, core.NewResourceOps(resourceOps...), instance)
 
 	// Set the embedded *VastResource field using reflection
 	// All untyped resources embed *core.VastResource
