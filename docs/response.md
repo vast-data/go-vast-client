@@ -36,7 +36,7 @@ The untyped client returns **flexible map-based types**:
 - **`core.EmptyRecord`**: Empty result (used in operations like DELETE)
 
 ```go
-rest, _ := client.NewUntypedVMSRest(config)
+rest, _ := client.NewVMSRest(config)
 
 // Returns core.Record
 record, err := rest.Views.Create(params)
@@ -90,7 +90,7 @@ Untyped responses provide helper methods for display and data extraction.
 **Example:**
 
 ```go
-rest, _ := client.NewUntypedVMSRest(config)
+rest, _ := client.NewVMSRest(config)
 
 record, err := rest.Views.Get(client.Params{"name": "myview"})
 if err != nil {
@@ -118,7 +118,7 @@ You can extract frequently used fields directly from a response object:
 **Example:**
 
 ```go
-rest, _ := client.NewUntypedVMSRest(config)
+rest, _ := client.NewVMSRest(config)
 
 record, err := rest.Views.Get(client.Params{"name": "myview"})
 if err != nil {
@@ -160,7 +160,7 @@ func main() {
     }
 
     // Use untyped client
-    rest, err := client.NewUntypedVMSRest(config)
+    rest, err := client.NewVMSRest(config)
     if err != nil {
         log.Fatal(err)
     }

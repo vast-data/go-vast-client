@@ -16,7 +16,7 @@ func main() {
 		Password: "123456",
 	}
 
-	rest, err := client.NewUntypedVMSRest(config)
+	rest, err := client.NewVMSRest(config)
 	if err != nil {
 		panic(err)
 	}

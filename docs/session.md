@@ -29,8 +29,8 @@ typedRest, _ := client.NewTypedVMSRest(config)
 session := typedRest.GetSession()
 
 // From untyped client
-untypedRest, _ := client.NewUntypedVMSRest(config)
-session := untypedRest.GetSession()
+rest, _ := client.NewVMSRest(config)
+session := rest.GetSession()
 ```
 
 > **Note:** Session methods always return untyped data (`core.Record`, `core.RecordSet`, or `core.EmptyRecord`), even when accessed from a typed client.
@@ -56,7 +56,7 @@ func main() {
     }
 
     // Can use either typed or untyped client
-    rest, err := client.NewUntypedVMSRest(config)
+    rest, err := client.NewVMSRest(config)
     if err != nil {
         panic(err)
     }

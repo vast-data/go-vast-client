@@ -13,12 +13,12 @@ The VAST Go client provides an interface to the VAST Data REST API. It wraps low
 > **NOTE:** Since version 0.100.0, the REST client has been split into two distinct client types:
 >
 > - **Typed Client** (`NewTypedVMSRest`): Provides strongly-typed structs for requests and responses. Offers compile-time type safety, IDE auto-completion, and clear API contracts. Recommended for most use cases.
-> - **Untyped Client** (`NewUntypedVMSRest`): Uses flexible `map[string]any` for data handling. Useful for dynamic scenarios and prototyping.
+> - **Untyped Client** (`NewVMSRest`): Uses flexible `map[string]any` for data handling. Useful for dynamic scenarios and prototyping. This is the default recommended client.
 
 ## Installation
 
 ```bash
-go get github.com/vast-data/go-vast-client@v0.100.0  # Replace with the latest available tag
+go get github.com/vast-data/go-vast-client@v0.103.0  # Replace with the latest available tag
 ```
 
 Import it in your Go code:

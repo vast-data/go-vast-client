@@ -51,7 +51,7 @@ The untyped client uses flexible `map[string]any` for parameters and responses:
 import client "github.com/vast-data/go-vast-client"
 
 // Initialize untyped client
-rest, err := client.NewUntypedVMSRest(config)
+rest, err := client.NewVMSRest(config)
 if err != nil {
     log.Fatal(err)
 }
@@ -142,7 +142,7 @@ view, err := rest.Views.Create(body)
 ```go
 import client "github.com/vast-data/go-vast-client"
 
-rest, _ := client.NewUntypedVMSRest(config)
+rest, _ := client.NewVMSRest(config)
 
 result, err := rest.Views.Create(client.Params{
     "name":       "myview",
