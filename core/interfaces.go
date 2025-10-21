@@ -23,6 +23,7 @@ type VastResourceAPI interface {
 	GetById(any) (Record, error)
 	Exists(Params) (bool, error)
 	MustExists(Params) bool
+	GetIterator(Params, int) Iterator
 	// Resource-level mutex lock for concurrent access control
 	Lock(...any) func()
 	// Internal methods
@@ -40,6 +41,7 @@ type VastResourceAPIWithContext interface {
 	GetByIdWithContext(context.Context, any) (Record, error)
 	ExistsWithContext(context.Context, Params) (bool, error)
 	MustExistsWithContext(context.Context, Params) bool
+	GetIteratorWithContext(context.Context, Params, int) Iterator
 }
 
 // InterceptableVastResourceAPI combines request interception with vast resource behavior.

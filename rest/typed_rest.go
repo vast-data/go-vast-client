@@ -139,9 +139,11 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 		Untyped: untyped,
 	}
 
-	// Set external context
+	// Set context: use provided context or default to background context
 	if config.Context != nil {
 		rest.SetCtx(config.Context)
+	} else {
+		rest.SetCtx(context.Background())
 	}
 
 	rest.ActiveDirectories = newTypedResource[typed.ActiveDirectory](rest)

@@ -401,9 +401,11 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 		resourceMap: make(map[string]core.VastResourceAPIWithContext),
 	}
 
-	// Set external context
+	// Set context: use provided context or default to background context
 	if config.Context != nil {
 		rest.SetCtx(config.Context)
+	} else {
+		rest.SetCtx(context.Background())
 	}
 
 	// Fill in each resource, pointing back to the same rest
