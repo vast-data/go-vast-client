@@ -93,8 +93,12 @@ func (e *VastResource) GetResourcePath() string {
 }
 
 // ListWithContext retrieves all resources matching the given parameters using the provided context.
+// This method uses GetIteratorWithContext internally and fetches all pages.
 func (e *VastResource) ListWithContext(ctx context.Context, params Params) (RecordSet, error) {
-	result, err := Request[RecordSet](ctx, e, http.MethodGet, e.resourcePath, params, nil)
+	// Use Iterator as base abstraction - fetch all pages
+	pageSize := e.Session().GetConfig().PageSize
+	iter := e.GetIteratorWithContext(ctx, params, pageSize)
+	result, err := iter.All()
 	if !e.resourceOps.has(L) && ExpectStatusCodes(err, http.StatusNotFound) {
 		err.(*ApiError).hints = e.describeResourceFrom(e)
 	}
@@ -290,6 +294,52 @@ func (e *VastResource) MustExists(params Params) bool {
 	return e.MustExistsWithContext(e.Rest.GetCtx(), params)
 }
 
+// GetIteratorWithContext creates a new iterator for paginated results using the provided context.
+// The iterator abstracts away the differences between paginated and non-paginated API responses.
+//
+// Parameters:
+//   - ctx: The context for the iterator (used for all subsequent requests)
+//   - params: Query parameters to filter results
+//   - pageSize: Number of items per page (if <= 0, uses session's configured PageSize)
+//
+// Returns an Iterator that can be used to navigate through pages of results.
+//
+// Example usage:
+//
+//	iter := resource.GetIteratorWithContext(ctx, Params{"name__contains": "test"}, 50)
+//	for {
+//	    records, err := iter.Next()
+//	    if err != nil || len(records) == 0 {
+//	        break
+//	    }
+//	    // Process records
+//	}
+func (e *VastResource) GetIteratorWithContext(ctx context.Context, params Params, pageSize int) Iterator {
+	return NewResourceIterator(ctx, e, params, pageSize)
+}
+
+// GetIterator creates a new iterator for paginated results using the bound REST context.
+//
+// Parameters:
+//   - params: Query parameters to filter results
+//   - pageSize: Number of items per page (if <= 0, uses session's configured PageSize; 0 means no page_size param)
+//
+// Returns an Iterator that can be used to navigate through pages of results.
+//
+// Example usage:
+//
+//	iter := resource.GetIterator(Params{"tenant_id": 1}, 25)
+//	for {
+//	    records, err := iter.Next()
+//	    if err != nil || len(records) == 0 {
+//	        break
+//	    }
+//	    fmt.Printf("Page has %d records\n", len(records))
+//	}
+func (e *VastResource) GetIterator(params Params, pageSize int) Iterator {
+	return e.GetIteratorWithContext(e.Rest.GetCtx(), params, pageSize)
+}
+
 // Lock acquires the resource-level mutex and returns a function to release it.
 // This allows for convenient deferring of unlock operations:
 //
@@ -308,7 +358,7 @@ type ExtraMethodInfo struct {
 // discoverExtraMethods uses reflection to find all extra methods on the parent resource
 // It looks for methods matching the pattern *_GET, *_POST, *_PATCH, *_DELETE
 // The parent resource is the struct that embeds this VastResource
-func (e *VastResource) discoverExtraMethods(parentResource interface{}) []ExtraMethodInfo {
+func (e *VastResource) discoverExtraMethods(parentResource any) []ExtraMethodInfo {
 	// Use reflection to find all methods on the parent resource (e.g., *Host)
 	resourceValue := reflect.ValueOf(parentResource)
 	resourceType := resourceValue.Type()
@@ -528,6 +578,16 @@ func (e *TypedVastResource) Lock(keys ...any) func() {
 
 func (e *TypedVastResource) String() string {
 	return fmt.Sprintf("%s", e.getUntypedVastResource())
+}
+
+// GetIteratorWithContext creates a new iterator for paginated results using the provided context.
+func (e *TypedVastResource) GetIteratorWithContext(ctx context.Context, params Params, pageSize int) Iterator {
+	return e.getUntypedVastResource().(VastResourceAPIWithContext).GetIteratorWithContext(ctx, params, pageSize)
+}
+
+// GetIterator creates a new iterator for paginated results using the bound REST context.
+func (e *TypedVastResource) GetIterator(params Params, pageSize int) Iterator {
+	return e.getUntypedVastResource().GetIterator(params, pageSize)
 }
 
 //  ######################################################

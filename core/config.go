@@ -24,6 +24,7 @@ type VMSConfig struct {
 	MaxConnections int            // Maximum number of concurrent HTTP connections.
 	UserAgent      string         // Optional custom User-Agent header to use in HTTP requests. If empty, a default may be applied.
 	ApiVersion     string         // Optional API version
+	PageSize       int            // Default page size for iterators
 	// Context is an optional external context for controlling HTTP request lifecycle.
 	// When provided, it will be used as the parent context for all HTTP requests made by the client.
 	Context context.Context
