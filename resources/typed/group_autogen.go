@@ -426,4 +426,4 @@ func (r *Group) GroupQuery_GET(params *GroupQuery_GET_Body) (*GroupQuery_GET_Mod
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method PATCH /groups/query/ skipped: PATCH /groups/query/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /groups/query/
+//   - Extra method PATCH /groups/query/ skipped: PATCH /groups/query/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /groups/query/

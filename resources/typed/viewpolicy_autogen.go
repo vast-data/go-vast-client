@@ -402,5 +402,5 @@ func (r *ViewPolicy) ViewPolicyRemoteMapping_DELETE(id any, peer string) error {
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method POST /viewpolicies/{id}/remote_mapping/ skipped: POST /viewpolicies/{id}/remote_mapping/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202) for resource /viewpolicies/{id}/remote_mapping/
+//   - Extra method POST /viewpolicies/{id}/remote_mapping/ skipped: POST /viewpolicies/{id}/remote_mapping/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /viewpolicies/{id}/remote_mapping/
 //   - UPDATE operation excluded: PATCH/PUT /viewpolicies/{id}/ has no response schema and doesn't return 204 NO CONTENT

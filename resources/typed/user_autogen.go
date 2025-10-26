@@ -692,6 +692,6 @@ func (r *User) UserTenantData_PATCH(id any, body *UserTenantData_PATCH_Body) (*U
 // -----------------------------------------------------
 //   - Extra method GET /users/names/ skipped: GET /users/names/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method GET /users/query/ skipped: GET /users/query/ - Response schema contains ambiguous nested objects (objects with no properties)
-//   - Extra method PATCH /users/query/ skipped: PATCH /users/query/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /users/query/
-//   - Extra method PATCH /users/refresh/ skipped: PATCH /users/refresh/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /users/refresh/
+//   - Extra method PATCH /users/query/ skipped: PATCH /users/query/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /users/query/
+//   - Extra method PATCH /users/refresh/ skipped: PATCH /users/refresh/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /users/refresh/
 //   - UPDATE operation excluded: PATCH/PUT /users/{id}/ has no response schema and doesn't return 204 NO CONTENT

@@ -260,5 +260,5 @@ func (r *Cbox) CboxControlLed_PATCH(id any, control string, waitTimeout time.Dur
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - CREATE operation excluded: POST cboxes has no response schema and doesn't return 204 NO CONTENT
-//   - Extra method PATCH /cboxes/{id}/refresh_uid/ skipped: PATCH /cboxes/{id}/refresh_uid/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /cboxes/{id}/refresh_uid/
+//   - Extra method PATCH /cboxes/{id}/refresh_uid/ skipped: PATCH /cboxes/{id}/refresh_uid/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /cboxes/{id}/refresh_uid/
 //   - UPDATE operation excluded: PATCH/PUT /cboxes/{id}/ has no response schema and doesn't return 204 NO CONTENT

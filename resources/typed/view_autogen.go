@@ -798,5 +798,5 @@ func (r *View) ViewPermissionsRepair_POST(id any, body *ViewPermissionsRepair_PO
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method PATCH /views/{id}/legal_hold/ skipped: PATCH /views/{id}/legal_hold/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /views/{id}/legal_hold/
+//   - Extra method PATCH /views/{id}/legal_hold/ skipped: PATCH /views/{id}/legal_hold/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /views/{id}/legal_hold/
 //   - UPDATE operation excluded: PATCH/PUT /views/{id}/ has no response schema and doesn't return 204 NO CONTENT

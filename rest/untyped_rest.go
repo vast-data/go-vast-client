@@ -194,8 +194,7 @@ type UntypedVMSRest struct {
 	IoData            *untyped.IoData
 	// +apiall:extraMethod:GET=/kafkabrokers/{id}/list_topics/
 	KafkaBrokers *untyped.KafkaBroker
-	// +apiall:extraMethod:POST|PUT=/kerberos/{id}/keytab/
-	Kerberos *untyped.Kerberos
+	Kerberos     *untyped.Kerberos
 	// +apiall:extraMethod:PATCH=/ldaps/{id}/set_posix_primary/
 	Ldaps               *untyped.Ldap
 	Licenses            *untyped.License

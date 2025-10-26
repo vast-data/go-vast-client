@@ -28,6 +28,12 @@ type (
 	// Renderable is the interface for Record, RecordSet, and EmptyRecord.
 	Renderable = core.Renderable
 
+	// DisplayableRecord is an interface for records that can be displayed.
+	DisplayableRecord = core.DisplayableRecord
+
+	// ApiError represents an error from the VAST API.
+	ApiError = core.ApiError
+
 	// TypedVMSRest is the strongly-typed client with compile-time type safety.
 	TypedVMSRest = rest.TypedVMSRest
 
@@ -42,6 +48,24 @@ type (
 
 	// InterceptableVastResourceAPI adds request/response interception to VastResourceAPIWithContext.
 	InterceptableVastResourceAPI = core.InterceptableVastResourceAPI
+)
+
+// Error handling functions
+var (
+	// IsNotFoundErr checks if the error is a 404 Not Found error.
+	IsNotFoundErr = core.IsNotFoundErr
+
+	// IgnoreNotFound returns nil if the error is a 404, otherwise returns the original error.
+	IgnoreNotFound = core.IgnoreNotFound
+
+	// IgnoreStatusCodes returns nil if the error is an API error with one of the specified status codes.
+	IgnoreStatusCodes = core.IgnoreStatusCodes
+
+	// ExpectStatusCodes checks if the error is an API error with one of the specified status codes.
+	ExpectStatusCodes = core.ExpectStatusCodes
+
+	// IsApiError checks if the error is an ApiError.
+	IsApiError = core.IsApiError
 )
 
 // NewTypedVMSRest creates a strongly-typed client with compile-time type safety.

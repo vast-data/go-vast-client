@@ -123,10 +123,10 @@ func Request[T RecordUnion](
 	verb, path string,
 	params, body Params,
 ) (T, error) {
-	return requestWithHeaders[T](ctx, r, verb, path, params, body, nil)
+	return RequestWithHeaders[T](ctx, r, verb, path, params, body, nil)
 }
 
-func requestWithHeaders[T RecordUnion](
+func RequestWithHeaders[T RecordUnion](
 	ctx context.Context,
 	r VastResourceAPIWithContext,
 	verb, path string,
