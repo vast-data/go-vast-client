@@ -11,29 +11,84 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/vast-data/go-vast-client/rest"
 	"go.uber.org/zap"
 )
 
-var SupportedResources = []string{}
 var customResources = shared.NewSet[string](
 	[]string{
 		"profiles",
-		"ssh_connections",
-		"user_keys [local store]",
-		"api_tokens [local store]",
 	},
 )
 
+// Global widgets map to store auto-generated widgets
+var generatedWidgets map[string]common.Widget
+var globalFactory *WidgetFactory
+
 type Resources struct {
 	*BaseWidget
+	factory *WidgetFactory
+}
+
+// InitializeWidgets initializes specific widgets one by one and returns the factory
+func InitializeWidgets(db *database.Service, restClient *rest.UntypedVMSRest) (*WidgetFactory, error) {
+	if restClient == nil {
+		return nil, fmt.Errorf("rest client is nil")
+	}
+
+	factory := NewWidgetFactory(db, restClient)
+	generatedWidgets = make(map[string]common.Widget)
+
+	// Create widgets one by one - add more as needed
+	if restClient.Users != nil {
+		usersWidget, err := factory.CreateWidget(restClient.Users, []string{"id", "name", "uid", "sid"})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Users widget: %w", err)
+		}
+		// Use the widget's resource type as the key (already cleaned by factory)
+		resourceKey := usersWidget.GetResourceType()
+		generatedWidgets[resourceKey] = usersWidget
+		factory.addSupportedResource(resourceKey)
+	}
+
+	// TODO: Add more widgets one by one as needed:
+	// if restClient.Groups != nil {
+	// 	// Pass custom headers or nil for defaults
+	// 	groupsWidget, err := factory.CreateWidget(restClient.Groups, nil)
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("failed to create Groups widget: %w", err)
+	// 	}
+	// 	resourceKey := groupsWidget.GetResourceType()
+	// 	generatedWidgets[resourceKey] = groupsWidget
+	// 	factory.addSupportedResource(resourceKey)
+	// }
+
+	// Store globally for Resources widget to access
+	globalFactory = factory
+
+	return factory, nil
+}
+
+// GetGeneratedWidget returns a generated widget by name
+func GetGeneratedWidget(name string) (common.Widget, bool) {
+	widget, ok := generatedWidgets[name]
+	if ok {
+		return widget, true
+	}
+
+	for key, widget := range generatedWidgets {
+		if strings.EqualFold(key, name) {
+			return widget, true
+		}
+	}
+
+	return nil, false
 }
 
 // NewResources creates a new resources widget
 func NewResources(db *database.Service) common.Widget {
 	resourceType := "resources"
 	listHeaders := []string{"type"}
-
-	extraNav := []common.ExtraWidget{}
 
 	keyRestrictions := &common.NavigatorKeyRestrictions{
 		Main: common.KeyRestrictions{
@@ -43,16 +98,45 @@ func NewResources(db *database.Service) common.Widget {
 	}
 
 	widget := &Resources{
-		NewBaseWidget(db, listHeaders, nil, resourceType, extraNav, keyRestrictions),
+		BaseWidget: NewBaseWidget(db, listHeaders, nil, resourceType, nil, keyRestrictions),
+		factory:    globalFactory,
 	}
 
 	widget.SetParentForBaseWidget(widget, false)
 	return widget
 }
 
+// GetAllWidgets returns all available widgets (custom + generated)
+func (r *Resources) GetAllWidgets() map[string]common.Widget {
+	allWidgets := make(map[string]common.Widget)
+
+	// Add Profile widget (always available)
+	profileWidget := NewProfile(r.db)
+	allWidgets[profileWidget.GetResourceType()] = profileWidget
+
+	// Add Resources widget itself
+	allWidgets["resources"] = r
+
+	// Add all generated widgets from factory (already using clean keys)
+	for key, widget := range generatedWidgets {
+		allWidgets[key] = widget
+	}
+
+	return allWidgets
+}
+
 func (r *Resources) SetListData() tea.Msg {
-	// Get all available resource types from the registered widgets
-	supportedResources := SupportedResources
+	var supportedResources []string
+
+	// Add custom resources first (always available)
+	supportedResources = append(supportedResources, customResources.ToOrderedSlice()...)
+
+	// Add resources from factory if available
+	// Check if globalFactory has been initialized since widget creation
+	if globalFactory != nil {
+		r.factory = globalFactory // Update reference to current factory
+		supportedResources = append(supportedResources, r.factory.GetSupportedResources()...)
+	}
 
 	// Sort alphabetically, but keep "profiles" first and "ssh_connections" second (both not sortable)
 	var sortedResources []string

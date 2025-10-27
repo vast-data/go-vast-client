@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -203,8 +205,62 @@ func AuxLog(msg string) {
 }
 
 // AuxLogf logs a formatted message using the auxiliary logger
-func AuxLogf(format string, v ...interface{}) {
+func AuxLogf(format string, args ...interface{}) {
 	if auxLogger != nil {
-		auxLogger.Printf(format, v...)
+		auxLogger.Printf(format, args...)
+	}
+}
+
+// LogPanic captures panic information and logs it to ~/.vastix/logs/panic.log
+// This should be used as a deferred function at the top level of the application
+// The panic will still propagate and crash the program after logging
+func LogPanic() {
+	if r := recover(); r != nil {
+		// Get full stack trace (all goroutines)
+		buf := make([]byte, 1024*64)  // 64KB buffer for full trace
+		n := runtime.Stack(buf, true) // true = all goroutines
+		stackTrace := string(buf[:n])
+
+		// Try to log to panic.log file
+		if vastixDir, err := GetVastixDir(); err == nil {
+			logsDir := filepath.Join(vastixDir, "logs")
+			panicLogPath := filepath.Join(logsDir, "panic.log")
+
+			// Open panic log file in append mode
+			if f, err := os.OpenFile(panicLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+				timestamp := time.Now().Format("2006-01-02 15:04:05")
+				panicInfo := fmt.Sprintf("\n"+
+					"================================================================================\n"+
+					"PANIC at %s\n"+
+					"================================================================================\n"+
+					"Error: %v\n\n"+
+					"Stack Trace:\n%s\n"+
+					"================================================================================\n\n",
+					timestamp, r, stackTrace)
+
+				f.WriteString(panicInfo)
+				f.Close()
+
+				// Print to stderr where the panic log was saved
+				fmt.Fprintf(os.Stderr, "\n⚠️  Panic details saved to: %s\n\n", panicLogPath)
+			}
+		}
+
+		// Also log to main application logger if available
+		if globalLogger != nil {
+			globalLogger.Error("Application panic",
+				zap.Any("panic", r),
+				zap.String("stack_trace", stackTrace),
+			)
+			globalLogger.Sync() // Flush logs before crash
+		}
+
+		// Also log to aux logger if available
+		if auxLogger != nil {
+			auxLogger.Printf("PANIC: %v\n%s", r, stackTrace)
+		}
+
+		// Re-panic to let the program crash naturally
+		panic(r)
 	}
 }

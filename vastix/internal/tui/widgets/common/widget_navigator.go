@@ -158,7 +158,9 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 	case NavigatorModeList:
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
+			wn.auxlog.Printf("WIDGET_NAVIGATOR List mode: key='%s'", msg.String())
 			if _, ok := wn.NotAllowedListKeys[msg.String()]; ok {
+				wn.auxlog.Printf("WIDGET_NAVIGATOR: Ignoring blocked key in list mode: '%s'", msg.String())
 				logging.Debug("Ignoring key in list mode", zap.String("key", msg.String()))
 				return nil // Ignore keys that are not allowed in list mode
 			}
@@ -237,7 +239,7 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 			case "x":
 				if extraWidget, ok := wn.widget.(ExtraWidget); ok {
 					if extraWidget.CanUseExtra() {
-						wn.setModeIfSupported(NavigatorModeExtra)
+						wn.SetModeMust(NavigatorModeExtra)
 						return msg_types.ProcessWithSpinner(extraWidget.Init)
 
 					} else {
@@ -373,19 +375,53 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 			}
 
 			switch msg.String() {
-			case "y", "Y", "enter":
-				// Confirm deletion - call Delete method if widget supports it
-				logging.Debug("Delete confirmed")
+			case "left", "right", "tab":
+				// Toggle between Yes and No buttons
+				logging.Debug("Toggle button selection in delete mode", zap.String("key", msg.String()))
+				if adapter, ok := any(wn.widget).(PromptToggleAdapter); ok {
+					adapter.TogglePromptSelection()
+				}
+				return nil
+			case "y", "Y":
+				// Always confirm deletion when Y is pressed
+				logging.Debug("Delete confirmed via Y key")
 				if adapter, ok := any(wn.widget).(DeleteAdapter); ok {
 					return msg_types.ProcessWithClearError(adapter.DeleteDo(wn.widget))
 				} else {
 					panic("WidgetNavigator: widget does not implement DeleteAdapter interface")
 				}
 			case "n", "N", "esc":
-				// Cancel deletion and return to list mode
-				logging.Debug("Delete canceled, returning to list mode")
+				// Always cancel deletion when N or Esc is pressed
+				logging.Debug("Delete canceled via N/Esc key, returning to list mode")
 				wn.widget.SetMode(NavigatorModeList)
 				return msg_types.ProcessWithClearError(nil)
+			case "enter":
+				// Respect button selection when Enter is pressed
+				logging.Debug("Delete prompt: enter key pressed, checking button selection")
+				if adapter, ok := any(wn.widget).(PromptSelectionAdapter); ok {
+					if adapter.IsPromptNoSelected() {
+						// No is selected, cancel
+						logging.Debug("Delete canceled via Enter (No selected), returning to list mode")
+						wn.widget.SetMode(NavigatorModeList)
+						return msg_types.ProcessWithClearError(nil)
+					} else {
+						// Yes is selected, confirm deletion
+						logging.Debug("Delete confirmed via Enter (Yes selected)")
+						if deleteAdapter, ok := any(wn.widget).(DeleteAdapter); ok {
+							return msg_types.ProcessWithClearError(deleteAdapter.DeleteDo(wn.widget))
+						} else {
+							panic("WidgetNavigator: widget does not implement DeleteAdapter interface")
+						}
+					}
+				} else {
+					// Fallback to old behavior if adapter not implemented (confirm deletion)
+					logging.Debug("Delete confirmed via Enter (fallback)")
+					if deleteAdapter, ok := any(wn.widget).(DeleteAdapter); ok {
+						return msg_types.ProcessWithClearError(deleteAdapter.DeleteDo(wn.widget))
+					} else {
+						panic("WidgetNavigator: widget does not implement DeleteAdapter interface")
+					}
+				}
 			}
 		}
 

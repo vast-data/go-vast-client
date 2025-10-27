@@ -28,10 +28,8 @@ func NewProfile(db *database.Service) common.Widget {
 	resourceType := "profiles"
 	listHeaders := []string{"id", "endpoint", "alias", "vast", "status", "username", "password", "token", "tenant", "api_version"}
 
-	extraNav := []common.ExtraWidget{}
-
 	widget := &Profile{
-		NewBaseWidget(db, listHeaders, nil, resourceType, extraNav, nil),
+		NewBaseWidget(db, listHeaders, nil, resourceType, nil, nil),
 	}
 
 	widget.SetParentForBaseWidget(widget, false)
@@ -312,7 +310,7 @@ func (p *Profile) GetKeyBindings() []common.KeyBinding {
 		keyBindings = []common.KeyBinding{
 			{Key: "<tab>", Desc: "next input"},
 			{Key: "<shift+tab>", Desc: "previous input"},
-			{Key: "<enter>", Desc: "submit"},
+			{Key: "<ctrl+s>", Desc: "submit"},
 			{Key: "<esc>", Desc: "back"},
 			{Key: "<space>", Desc: "toggle boolean"},
 		}

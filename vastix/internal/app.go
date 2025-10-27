@@ -6,6 +6,7 @@ import (
 	stdlog "log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 	"vastix/internal/client"
@@ -13,9 +14,9 @@ import (
 	"vastix/internal/logging"
 	"vastix/internal/msg_types"
 	"vastix/internal/tui"
+	"vastix/internal/tui/widgets"
 	"vastix/internal/tui/widgets/common"
 
-	"github.com/vast-data/go-vast-client/openapi_schema"
 	"go.uber.org/zap"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -103,7 +104,8 @@ func NewApp(appVersion string, spinnerCtrl *SpinnerControl, tickerCtrl *TickerCo
 	)
 
 	// Create working zone with error handlers and ticker control that reference the app
-	app.workingZone = tui.NewWorkingZone(db, app.SetError, app.ClearError, app.EnableTickers, app.DisableTickers)
+	// Pass nil for restClient initially - it will be set later when profile is loaded
+	app.workingZone = tui.NewWorkingZone(db, app.SetError, app.ClearError, app.EnableTickers, app.DisableTickers, nil)
 
 	app.workingZone.BeforeSetResourceCb = func() {
 		// Reset all filters and search state before switching resource types
@@ -126,18 +128,32 @@ func NewApp(appVersion string, spinnerCtrl *SpinnerControl, tickerCtrl *TickerCo
 
 // Init initializes the application
 func (a *App) Init() tea.Cmd {
+	// Log any panics that occur during init
+	defer logging.LogPanic()
+
 	initAppCmd := func() tea.Msg {
-		// Hot preload OpenAPI documentation
 		a.auxlog.Println("[app.Init] - start")
-		if _, err := openapi_schema.GetOpenApiResource("/"); err != nil {
-			a.log.Error("Failed to load OpenAPI document", zap.Error(err))
-		}
+		// OpenAPI document will be loaded automatically when first needed
 		a.profile.Init()
 		a.keybindings.Init()
 		a.logo.Init()
 		a.workingZone.Init()
 		a.statusZone.Init()
 		a.filtersZone.Init()
+
+		// Initialize API widgets if there's an active profile with REST client
+		if profile, err := a.db.GetActiveProfile(); err == nil && profile != nil {
+			if restClient, err := profile.RestClientFromProfile(); err == nil && restClient != nil {
+				a.auxlog.Println("[app.Init] - initializing API widgets from active profile")
+				// VMSRest is already UntypedVMSRest (type alias)
+				if err := a.workingZone.InitializeAPIWidgets(restClient); err != nil {
+					a.log.Error("Failed to initialize API widgets", zap.Error(err))
+				} else {
+					a.auxlog.Println("[app.Init] - API widgets initialized successfully")
+				}
+			}
+		}
+
 		a.ready = true
 		a.ClearError()
 
@@ -177,6 +193,9 @@ func (a *App) forceStopAllSpinners() {
 
 // Update handles messages and updates the application state
 func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Log any panics that occur during update
+	defer logging.LogPanic()
+
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
@@ -321,15 +340,27 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a, cmd
 
 	case msg_types.TickerSetDataMsg:
-		// Force redraw when in list mode to show updated state
-		if a.workingZone.GetCurrentWidget() != nil && a.workingZone.GetCurrentWidget().GetMode() == common.NavigatorModeList {
-			// Combine list data update with forced UI redraw for immediate visual feedback
-			cmd := tea.Sequence(a.workingZone.SetListDataThrottled, func() tea.Msg {
-				return tea.WindowSizeMsg{Width: a.width, Height: a.height}
-			})
-			return a, cmd
+		// Log ticker activity for debugging
+		if a.workingZone.GetCurrentWidget() != nil {
+			currentMode := a.workingZone.GetCurrentWidget().GetMode()
+			a.auxlog.Printf("TickerSetDataMsg received: widget=%T, mode=%v",
+				a.workingZone.GetCurrentWidget(), currentMode)
+
+			// Only process ticker data updates in list mode
+			if currentMode == common.NavigatorModeList {
+				a.auxlog.Println("Processing ticker data update (list mode)")
+				// Combine list data update with forced UI redraw for immediate visual feedback
+				cmd := tea.Sequence(a.workingZone.SetListDataThrottled, func() tea.Msg {
+					return tea.WindowSizeMsg{Width: a.width, Height: a.height}
+				})
+				return a, cmd
+			}
+
+			a.auxlog.Printf("Ignoring ticker data update (not in list mode: %v)", currentMode)
+		} else {
+			a.auxlog.Println("TickerSetDataMsg: currentWidget is nil")
 		}
-		return a, a.workingZone.SetListDataThrottled
+		return a, nil
 
 	case msg_types.TickerUpdateProfileMsg:
 		return a, a.profile.SetData
@@ -340,7 +371,28 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case msg_types.DetailsContentMsg:
 		a.updateSizes()
-		a.workingZone.SetDetailsData(msg.Content)
+
+		// If we're in an extra widget, set details on the ExtraWidgetGroup, not the parent widget
+		if currentWidget := a.workingZone.GetCurrentWidget(); currentWidget != nil {
+			if currentWidget.GetMode() == common.NavigatorModeExtra {
+				// We're in extra mode - set details on the ExtraWidgetGroup
+				if extraWidgetGetter, ok := currentWidget.(interface{ GetExtraWidget() common.ExtraWidget }); ok {
+					if extraWidgetGroup, ok := extraWidgetGetter.GetExtraWidget().(*widgets.ExtraWidgetGroup); ok {
+						// Set the details data on the extra widget group (which delegates to the current extra widget)
+						extraWidgetGroup.SetDetailsData(msg.Content)
+						// Switch to details mode to display the result
+						extraWidgetGroup.SetExtraModeMust(common.ExtraNavigatorModeDetails)
+					}
+				}
+			} else {
+				// Normal mode - set details on the current widget
+				a.workingZone.SetDetailsData(msg.Content)
+			}
+		} else {
+			// Fallback - no current widget
+			a.workingZone.SetDetailsData(msg.Content)
+		}
+
 		return a, nil
 
 	case msg_types.SetResourceTypeMsg:
@@ -390,6 +442,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the entire application
 func (a *App) View() string {
+	// Log any panics that occur during view rendering
+	defer logging.LogPanic()
+
 	if !a.allZonesReady() || !a.Ready() {
 		return a.renderSplashScreen()
 	}
@@ -709,6 +764,7 @@ func Run(appVersion string) error {
 	// Initialize database for cleanup later
 	db := database.New()
 	defer func() {
+		auxlog.Println("Closing database connection...")
 		if err := db.Close(); err != nil {
 			auxlog.Printf("Error closing database: %v", err)
 		} else {
@@ -749,6 +805,8 @@ func Run(appVersion string) error {
 	// Run the program in a goroutine
 	resultChan := make(chan error, 1)
 	go func() {
+		// Add panic logging for this goroutine (bubbletea has its own panic recovery)
+		defer logging.LogPanic()
 		_, err := p.Run()
 		resultChan <- err
 	}()
@@ -758,6 +816,43 @@ func Run(appVersion string) error {
 	case err := <-resultChan:
 		auxlog.Println("TUI program finished")
 		cancel() // Cancel context to stop background goroutines
+
+		// Check if the error indicates a panic that was caught by bubbletea
+		if err != nil {
+			auxlog.Printf("TUI program error: %v", err)
+
+			// Bubbletea returns specific error messages when panics occur
+			errMsg := err.Error()
+			if errMsg == "program was killed: program experienced a panic" {
+				auxlog.Println("Detected panic caught by bubbletea, logging to panic.log")
+
+				// Log this to panic.log file
+				if vastixDir, dirErr := logging.GetVastixDir(); dirErr == nil {
+					logsDir := filepath.Join(vastixDir, "logs")
+					panicLogPath := filepath.Join(logsDir, "panic.log")
+
+					if f, fileErr := os.OpenFile(panicLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); fileErr == nil {
+						timestamp := time.Now().Format("2006-01-02 15:04:05")
+						panicInfo := fmt.Sprintf("\n"+
+							"================================================================================\n"+
+							"PANIC at %s (caught by bubbletea)\n"+
+							"================================================================================\n"+
+							"Error: %v\n\n"+
+							"Note: Full stack trace may be in terminal output above.\n"+
+							"This panic was caught by bubbletea's internal panic handler.\n"+
+							"================================================================================\n\n",
+							timestamp, err)
+
+						f.WriteString(panicInfo)
+						f.Close()
+
+						fmt.Fprintf(os.Stderr, "\n  Panic details saved to: %s\n", panicLogPath)
+						fmt.Fprintf(os.Stderr, "Check terminal output above for full stack trace.\n\n")
+					}
+				}
+			}
+		}
+
 		return err
 	case <-sigChan:
 		auxlog.Println("Received interrupt signal, shutting down...")

@@ -82,7 +82,7 @@ func NewListAdapter(db *database.Service, resourceType string, headers []string)
 	}
 
 	// Set default narrow columns for common ID fields
-	adapter.SetNarrowColumns([]string{"ID", "TENANT_ID", "USER_ID", "VAST"})
+	adapter.SetNarrowColumns([]string{"ID", "TENANT_ID", "USER_ID", "VAST", "METHOD"})
 
 	log.Debug("ListAdapter initialized successfully")
 

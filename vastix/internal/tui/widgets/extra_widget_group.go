@@ -47,18 +47,21 @@ func NewExtraWidgetGroup(db *database.Service, parentNavigator *common.WidgetNav
 	log := logging.GetGlobalLogger()
 	auxlog := logging.GetAuxLogger()
 
+	auxlog.Printf("[ExtraWidgetGroup] NewExtraWidgetGroup called with %d extra widgets", len(extraWidgets))
 	log.Debug("Initializing ExtraWidgetGroup")
 	defer log.Debug("ExtraWidgetGroup initialized")
 
 	resourceType := "extra actions"
-	listHeaders := []string{"action"}
+	listHeaders := []string{"method", "action", "summary"}
 
 	entries := make(map[string]common.ExtraWidget)
 	// Initialize entries from provided extra widgets
-	for _, widget := range extraWidgets {
+	for i, widget := range extraWidgets {
 		extraResourceType := widget.GetExtraResourceType()
+		auxlog.Printf("[ExtraWidgetGroup] Adding extra widget %d: type=%s", i, extraResourceType)
 		entries[extraResourceType] = widget
 	}
+	auxlog.Printf("[ExtraWidgetGroup] Total entries created: %d", len(entries))
 
 	extraWidgetGroup := &ExtraWidgetGroup{
 		resourceType: resourceType,
@@ -144,7 +147,15 @@ func (eg *ExtraWidgetGroup) Init() tea.Msg {
 
 func (eg *ExtraWidgetGroup) CanUseExtra() bool {
 	// Can be displayed if there is at least one extra widget defined
-	return len(eg.entries) > 0
+	numEntries := len(eg.entries)
+	eg.auxlog.Printf("[ExtraWidgetGroup] CanUseExtra: entries=%d", numEntries)
+	if numEntries > 0 {
+		eg.auxlog.Printf("[ExtraWidgetGroup] Extra widgets available:")
+		for name := range eg.entries {
+			eg.auxlog.Printf("  - %s", name)
+		}
+	}
+	return numEntries > 0
 }
 
 // GetAllExtraWidgets returns all extra widgets in the group
@@ -266,8 +277,15 @@ func (eg *ExtraWidgetGroup) SetListData() tea.Msg {
 		// If no active extra widget, use the ListAdapter to set data
 		// Convert to data format
 		data := make([][]string, 0, len(eg.entries))
-		for action := range eg.entries {
-			data = append(data, []string{action})
+		for action, widget := range eg.entries {
+			// Try to get HTTP method and summary from ExtraMethodWidget
+			method := "N/A"
+			summary := ""
+			if extraMethodWidget, ok := widget.(*ExtraMethodWidget); ok {
+				method = extraMethodWidget.GetHTTPMethod()
+				summary = extraMethodWidget.GetSummary()
+			}
+			data = append(data, []string{method, action, summary})
 		}
 		eg.ListAdapter.SetListData(data, eg.GetFuzzyListSearchString())
 		return msg_types.SetDataMsg{}
@@ -515,7 +533,8 @@ func (eg *ExtraWidgetGroup) Details(selectedRowData common.RowData) (tea.Cmd, er
 }
 
 func (eg *ExtraWidgetGroup) Select(selectedRowData common.RowData) (tea.Cmd, error) {
-	selectedAction := selectedRowData.GetID()
+	// Get the action path from the second column (not the HTTP method from first column)
+	selectedAction := selectedRowData.GetString("action")
 	if _, ok := eg.entries[selectedAction]; !ok {
 		availableActions := slices.Collect(maps.Keys(eg.entries))
 		panic(
@@ -577,6 +596,45 @@ func (eg *ExtraWidgetGroup) SetSelectedRowData(data common.RowData) {
 	} else {
 		eg.currentExtraWidget().SetSelectedRowData(data)
 	}
+}
+
+// ToggleFormJSONMode delegates to the current extra widget's form/JSON toggle
+func (eg *ExtraWidgetGroup) ToggleFormJSONMode() {
+	if eg.activeExtraWidget != "" {
+		if toggleWidget, ok := eg.currentExtraWidget().(interface{ ToggleFormJSONMode() }); ok {
+			toggleWidget.ToggleFormJSONMode()
+		}
+	}
+}
+
+// IsEditingJSON delegates to the current extra widget's JSON editing state
+func (eg *ExtraWidgetGroup) IsEditingJSON() bool {
+	if eg.activeExtraWidget != "" {
+		if jsonWidget, ok := eg.currentExtraWidget().(interface{ IsEditingJSON() bool }); ok {
+			return jsonWidget.IsEditingJSON()
+		}
+	}
+	return false
+}
+
+// UpdateJSONTextarea delegates to the current extra widget's JSON textarea update
+func (eg *ExtraWidgetGroup) UpdateJSONTextarea(msg tea.Msg) tea.Cmd {
+	if eg.activeExtraWidget != "" {
+		if jsonWidget, ok := eg.currentExtraWidget().(interface{ UpdateJSONTextarea(tea.Msg) tea.Cmd }); ok {
+			return jsonWidget.UpdateJSONTextarea(msg)
+		}
+	}
+	return nil
+}
+
+// SaveJSONEdits delegates to the current extra widget's JSON save
+func (eg *ExtraWidgetGroup) SaveJSONEdits() error {
+	if eg.activeExtraWidget != "" {
+		if jsonWidget, ok := eg.currentExtraWidget().(interface{ SaveJSONEdits() error }); ok {
+			return jsonWidget.SaveJSONEdits()
+		}
+	}
+	return nil
 }
 
 // HasActiveWidget checks if there's an active extra widget
@@ -659,7 +717,8 @@ func (eg *ExtraWidgetGroup) GetCreateKeyBindings() []common.KeyBinding {
 	availableBindings := []common.KeyBinding{
 		{Key: "<tab>", Desc: "next input"},
 		{Key: "<shift+tab>", Desc: "previous input"},
-		{Key: "<enter>", Desc: "submit"},
+		{Key: "<ctrl+s>", Desc: "submit"},
+		{Key: "<ctrl+t>", Desc: "toggle form/json"},
 		{Key: "<esc>", Desc: "back"},
 		{Key: "<space>", Desc: "toggle boolean"},
 		{Key: "<,>", Desc: "array delimiter"},
@@ -699,6 +758,7 @@ func (eg *ExtraWidgetGroup) GetDetailsKeyBindings() []common.KeyBinding {
 		{Key: "<↑/↓>", Desc: "scroll"},
 		{Key: "<pgup/pgdn>", Desc: "page"},
 		{Key: "<ctrl+s>", Desc: "copy to clipboard"},
+		{Key: "<ctrl+e>", Desc: "edit & resubmit"},
 		{Key: "<esc>", Desc: "back"},
 	}
 

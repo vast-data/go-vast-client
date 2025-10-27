@@ -601,7 +601,8 @@ func (bw *BaseWidget) GetServerParams() *vast_client.Params {
 
 func (bw *BaseWidget) GetInputs() (common.Inputs, error) {
 	// Use dynamic schema-based input generation
-	if bw.cachedInputs == nil && bw.formHints != nil && !bw.isExtra {
+	// Extra widgets can now also generate inputs from their FormHints
+	if bw.cachedInputs == nil && bw.formHints != nil {
 		inputs, err := bw.getInputsWithError()
 		if err != nil {
 			return nil, err
@@ -650,11 +651,8 @@ func (bw *BaseWidget) SetInputs(inputs common.Inputs) {
 
 // ViewCreateForm renders the profile creation form
 func (bw *BaseWidget) ViewCreateForm() string {
-	if bw.isExtra {
-		panic("BaseWidget ViewCreateForm should not be called for extra widgets. " +
-			"Each extra widget should implement its own ViewCreateForm method.",
-		)
-	}
+	// Extra widgets can now use the base implementation for form rendering
+	// The form will be generated from the FormHints (OpenAPI schema reference)
 	return bw.viewCreateForm()
 
 }
@@ -982,13 +980,9 @@ func (bw *BaseWidget) Reset() {
 }
 
 func (bw *BaseWidget) ViewDetails() string {
-	if bw.isExtra {
-		panic("BaseWidget ViewDetails should not be called for extra widgets. " +
-			"Each extra widget should implement its own ViewDetails method.",
-		)
-	}
+	// Extra widgets can now use the base implementation for details rendering
+	// The details will show response data set via SetDetailsData()
 	return bw.viewDetails()
-
 }
 
 func (bw *BaseWidget) viewDetails() string {
@@ -1102,16 +1096,17 @@ func (bw *BaseWidget) InitialExtraMode() common.ExtraNavigatorMode {
 // ------------------------------
 
 func (bw *BaseWidget) ViewPrompt() string {
-	if bw.isExtra {
-		panic("BaseWidget ViewPrompt should not be called for extra widgets. " +
-			"Each extra widget should implement its own ViewPrompt method.",
-		)
-	}
+	// Extra widgets can also use the default prompt implementation
 	return bw.viewPrompt()
-
 }
 
 func (bw *BaseWidget) viewPrompt() string {
+	// Safety check: ensure PromptAdapter is initialized
+	if bw.PromptAdapter == nil {
+		bw.log.Error("PromptAdapter is nil, cannot display prompt dialog")
+		return "Error: Prompt dialog not available"
+	}
+
 	var selectedInfo string
 	selectedRowData := bw.GetSelectedRowData()
 	if selectedRowData.Len() > 0 {
@@ -1128,6 +1123,21 @@ func (bw *BaseWidget) viewPrompt() string {
 	title := fmt.Sprintf(" delete: %s ", bw.resourceType)
 
 	return bw.PromptAdapter.PromptDo(msg, title, bw.GetWidth(), bw.GetHeight())
+}
+
+// TogglePromptSelection toggles between Yes and No buttons in the prompt
+func (bw *BaseWidget) TogglePromptSelection() {
+	if bw.PromptAdapter != nil {
+		bw.PromptAdapter.ToggleSelection()
+	}
+}
+
+// IsPromptNoSelected returns true if "No" button is currently selected
+func (bw *BaseWidget) IsPromptNoSelected() bool {
+	if bw.PromptAdapter != nil {
+		return bw.PromptAdapter.IsNoSelected()
+	}
+	return false // Default to Yes (false means No is not selected)
 }
 
 // ------------------------------
@@ -1327,8 +1337,9 @@ func (bw *BaseWidget) GetCreateKeyBindings() []common.KeyBinding {
 func (bw *BaseWidget) GetDeleteKeyBindings() []common.KeyBinding {
 	if bw.cachedDeleteKeyBindings == nil {
 		availableBindings := []common.KeyBinding{
-			{Key: "<y or enter>", Desc: "confirm"},
+			{Key: "<←/→/tab>", Desc: "toggle"},
 			{Key: "<n or esc>", Desc: "cancel"},
+			{Key: "<enter>", Desc: "confirm"},
 		}
 
 		bindings := make([]common.KeyBinding, 0, len(availableBindings))

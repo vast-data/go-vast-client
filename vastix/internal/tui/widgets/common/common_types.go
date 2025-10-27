@@ -199,6 +199,16 @@ type PromptAdapter interface {
 	PromptDo(msg, title string, width, height int) string // Returns a prompt string
 }
 
+// PromptToggleAdapter interface for toggling button selection in prompts
+type PromptToggleAdapter interface {
+	TogglePromptSelection() // Toggles between Yes and No buttons in the prompt
+}
+
+// PromptSelectionAdapter interface for checking button selection in prompts
+type PromptSelectionAdapter interface {
+	IsPromptNoSelected() bool // Returns true if "No" button is currently selected
+}
+
 type SearchableWidget interface {
 	IsServerSearchable() bool             // Returns true if the widget can currently search its data on the server
 	IsFuzzySearchable() bool              // Returns true if the widget can currently apply fuzzy search to its local data

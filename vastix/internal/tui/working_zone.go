@@ -6,13 +6,14 @@ import (
 	"strings"
 	"time"
 	"vastix/internal/database"
-	"vastix/internal/logging"
 	log "vastix/internal/logging"
+	"vastix/internal/msg_types"
 	"vastix/internal/tui/widgets"
 	"vastix/internal/tui/widgets/common"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/vast-data/go-vast-client/rest"
 	"go.uber.org/zap"
 )
 
@@ -53,76 +54,51 @@ type WorkingZone struct {
 	lastSetDataWidget common.Widget
 }
 
-func NewWorkingZone(db *database.Service, errorHandler func(string), clearErrors func(), enableTickers func(), disableTickers func()) *WorkingZone {
+func NewWorkingZone(db *database.Service, errorHandler func(string), clearErrors func(), enableTickers func(), disableTickers func(), restClient interface{}) *WorkingZone {
 	log.Debug("WorkingZone initializing")
 
-	registeredWidgetsList := []common.Widget{
-		widgets.NewProfile(db),
-		widgets.NewSshConnections(db),
-		widgets.NewResources(db),
-		widgets.NewView(db),
-		widgets.NewUser(db),
-		widgets.NewUserKeysFromLocalDb(db),
-		widgets.NewViewPolicy(db),
-		widgets.NewVipPool(db),
-		widgets.NewEventDefinition(db),
-		widgets.NewEventDefinitionConfig(db),
-		widgets.NewBGPConfig(db),
-		widgets.NewNonLocalUser(db),
-		widgets.NewApiToken(db),
-		widgets.NewApiTokensFromLocalDb(db),
-		widgets.NewActiveDirectory(db),
-		widgets.NewAdministratorManager(db),
-		widgets.NewAdministratorRealm(db),
-		widgets.NewAdministratorRole(db),
-		widgets.NewBlockHost(db),
-		widgets.NewDNS(db),
-		widgets.NewEncryptionGroup(db),
-		widgets.NewGlobalSnapshotStream(db),
-		widgets.NewGroup(db),
-		widgets.NewLDAP(db),
-		widgets.NewLocalProvider(db),
-		widgets.NewLocalS3Key(db),
-		widgets.NewNIS(db),
-		widgets.NewProtectedPath(db),
-		widgets.NewProtectionPolicy(db),
-		widgets.NewQosPolicy(db),
-		widgets.NewQuota(db),
-		widgets.NewReplicationPeer(db),
-		widgets.NewS3LifeCycleRule(db),
-		widgets.NewS3Policy(db),
-		widgets.NewS3ReplicationPeer(db),
-		widgets.NewSnapshot(db),
-		widgets.NewTenant(db),
-		widgets.NewVms(db),
-		widgets.NewVolume(db),
-		widgets.NewBlockHostMapping(db),
-	}
-
-	registeredWidgets := make(map[string]common.Widget, len(registeredWidgetsList))
-	for _, widget := range registeredWidgetsList {
-		resourceType := widget.GetResourceType()
-
-		if resourceType != "resources" {
-			widgets.SupportedResources = append(widgets.SupportedResources, widget.GetResourceType())
-
+	// Note: REST client may be nil at startup - widgets will be initialized later
+	// when InitializeAPIWidgets() is called after profile connection
+	if restClient != nil {
+		if untypedRest, ok := restClient.(*rest.UntypedVMSRest); ok {
+			factory, err := widgets.InitializeWidgets(db, untypedRest)
+			if err != nil {
+				log.Error("Failed to initialize widgets", zap.Error(err))
+			} else {
+				log.Info("Widgets initialized successfully",
+					zap.Int("widget_count", len(factory.GetSupportedResources())))
+			}
 		}
-		registeredWidgets[resourceType] = widget
+	} else {
+		log.Info("REST client not available yet, widgets will be initialized after profile connection")
 	}
 
-	log.Debug("Base widgets initialized",
+	// Initialize Resources widget first - it manages all other widgets
+	resourcesWidget := widgets.NewResources(db).(*widgets.Resources)
+
+	// Get all widgets from Resources widget (includes Profile + any generated widgets)
+	registeredWidgets := resourcesWidget.GetAllWidgets()
+
+	log.Debug("All widgets initialized from Resources widget",
 		zap.Int("widget_count", len(registeredWidgets)))
 
 	// Get current resource from database history, fallback to "profiles" if none exists
+	auxlog := log.GetAuxLogger()
 	currentResourceType, err := db.GetCurrentResource()
 	if err != nil {
+		auxlog.Printf("Failed to get current resource from database: %v, using default 'profiles'", err)
 		log.Debug("Failed to get current resource from database, using default", zap.Error(err))
 		currentResourceType = "profiles"
+	} else {
+		auxlog.Printf("Read from database: current resource = '%s'", currentResourceType)
 	}
 
 	// Initialize resource history if it doesn't exist
 	if err := db.InitializeResourceHistory(currentResourceType); err != nil {
+		auxlog.Printf("Failed to initialize resource history: %v", err)
 		log.Debug("Failed to initialize resource history", zap.Error(err))
+	} else {
+		auxlog.Printf("Resource history initialized with: '%s'", currentResourceType)
 	}
 
 	navigatorMode := common.NavigatorModeList // Default mode
@@ -157,18 +133,31 @@ func NewWorkingZone(db *database.Service, errorHandler func(string), clearErrors
 			zap.String("currentResource", currentResourceType))
 	}
 
-	// Check if the current resource type has a registered widget, fallback to "views" if not
+	// Check if the current resource type has a registered widget, fallback to "profiles" if not
 	currentWidget := registeredWidgets[currentResourceType]
 	if currentWidget == nil {
-		log.Warn("Current resource type not found in registered widgets, falling back to views",
-			zap.String("currentResourceType", currentResourceType))
-		currentResourceType = "views"
-		currentWidget = registeredWidgets["views"]
+		auxlog.Printf("Widget '%s' not found yet (may be API-generated), temporarily using 'profiles'", currentResourceType)
+		log.Warn("Current resource type not found in registered widgets, temporarily using profiles for display",
+			zap.String("savedResourceType", currentResourceType))
 
-		// Update the database with the fallback resource
-		if err := db.SetResourceHistory("views", currentResourceType); err != nil {
-			log.Debug("Failed to update resource history after fallback", zap.Error(err))
-		}
+		// Use profiles widget for display, but DON'T overwrite the database
+		// The saved widget name in the database is still valid, it just hasn't been loaded yet
+		// When API widgets are loaded, we'll restore to the correct widget
+		currentWidget = registeredWidgets["profiles"]
+
+		// NOTE: We do NOT call SetResourceHistory here because:
+		// 1. The widget might be API-generated and will be loaded soon after profile connects
+		// 2. We want to preserve the user's last selected widget in the database
+		// 3. InitializeAPIWidgets will restore to the saved widget when it becomes available
+		auxlog.Printf("Database still has '%s' saved, will restore after API widgets load", currentResourceType)
+
+		// Temporarily display profiles, but the saved resource name stays in database for restoration
+		currentResourceType = "profiles"
+	}
+
+	// Final safety check
+	if currentWidget == nil {
+		panic("Failed to initialize any widget - both currentResourceType and fallback failed")
 	}
 
 	workingZone := &WorkingZone{
@@ -196,6 +185,64 @@ func (w *WorkingZone) Init() {
 	for _, widget := range w.widgets {
 		widget.Init()
 	}
+}
+
+// InitializeAPIWidgets initializes widgets from API after profile connection
+func (w *WorkingZone) InitializeAPIWidgets(restClient *rest.UntypedVMSRest) error {
+	if restClient == nil {
+		return fmt.Errorf("rest client is nil")
+	}
+
+	log.Info("Initializing API widgets after profile connection")
+
+	factory, err := widgets.InitializeWidgets(w.db, restClient)
+	if err != nil {
+		log.Error("Failed to initialize API widgets", zap.Error(err))
+		return err
+	}
+
+	log.Info("API widgets initialized successfully",
+		zap.Int("widget_count", len(factory.GetSupportedResources())))
+
+	// Get the Resources widget and refresh all widgets from it
+	if resourcesWidget, ok := w.widgets["resources"].(*widgets.Resources); ok {
+		// Get all widgets (including newly generated ones)
+		allWidgets := resourcesWidget.GetAllWidgets()
+
+		// Update the widgets map with any new widgets
+		for name, widget := range allWidgets {
+			if _, exists := w.widgets[name]; !exists {
+				w.widgets[name] = widget
+				widget.SetSize(w.width, w.height)
+				log.Debug("Registered new widget", zap.String("resource", name))
+			}
+		}
+
+		// Refresh the Resources widget to show the new widgets
+		resourcesWidget.SetListData()
+		log.Info("Resources widget refreshed with new API widgets")
+	}
+
+	log.Info("All API widgets registered", zap.Int("total_widgets", len(w.widgets)))
+
+	// Now try to restore to the saved widget from database if it wasn't available during init
+	auxlog := log.GetAuxLogger()
+	savedResource, err := w.db.GetCurrentResource()
+	if err == nil && savedResource != "" && savedResource != w.resourceType {
+		// Check if the saved widget now exists
+		if savedWidget, exists := w.widgets[savedResource]; exists {
+			auxlog.Printf("Restoring to saved widget '%s' (now available after API load)", savedResource)
+			w.currentWidget = savedWidget
+			w.resourceType = savedResource
+			w.currentWidget.SetSize(w.width, w.height)
+			log.Info("Restored to saved widget from database",
+				zap.String("widget", savedResource))
+		} else {
+			auxlog.Printf("Saved widget '%s' still not available, staying on current widget", savedResource)
+		}
+	}
+
+	return nil
 }
 
 // SetSize sets the dimensions of the working zone
@@ -247,28 +294,34 @@ func (w *WorkingZone) View() string {
 }
 
 func (w *WorkingZone) setNavigatorMode(mode common.NavigatorMode) {
+	auxlog := log.GetAuxLogger()
+
 	// Check if currentWidget is nil to prevent panic
 	if w.currentWidget == nil {
 		log.Error("Cannot set navigator mode: currentWidget is nil")
 		return
 	}
 
+	auxlog.Printf("setNavigatorMode: setting mode to %v for widget %T", mode, w.currentWidget)
+
 	// Set the navigator mode for the current widget
 	w.currentWidget.SetMode(mode)
 
 	// Control tickers based on navigator mode
 	// Tickers are enabled only in NavigatorModeList to provide real-time data updates
-	// when browsing lists. They are disabled in other modes (create, delete, details)
+	// when browsing lists. They are disabled in other modes (create, delete, details, extra)
 	// to avoid interference and unnecessary processing during focused operations.
 	if mode == common.NavigatorModeList {
 		// Enable tickers only in list mode
+		auxlog.Println("setNavigatorMode: enabling tickers (list mode)")
 		if w.enableTickers != nil {
 			w.enableTickers()
 		}
 		// Get the widget navigator and reset its creation.
 		w.currentWidget.ResetCreateForm()
 	} else {
-		// Disable tickers for all other modes (create, delete, details)
+		// Disable tickers for all other modes (create, delete, details, extra)
+		auxlog.Printf("setNavigatorMode: disabling tickers (mode: %v)", mode)
 		if w.disableTickers != nil {
 			w.disableTickers()
 		}
@@ -316,12 +369,15 @@ func (w *WorkingZone) SetResourceType(resourceType string) {
 		w.currentWidget = widget
 		w.currentWidget.SetSize(w.width, w.height)
 		// Update resource history in database: current becomes previous, new becomes current
+		auxlog.Printf("Updating database: current='%s' -> previous='%s'", resourceType, currentFromDB)
 		if err := w.db.SetResourceHistory(resourceType, currentFromDB); err != nil {
+			auxlog.Printf("Failed to update resource history: %v", err)
 			log.Debug("Failed to update resource history in database",
 				zap.Error(err),
 				zap.String("new_current", resourceType),
 				zap.String("new_previous", currentFromDB))
 		} else {
+			auxlog.Printf("Resource history saved to database: current='%s', previous='%s'", resourceType, currentFromDB)
 			log.Debug("Resource history updated successfully",
 				zap.String("new_current", resourceType),
 				zap.String("new_previous", currentFromDB))
@@ -366,6 +422,11 @@ func (w *WorkingZone) HasSpinner() bool {
 }
 
 func (w *WorkingZone) SetListData() tea.Msg {
+	if w.currentWidget == nil {
+		log.Error("SetListData: currentWidget is nil")
+		return msg_types.MockMsg{}
+	}
+
 	// Call the widget's SetListData method
 	result := w.currentWidget.SetListData()
 
@@ -380,7 +441,7 @@ func (w *WorkingZone) SetListData() tea.Msg {
 // - The current widget has changed since the last call, OR
 // - More than 1 minute has passed since the last call for the same widget
 func (w *WorkingZone) SetListDataThrottled() tea.Msg {
-	auxlog := logging.GetAuxLogger()
+	auxlog := log.GetAuxLogger()
 	now := time.Now()
 
 	// Check if widget has changed

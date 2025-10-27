@@ -247,6 +247,45 @@ func (wn *ExtraWidgetNavigator) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
+			// Check if we're editing JSON
+			if adapter, ok := any(wn.widget).(interface{ IsEditingJSON() bool }); ok && adapter.IsEditingJSON() {
+				// In JSON editing mode, handle special keys
+				switch msg.String() {
+				case "ctrl+t":
+					// Toggle back to form mode
+					wn.auxlog.Println("Toggle back to form mode from JSON")
+					if toggleAdapter, ok := any(wn.widget).(interface{ ToggleFormJSONMode() }); ok {
+						toggleAdapter.ToggleFormJSONMode()
+					}
+					return nil, true
+				case "ctrl+s":
+					// Submit from JSON mode - first save JSON to form, then submit
+					wn.auxlog.Println("Submit from JSON mode")
+					// Save JSON edits to form inputs first
+					if saveAdapter, ok := any(wn.widget).(interface{ SaveJSONEdits() error }); ok {
+						if err := saveAdapter.SaveJSONEdits(); err != nil {
+							wn.auxlog.Printf("Failed to save JSON edits: %v", err)
+							return func() tea.Msg {
+								return msg_types.ErrorMsg{Err: err}
+							}, true
+						}
+					}
+					// Now submit the form
+					if adapter, ok := any(wn.widget).(CreateFromInputsAdapter); ok {
+						wn.widget.ClearFuzzyDetailsSearch()
+						cmd := adapter.CreateFromInputsDo(wn.widget)
+						return cmd, true
+					}
+					return nil, true
+				default:
+					// Forward all other keys to the textarea
+					if textareaAdapter, ok := any(wn.widget).(interface{ UpdateJSONTextarea(tea.Msg) tea.Cmd }); ok {
+						return textareaAdapter.UpdateJSONTextarea(msg), true
+					}
+					return nil, true
+				}
+			}
+
 			if _, ok := wn.NotAllowedCreateKeys[msg.String()]; ok {
 				return nil, false // Ignore keys that are not allowed in create mode
 			}
@@ -268,8 +307,8 @@ func (wn *ExtraWidgetNavigator) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 				} else {
 					panic("ExtraWidgetNavigator: widget does not implement FormNavigateAdaptor interface")
 				}
-			case "enter":
-				// Submit form using public GetInputs method
+			case "ctrl+s":
+				// Submit form using public GetInputs method (matches normal widget behavior)
 				if adapter, ok := any(wn.widget).(CreateFromInputsAdapter); ok {
 					wn.widget.ClearFuzzyDetailsSearch()
 					cmd := adapter.CreateFromInputsDo(wn.widget)
@@ -319,23 +358,61 @@ func (wn *ExtraWidgetNavigator) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 			}
 
 			switch msg.String() {
-			case "y", "Y", "enter":
-				// Confirm deletion - call Delete method if widget supports it
-				wn.auxlog.Println("Delete confirmed")
+			case "left", "right", "tab":
+				// Toggle between Yes and No buttons
+				wn.auxlog.Printf("Toggle button selection in delete mode: %s", msg.String())
+				if adapter, ok := any(wn.widget).(PromptToggleAdapter); ok {
+					adapter.TogglePromptSelection()
+				}
+				return nil, true
+			case "y", "Y":
+				// Always confirm deletion when Y is pressed
+				wn.auxlog.Println("Delete confirmed via Y key")
 				if adapter, ok := any(wn.widget).(DeleteAdapter); ok {
 					cmd := msg_types.ProcessWithClearError(adapter.DeleteDo(wn.widget))
 					wn.setModeIfSupported(ExtraNavigatorModeList)
-					return cmd, true // Return command to process deletion
+					return cmd, true
 				} else {
 					panic("ExtraWidgetNavigator: widget does not implement DeleteAdapter interface")
 				}
 			case "n", "N":
-				// Cancel deletion and return to list mode
-				wn.auxlog.Println("Delete canceled, returning to list mode")
+				// Always cancel deletion when N is pressed
+				wn.auxlog.Println("Delete canceled via N key, returning to list mode")
 				wn.setModeIfSupported(ExtraNavigatorModeList)
 				return msg_types.ProcessWithClearError(nil), true
 			case "esc":
 				return wn.handleEscKey()
+			case "enter":
+				// Respect button selection when Enter is pressed
+				wn.auxlog.Println("Delete prompt: enter key pressed, checking button selection")
+				if adapter, ok := any(wn.widget).(PromptSelectionAdapter); ok {
+					if adapter.IsPromptNoSelected() {
+						// No is selected, cancel
+						wn.auxlog.Println("Delete canceled via Enter (No selected), returning to list mode")
+						wn.setModeIfSupported(ExtraNavigatorModeList)
+						return msg_types.ProcessWithClearError(nil), true
+					} else {
+						// Yes is selected, confirm deletion
+						wn.auxlog.Println("Delete confirmed via Enter (Yes selected)")
+						if deleteAdapter, ok := any(wn.widget).(DeleteAdapter); ok {
+							cmd := msg_types.ProcessWithClearError(deleteAdapter.DeleteDo(wn.widget))
+							wn.setModeIfSupported(ExtraNavigatorModeList)
+							return cmd, true
+						} else {
+							panic("ExtraWidgetNavigator: widget does not implement DeleteAdapter interface")
+						}
+					}
+				} else {
+					// Fallback to old behavior if adapter not implemented (confirm deletion)
+					wn.auxlog.Println("Delete confirmed via Enter (fallback)")
+					if deleteAdapter, ok := any(wn.widget).(DeleteAdapter); ok {
+						cmd := msg_types.ProcessWithClearError(deleteAdapter.DeleteDo(wn.widget))
+						wn.setModeIfSupported(ExtraNavigatorModeList)
+						return cmd, true
+					} else {
+						panic("ExtraWidgetNavigator: widget does not implement DeleteAdapter interface")
+					}
+				}
 			}
 		}
 
@@ -355,6 +432,11 @@ func (wn *ExtraWidgetNavigator) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 				} else {
 					panic("ExtraWidgetNavigator: widget does not implement CopyToClipboardAdapter interface")
 				}
+			case "ctrl+e":
+				// Go back to create mode to allow editing and resubmitting
+				wn.auxlog.Println("Switching back to create mode to edit parameters")
+				wn.setModeIfSupported(ExtraNavigatorModeCreate)
+				return nil, true
 			case "esc":
 				return wn.handleEscKey()
 			default:

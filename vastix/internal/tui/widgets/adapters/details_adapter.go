@@ -163,7 +163,7 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 
 	resourceNameStyle := lipgloss.NewStyle().
 		Background(lipgloss.Color("214")). // Orange background
-		Foreground(lipgloss.Color("0"))    // Black text
+		Foreground(lipgloss.Color("0")) // Black text
 
 	// Apply fuzzy search to the FULL content first (not just visible content)
 	var filteredContent string
@@ -245,7 +245,7 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 	if fuzzyDetailsLocalSearch != "" {
 		labelStyle := lipgloss.NewStyle().
 			Background(lipgloss.Color("22")). // Muted green background
-			Foreground(lipgloss.Color("0"))   // Black text
+			Foreground(lipgloss.Color("0")) // Black text
 
 		label := labelStyle.Render(fmt.Sprintf(" fuzzy-search: %s ", fuzzyDetailsLocalSearch))
 		resourceTypeLabel = fmt.Sprintf("%s %s", resourceTypeLabel, label)
@@ -329,7 +329,10 @@ func (da *DetailsAdapter) contentToString() string {
 	case map[string]any:
 		return formatRecordAsJSON(v)
 	case vast_client.Record:
-		return formatRecordAsJSON(map[string]any(v))
+		return formatRecordAsJSON(v)
+	case vast_client.RecordSet:
+		// Format RecordSet as a JSON array of objects
+		return formatRecordSetAsJSON(v)
 	default:
 		// Try to handle structs with JSON tags by converting to map
 		if isStruct(v) {
@@ -381,6 +384,9 @@ func (da *DetailsAdapter) contentToClipboardString() string {
 	case map[string]any:
 		return vast_client.Record(v).PrettyJson("  ")
 	case vast_client.Record:
+		return v.PrettyJson("  ")
+	case vast_client.RecordSet:
+		// Format RecordSet as pretty JSON for clipboard
 		return v.PrettyJson("  ")
 	default:
 		// Try to handle structs with JSON tags by converting to JSON
@@ -1243,6 +1249,62 @@ func adaptersFormatRecordAsJSON(record map[string]any) string {
 	}
 	b.WriteString(" }")
 	return b.String()
+}
+
+// formatRecordSetAsJSON formats a RecordSet (array of records) as a JSON array with syntax highlighting
+func formatRecordSetAsJSON(recordSet vast_client.RecordSet) string {
+	if len(recordSet) == 0 {
+		return "[]"
+	}
+
+	var result strings.Builder
+
+	// Define colors for syntax highlighting (same as formatRecordAsJSON)
+	bracketColor := lipgloss.NewStyle().Foreground(lipgloss.Color("252")) // Light white for brackets/punctuation
+
+	// Left margin (2 spaces)
+	leftMargin := "  "
+
+	// Start JSON array
+	result.WriteString(leftMargin + bracketColor.Render("[\n"))
+
+	// Format each record
+	for i, record := range recordSet {
+		// Convert Record to map[string]any
+		recordMap := map[string]any(record)
+
+		// Format the record (but we need to indent it properly)
+		formattedRecord := formatRecordAsJSON(recordMap)
+
+		// Add indentation to each line of the formatted record (except the first margin)
+		lines := strings.Split(formattedRecord, "\n")
+		for j, line := range lines {
+			if j == 0 {
+				// First line - already has left margin, just add array element indent
+				result.WriteString("  " + strings.TrimPrefix(line, "  ") + "\n")
+			} else {
+				// Other lines - add array element indent
+				result.WriteString("  " + line + "\n")
+			}
+		}
+
+		// Add comma if not the last element
+		if i < len(recordSet)-1 {
+			// Remove the last closing brace line, add comma, then add it back
+			resultStr := result.String()
+			lastBraceIdx := strings.LastIndex(resultStr, "}")
+			if lastBraceIdx != -1 {
+				result.Reset()
+				result.WriteString(resultStr[:lastBraceIdx])
+				result.WriteString(bracketColor.Render("},\n"))
+			}
+		}
+	}
+
+	// End JSON array
+	result.WriteString(leftMargin + bracketColor.Render("]"))
+
+	return result.String()
 }
 
 func adaptersRecordPretty(record map[string]any) string {

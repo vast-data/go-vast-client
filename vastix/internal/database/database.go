@@ -301,6 +301,8 @@ func (s *Service) GetCurrentResourceHistory() (*ResourceHistory, error) {
 
 // SetResourceHistory updates the single resource history record (upsert pattern)
 func (s *Service) SetResourceHistory(currentResource, previousResource string) error {
+	log.Printf("[DB] SetResourceHistory called: current='%s', previous='%s'", currentResource, previousResource)
+
 	vastixlog.Debug("Setting resource history",
 		zap.String("current", currentResource),
 		zap.String("previous", previousResource))
@@ -308,11 +310,13 @@ func (s *Service) SetResourceHistory(currentResource, previousResource string) e
 	// Try to get existing record
 	existingHistory, err := s.GetCurrentResourceHistory()
 	if err != nil {
+		log.Printf("[DB] Failed to get existing history: %v", err)
 		return err
 	}
 
 	if existingHistory == nil {
 		// No record exists, create new one
+		log.Printf("[DB] Creating new resource history record")
 		history := &ResourceHistory{
 			CurrentResource:  currentResource,
 			PreviousResource: previousResource,
@@ -320,25 +324,30 @@ func (s *Service) SetResourceHistory(currentResource, previousResource string) e
 
 		err := s.db.Create(history).Error
 		if err != nil {
+			log.Printf("[DB] Failed to create: %v", err)
 			vastixlog.Debug("Failed to create resource history", zap.Error(err))
 			return err
 		}
 
+		log.Printf("[DB] Created new record: current='%s', previous='%s'", currentResource, previousResource)
 		vastixlog.Debug("Resource history created",
 			zap.String("current", currentResource),
 			zap.String("previous", previousResource))
 	} else {
 		// Record exists, update it
+		log.Printf("[DB] Updating existing record (ID=%d)", existingHistory.ID)
 		err := s.db.Model(existingHistory).Updates(ResourceHistory{
 			CurrentResource:  currentResource,
 			PreviousResource: previousResource,
 		}).Error
 
 		if err != nil {
+			log.Printf("[DB] Failed to update: %v", err)
 			vastixlog.Debug("Failed to update resource history", zap.Error(err))
 			return err
 		}
 
+		log.Printf("[DB] Updated record: current='%s', previous='%s'", currentResource, previousResource)
 		vastixlog.Debug("Resource history updated",
 			zap.String("current", currentResource),
 			zap.String("previous", previousResource))
@@ -349,13 +358,17 @@ func (s *Service) SetResourceHistory(currentResource, previousResource string) e
 
 // GetCurrentResource returns just the current active resource type
 func (s *Service) GetCurrentResource() (string, error) {
+	log.Printf("[DB] GetCurrentResource called")
 	history, err := s.GetCurrentResourceHistory()
 	if err != nil {
+		log.Printf("[DB] GetCurrentResource: error getting history: %v", err)
 		return "", err
 	}
 	if history == nil {
-		return "views", nil // Default resource if no history exists
+		log.Printf("[DB] GetCurrentResource: no history found, returning default 'profiles'")
+		return "profiles", nil // Default resource if no history exists
 	}
+	log.Printf("[DB] GetCurrentResource: found '%s' in database", history.CurrentResource)
 	return history.CurrentResource, nil
 }
 

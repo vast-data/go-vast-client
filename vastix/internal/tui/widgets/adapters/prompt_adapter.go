@@ -4,9 +4,19 @@ import (
 	"strings"
 
 	"vastix/internal/database"
-	"vastix/internal/tui/widgets/common"
 
 	"github.com/charmbracelet/lipgloss"
+)
+
+// Define colors locally to avoid import cycle
+var (
+	colorOrange    = lipgloss.Color("214")
+	colorBlack     = lipgloss.Color("#000000")
+	colorLightGrey = lipgloss.Color("245")
+	colorWhite     = lipgloss.Color("#ffffff")
+	colorYellow    = lipgloss.Color("#DBBD70") // Match key binding color
+	colorBlue      = lipgloss.Color("63")
+	colorDarkGrey  = lipgloss.Color("#606362")
 )
 
 type PromptAdapter struct {
@@ -14,12 +24,14 @@ type PromptAdapter struct {
 	resourceType    string
 	predefinedMsg   string
 	predefinedTitle string
+	selectedNo      bool // true if "No" button is selected, false if "Yes" is selected (default is Yes)
 }
 
 func NewPromptAdapter(db *database.Service, resourceType string) *PromptAdapter {
 	return &PromptAdapter{
 		db:           db,
 		resourceType: resourceType,
+		selectedNo:   false, // Default to "Yes" (selectedNo = false means Yes is selected)
 	}
 }
 
@@ -29,6 +41,7 @@ func NewPromptAdapterWithPredefined(db *database.Service, resourceType, msg, tit
 		resourceType:    resourceType,
 		predefinedMsg:   msg,
 		predefinedTitle: title,
+		selectedNo:      false, // Default to "Yes" (selectedNo = false means Yes is selected)
 	}
 }
 
@@ -53,79 +66,170 @@ func (pa *PromptAdapter) SetPredefinedText(msg, title string) {
 	pa.predefinedTitle = title
 }
 
+// ToggleSelection toggles between Yes and No buttons
+func (pa *PromptAdapter) ToggleSelection() {
+	pa.selectedNo = !pa.selectedNo
+}
+
+// IsNoSelected returns true if "No" is currently selected
+func (pa *PromptAdapter) IsNoSelected() bool {
+	return pa.selectedNo
+}
+
+// SetSelection sets the button selection (true for No, false for Yes)
+func (pa *PromptAdapter) SetSelection(selectNo bool) {
+	pa.selectedNo = selectNo
+}
+
 func (pa *PromptAdapter) ViewPrompt(msg, title string, width, height int) string {
-	// Main prompt message styling
-	promptStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("245")). // LightGrey
+	// Base styles
+	baseStyle := lipgloss.NewStyle()
+
+	// Title style
+	titleStyle := lipgloss.NewStyle().
+		Background(colorOrange).
+		Foreground(colorBlack).
+		Padding(0, 1).
 		Bold(true)
 
-	// Hint styling for (y/n)
-	hintStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#DBBD70")). // Yellow
-		Bold(true)
+	// Message style
+	msgStyle := lipgloss.NewStyle().
+		Foreground(colorLightGrey).
+		Bold(false)
 
-	styledMsg := promptStyle.Render(msg)
-	styledHint := hintStyle.Render("(y/n)")
+	// Button styles - base style with padding
+	buttonBaseStyle := lipgloss.NewStyle().
+		Padding(0, 2)
 
-	// Sizing and layout
-	innerWidth := width - 2
-	innerHeight := height - 3
+	// Text color for unselected buttons
+	textColor := colorLightGrey // Light grey for the rest (like descriptions)
 
-	if innerWidth < 1 {
-		innerWidth = width
+	// Apply selection highlighting and create buttons
+	// Selected button uses Yellow background (like navigation keys), unselected is darker
+	var yesButton, noButton string
+
+	if pa.selectedNo {
+		// No is selected (highlighted with yellow background like navigation keys)
+		noButtonStyle := buttonBaseStyle.
+			Background(colorYellow).
+			Foreground(colorBlack).
+			Bold(true).
+			Underline(true)
+		noButton = noButtonStyle.Render("No")
+
+		// Yes is not selected (dimmed)
+		yesButtonStyle := buttonBaseStyle.
+			Background(colorDarkGrey).
+			Foreground(textColor).
+			Underline(true)
+		yesButton = yesButtonStyle.Render("Yes")
+	} else {
+		// Yes is selected (highlighted with yellow background like navigation keys)
+		yesButtonStyle := buttonBaseStyle.
+			Background(colorYellow).
+			Foreground(colorBlack).
+			Bold(true).
+			Underline(true)
+		yesButton = yesButtonStyle.Render("Yes")
+
+		// No is not selected (dimmed)
+		noButtonStyle := buttonBaseStyle.
+			Background(colorDarkGrey).
+			Foreground(textColor).
+			Underline(true)
+		noButton = noButtonStyle.Render("No")
 	}
-	if innerHeight < 1 {
-		innerHeight = 5 // Minimum height
-	}
 
-	lines := make([]string, innerHeight)
-	for i := range lines {
-		lines[i] = strings.Repeat(" ", innerWidth)
+	// Split message into lines for proper rendering
+	msgLines := strings.Split(msg, "\n")
+	var renderedMsg []string
+	for _, line := range msgLines {
+		if strings.TrimSpace(line) != "" {
+			renderedMsg = append(renderedMsg, msgStyle.Render(line))
+		} else {
+			renderedMsg = append(renderedMsg, "")
+		}
 	}
+	messageContent := strings.Join(renderedMsg, "\n")
 
-	// Centering the main message
-	msgLines := strings.Split(styledMsg, "\n")
-	msgHeight := len(msgLines)
-	topPadding := (innerHeight - msgHeight - 2) / 2 // -2 to account for hint and spacing
-	if topPadding < 0 {
-		topPadding = 0
-	}
-
-	for i, line := range msgLines {
-		lineIndex := topPadding + i
-		if lineIndex < len(lines) {
-			lineWidth := lipgloss.Width(line)
-			leftPadding := (innerWidth - lineWidth) / 2
-			if leftPadding < 0 {
-				leftPadding = 0
-			}
-			padding := strings.Repeat(" ", leftPadding)
-			lines[lineIndex] = padding + line
+	// Calculate button container width based on message
+	msgWidth := 0
+	for _, line := range msgLines {
+		if w := lipgloss.Width(line); w > msgWidth {
+			msgWidth = w
 		}
 	}
 
-	// Centering the (y/n) hint
-	hintIndex := topPadding + msgHeight + 1 // Place it below the message
-	if hintIndex < len(lines) {
-		hintWidth := lipgloss.Width(styledHint)
-		leftPadding := (innerWidth - hintWidth) / 2
-		if leftPadding < 0 {
-			leftPadding = 0
-		}
-		padding := strings.Repeat(" ", leftPadding)
-		lines[hintIndex] = padding + styledHint
+	// Ensure minimum width for buttons
+	minWidth := lipgloss.Width(yesButton) + lipgloss.Width(noButton) + 4 // 4 for spacing
+	if msgWidth < minWidth {
+		msgWidth = minWidth
 	}
 
-	content := strings.Join(lines, "\n")
+	// Create buttons row - No on left, Yes on right
+	buttons := baseStyle.
+		Width(msgWidth).
+		Align(lipgloss.Right).
+		Render(lipgloss.JoinHorizontal(lipgloss.Center, noButton, "  ", yesButton))
 
-	// Border and title
-	resourceNameStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("214")).
-		Foreground(lipgloss.Color("0"))
+	// Combine title, message, and buttons
+	titleRendered := titleStyle.Render(title)
 
-	embeddedText := map[common.BorderPosition]string{
-		common.TopMiddleBorder: resourceNameStyle.Render(title),
+	content := baseStyle.Render(
+		lipgloss.JoinVertical(
+			lipgloss.Left,
+			titleRendered,
+			"",
+			messageContent,
+			"",
+			buttons,
+		),
+	)
+
+	// Create dialog window with rounded border
+	dialogStyle := baseStyle.
+		Padding(1, 2).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorBlue)
+
+	dialog := dialogStyle.Render(content)
+
+	// Center the dialog in the available space
+	dialogWidth := lipgloss.Width(dialog)
+	dialogHeight := lipgloss.Height(dialog)
+
+	// Calculate centering
+	verticalPadding := (height - dialogHeight) / 2
+	horizontalCenterPadding := (width - dialogWidth) / 2
+
+	if verticalPadding < 0 {
+		verticalPadding = 0
+	}
+	if horizontalCenterPadding < 0 {
+		horizontalCenterPadding = 0
 	}
 
-	return common.Borderize(content, true, embeddedText)
+	// Create vertical padding
+	verticalPad := strings.Repeat("\n", verticalPadding)
+
+	// Create horizontal padding
+	leftPad := strings.Repeat(" ", horizontalCenterPadding)
+
+	// Add padding to each line of the dialog
+	dialogLines := strings.Split(dialog, "\n")
+	for i := range dialogLines {
+		dialogLines[i] = leftPad + dialogLines[i]
+	}
+
+	// Combine everything
+	centeredDialog := verticalPad + strings.Join(dialogLines, "\n")
+
+	// Fill the rest with empty lines to take up full height
+	currentHeight := verticalPadding + dialogHeight
+	if currentHeight < height {
+		bottomPadding := strings.Repeat("\n", height-currentHeight)
+		centeredDialog += bottomPadding
+	}
+
+	return centeredDialog
 }
