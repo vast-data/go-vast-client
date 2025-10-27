@@ -15,7 +15,6 @@ import (
 	"vastix/internal/tui"
 	"vastix/internal/tui/widgets/common"
 
-	"github.com/vast-data/go-vast-client/openapi_schema"
 	"go.uber.org/zap"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -103,7 +102,8 @@ func NewApp(appVersion string, spinnerCtrl *SpinnerControl, tickerCtrl *TickerCo
 	)
 
 	// Create working zone with error handlers and ticker control that reference the app
-	app.workingZone = tui.NewWorkingZone(db, app.SetError, app.ClearError, app.EnableTickers, app.DisableTickers)
+	// Pass nil for restClient initially - it will be set later when profile is loaded
+	app.workingZone = tui.NewWorkingZone(db, app.SetError, app.ClearError, app.EnableTickers, app.DisableTickers, nil)
 
 	app.workingZone.BeforeSetResourceCb = func() {
 		// Reset all filters and search state before switching resource types
@@ -127,17 +127,28 @@ func NewApp(appVersion string, spinnerCtrl *SpinnerControl, tickerCtrl *TickerCo
 // Init initializes the application
 func (a *App) Init() tea.Cmd {
 	initAppCmd := func() tea.Msg {
-		// Hot preload OpenAPI documentation
 		a.auxlog.Println("[app.Init] - start")
-		if _, err := openapi_schema.GetOpenApiResource("/"); err != nil {
-			a.log.Error("Failed to load OpenAPI document", zap.Error(err))
-		}
+		// OpenAPI document will be loaded automatically when first needed
 		a.profile.Init()
 		a.keybindings.Init()
 		a.logo.Init()
 		a.workingZone.Init()
 		a.statusZone.Init()
 		a.filtersZone.Init()
+
+		// Initialize API widgets if there's an active profile with REST client
+		if profile, err := a.db.GetActiveProfile(); err == nil && profile != nil {
+			if restClient, err := profile.RestClientFromProfile(); err == nil && restClient != nil {
+				a.auxlog.Println("[app.Init] - initializing API widgets from active profile")
+				// VMSRest is already UntypedVMSRest (type alias)
+				if err := a.workingZone.InitializeAPIWidgets(restClient); err != nil {
+					a.log.Error("Failed to initialize API widgets", zap.Error(err))
+				} else {
+					a.auxlog.Println("[app.Init] - API widgets initialized successfully")
+				}
+			}
+		}
+
 		a.ready = true
 		a.ClearError()
 

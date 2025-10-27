@@ -158,7 +158,9 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 	case NavigatorModeList:
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
+			wn.auxlog.Printf("WIDGET_NAVIGATOR List mode: key='%s'", msg.String())
 			if _, ok := wn.NotAllowedListKeys[msg.String()]; ok {
+				wn.auxlog.Printf("WIDGET_NAVIGATOR: Ignoring blocked key in list mode: '%s'", msg.String())
 				logging.Debug("Ignoring key in list mode", zap.String("key", msg.String()))
 				return nil // Ignore keys that are not allowed in list mode
 			}
@@ -237,7 +239,7 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 			case "x":
 				if extraWidget, ok := wn.widget.(ExtraWidget); ok {
 					if extraWidget.CanUseExtra() {
-						wn.setModeIfSupported(NavigatorModeExtra)
+						wn.SetModeMust(NavigatorModeExtra)
 						return msg_types.ProcessWithSpinner(extraWidget.Init)
 
 					} else {

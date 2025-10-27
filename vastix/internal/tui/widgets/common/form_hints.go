@@ -310,8 +310,8 @@ func isAmbiguousObject(schema *openapi3.Schema) bool {
 		return false
 	}
 
-	// Check if it's an object type with no properties
-	return (*schema.Type)[0] == openapi3.TypeObject && len(schema.Properties) == 0
+	// Check if it's an object type with no properties and no additionalProperties (map types)
+	return (*schema.Type)[0] == openapi3.TypeObject && len(schema.Properties) == 0 && schema.AdditionalProperties.Schema == nil
 }
 
 // convertSchemaToInputDefinition recursively converts an OpenAPI schema to an InputDefinition
