@@ -199,6 +199,6 @@ func (r *Folder) FolderStatPath_POST(path string, tenantId int64) (*FolderStatPa
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method PATCH /folders/modify_folder/ skipped: PATCH /folders/modify_folder/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /folders/modify_folder/
-//   - Extra method POST /folders/create_folder/ skipped: POST /folders/create_folder/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202) for resource /folders/create_folder/
-//   - Extra method POST /folders/read_only/ skipped: POST /folders/read_only/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202) for resource /folders/read_only/
+//   - Extra method PATCH /folders/modify_folder/ skipped: PATCH /folders/modify_folder/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /folders/modify_folder/
+//   - Extra method POST /folders/create_folder/ skipped: POST /folders/create_folder/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /folders/create_folder/
+//   - Extra method POST /folders/read_only/ skipped: POST /folders/read_only/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /folders/read_only/

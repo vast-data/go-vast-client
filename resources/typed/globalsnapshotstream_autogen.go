@@ -387,6 +387,6 @@ func (r *GlobalSnapshotStream) GlobalSnapshotStreamStop_PATCH(id any, waitTimeou
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method PATCH /globalsnapstreams/{id}/pause/ skipped: PATCH /globalsnapstreams/{id}/pause/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /globalsnapstreams/{id}/pause/
-//   - Extra method PATCH /globalsnapstreams/{id}/resume/ skipped: PATCH /globalsnapstreams/{id}/resume/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /globalsnapstreams/{id}/resume/
+//   - Extra method PATCH /globalsnapstreams/{id}/pause/ skipped: PATCH /globalsnapstreams/{id}/pause/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /globalsnapstreams/{id}/pause/
+//   - Extra method PATCH /globalsnapstreams/{id}/resume/ skipped: PATCH /globalsnapstreams/{id}/resume/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /globalsnapstreams/{id}/resume/
 //   - UPDATE operation excluded: PATCH/PUT /globalsnapstreams/{id}/ has no response schema and doesn't return 204 NO CONTENT

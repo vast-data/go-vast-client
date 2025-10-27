@@ -52,11 +52,11 @@ type ActiveDirectorySearchParams struct {
 
 // ActiveDirectoryRequestBody represents the request body for ActiveDirectory operations
 type ActiveDirectoryRequestBody struct {
-	AbacReadOnlyValueName       string    `json:"abac_read_only_value_name,omitempty" yaml:"abac_read_only_value_name,omitempty" required:"false" doc:"The attribute to use when querying a provider for a read only attribute access check."`
-	AbacReadWriteValueName      string    `json:"abac_read_write_value_name,omitempty" yaml:"abac_read_write_value_name,omitempty" required:"false" doc:"The attribute to use when querying a provider for a read-write attribute access check."`
+	AbacReadOnlyValueName       string    `json:"abac_read_only_value_name,omitempty" yaml:"abac_read_only_value_name,omitempty" required:"false" doc:"The attribute to use when querying a provider for a read only attribute access check"`
+	AbacReadWriteValueName      string    `json:"abac_read_write_value_name,omitempty" yaml:"abac_read_write_value_name,omitempty" required:"false" doc:"The attribute to use when querying a provider for a read-write attribute access check"`
 	Binddn                      string    `json:"binddn,omitempty" yaml:"binddn,omitempty" required:"false" doc:"The bind DN for authenticating to the LDAP domain. You can specify any user account that has read access to the domain."`
 	Bindpw                      string    `json:"bindpw,omitempty" yaml:"bindpw,omitempty" required:"false" doc:"The password used with the Bind DN to authenticate to the LDAP server."`
-	DomainName                  string    `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"The fully qualified domain name (FQDN) of the Active Directory. This parameter is required unless ldap_id is provided."`
+	DomainName                  string    `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"The fully qualified domain name (FQDN) of the Active Directory domain to join. This parameter is required unless ldap_id is provided."`
 	DomainsWithPosixAttributes  *[]string `json:"domains_with_posix_attributes,omitempty" yaml:"domains_with_posix_attributes,omitempty" required:"false" doc:"Allows to enumerate specific domains for POSIX attributes in case posix_attributes_source is set to SPECIFIC_DOMAINS."`
 	GidNumber                   string    `json:"gid_number,omitempty" yaml:"gid_number,omitempty" required:"false" doc:"Override 'gidNumber' as the attribute of a group entry that contains the group's GID number. When binding VAST Cluster to AD, you may need to set this to 'gidnumber' (case sensitive)."`
 	GroupLoginName              string    `json:"group_login_name,omitempty" yaml:"group_login_name,omitempty" required:"false" doc:"The attribute used to query Active Directory for the group login name in NFS ID mapping. Applicable only with Active Directory and NFSv4."`
@@ -461,4 +461,4 @@ func (r *ActiveDirectory) ActiveDirectoryRefresh_PATCH(id any) error {
 //   - Extra method GET /activedirectory/{id}/dcs/ skipped: GET /activedirectory/{id}/dcs/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method GET /activedirectory/{id}/domains/ skipped: GET /activedirectory/{id}/domains/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method GET /activedirectory/{id}/gcs/ skipped: GET /activedirectory/{id}/gcs/ - Response schema contains ambiguous nested objects (objects with no properties)
-//   - Extra method POST /activedirectory/{id}/change_machine_account_password/ skipped: POST /activedirectory/{id}/change_machine_account_password/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202) for resource /activedirectory/{id}/change_machine_account_password/
+//   - Extra method POST /activedirectory/{id}/change_machine_account_password/ skipped: POST /activedirectory/{id}/change_machine_account_password/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /activedirectory/{id}/change_machine_account_password/

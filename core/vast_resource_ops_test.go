@@ -163,3 +163,140 @@ func TestResourceOpsHas(t *testing.T) {
 		})
 	}
 }
+
+// MockResourceWithExtraMethods is a test resource with extra methods
+type MockResourceWithExtraMethods struct {
+	*VastResource
+}
+
+func (m *MockResourceWithExtraMethods) UserAccessKeys_POST(params Params) (Record, error) {
+	return nil, nil
+}
+
+func (m *MockResourceWithExtraMethods) UserAccessKeys_DELETE(id any, params Params) (EmptyRecord, error) {
+	return EmptyRecord{}, nil
+}
+
+func (m *MockResourceWithExtraMethods) UserQuery_GET(params Params) (RecordSet, error) {
+	return nil, nil
+}
+
+func TestGetCRUDHintsFromResource(t *testing.T) {
+	// Create a test resource with specific operations
+	vr := &VastResource{
+		resourceType: "users",
+		resourcePath: "/users/",
+		resourceOps:  NewResourceOps(C, L, R, U, D),
+	}
+
+	// Test with direct VastResource
+	hints := GetCRUDHintsFromResource(vr)
+	if hints != NewResourceOps(C, L, R, U, D) {
+		t.Errorf("Expected CLRUD, got %s", hints.String())
+	}
+
+	// Test with wrapped resource (like actual API resources)
+	wrapped := &MockResourceWithExtraMethods{VastResource: vr}
+	hints = GetCRUDHintsFromResource(wrapped)
+	if hints != NewResourceOps(C, L, R, U, D) {
+		t.Errorf("Expected CLRUD for wrapped resource, got %s", hints.String())
+	}
+
+	// Test with read-only resource
+	roResource := &VastResource{
+		resourceType: "readonly",
+		resourcePath: "/readonly/",
+		resourceOps:  NewResourceOps(L, R),
+	}
+	hints = GetCRUDHintsFromResource(roResource)
+	if hints != NewResourceOps(L, R) {
+		t.Errorf("Expected LR, got %s", hints.String())
+	}
+}
+
+func TestDiscoverExtraMethodsFromResource(t *testing.T) {
+	vr := &VastResource{
+		resourceType: "user",
+		resourcePath: "/users/",
+		resourceOps:  NewResourceOps(C, L, R, U, D),
+	}
+
+	mock := &MockResourceWithExtraMethods{VastResource: vr}
+
+	extraMethods := DiscoverExtraMethodsFromResource(mock)
+
+	// Should find 3 extra methods: UserAccessKeys_POST, UserAccessKeys_DELETE, UserQuery_GET
+	if len(extraMethods) != 3 {
+		t.Fatalf("Expected 3 extra methods, got %d", len(extraMethods))
+	}
+
+	// Verify the methods were discovered correctly
+	methodNames := make(map[string]bool)
+	for _, method := range extraMethods {
+		methodNames[method.Name] = true
+
+		// Verify each method has the expected fields
+		if method.HTTPVerb == "" {
+			t.Errorf("Method %s has empty HTTPVerb", method.Name)
+		}
+		if method.Path == "" {
+			t.Errorf("Method %s has empty Path", method.Name)
+		}
+	}
+
+	// Check expected methods are present
+	expectedMethods := []string{"UserAccessKeys_POST", "UserAccessKeys_DELETE", "UserQuery_GET"}
+	for _, expected := range expectedMethods {
+		if !methodNames[expected] {
+			t.Errorf("Expected method %s not found", expected)
+		}
+	}
+}
+
+func TestInferPathFromMethodName(t *testing.T) {
+	tests := []struct {
+		name         string
+		methodName   string
+		resourceType string
+		resourcePath string
+		expected     string
+	}{
+		{
+			name:         "User access keys",
+			methodName:   "UserAccessKeys",
+			resourceType: "user",
+			resourcePath: "/users/",
+			expected:     "/users/access_keys/",
+		},
+		{
+			name:         "User query",
+			methodName:   "UserQuery",
+			resourceType: "user",
+			resourcePath: "/users/",
+			expected:     "/users/query/",
+		},
+		{
+			name:         "Host discovered hosts",
+			methodName:   "HostDiscoveredHosts",
+			resourceType: "host",
+			resourcePath: "/hosts/",
+			expected:     "/hosts/discovered_hosts/",
+		},
+		{
+			name:         "Empty method name (standard CRUD)",
+			methodName:   "User",
+			resourceType: "user",
+			resourcePath: "/users/",
+			expected:     "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := inferPathFromMethodName(tt.methodName, tt.resourceType, tt.resourcePath)
+			if result != tt.expected {
+				t.Errorf("Expected path '%s', got '%s'", tt.expected, result)
+			}
+		})
+	}
+}

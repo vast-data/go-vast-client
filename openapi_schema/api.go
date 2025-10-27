@@ -155,7 +155,7 @@ func GetSchema_FromComponents(resourcePath string) (*openapi3.SchemaRef, error) 
 		return nil, fmt.Errorf("component schema %q not found in OpenAPI document", component)
 	}
 
-	final := resolveComposedSchema(resolveAllRefs(content))
+	final := ResolveComposedSchema(ResolveAllRefs(content))
 	return &openapi3.SchemaRef{Value: final}, nil
 }
 
@@ -172,7 +172,7 @@ func GetSchemaFromComponent(componentName string) (*openapi3.SchemaRef, error) {
 		return nil, fmt.Errorf("component schema %q not found in OpenAPI document", componentName)
 	}
 
-	final := resolveComposedSchema(resolveAllRefs(content))
+	final := ResolveComposedSchema(ResolveAllRefs(content))
 	return &openapi3.SchemaRef{Value: final}, nil
 }
 
@@ -197,7 +197,7 @@ func GetAllComponentSchemas() ([]ComponentSchema, error) {
 		}
 
 		// Resolve all refs and compositions
-		resolved := resolveComposedSchema(resolveAllRefs(schemaRef))
+		resolved := ResolveComposedSchema(ResolveAllRefs(schemaRef))
 
 		components = append(components, ComponentSchema{
 			Name:      name,
@@ -378,7 +378,8 @@ func isStringOrInteger(prop *openapi3.Schema) bool {
 	}
 }
 
-func resolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
+// ResolveComposedSchema resolves allOf/oneOf/anyOf compositions in an OpenAPI schema
+func ResolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
 	if schema == nil {
 		return nil
 	}
@@ -404,7 +405,7 @@ func resolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
 		// Then, merge properties from allOf sub-schemas
 		for _, subRef := range schema.AllOf {
 			// Resolve refs and also compose nested allOf/anyOf/oneOf
-			sub := resolveComposedSchema(resolveAllRefs(subRef))
+			sub := ResolveComposedSchema(ResolveAllRefs(subRef))
 			if sub == nil {
 				continue
 			}
@@ -427,7 +428,7 @@ func resolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
 	// Resolve oneOf or anyOf by picking the first resolvable schema with a type
 	for _, refList := range [][]*openapi3.SchemaRef{schema.OneOf, schema.AnyOf} {
 		for _, subRef := range refList {
-			sub := resolveAllRefs(subRef)
+			sub := ResolveAllRefs(subRef)
 			if sub != nil && sub.Type != nil && len(*sub.Type) > 0 {
 				return sub
 			}
@@ -436,7 +437,8 @@ func resolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
 	return schema
 }
 
-func resolveAllRefs(ref *openapi3.SchemaRef) *openapi3.Schema {
+// ResolveAllRefs resolves all $ref references in an OpenAPI schema
+func ResolveAllRefs(ref *openapi3.SchemaRef) *openapi3.Schema {
 	seen := map[string]bool{}
 	for ref != nil && ref.Ref != "" && !seen[ref.Ref] {
 		seen[ref.Ref] = true
@@ -505,7 +507,7 @@ func GetRequestBodySchema(httpMethod, resourcePath string) (*openapi3.SchemaRef,
 	}
 
 	// Resolve and compose if necessary
-	final := resolveComposedSchema(resolveAllRefs(content.Schema))
+	final := ResolveComposedSchema(ResolveAllRefs(content.Schema))
 	return &openapi3.SchemaRef{Value: final}, nil
 }
 
@@ -583,14 +585,14 @@ func GetResponseModelSchemaUnresolved(httpMethod, resourcePath string) (*openapi
 }
 
 // GetResponseModelSchema extracts the response model schema for a given HTTP method and resource path.
-// It checks for successful status codes (200, 201, 202) and returns the schema from the response body.
+// It checks for successful status codes (200, 201, 202, 204) and returns the schema from the response body.
 //
 // Parameters:
 //   - httpMethod: HTTP method (e.g., "GET", "POST", "PATCH", "PUT", "DELETE")
 //   - resourcePath: The API resource path (e.g., "apitokens")
 //
 // Returns:
-//   - *openapi3.SchemaRef: The response model schema
+//   - *openapi3.SchemaRef: The response model schema (empty schema for 204 No Content responses)
 //   - error: If the resource cannot be loaded, the method is not supported, or no valid schema is found
 //
 // Example:
@@ -599,7 +601,8 @@ func GetResponseModelSchemaUnresolved(httpMethod, resourcePath string) (*openapi
 //
 // Notes:
 //   - For GET requests, it automatically handles paginated responses, arrays, and single objects
-//   - For other methods, it checks status codes 200, 201, 202 in order
+//   - For other methods, it checks status codes 200, 201, 202 for content, and 204 for No Content
+//   - 204 No Content responses return an empty schema since there's no response body
 func GetResponseModelSchema(httpMethod, resourcePath string) (*openapi3.SchemaRef, error) {
 	resource, err := GetOpenApiResource(resourcePath)
 	if err != nil {
@@ -641,13 +644,20 @@ func GetResponseModelSchema(httpMethod, resourcePath string) (*openapi3.SchemaRe
 		resp := operation.Responses.Status(code)
 		schemaRef := extractSchemaFromResponse(resp)
 		if schemaRef != nil {
-			final := resolveComposedSchema(resolveAllRefs(schemaRef))
+			final := ResolveComposedSchema(ResolveAllRefs(schemaRef))
 			return &openapi3.SchemaRef{Value: final}, nil
 		}
 	}
 
+	// Check for 204 No Content response (operation succeeded but no content to return)
+	resp204 := operation.Responses.Status(204)
+	if resp204 != nil && resp204.Value != nil {
+		// 204 responses have no content, return empty schema
+		return &openapi3.SchemaRef{Value: &openapi3.Schema{}}, nil
+	}
+
 	return nil, fmt.Errorf(
-		"no valid schema found in %s response (200/201/202) for resource %s",
+		"no valid schema found in %s response (200/201/202/204) for resource %s",
 		httpMethod, resourcePath,
 	)
 }
@@ -669,14 +679,14 @@ func getResponseModelSchemaForGET(resource *openapi3.PathItem, resourcePath stri
 		return nil, fmt.Errorf("GET response missing or malformed schema")
 	}
 
-	rootSchema := resolveComposedSchema(resolveAllRefs(content.Schema))
+	rootSchema := ResolveComposedSchema(ResolveAllRefs(content.Schema))
 
 	// 1. Check if response is paginated with "results" field
 	if rootSchema.Type != nil && (*rootSchema.Type).Is("object") && rootSchema.Properties != nil {
 		if resultsRef, ok := rootSchema.Properties["results"]; ok {
-			resultsSchema := resolveComposedSchema(resolveAllRefs(resultsRef))
+			resultsSchema := ResolveComposedSchema(ResolveAllRefs(resultsRef))
 			if resultsSchema.Type != nil && (*resultsSchema.Type).Is("array") && resultsSchema.Items != nil {
-				itemSchema := resolveComposedSchema(resolveAllRefs(resultsSchema.Items))
+				itemSchema := ResolveComposedSchema(ResolveAllRefs(resultsSchema.Items))
 				return &openapi3.SchemaRef{Value: itemSchema}, nil
 			}
 		}
@@ -684,7 +694,7 @@ func getResponseModelSchemaForGET(resource *openapi3.PathItem, resourcePath stri
 
 	// 2. Check if response is a flat array
 	if rootSchema.Type != nil && (*rootSchema.Type).Is("array") && rootSchema.Items != nil {
-		itemSchema := resolveComposedSchema(resolveAllRefs(rootSchema.Items))
+		itemSchema := ResolveComposedSchema(ResolveAllRefs(rootSchema.Items))
 		return &openapi3.SchemaRef{Value: itemSchema}, nil
 	}
 

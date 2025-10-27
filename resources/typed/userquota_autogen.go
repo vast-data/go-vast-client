@@ -25,12 +25,12 @@ type UserQuota struct {
 // UserQuotaSearchParams represents the search parameters for UserQuota operations
 type UserQuotaSearchParams struct {
 	Guid          string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
-	IsAccountable bool   `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:""`
+	IsAccountable bool   `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:"Set to true to list only user and group quotas for users and groups that have defined user quotas. Set to false to list only user quotas for users and groups that wrote to the directory but have no defined user/group quota rules."`
 	Name          string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The name"`
 	Path          string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:""`
-	QuotaId       int64  `json:"quota_id,omitempty" yaml:"quota_id,omitempty" required:"false" doc:""`
-	QuotaSystemId int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
-	RefreshData   bool   `json:"refresh_data,omitempty" yaml:"refresh_data,omitempty" required:"false" doc:""`
+	QuotaId       int64  `json:"quota_id,omitempty" yaml:"quota_id,omitempty" required:"false" doc:"Filter by specific directory quota"`
+	QuotaSystemId int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:"Filters the list to show only user quotas that belong to a quota with a specified system_id number. This is different to quota ID"`
+	RefreshData   bool   `json:"refresh_data,omitempty" yaml:"refresh_data,omitempty" required:"false" doc:"Set to true to refresh data before returning a response, hence guaranteeing fresh data. If false, the data is fetched from the VMS database without refreshing. Response may be quicker with this parameter set to false."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//
@@ -60,7 +60,7 @@ type UserQuotaRequestBody struct {
 	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the quota path beyond which no writes will be allowed for the user/group. A file with multiple hardlinks is counted only once."`
 	Identifier      string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
 	IdentifierType  string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:"Set to True for a group. Set to false for a user."`
-	IsGroup         bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:""`
+	IsGroup         bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:"Set to True for a group. Set to false for a user."`
 	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user name or group name."`
 	QuotaId         int64  `json:"quota_id,omitempty" yaml:"quota_id,omitempty" required:"false" doc:"The ID of the quota to which the user/group quota should be added."`
 	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Storage usage limit at which warnings of exceeding the quota are issued for the user/group."`

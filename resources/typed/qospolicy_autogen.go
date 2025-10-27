@@ -82,15 +82,15 @@ type QosPolicyRequestBody struct {
 	CapacityLimits      QospolicieRequestBody_CapacityLimits      `json:"capacity_limits,omitempty" yaml:"capacity_limits,omitempty" required:"false" doc:"Performance limits per unit of either used logical capacity or provisioned capacity, depending on the mode. Units are stated per limit. Valid values: 0-4294967296. 0 means unlimited."`
 	CapacityTotalLimits QospolicieRequestBody_CapacityTotalLimits `json:"capacity_total_limits,omitempty" yaml:"capacity_total_limits,omitempty" required:"false" doc:""`
 	IsDefault           bool                                      `json:"is_default,omitempty" yaml:"is_default,omitempty" required:"false" doc:"Is default User QOS Policy"`
-	IsGold              bool                                      `json:"is_gold,omitempty" yaml:"is_gold,omitempty" required:"false" doc:"Grants priority QoS over views that do not have this setting enabled"`
-	LimitBy             string                                    `json:"limit_by,omitempty" yaml:"limit_by,omitempty" required:"false" doc:"Parameter to limit by"`
+	IsGold              bool                                      `json:"is_gold,omitempty" yaml:"is_gold,omitempty" required:"false" doc:"Grants priority QoS over views that do not have this setting enabled."`
+	LimitBy             string                                    `json:"limit_by,omitempty" yaml:"limit_by,omitempty" required:"false" doc:"Specifies which performance parameter(s) are limited by the policy. BW_IOPS=The policy limits service according to bandwidth (BW) and IO per second (IOPS). BW=The policy limits service according to BW only. IOPS=The policy limits service according to IOPS only."`
 	Mode                string                                    `json:"mode,omitempty" yaml:"mode,omitempty" required:"false" doc:"QoS provisioning mode"`
-	PolicyType          string                                    `json:"policy_type,omitempty" yaml:"policy_type,omitempty" required:"false" doc:"QOS Policy type - VIEW or USER"`
+	PolicyType          string                                    `json:"policy_type,omitempty" yaml:"policy_type,omitempty" required:"false" doc:"QOS Policy type"`
 	S3ConnectionsLimit  int64                                     `json:"s3_connections_limit,omitempty" yaml:"s3_connections_limit,omitempty" required:"false" doc:"Maximum number of allowed S3 connections, 0 means unlimited"`
 	StaticLimits        string                                    `json:"static_limits,omitempty" yaml:"static_limits,omitempty" required:"false" doc:""`
 	StaticTotalLimits   QospolicieRequestBody_StaticTotalLimits   `json:"static_total_limits,omitempty" yaml:"static_total_limits,omitempty" required:"false" doc:""`
 	TenantId            int64                                     `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
-	UseTotalLimits      bool                                      `json:"use_total_limits,omitempty" yaml:"use_total_limits,omitempty" required:"false" doc:"If true - total limits are used instead of separate read/write limits"`
+	UseTotalLimits      bool                                      `json:"use_total_limits,omitempty" yaml:"use_total_limits,omitempty" required:"false" doc:"If true - total limits are used instead of separate read/write limits."`
 }
 
 // -----------------------------------------------------

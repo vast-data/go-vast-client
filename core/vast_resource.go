@@ -93,8 +93,12 @@ func (e *VastResource) GetResourcePath() string {
 }
 
 // ListWithContext retrieves all resources matching the given parameters using the provided context.
+// This method uses GetIteratorWithContext internally and fetches all pages.
 func (e *VastResource) ListWithContext(ctx context.Context, params Params) (RecordSet, error) {
-	result, err := Request[RecordSet](ctx, e, http.MethodGet, e.resourcePath, params, nil)
+	// Use Iterator as base abstraction - fetch all pages
+	pageSize := e.Session().GetConfig().PageSize
+	iter := e.GetIteratorWithContext(ctx, params, pageSize)
+	result, err := iter.All()
 	if !e.resourceOps.has(L) && ExpectStatusCodes(err, http.StatusNotFound) {
 		err.(*ApiError).hints = e.describeResourceFrom(e)
 	}
@@ -290,6 +294,52 @@ func (e *VastResource) MustExists(params Params) bool {
 	return e.MustExistsWithContext(e.Rest.GetCtx(), params)
 }
 
+// GetIteratorWithContext creates a new iterator for paginated results using the provided context.
+// The iterator abstracts away the differences between paginated and non-paginated API responses.
+//
+// Parameters:
+//   - ctx: The context for the iterator (used for all subsequent requests)
+//   - params: Query parameters to filter results
+//   - pageSize: Number of items per page (if <= 0, uses session's configured PageSize)
+//
+// Returns an Iterator that can be used to navigate through pages of results.
+//
+// Example usage:
+//
+//	iter := resource.GetIteratorWithContext(ctx, Params{"name__contains": "test"}, 50)
+//	for {
+//	    records, err := iter.Next()
+//	    if err != nil || len(records) == 0 {
+//	        break
+//	    }
+//	    // Process records
+//	}
+func (e *VastResource) GetIteratorWithContext(ctx context.Context, params Params, pageSize int) Iterator {
+	return NewResourceIterator(ctx, e, params, pageSize)
+}
+
+// GetIterator creates a new iterator for paginated results using the bound REST context.
+//
+// Parameters:
+//   - params: Query parameters to filter results
+//   - pageSize: Number of items per page (if <= 0, uses session's configured PageSize; 0 means no page_size param)
+//
+// Returns an Iterator that can be used to navigate through pages of results.
+//
+// Example usage:
+//
+//	iter := resource.GetIterator(Params{"tenant_id": 1}, 25)
+//	for {
+//	    records, err := iter.Next()
+//	    if err != nil || len(records) == 0 {
+//	        break
+//	    }
+//	    fmt.Printf("Page has %d records\n", len(records))
+//	}
+func (e *VastResource) GetIterator(params Params, pageSize int) Iterator {
+	return e.GetIteratorWithContext(e.Rest.GetCtx(), params, pageSize)
+}
+
 // Lock acquires the resource-level mutex and returns a function to release it.
 // This allows for convenient deferring of unlock operations:
 //
@@ -298,51 +348,12 @@ func (e *VastResource) Lock(keys ...any) func() {
 	return e.mu.Lock(keys...)
 }
 
-// ExtraMethodInfo holds metadata about extra methods
+// ExtraMethodInfo contains information about an extra method discovered on a resource.
+// Extra methods are non-CRUD operations that follow the pattern <MethodName>_<HTTPVerb>.
 type ExtraMethodInfo struct {
 	Name     string // Method name (e.g., "ViewCheckPermissionsTemplates_POST")
 	HTTPVerb string // HTTP method (GET, POST, PATCH, DELETE)
 	Path     string // Full path (e.g., "/views/{id}/check_permissions_templates/")
-}
-
-// discoverExtraMethods uses reflection to find all extra methods on the parent resource
-// It looks for methods matching the pattern *_GET, *_POST, *_PATCH, *_DELETE
-// The parent resource is the struct that embeds this VastResource
-func (e *VastResource) discoverExtraMethods(parentResource interface{}) []ExtraMethodInfo {
-	// Use reflection to find all methods on the parent resource (e.g., *Host)
-	resourceValue := reflect.ValueOf(parentResource)
-	resourceType := resourceValue.Type()
-
-	var discovered []ExtraMethodInfo
-	httpVerbs := []string{"GET", "POST", "PATCH", "PUT", "DELETE"}
-
-	for i := 0; i < resourceType.NumMethod(); i++ {
-		method := resourceType.Method(i)
-		methodName := method.Name
-
-		// Check if method ends with _<HTTP_VERB>
-		for _, verb := range httpVerbs {
-			suffix := "_" + verb
-			if strings.HasSuffix(methodName, suffix) {
-				// Extract base name (remove _GET, _POST, etc.)
-				baseName := strings.TrimSuffix(methodName, suffix)
-
-				// Try to infer the URL path from the method name
-				// Method names follow pattern: <ResourceName><PathParts>_<VERB>
-				// e.g., HostDiscoveredHosts_GET -> /hosts/discovered_hosts/
-				path := e.inferPathFromMethodName(baseName)
-
-				discovered = append(discovered, ExtraMethodInfo{
-					Name:     methodName,
-					HTTPVerb: verb,
-					Path:     path,
-				})
-				break
-			}
-		}
-	}
-
-	return discovered
 }
 
 func (e *VastResource) String() string {
@@ -352,47 +363,6 @@ func (e *VastResource) String() string {
 		target = e
 	}
 	return e.describeResourceFrom(target)
-}
-
-// inferPathFromMethodName attempts to infer the URL path from a method name
-// e.g., HostDiscoveredHosts -> /hosts/discovered_hosts/
-func (e *VastResource) inferPathFromMethodName(methodName string) string {
-	// Remove "WithContext" suffix if present
-	methodName = strings.TrimSuffix(methodName, "WithContext")
-
-	// Remove the resource name prefix
-	// e.g., HostDiscoveredHosts -> DiscoveredHosts
-	// Capitalize first letter of resource type (replaces deprecated strings.Title)
-	var resourceNameTitle string
-	if len(e.resourceType) > 0 {
-		resourceNameTitle = strings.ToUpper(e.resourceType[:1]) + e.resourceType[1:]
-	}
-	methodName = strings.TrimPrefix(methodName, resourceNameTitle)
-
-	if methodName == "" {
-		// This is a standard CRUD method, not an extra method
-		return ""
-	}
-
-	// Convert CamelCase to snake_case with slashes
-	// e.g., DiscoveredHosts -> discovered_hosts
-	var result strings.Builder
-	for i, r := range methodName {
-		if i > 0 && unicode.IsUpper(r) {
-			result.WriteRune('_')
-		}
-		result.WriteRune(unicode.ToLower(r))
-	}
-
-	pathPart := result.String()
-
-	// Build the full path
-	// Check if it starts with resource path or is standalone
-	basePath := e.GetResourcePath()
-
-	// Try both patterns: /resource/extra/ and /resource/{id}/extra/
-	// For now, assume non-id pattern (most common for extra methods)
-	return strings.TrimSuffix(basePath, "/") + "/" + pathPart + "/"
 }
 
 // describeResourceFrom returns a comprehensive description of all endpoints for a resource
@@ -475,7 +445,7 @@ func (e *VastResource) describeResourceFrom(parentResource any) string {
 	}
 
 	// Discover and print extra methods
-	extraMethods := e.discoverExtraMethods(parentResource)
+	extraMethods := DiscoverExtraMethodsFromResource(parentResource)
 	if len(extraMethods) > 0 {
 		sb.WriteString("| extra methods:\n")
 		for _, extra := range extraMethods {
@@ -528,6 +498,16 @@ func (e *TypedVastResource) Lock(keys ...any) func() {
 
 func (e *TypedVastResource) String() string {
 	return fmt.Sprintf("%s", e.getUntypedVastResource())
+}
+
+// GetIteratorWithContext creates a new iterator for paginated results using the provided context.
+func (e *TypedVastResource) GetIteratorWithContext(ctx context.Context, params Params, pageSize int) Iterator {
+	return e.getUntypedVastResource().(VastResourceAPIWithContext).GetIteratorWithContext(ctx, params, pageSize)
+}
+
+// GetIterator creates a new iterator for paginated results using the bound REST context.
+func (e *TypedVastResource) GetIterator(params Params, pageSize int) Iterator {
+	return e.getUntypedVastResource().GetIterator(params, pageSize)
 }
 
 //  ######################################################
@@ -601,4 +581,150 @@ func (ops ResourceOps) String() string {
 		b.WriteByte('D')
 	}
 	return b.String()
+}
+
+// GetCRUDHintsFromResource is a helper function to extract CRUD operation hints from a resource.
+// This is useful for introspection and tooling purposes (e.g., auto-generating widgets).
+//
+// Example:
+//
+//	hints := core.GetCRUDHintsFromResource(rest.Users)
+//	canCreate := hints & core.C != 0
+//	canList := hints & core.L != 0
+func GetCRUDHintsFromResource(resource any) ResourceOps {
+	// Try to type assert to *VastResource
+	if vr, ok := resource.(*VastResource); ok {
+		return vr.resourceOps
+	}
+
+	// Try VastResourceAPI interface which might have a *VastResource embedded
+	if _, ok := resource.(VastResourceAPI); ok {
+		// Use reflection to access the embedded *VastResource field
+		val := reflect.ValueOf(resource)
+		if val.Kind() == reflect.Ptr {
+			val = val.Elem()
+		}
+
+		// Look for an embedded *VastResource field
+		for i := 0; i < val.NumField(); i++ {
+			field := val.Field(i)
+			if field.Type() == reflect.TypeOf((*VastResource)(nil)) {
+				if vr, ok := field.Interface().(*VastResource); ok {
+					return vr.resourceOps
+				}
+			}
+		}
+	}
+
+	// Default: no operations supported
+	return ResourceOps(0)
+}
+
+// DiscoverExtraMethodsFromResource uses reflection to find all extra methods on a resource.
+// It looks for methods matching the pattern *_GET, *_POST, *_PATCH, *_DELETE, *_PUT.
+// This is useful for introspection and tooling purposes (e.g., auto-generating widgets).
+//
+// Example:
+//
+//	extraMethods := core.DiscoverExtraMethodsFromResource(rest.Users)
+//	for _, method := range extraMethods {
+//	    fmt.Printf("Method: %s, Verb: %s, Path: %s\n", method.Name, method.HTTPVerb, method.Path)
+//	}
+func DiscoverExtraMethodsFromResource(resource any) []ExtraMethodInfo {
+	// Get resource type and path using reflection
+	var resourceType, resourcePath string
+
+	// Try to get via VastResourceAPI interface methods
+	if api, ok := resource.(VastResourceAPI); ok {
+		resourceType = api.GetResourceType()
+		resourcePath = api.GetResourcePath()
+	} else {
+		// Fallback: try to access via reflection
+		val := reflect.ValueOf(resource)
+		if val.Kind() == reflect.Ptr {
+			val = val.Elem()
+		}
+
+		// Look for GetResourceType and GetResourcePath methods
+		if method := reflect.ValueOf(resource).MethodByName("GetResourceType"); method.IsValid() {
+			if results := method.Call(nil); len(results) > 0 {
+				resourceType = results[0].String()
+			}
+		}
+		if method := reflect.ValueOf(resource).MethodByName("GetResourcePath"); method.IsValid() {
+			if results := method.Call(nil); len(results) > 0 {
+				resourcePath = results[0].String()
+			}
+		}
+	}
+
+	// Use reflection to find all methods on the resource
+	resourceValue := reflect.ValueOf(resource)
+	resourceTypeReflect := resourceValue.Type()
+
+	var discovered []ExtraMethodInfo
+	httpVerbs := []string{"GET", "POST", "PATCH", "PUT", "DELETE"}
+
+	for i := 0; i < resourceTypeReflect.NumMethod(); i++ {
+		method := resourceTypeReflect.Method(i)
+		methodName := method.Name
+
+		// Check if method ends with _<HTTP_VERB>
+		for _, verb := range httpVerbs {
+			suffix := "_" + verb
+			if strings.HasSuffix(methodName, suffix) {
+				// Extract base name (remove _GET, _POST, etc.)
+				baseName := strings.TrimSuffix(methodName, suffix)
+
+				// Try to infer the URL path from the method name
+				path := inferPathFromMethodName(baseName, resourceType, resourcePath)
+
+				discovered = append(discovered, ExtraMethodInfo{
+					Name:     methodName,
+					HTTPVerb: verb,
+					Path:     path,
+				})
+				break
+			}
+		}
+	}
+
+	return discovered
+}
+
+// inferPathFromMethodName attempts to infer the URL path from a method name.
+// e.g., HostDiscoveredHosts -> /hosts/discovered_hosts/
+func inferPathFromMethodName(methodName, resourceType, resourcePath string) string {
+	// Remove "WithContext" suffix if present
+	methodName = strings.TrimSuffix(methodName, "WithContext")
+
+	// Remove the resource name prefix
+	// e.g., HostDiscoveredHosts -> DiscoveredHosts
+	var resourceNameTitle string
+	if len(resourceType) > 0 {
+		resourceNameTitle = strings.ToUpper(resourceType[:1]) + resourceType[1:]
+	}
+	methodName = strings.TrimPrefix(methodName, resourceNameTitle)
+
+	if methodName == "" {
+		// This is a standard CRUD method, not an extra method
+		return ""
+	}
+
+	// Convert CamelCase to snake_case
+	// e.g., DiscoveredHosts -> discovered_hosts
+	var result strings.Builder
+	for i, r := range methodName {
+		if i > 0 && unicode.IsUpper(r) {
+			result.WriteRune('_')
+		}
+		result.WriteRune(unicode.ToLower(r))
+	}
+
+	pathPart := result.String()
+
+	// Build the full path
+	// Try both patterns: /resource/extra/ and /resource/{id}/extra/
+	// For now, assume non-id pattern (most common for extra methods)
+	return strings.TrimSuffix(resourcePath, "/") + "/" + pathPart + "/"
 }

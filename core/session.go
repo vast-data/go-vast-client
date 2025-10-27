@@ -123,10 +123,10 @@ func Request[T RecordUnion](
 	verb, path string,
 	params, body Params,
 ) (T, error) {
-	return requestWithHeaders[T](ctx, r, verb, path, params, body, nil)
+	return RequestWithHeaders[T](ctx, r, verb, path, params, body, nil)
 }
 
-func requestWithHeaders[T RecordUnion](
+func RequestWithHeaders[T RecordUnion](
 	ctx context.Context,
 	r VastResourceAPIWithContext,
 	verb, path string,
@@ -162,7 +162,7 @@ func requestWithHeaders[T RecordUnion](
 	if params != nil {
 		query = params.ToQuery()
 	}
-	url, err := buildUrl(session, path, query, "v5")
+	url, err := buildUrl(session, path, query, session.GetConfig().ApiVersion)
 	if err != nil {
 		return nil, err
 	}

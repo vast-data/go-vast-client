@@ -167,5 +167,5 @@ func (r *VTask) MustExistsWithContext(ctx context.Context, req *VTaskSearchParam
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method PATCH /vtasks/{id}/retry/ skipped: PATCH /vtasks/{id}/retry/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /vtasks/{id}/retry/
+//   - Extra method PATCH /vtasks/{id}/retry/ skipped: PATCH /vtasks/{id}/retry/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /vtasks/{id}/retry/
 //   - UPDATE operation excluded: PATCH/PUT /vtasks/{id}/ has no response schema and doesn't return 204 NO CONTENT

@@ -55,14 +55,14 @@ type UserSearchParams struct {
 // UserRequestBody represents the request body for User operations
 type UserRequestBody struct {
 	Name              string   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"User name"`
-	AllowCreateBucket bool     `json:"allow_create_bucket,omitempty" yaml:"allow_create_bucket,omitempty" required:"false" doc:"Set to true to give the user permission to create S3 buckets"`
-	AllowDeleteBucket bool     `json:"allow_delete_bucket,omitempty" yaml:"allow_delete_bucket,omitempty" required:"false" doc:"Set to true to give the user permission to delete S3 buckets"`
-	Gids              *[]int64 `json:"gids,omitempty" yaml:"gids,omitempty" required:"false" doc:"list of GIDs"`
+	AllowCreateBucket bool     `json:"allow_create_bucket,omitempty" yaml:"allow_create_bucket,omitempty" required:"false" doc:"Set to true to give the user permission to create S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
+	AllowDeleteBucket bool     `json:"allow_delete_bucket,omitempty" yaml:"allow_delete_bucket,omitempty" required:"false" doc:"Set to true to give the user permission to delete S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
+	Gids              *[]int64 `json:"gids,omitempty" yaml:"gids,omitempty" required:"false" doc:"List of group GIDs of all groups to which the user should belong."`
 	LeadingGid        int64    `json:"leading_gid,omitempty" yaml:"leading_gid,omitempty" required:"false" doc:"Leading GID"`
-	Local             bool     `json:"local,omitempty" yaml:"local,omitempty" required:"false" doc:""`
-	LocalProviderId   int64    `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"Local provider ID"`
+	Local             bool     `json:"local,omitempty" yaml:"local,omitempty" required:"false" doc:"Not in use"`
+	LocalProviderId   int64    `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"The ID of the local provider to which to add the user"`
 	Password          string   `json:"password,omitempty" yaml:"password,omitempty" required:"false" doc:"Password"`
-	S3Superuser       bool     `json:"s3_superuser,omitempty" yaml:"s3_superuser,omitempty" required:"false" doc:"Set to true to give the user S3 superuser permission"`
+	S3Superuser       bool     `json:"s3_superuser,omitempty" yaml:"s3_superuser,omitempty" required:"false" doc:"Set to true to give the user S3 superuser permission. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
 	Uid               int64    `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"NFS UID"`
 }
 
@@ -637,11 +637,11 @@ func (r *User) UserTenantData_GET(id any, params *UserTenantData_GET_Body) (*Use
 
 // UserTenantData_PATCH_Body represents the request body for UserTenantData
 type UserTenantData_PATCH_Body struct {
-	TenantId          int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"true" doc:"Tenant ID"`
 	AllowCreateBucket bool     `json:"allow_create_bucket,omitempty" yaml:"allow_create_bucket,omitempty" required:"false" doc:"Grants the user permission to create S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
 	AllowDeleteBucket bool     `json:"allow_delete_bucket,omitempty" yaml:"allow_delete_bucket,omitempty" required:"false" doc:"Grants the user permission to delete S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
 	S3PoliciesIds     *[]int64 `json:"s3_policies_ids,omitempty" yaml:"s3_policies_ids,omitempty" required:"false" doc:"IDs of S3 policies to attach to the user"`
 	S3Superuser       bool     `json:"s3_superuser,omitempty" yaml:"s3_superuser,omitempty" required:"false" doc:"Grants the user S3 super user permission, which enables the user to override S3 ACLs. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
+	TenantId          int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 }
 
 // UserTenantData_PATCH_Model represents the response model for UserTenantData
@@ -692,6 +692,6 @@ func (r *User) UserTenantData_PATCH(id any, body *UserTenantData_PATCH_Body) (*U
 // -----------------------------------------------------
 //   - Extra method GET /users/names/ skipped: GET /users/names/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method GET /users/query/ skipped: GET /users/query/ - Response schema contains ambiguous nested objects (objects with no properties)
-//   - Extra method PATCH /users/query/ skipped: PATCH /users/query/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /users/query/
-//   - Extra method PATCH /users/refresh/ skipped: PATCH /users/refresh/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /users/refresh/
+//   - Extra method PATCH /users/query/ skipped: PATCH /users/query/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /users/query/
+//   - Extra method PATCH /users/refresh/ skipped: PATCH /users/refresh/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /users/refresh/
 //   - UPDATE operation excluded: PATCH/PUT /users/{id}/ has no response schema and doesn't return 204 NO CONTENT

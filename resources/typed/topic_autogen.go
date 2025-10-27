@@ -5,6 +5,7 @@ package typed
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
@@ -145,6 +146,12 @@ func (r *Topic) MustExistsWithContext(ctx context.Context, req *TopicSearchParam
 // EXTRA METHODS
 // -----------------------------------------------------
 
+// TopicTopicsItem represents a nested type for Topic extra method response
+type TopicTopicsItem struct {
+	DatabaseName string `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"true" doc:"Name of the Database"`
+	Name         string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the Topic"`
+}
+
 // TopicDelete_DELETE_Body represents the request body for TopicDelete
 type TopicDelete_DELETE_Body struct {
 	DatabaseName   string `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"true" doc:"Name of the Database"`
@@ -233,8 +240,54 @@ func (r *Topic) TopicShow_GET(params *TopicShow_GET_Body) (*TopicShow_GET_Model,
 	return r.TopicShowWithContext_GET(r.Untyped.GetCtx(), params)
 }
 
+// TopicTopics_GET_Body represents the request body for TopicTopics
+type TopicTopics_GET_Body struct {
+	CountOnly    bool   `json:"count_only,omitempty" yaml:"count_only,omitempty" required:"false" doc:"Whether to only return count of objects"`
+	DatabaseName string `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"false" doc:"Getting list of objects by database_name"`
+	Name         string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Getting list of objects by exact match"`
+	TenantId     int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+}
+
+// TopicTopicsWithContext_GET
+// method: GET
+// url: /topics/
+// summary: List Kafka Topics
+func (r *Topic) TopicTopicsWithContext_GET(ctx context.Context, params *TopicTopics_GET_Body) ([]TopicTopicsItem, error) {
+	resourcePath := "/topics/"
+
+	reqParams, err := core.NewParamsFromStruct(params)
+	if err != nil {
+		return nil, err
+	}
+	var reqBody core.Params
+
+	record, err := core.Request[core.RecordSet](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+	// Convert RecordSet ([]core.Record) to typed array ([]TopicTopicsItem)
+	result := make([]TopicTopicsItem, len(record))
+	for i, item := range record {
+		if err := item.Fill(&result[i]); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal array item %d: %w", i, err)
+		}
+	}
+	return result, nil
+
+}
+
+// TopicTopics_GET
+// method: GET
+// url: /topics/
+// summary: List Kafka Topics
+func (r *Topic) TopicTopics_GET(params *TopicTopics_GET_Body) ([]TopicTopicsItem, error) {
+	return r.TopicTopicsWithContext_GET(r.Untyped.GetCtx(), params)
+}
+
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - CREATE operation excluded: POST topics has no response schema and doesn't return 204 NO CONTENT
+//   - Extra method PATCH /topics/ skipped: PATCH /topics/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /topics/
+//   - Extra method POST /topics/ skipped: POST /topics/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /topics/
 //   - UPDATE operation excluded: PATCH/PUT /topics/{id}/ has no response schema and doesn't return 204 NO CONTENT

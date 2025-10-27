@@ -166,5 +166,5 @@ func (r *EventDefinitionConfig) MustExistsWithContext(ctx context.Context, req *
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - CREATE operation excluded: POST eventdefinitionconfigs has no response schema and doesn't return 204 NO CONTENT
-//   - Extra method PATCH /eventdefinitionconfigs/{id}/test/ skipped: PATCH /eventdefinitionconfigs/{id}/test/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /eventdefinitionconfigs/{id}/test/
+//   - Extra method PATCH /eventdefinitionconfigs/{id}/test/ skipped: PATCH /eventdefinitionconfigs/{id}/test/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /eventdefinitionconfigs/{id}/test/
 //   - UPDATE operation excluded: PATCH/PUT /eventdefinitionconfigs/{id}/ has no response schema and doesn't return 204 NO CONTENT

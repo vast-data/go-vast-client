@@ -206,5 +206,5 @@ func (r *Alarm) MustExistsWithContext(ctx context.Context, req *AlarmSearchParam
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method PATCH /alarms/clear/ skipped: PATCH /alarms/clear/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /alarms/clear/
+//   - Extra method PATCH /alarms/clear/ skipped: PATCH /alarms/clear/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /alarms/clear/
 //   - UPDATE operation excluded: PATCH/PUT /alarms/{id}/ has no response schema and doesn't return 204 NO CONTENT

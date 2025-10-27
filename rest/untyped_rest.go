@@ -194,8 +194,7 @@ type UntypedVMSRest struct {
 	IoData            *untyped.IoData
 	// +apiall:extraMethod:GET=/kafkabrokers/{id}/list_topics/
 	KafkaBrokers *untyped.KafkaBroker
-	// +apiall:extraMethod:POST|PUT=/kerberos/{id}/keytab/
-	Kerberos *untyped.Kerberos
+	Kerberos     *untyped.Kerberos
 	// +apiall:extraMethod:PATCH=/ldaps/{id}/set_posix_primary/
 	Ldaps               *untyped.Ldap
 	Licenses            *untyped.License
@@ -317,6 +316,7 @@ type UntypedVMSRest struct {
 	// +apiall:extraMethod:GET=/tenants/{id}/nfs4_delegs/
 	// +apiall:extraMethod:DELETE=/tenants/{id}/nfs4_deleg/
 	Tenants *untyped.Tenant
+	// +apiall:extraMethod:GET|POST|PATCH=/topics/
 	// +apiall:extraMethod:GET=/topics/show/
 	// +apiall:extraMethod:DELETE=/topics/delete/
 	Topics *untyped.Topic
@@ -401,9 +401,11 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 		resourceMap: make(map[string]core.VastResourceAPIWithContext),
 	}
 
-	// Set external context
+	// Set context: use provided context or default to background context
 	if config.Context != nil {
 		rest.SetCtx(config.Context)
+	} else {
+		rest.SetCtx(context.Background())
 	}
 
 	// Fill in each resource, pointing back to the same rest

@@ -59,19 +59,19 @@ type ProtectedPathSearchParams struct {
 // ProtectedPathRequestBody represents the request body for ProtectedPath operations
 type ProtectedPathRequestBody struct {
 	Name                     string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	SourceDir                string `json:"source_dir,omitempty" yaml:"source_dir,omitempty" required:"true" doc:"path to replicate"`
-	TargetExportedDir        string `json:"target_exported_dir,omitempty" yaml:"target_exported_dir,omitempty" required:"true" doc:"where to replicate on the remote"`
-	TenantId                 string `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"true" doc:"local tenant ID"`
-	Capabilities             string `json:"capabilities,omitempty" yaml:"capabilities,omitempty" required:"false" doc:"Stream capabilities"`
-	Enabled                  bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"enable/pause protected path"`
-	LeaseExpiryTime          int64  `json:"lease_expiry_time,omitempty" yaml:"lease_expiry_time,omitempty" required:"false" doc:"replication group lease expiry time (sec)"`
-	PolicyId                 string `json:"policy_id,omitempty" yaml:"policy_id,omitempty" required:"false" doc:"replication policy id"`
-	ProtectionPolicyId       string `json:"protection_policy_id,omitempty" yaml:"protection_policy_id,omitempty" required:"false" doc:"protection policy id"`
-	RemoteTargetId           int64  `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:"Remote target ID for streams with GN or SYNC capability."`
-	RemoteTenantGuid         string `json:"remote_tenant_guid,omitempty" yaml:"remote_tenant_guid,omitempty" required:"false" doc:"remote tenant guid"`
+	SourceDir                string `json:"source_dir,omitempty" yaml:"source_dir,omitempty" required:"true" doc:"A path on the local cluster to protect. A snapshot of the specified path will be taken periodically on the schedule configured in the specified protection policy."`
+	TargetExportedDir        string `json:"target_exported_dir,omitempty" yaml:"target_exported_dir,omitempty" required:"true" doc:"A path on a remote peer to which to replicate."`
+	TenantId                 string `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"true" doc:"Tenant ID of the tenant on the local cluster to which the source_dir belongs."`
+	Capabilities             string `json:"capabilities,omitempty" yaml:"capabilities,omitempty" required:"false" doc:"Indicates if the protected path supports global access streams (\"STARED_GLOBAL_NAMESPACE\") or async replication streams (\"ASYNC_REPLICATION\") or a single stream for synchronous replication (\"SYNC_REPLICATION\") or both global access and async replication (\"REPLICATION_AND_GN\")."`
+	Enabled                  bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enables/pauses the protected path"`
+	LeaseExpiryTime          int64  `json:"lease_expiry_time,omitempty" yaml:"lease_expiry_time,omitempty" required:"false" doc:"The lease expiry time, in seconds, for a global access protected path. This is the duration for which data that was already requested at the destination path can be read locally from cache without the destination peer requesting it from the source peer. When the lease expires, the cache is invalidated and the next read request for the data is requested again from the source peer."`
+	PolicyId                 string `json:"policy_id,omitempty" yaml:"policy_id,omitempty" required:"false" doc:"Protection policy ID"`
+	ProtectionPolicyId       string `json:"protection_policy_id,omitempty" yaml:"protection_policy_id,omitempty" required:"false" doc:"Specifies whcih protection policy to use"`
+	RemoteTargetId           int64  `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:"Remote target ID for streams with global namespace or synchronous replication capability."`
+	RemoteTenantGuid         string `json:"remote_tenant_guid,omitempty" yaml:"remote_tenant_guid,omitempty" required:"false" doc:"Tenant GUID of the remote peer tenant to which to replicate"`
 	SourceMemberCapabilities string `json:"source_member_capabilities,omitempty" yaml:"source_member_capabilities,omitempty" required:"false" doc:"Stream capabilities for the source member"`
-	SyncDisconnectTime       int64  `json:"sync_disconnect_time,omitempty" yaml:"sync_disconnect_time,omitempty" required:"false" doc:"replication group sync replication disconnect time (sec)"`
-	SyncInterval             int64  `json:"sync_interval,omitempty" yaml:"sync_interval,omitempty" required:"false" doc:"replication group sync interval"`
+	SyncDisconnectTime       int64  `json:"sync_disconnect_time,omitempty" yaml:"sync_disconnect_time,omitempty" required:"false" doc:"A period of time, in seconds, without communication between sync replication peers, after which the peers are disconnected."`
+	SyncInterval             int64  `json:"sync_interval,omitempty" yaml:"sync_interval,omitempty" required:"false" doc:"Replication group sync interval"`
 }
 
 // -----------------------------------------------------
@@ -521,14 +521,14 @@ func (r *ProtectedPath) ProtectedPathValidate_GET(id any) (*ProtectedPathValidat
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method PATCH /protectedpaths/{id}/add_stream/ skipped: PATCH /protectedpaths/{id}/add_stream/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/add_stream/
-//   - Extra method PATCH /protectedpaths/{id}/commit/ skipped: PATCH /protectedpaths/{id}/commit/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/commit/
-//   - Extra method PATCH /protectedpaths/{id}/force_failover/ skipped: PATCH /protectedpaths/{id}/force_failover/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/force_failover/
-//   - Extra method PATCH /protectedpaths/{id}/modify_member/ skipped: PATCH /protectedpaths/{id}/modify_member/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/modify_member/
-//   - Extra method PATCH /protectedpaths/{id}/pause/ skipped: PATCH /protectedpaths/{id}/pause/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/pause/
-//   - Extra method PATCH /protectedpaths/{id}/reattach_stream/ skipped: PATCH /protectedpaths/{id}/reattach_stream/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/reattach_stream/
-//   - Extra method PATCH /protectedpaths/{id}/replicate_now/ skipped: PATCH /protectedpaths/{id}/replicate_now/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/replicate_now/
-//   - Extra method PATCH /protectedpaths/{id}/resume/ skipped: PATCH /protectedpaths/{id}/resume/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/resume/
-//   - Extra method PATCH /protectedpaths/{id}/stop/ skipped: PATCH /protectedpaths/{id}/stop/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /protectedpaths/{id}/stop/
+//   - Extra method PATCH /protectedpaths/{id}/add_stream/ skipped: PATCH /protectedpaths/{id}/add_stream/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/add_stream/
+//   - Extra method PATCH /protectedpaths/{id}/commit/ skipped: PATCH /protectedpaths/{id}/commit/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/commit/
+//   - Extra method PATCH /protectedpaths/{id}/force_failover/ skipped: PATCH /protectedpaths/{id}/force_failover/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/force_failover/
+//   - Extra method PATCH /protectedpaths/{id}/modify_member/ skipped: PATCH /protectedpaths/{id}/modify_member/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/modify_member/
+//   - Extra method PATCH /protectedpaths/{id}/pause/ skipped: PATCH /protectedpaths/{id}/pause/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/pause/
+//   - Extra method PATCH /protectedpaths/{id}/reattach_stream/ skipped: PATCH /protectedpaths/{id}/reattach_stream/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/reattach_stream/
+//   - Extra method PATCH /protectedpaths/{id}/replicate_now/ skipped: PATCH /protectedpaths/{id}/replicate_now/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/replicate_now/
+//   - Extra method PATCH /protectedpaths/{id}/resume/ skipped: PATCH /protectedpaths/{id}/resume/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/resume/
+//   - Extra method PATCH /protectedpaths/{id}/stop/ skipped: PATCH /protectedpaths/{id}/stop/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /protectedpaths/{id}/stop/
 //   - Extra method POST /protectedpaths/{id}/restore/ skipped: POST /protectedpaths/{id}/restore/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - UPDATE operation excluded: PATCH/PUT /protectedpaths/{id}/ has no response schema and doesn't return 204 NO CONTENT
