@@ -26,7 +26,7 @@ type ReplicationStream struct {
 type ReplicationStreamSearchParams struct {
 	Enabled   string `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"start/pause replication stream"`
 	Guid      string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"guid"`
-	Name      string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Name      string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"start/pause replication stream"`
 	Ordering  string `json:"ordering,omitempty" yaml:"ordering,omitempty" required:"false" doc:"orders by some field"`
 	SourceDir string `json:"source_dir,omitempty" yaml:"source_dir,omitempty" required:"false" doc:""`
 	State     string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`

@@ -40,24 +40,3 @@ func (k *Kerberos) KerberosKeytabWithContext_POST(ctx context.Context, id any, a
 func (k *Kerberos) KerberosKeytab_POST(id any, adminPassword string, adminUsername string) (core.Record, error) {
 	return k.KerberosKeytabWithContext_POST(k.Rest.GetCtx(), id, adminPassword, adminUsername)
 }
-
-// KerberosKeytabWithContext_PUT
-// method: PUT
-// url: /kerberos/{id}/keytab/
-// summary: Upload keytab for the Kerberos Provider
-func (k *Kerberos) KerberosKeytabWithContext_PUT(ctx context.Context, id any, body core.Params) (core.Record, error) {
-	resourcePath := core.BuildResourcePathWithID("kerberos", id, "keytab")
-	result, err := core.Request[core.Record](ctx, k, http.MethodPut, resourcePath, nil, body)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-// KerberosKeytab_PUT
-// method: PUT
-// url: /kerberos/{id}/keytab/
-// summary: Upload keytab for the Kerberos Provider
-func (k *Kerberos) KerberosKeytab_PUT(id any, body core.Params) (core.Record, error) {
-	return k.KerberosKeytabWithContext_PUT(k.Rest.GetCtx(), id, body)
-}

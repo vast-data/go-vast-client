@@ -5,7 +5,6 @@ package typed
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
 )
@@ -315,97 +314,4 @@ func (r *Kerberos) MustExistsWithContext(ctx context.Context, req *KerberosSearc
 		panic(err)
 	}
 	return r.Untyped.GetResourceMap()[r.GetResourceType()].MustExistsWithContext(ctx, params)
-}
-
-// -----------------------------------------------------
-// EXTRA METHODS
-// -----------------------------------------------------
-
-// KerberosKeytabModel_ServicePrincipalsItem represents a nested type for Kerberos extra method response
-type KerberosKeytabModel_ServicePrincipalsItem struct {
-	Message string `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:""`
-	Name    string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	Status  string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
-}
-
-// KerberosKeytab_POST_Model represents the response model for KerberosKeytab
-type KerberosKeytab_POST_Model struct {
-	ServicePrincipals *[]KerberosKeytabModel_ServicePrincipalsItem `json:"service_principals,omitempty" yaml:"service_principals,omitempty" required:"false" doc:""`
-}
-
-// KerberosKeytabWithContext_POST
-// method: POST
-// url: /kerberos/{id}/keytab/
-// summary: Generate keytab for the Kerberos Provider
-//
-// Parameters:
-//   - adminPassword (body): Request parameter
-//   - adminUsername (body): Request parameter
-func (r *Kerberos) KerberosKeytabWithContext_POST(ctx context.Context, id any, adminPassword string, adminUsername string) (*KerberosKeytab_POST_Model, error) {
-	resourcePath := core.BuildResourcePathWithID("kerberos", id, "keytab")
-
-	var reqParams core.Params
-	reqBody := core.Params{}
-	reqBody["admin_password"] = adminPassword
-	reqBody["admin_username"] = adminUsername
-
-	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
-	if err != nil {
-		return nil, err
-	}
-
-	var response KerberosKeytab_POST_Model
-	if err := record.Fill(&response); err != nil {
-		return nil, err
-	}
-	return &response, nil
-
-}
-
-// KerberosKeytab_POST
-// method: POST
-// url: /kerberos/{id}/keytab/
-// summary: Generate keytab for the Kerberos Provider
-//
-// Parameters:
-//   - adminPassword (body): Request parameter
-//   - adminUsername (body): Request parameter
-func (r *Kerberos) KerberosKeytab_POST(id any, adminPassword string, adminUsername string) (*KerberosKeytab_POST_Model, error) {
-	return r.KerberosKeytabWithContext_POST(r.Untyped.GetCtx(), id, adminPassword, adminUsername)
-}
-
-// KerberosKeytab_PUT_Model represents the response model for KerberosKeytab
-type KerberosKeytab_PUT_Model struct {
-	ServicePrincipals *[]KerberosKeytabModel_ServicePrincipalsItem `json:"service_principals,omitempty" yaml:"service_principals,omitempty" required:"false" doc:""`
-}
-
-// KerberosKeytabWithContext_PUT
-// method: PUT
-// url: /kerberos/{id}/keytab/
-// summary: Upload keytab for the Kerberos Provider
-func (r *Kerberos) KerberosKeytabWithContext_PUT(ctx context.Context, id any) (*KerberosKeytab_PUT_Model, error) {
-	resourcePath := core.BuildResourcePathWithID("kerberos", id, "keytab")
-
-	var reqParams core.Params
-	var reqBody core.Params
-
-	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPut, resourcePath, reqParams, reqBody)
-	if err != nil {
-		return nil, err
-	}
-
-	var response KerberosKeytab_PUT_Model
-	if err := record.Fill(&response); err != nil {
-		return nil, err
-	}
-	return &response, nil
-
-}
-
-// KerberosKeytab_PUT
-// method: PUT
-// url: /kerberos/{id}/keytab/
-// summary: Upload keytab for the Kerberos Provider
-func (r *Kerberos) KerberosKeytab_PUT(id any) (*KerberosKeytab_PUT_Model, error) {
-	return r.KerberosKeytabWithContext_PUT(r.Untyped.GetCtx(), id)
 }

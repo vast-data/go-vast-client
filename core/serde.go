@@ -724,8 +724,8 @@ func typeMatch[T RecordUnion](val Renderable) bool {
 	return reflect.TypeOf(val) == reflect.TypeOf(zero)
 }
 
-// SetResourceKey Set resource type key for tabular formatting (only if not already set).
-func SetResourceKey(result Renderable, resourceType string) error {
+// setResourceKey sets resource type key for tabular formatting (only if not already set).
+func setResourceKey(result Renderable, resourceType string) error {
 	switch v := result.(type) {
 	case Record:
 		if _, ok := v[ResourceTypeKey]; !ok && len(v) > 0 {

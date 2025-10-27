@@ -50,24 +50,24 @@ type DnsSearchParams struct {
 
 // DnsRequestBody represents the request body for Dns operations
 type DnsRequestBody struct {
-	BgpConfigId         int64  `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"BGP configuration ID"`
-	CnodeIds            string `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"To dedicate a specific group of CNodes to the DNS, list the IDs of the CNodes."`
-	DomainSuffix        string `json:"domain_suffix,omitempty" yaml:"domain_suffix,omitempty" required:"false" doc:"A suffix for domain names. Requests for domain names with this suffix are resolved to the VIPs configured on the cluster."`
-	EnableL3            bool   `json:"enable_l3,omitempty" yaml:"enable_l3,omitempty" required:"false" doc:"Enable L3"`
-	Enabled             bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to true to enable the DNS service"`
-	InvalidNameResponse string `json:"invalid_name_response,omitempty" yaml:"invalid_name_response,omitempty" required:"false" doc:""`
-	InvalidTypeResponse string `json:"invalid_type_response,omitempty" yaml:"invalid_type_response,omitempty" required:"false" doc:""`
-	Name                string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the DNS server configuration"`
-	NetType             string `json:"net_type,omitempty" yaml:"net_type,omitempty" required:"false" doc:""`
-	Port                int64  `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Specifies a port for the DNS"`
-	Ttl                 int64  `json:"ttl,omitempty" yaml:"ttl,omitempty" required:"false" doc:"Specifies the TTL value for the DNS."`
-	Vip                 string `json:"vip,omitempty" yaml:"vip,omitempty" required:"false" doc:"A virtual IP to assign to the DNS service. DNS requests from your external DNS server must be delegated to this IP."`
-	VipGateway          string `json:"vip_gateway,omitempty" yaml:"vip_gateway,omitempty" required:"false" doc:"If the external DNS server doesn't reside on the same subnet as the DNS VIP, enter the IP of a gateway through which to connect to the DNS server."`
-	VipIpv6             string `json:"vip_ipv6,omitempty" yaml:"vip_ipv6,omitempty" required:"false" doc:"Assigns an IPv6 to the DNS service."`
-	VipIpv6Gateway      string `json:"vip_ipv6_gateway,omitempty" yaml:"vip_ipv6_gateway,omitempty" required:"false" doc:"Specifies a gateway IPv6 to external DNS server if on different subnet."`
-	VipIpv6SubnetCidr   int64  `json:"vip_ipv6_subnet_cidr,omitempty" yaml:"vip_ipv6_subnet_cidr,omitempty" required:"false" doc:"Specifies the subnet, as a CIDR index, on which the DNS resides. [1..128]"`
-	VipSubnetCidr       int64  `json:"vip_subnet_cidr,omitempty" yaml:"vip_subnet_cidr,omitempty" required:"false" doc:"The subnet, in CIDR format, on which the DNS VIP resides."`
-	VipVlan             int64  `json:"vip_vlan,omitempty" yaml:"vip_vlan,omitempty" required:"false" doc:"If your external DNS server is only exposed to a specific VLAN, you can enter the VLAN here to enable communication with the DNS server."`
+	Vip                 string   `json:"vip,omitempty" yaml:"vip,omitempty" required:"true" doc:"A virtual IP to assign to the DNS service. DNS requests from your external DNS server must be delegated to this IP."`
+	BgpConfigId         int64    `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"The ID of the BGP configuration to use for layer 3 connectivity configuration"`
+	CnodeIds            *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"To dedicate a specific group of CNodes to the DNS, list the IDs of the CNodes."`
+	DomainSuffix        string   `json:"domain_suffix,omitempty" yaml:"domain_suffix,omitempty" required:"false" doc:"A suffix for domain names. Requests for domain names with this suffix are resolved to the VIPs configured on the cluster."`
+	EnableL3            bool     `json:"enable_l3,omitempty" yaml:"enable_l3,omitempty" required:"false" doc:"Enable layer 3 connectivity"`
+	Enabled             bool     `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to true to enable the DNS service"`
+	InvalidNameResponse string   `json:"invalid_name_response,omitempty" yaml:"invalid_name_response,omitempty" required:"false" doc:""`
+	InvalidTypeResponse string   `json:"invalid_type_response,omitempty" yaml:"invalid_type_response,omitempty" required:"false" doc:""`
+	Name                string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the DNS server configuration"`
+	NetType             string   `json:"net_type,omitempty" yaml:"net_type,omitempty" required:"false" doc:""`
+	Port                int64    `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Specifies a port for the DNS"`
+	Ttl                 int64    `json:"ttl,omitempty" yaml:"ttl,omitempty" required:"false" doc:"Specifies the TTL value for the DNS."`
+	VipGateway          string   `json:"vip_gateway,omitempty" yaml:"vip_gateway,omitempty" required:"false" doc:"If the external DNS server doesn't reside on the same subnet as the DNS VIP, enter the IP of a gateway through which to connect to the DNS server."`
+	VipIpv6             string   `json:"vip_ipv6,omitempty" yaml:"vip_ipv6,omitempty" required:"false" doc:"Assigns an IPv6 to the DNS service."`
+	VipIpv6Gateway      string   `json:"vip_ipv6_gateway,omitempty" yaml:"vip_ipv6_gateway,omitempty" required:"false" doc:"Specifies a gateway IPv6 to external DNS server if on different subnet."`
+	VipIpv6SubnetCidr   int64    `json:"vip_ipv6_subnet_cidr,omitempty" yaml:"vip_ipv6_subnet_cidr,omitempty" required:"false" doc:"Specifies the subnet, as a CIDR index, on which the DNS resides. [1..128]"`
+	VipSubnetCidr       int64    `json:"vip_subnet_cidr,omitempty" yaml:"vip_subnet_cidr,omitempty" required:"false" doc:"The subnet, in CIDR format, on which the DNS VIP resides."`
+	VipVlan             int64    `json:"vip_vlan,omitempty" yaml:"vip_vlan,omitempty" required:"false" doc:"If your external DNS server is only exposed to a specific VLAN, you can enter the VLAN here to enable communication with the DNS server."`
 }
 
 // -----------------------------------------------------

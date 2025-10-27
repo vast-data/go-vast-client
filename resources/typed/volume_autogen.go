@@ -56,9 +56,9 @@ type VolumeSearchParams struct {
 
 // VolumeRequestBody represents the request body for Volume operations
 type VolumeRequestBody struct {
-	Name        string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Volume path (relative so subsystem)"`
-	Size        int64             `json:"size,omitempty" yaml:"size,omitempty" required:"true" doc:"Volume size (in Bytes)"`
-	ViewId      int64             `json:"view_id,omitempty" yaml:"view_id,omitempty" required:"true" doc:"view (subsystem) ID"`
+	Name        string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The path to the volume relative to the subsystem directory. The path should not begin with a slash (/). You can include slashes inside the path to indicate a hierarchy of directories. The path will be created under the subsystem path for the volume. Any directory hierarchy indicated by slashes will be created accordingly. For example, if you specify b/c/d the directories <subsystem_path>/b and <subsystem_path>b/c will be created if they do not yet exist, as well as the new directory <subsystem_path>/b/c/d."`
+	Size        int64             `json:"size,omitempty" yaml:"size,omitempty" required:"true" doc:"The volume size, in bytes."`
+	ViewId      int64             `json:"view_id,omitempty" yaml:"view_id,omitempty" required:"true" doc:"The ID of the subsystem view on which to create the volume."`
 	QosPolicyId int64             `json:"qos_policy_id,omitempty" yaml:"qos_policy_id,omitempty" required:"false" doc:"QOS Policy ID"`
 	Tags        map[string]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:""`
 }
@@ -379,7 +379,7 @@ func (r *Volume) VolumeBulk_DELETE() error {
 
 // VolumeFetchCapacity_GET_Model represents the response model for VolumeFetchCapacity
 type VolumeFetchCapacity_GET_Model struct {
-	Capacity int64 `json:"capacity,omitempty" yaml:"capacity,omitempty" required:"false" doc:"Volume's capacity (in GB)."`
+	Capacity int64 `json:"capacity,omitempty" yaml:"capacity,omitempty" required:"false" doc:"Volume's capacity usage in bytes"`
 }
 
 // VolumeFetchCapacityWithContext_GET

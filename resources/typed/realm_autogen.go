@@ -291,6 +291,6 @@ func (r *Realm) MustExistsWithContext(ctx context.Context, req *RealmSearchParam
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method PATCH /realms/{id}/assign/ skipped: PATCH /realms/{id}/assign/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /realms/{id}/assign/
-//   - Extra method PATCH /realms/{id}/unassign/ skipped: PATCH /realms/{id}/unassign/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202) for resource /realms/{id}/unassign/
+//   - Extra method PATCH /realms/{id}/assign/ skipped: PATCH /realms/{id}/assign/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /realms/{id}/assign/
+//   - Extra method PATCH /realms/{id}/unassign/ skipped: PATCH /realms/{id}/unassign/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /realms/{id}/unassign/
 //   - UPDATE operation excluded: PATCH/PUT /realms/{id}/ has no response schema and doesn't return 204 NO CONTENT

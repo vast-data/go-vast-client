@@ -28,7 +28,7 @@ type VipPoolSearchParams struct {
 	Guid           string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
 	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"VIP pool name"`
 	PortMembership string `json:"port_membership,omitempty" yaml:"port_membership,omitempty" required:"false" doc:"Filters pools by port affinity"`
-	ServesTenant   string `json:"serves_tenant,omitempty" yaml:"serves_tenant,omitempty" required:"false" doc:"Filter by served tenants. Accepts Tenant ID or \"all\"."`
+	ServesTenant   string `json:"serves_tenant,omitempty" yaml:"serves_tenant,omitempty" required:"false" doc:"Filter by served tenants. Accepts tenant ID or \"all\" for all served tenants."`
 	StartIp        string `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"false" doc:"Filter by start IP of VIP pool range"`
 	TenantId       int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
@@ -57,28 +57,28 @@ type VipPoolSearchParams struct {
 type VipPoolRequestBody struct {
 	IpRanges                *[][]string `json:"ip_ranges,omitempty" yaml:"ip_ranges,omitempty" required:"true" doc:"Array of IP ranges to include in the vippool."`
 	SubnetCidr              int64       `json:"subnet_cidr,omitempty" yaml:"subnet_cidr,omitempty" required:"true" doc:"The subnet expressed as a CIDR index (number of bits in each IP that belong to the subnet)"`
-	BgpConfigId             int64       `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"BGP configuration ID for the VIP pool"`
+	BgpConfigId             int64       `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"The ID of the BGP configuration to use for layer 3 connectivity. configuration"`
 	ClientMonitoringIps     *[][]string `json:"client_monitoring_ips,omitempty" yaml:"client_monitoring_ips,omitempty" required:"false" doc:"External client monitoring IP ranges for VIP pool connectivity monitoring"`
 	ClusterId               int64       `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
-	CnodeIds                string      `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"To dedicate a specific group of CNodes to the VIP pool, list the IDs of the CNodes."`
-	CnodeNames              string      `json:"cnode_names,omitempty" yaml:"cnode_names,omitempty" required:"false" doc:"list of cnode names"`
-	DomainName              string      `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"Domain name for the VAST DNS server. The domain suffix defined in the DNS server configuration is appended to this domain name to form a FQDN which the DNS server resolves to this VIP pool."`
-	EnableL3                bool        `json:"enable_l3,omitempty" yaml:"enable_l3,omitempty" required:"false" doc:""`
+	CnodeIds                *[]int64    `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the IDs of the CNodes. Separate IDs by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overridden if cnode_names is passed."`
+	CnodeNames              string      `json:"cnode_names,omitempty" yaml:"cnode_names,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the names of the CNodes. Separate names by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overrides cnode_ids."`
+	DomainName              string      `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"Domain name for the VAST DNS server. If a DNS configuration exists, the domain suffix defined in the DNS server configuration is appended to this domain name to form a FQDN which the DNS server resolves to this VIP pool."`
+	EnableL3                bool        `json:"enable_l3,omitempty" yaml:"enable_l3,omitempty" required:"false" doc:"Enables L3 networking, in which the cluster's CNodes act as Border Gateway Protocol (BGP) peers belonging to a VAST Autonomous system (AS) which is connected to the client network's AS"`
 	EnableWeightedBalancing bool        `json:"enable_weighted_balancing,omitempty" yaml:"enable_weighted_balancing,omitempty" required:"false" doc:"Enable weighted balancing"`
-	Enabled                 bool        `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True for enable, False for disable"`
-	EndIp                   string      `json:"end_ip,omitempty" yaml:"end_ip,omitempty" required:"false" doc:"The IP address at the end of the range"`
-	GwIp                    string      `json:"gw_ip,omitempty" yaml:"gw_ip,omitempty" required:"false" doc:"The IP address of a local gateway device if client traffic is routed through one"`
-	GwIpv6                  string      `json:"gw_ipv6,omitempty" yaml:"gw_ipv6,omitempty" required:"false" doc:"The IP address of a local gateway device if client traffic is routed through one"`
+	Enabled                 bool        `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to false to disable the pool."`
+	EndIp                   string      `json:"end_ip,omitempty" yaml:"end_ip,omitempty" required:"false" doc:"Not currently in use. Use ip_ranges instead."`
+	GwIp                    string      `json:"gw_ip,omitempty" yaml:"gw_ip,omitempty" required:"false" doc:"The IP address of a local gateway device if client traffic is routed through one."`
+	GwIpv6                  string      `json:"gw_ipv6,omitempty" yaml:"gw_ipv6,omitempty" required:"false" doc:"The IP address of a local gateway device if client traffic is routed through one."`
 	Name                    string      `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	PeerAsn                 int64       `json:"peer_asn,omitempty" yaml:"peer_asn,omitempty" required:"false" doc:""`
-	PortMembership          string      `json:"port_membership,omitempty" yaml:"port_membership,omitempty" required:"false" doc:"The port on the CNode this pool will use. Right, left or all"`
-	Role                    string      `json:"role,omitempty" yaml:"role,omitempty" required:"false" doc:"'Protocol' dedicates the VIP pool for client access. 'Replication' dedicates the VIP pool for native replication. 'BIG_CATALOG' dedicates the VIP pool for vast catalog"`
-	StartIp                 string      `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"false" doc:"The IP address at the start of a continuous range"`
+	PeerAsn                 int64       `json:"peer_asn,omitempty" yaml:"peer_asn,omitempty" required:"false" doc:"The client network's ASN. Must not be equal to vast_asn. Applicable only if enable_ls is true."`
+	PortMembership          string      `json:"port_membership,omitempty" yaml:"port_membership,omitempty" required:"false" doc:"Allocates left, right or all CNode ports to the VIP pool. Allocating the left port and the right port in different VIP pools enables the CNodes to be connected to multiple networks simultaneously. Default: all"`
+	Role                    string      `json:"role,omitempty" yaml:"role,omitempty" required:"false" doc:"'PROTOCOLS' dedicates the VIP pool to client traffic from all of the supported access protocols (NFSv3, NFSv4.2, SMBv2, S3, Database). At least one VIP pool must be created to enable client access. 'REPLICATION' dedicates the VIP pool for connectivity with an async replication peer cluster. This is needed for async replication. 'BIG_CATALOG' dedicates the VIP pool to VAST Catalog query access from the client network."`
+	StartIp                 string      `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"false" doc:"Not currently in use. Use ip_ranges instead."`
 	SubnetCidrIpv6          int64       `json:"subnet_cidr_ipv6,omitempty" yaml:"subnet_cidr_ipv6,omitempty" required:"false" doc:"The subnet expressed as a CIDR index (number of bits in each IP that belong to the subnet)"`
 	TenantId                int64       `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
-	VastAsn                 int64       `json:"vast_asn,omitempty" yaml:"vast_asn,omitempty" required:"false" doc:""`
-	Vlan                    int64       `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:"To tag the VIP pool with a specific VLAN on the data network, specify the VLAN (0-4096)."`
-	VmsPreferred            bool        `json:"vms_preferred,omitempty" yaml:"vms_preferred,omitempty" required:"false" doc:"If true, CNodes participating in the vip pool are preferred in VMS host election"`
+	VastAsn                 int64       `json:"vast_asn,omitempty" yaml:"vast_asn,omitempty" required:"false" doc:"The cluster's ASN. Must not be equal to peer_asn. Applicable only if enable_ls is true."`
+	Vlan                    int64       `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:"To tag the VIP pool with a specific VLAN on the data network, specify the VLAN (0-4096). The VIP pool will be exposed only to the specified VLAN on the client network."`
+	VmsPreferred            bool        `json:"vms_preferred,omitempty" yaml:"vms_preferred,omitempty" required:"false" doc:"If true, CNodes participating in the vip pool are preferred in VMS host election."`
 }
 
 // -----------------------------------------------------

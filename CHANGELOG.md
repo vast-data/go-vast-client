@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.104.0
+
+ENHANCEMENTS:
+
+* **Iterator Support**: Added comprehensive iterator functionality for handling both paginated and non-paginated API responses
+  * New `Iterator` interface with idiomatic Go methods: `Next() (RecordSet, error)`, `Previous() (RecordSet, error)`, `HasNext()`, `HasPrevious()`, `Reset() (RecordSet, error)`, `All() (RecordSet, error)`, `Count()`, `PageSize()`
+  * Added `GetIterator(params, pageSize)` and `GetIteratorWithContext(ctx, params, pageSize)` methods to all resources
+  * Automatic detection of paginated vs non-paginated responses
+  * Support for bidirectional navigation (forward and backward)
+  * Lazy loading of pages for memory efficiency
+  * Comprehensive documentation and examples in `docs/iterators.md`
+  * Pagination envelope unwrapping removed from interceptors - Iterator handles it directly
+  * `List()` now uses `GetIterator().All()` internally - Iterator is the base abstraction
+  * Global `PageSize` configuration in `VMSConfig` (default: 0 means no page_size param, let server decide)
+  * Can override page size per iterator, or use 0 to omit page_size parameter
+
 ## 0.103.0
 
 ENHANCEMENTS:

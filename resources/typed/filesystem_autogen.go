@@ -15,4 +15,4 @@ type Filesystem struct {
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method POST /filesystem/clone/ skipped: POST /filesystem/clone/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202) for resource /filesystem/clone/
+//   - Extra method POST /filesystem/clone/ skipped: POST /filesystem/clone/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /filesystem/clone/

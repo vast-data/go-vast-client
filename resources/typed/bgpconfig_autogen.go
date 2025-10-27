@@ -24,7 +24,7 @@ type BGPConfig struct {
 
 // BGPConfigSearchParams represents the search parameters for BGPConfig operations
 type BGPConfigSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the BGP layer 3 connectivity configuration."`
 	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
@@ -56,20 +56,20 @@ type BgpconfigRequestBody_RacksItem struct {
 
 // BGPConfigRequestBody represents the request body for BGPConfig operations
 type BGPConfigRequestBody struct {
-	ExternalAsn                int64                             `json:"external_asn,omitempty" yaml:"external_asn,omitempty" required:"true" doc:""`
-	Name                       string                            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	SelfAsn                    int64                             `json:"self_asn,omitempty" yaml:"self_asn,omitempty" required:"true" doc:""`
-	AnyExternalAsn             bool                              `json:"any_external_asn,omitempty" yaml:"any_external_asn,omitempty" required:"false" doc:""`
+	ExternalAsn                int64                             `json:"external_asn,omitempty" yaml:"external_asn,omitempty" required:"true" doc:"The ASN expected to be presented to CNodes by upstream routers."`
+	Name                       string                            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the BGP layer 3 connectivity configuration."`
+	SelfAsn                    int64                             `json:"self_asn,omitempty" yaml:"self_asn,omitempty" required:"true" doc:"The Autonomous System number(s) presented by CNodes to the upstream/customer routers."`
+	AnyExternalAsn             bool                              `json:"any_external_asn,omitempty" yaml:"any_external_asn,omitempty" required:"false" doc:"If true, allow CNodes to peer with any ASN. Supercedes specified external_asn."`
 	BfdEnabled                 bool                              `json:"bfd_enabled,omitempty" yaml:"bfd_enabled,omitempty" required:"false" doc:""`
 	Guid                       string                            `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Id                         int64                             `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Id                         int64                             `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"The ID of the BGP layer 3 connectivity configuration."`
 	IpsRepresent               string                            `json:"ips_represent,omitempty" yaml:"ips_represent,omitempty" required:"false" doc:"IP address representation (odd/even)"`
-	Md5Password                string                            `json:"md5_password,omitempty" yaml:"md5_password,omitempty" required:"false" doc:""`
+	Md5Password                string                            `json:"md5_password,omitempty" yaml:"md5_password,omitempty" required:"false" doc:"A password used for BGP and BFD authentication."`
 	Method                     string                            `json:"method,omitempty" yaml:"method,omitempty" required:"false" doc:""`
 	Racks                      *[]BgpconfigRequestBody_RacksItem `json:"racks,omitempty" yaml:"racks,omitempty" required:"false" doc:""`
 	Status                     string                            `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
-	SubnetBits                 int64                             `json:"subnet_bits,omitempty" yaml:"subnet_bits,omitempty" required:"false" doc:""`
-	VipMigrationGracePeriodSec int64                             `json:"vip_migration_grace_period_sec,omitempty" yaml:"vip_migration_grace_period_sec,omitempty" required:"false" doc:""`
+	SubnetBits                 int64                             `json:"subnet_bits,omitempty" yaml:"subnet_bits,omitempty" required:"false" doc:"The number of bits in the subnet. For IPv4, this should be 32, for IPv6, 128 (i.e., a single address in the subnet)"`
+	VipMigrationGracePeriodSec int64                             `json:"vip_migration_grace_period_sec,omitempty" yaml:"vip_migration_grace_period_sec,omitempty" required:"false" doc:"The period of time after a BGP session is dropped before the virtual IPs advertised in the session link are moved to another CNode, in seconds"`
 	Vlan                       int64                             `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:""`
 }
 

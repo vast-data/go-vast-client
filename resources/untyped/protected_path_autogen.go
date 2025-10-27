@@ -78,8 +78,8 @@ func (p *ProtectedPath) ProtectedPathForceFailover_PATCH(id any, body core.Param
 // summary: Modify Capability of a Replication Stream that Belongs to a Protected Path
 //
 // Parameters:
-//   - capabilities (body): Stream capabilities
-//   - streamId (body): Request parameter
+//   - capabilities (body): The type of protection capability to apply to the stream. If ASYNC_REPLICATION, the stream replicates the path from source peer to destination peer periodically. If SYNC_REPLICATION, the stream replicates the path from source peer to destination peer continuously.
+//   - streamId (body): The ID of a stream that belongs to the protected path
 //   - sourceMemberCapabilities (body): Source member capabilities
 func (p *ProtectedPath) ProtectedPathModifyMemberWithContext_PATCH(ctx context.Context, id any, capabilities string, streamId string, sourceMemberCapabilities string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "modify_member")
@@ -102,8 +102,8 @@ func (p *ProtectedPath) ProtectedPathModifyMemberWithContext_PATCH(ctx context.C
 // summary: Modify Capability of a Replication Stream that Belongs to a Protected Path
 //
 // Parameters:
-//   - capabilities (body): Stream capabilities
-//   - streamId (body): Request parameter
+//   - capabilities (body): The type of protection capability to apply to the stream. If ASYNC_REPLICATION, the stream replicates the path from source peer to destination peer periodically. If SYNC_REPLICATION, the stream replicates the path from source peer to destination peer continuously.
+//   - streamId (body): The ID of a stream that belongs to the protected path
 //   - sourceMemberCapabilities (body): Source member capabilities
 func (p *ProtectedPath) ProtectedPathModifyMember_PATCH(id any, capabilities string, streamId string, sourceMemberCapabilities string) (core.Record, error) {
 	return p.ProtectedPathModifyMemberWithContext_PATCH(p.Rest.GetCtx(), id, capabilities, streamId, sourceMemberCapabilities)

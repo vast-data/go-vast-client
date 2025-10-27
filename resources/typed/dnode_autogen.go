@@ -58,7 +58,7 @@ type DnodeSearchParams struct {
 type DnodeRequestBody struct {
 	Enabled               bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True for activate, False for deactivate"`
 	EraseBoot             bool `json:"erase_boot,omitempty" yaml:"erase_boot,omitempty" required:"false" doc:"True for erase boot"`
-	PowerCycle            bool `json:"power_cycle,omitempty" yaml:"power_cycle,omitempty" required:"false" doc:"True for power on"`
+	PowerCycle            bool `json:"power_cycle,omitempty" yaml:"power_cycle,omitempty" required:"false" doc:"True for power cycle"`
 	PowerOff              bool `json:"power_off,omitempty" yaml:"power_off,omitempty" required:"false" doc:"True for power off"`
 	PowerOn               bool `json:"power_on,omitempty" yaml:"power_on,omitempty" required:"false" doc:"True for power on"`
 	Replace               bool `json:"replace,omitempty" yaml:"replace,omitempty" required:"false" doc:"True for replacement"`

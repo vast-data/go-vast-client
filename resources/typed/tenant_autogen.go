@@ -86,43 +86,43 @@ type TenantRequestBody_Qos_StaticLimits struct {
 
 // TenantRequestBody represents the request body for Tenant operations
 type TenantRequestBody struct {
-	Name                                 string                          `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Tenant name"`
-	AccessIpRanges                       *[]string                       `json:"access_ip_ranges,omitempty" yaml:"access_ip_ranges,omitempty" required:"false" doc:""`
-	AdProviderId                         int64                           `json:"ad_provider_id,omitempty" yaml:"ad_provider_id,omitempty" required:"false" doc:"Active Directory provider ID"`
-	AllowDisabledUsers                   bool                            `json:"allow_disabled_users,omitempty" yaml:"allow_disabled_users,omitempty" required:"false" doc:"Allow explicitly disabled users"`
-	AllowLockedUsers                     bool                            `json:"allow_locked_users,omitempty" yaml:"allow_locked_users,omitempty" required:"false" doc:"Allow temporarily locked out users"`
+	Name                                 string                          `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the tenant"`
+	AccessIpRanges                       *[]string                       `json:"access_ip_ranges,omitempty" yaml:"access_ip_ranges,omitempty" required:"false" doc:"Restricts tenant login access to specified source IP ranges. Enter as single IPs (1.1.1.1), ranges (1.2.3.4 - 1.2.3.6), or CIDR (1.1.1.0/24)."`
+	AdProviderId                         int64                           `json:"ad_provider_id,omitempty" yaml:"ad_provider_id,omitempty" required:"false" doc:"The ID of an Active Directory provider configured on the cluster. Enables the specified provider for the tenant."`
+	AllowDisabledUsers                   bool                            `json:"allow_disabled_users,omitempty" yaml:"allow_disabled_users,omitempty" required:"false" doc:"Allow IO from users whose Active Directory accounts are explicitly disabled."`
+	AllowLockedUsers                     bool                            `json:"allow_locked_users,omitempty" yaml:"allow_locked_users,omitempty" required:"false" doc:"Allow IO from users whose Active Directory accounts are locked out by lockout policies due to unsuccessful login attempts."`
 	AllowedDelegations                   string                          `json:"allowed_delegations,omitempty" yaml:"allowed_delegations,omitempty" required:"false" doc:"Defines the possible types of NFSv4 delegations"`
 	ApplicationUsersGroupName            string                          `json:"application_users_group_name,omitempty" yaml:"application_users_group_name,omitempty" required:"false" doc:"The name of the group that will be used for application users"`
 	CapacityRules                        TenantRequestBody_CapacityRules `json:"capacity_rules,omitempty" yaml:"capacity_rules,omitempty" required:"false" doc:""`
-	ClientIpRanges                       *[][]string                     `json:"client_ip_ranges,omitempty" yaml:"client_ip_ranges,omitempty" required:"false" doc:"Array of source IP ranges to allow for the tenant."`
+	ClientIpRanges                       *[][]string                     `json:"client_ip_ranges,omitempty" yaml:"client_ip_ranges,omitempty" required:"false" doc:"Array of ranges of client IPs to be served by the tenant. For client requests made to a VIP that belongs to a VIP Pool that is not associated to a specific tenant, the client's source IP is checked against the Client IPs that are defined within each tenant. That check determines access. The client IPs that you associate with each tenant must be unique per tenant."`
 	DefaultOthersShareLevelPerm          string                          `json:"default_others_share_level_perm,omitempty" yaml:"default_others_share_level_perm,omitempty" required:"false" doc:"Default Share-level permissions for Others"`
-	DomainName                           string                          `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:""`
+	DomainName                           string                          `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"Domain name to incorporate into the VMS tenant login page URL."`
 	EncryptionCrn                        string                          `json:"encryption_crn,omitempty" yaml:"encryption_crn,omitempty" required:"false" doc:"Tenant's encryption group unique identifier (deprecated)"`
 	EncryptionGroup                      string                          `json:"encryption_group,omitempty" yaml:"encryption_group,omitempty" required:"false" doc:"Tenant's encryption group unique identifier"`
 	GrantUnrequestedDelegationsByDefault bool                            `json:"grant_unrequested_delegations_by_default,omitempty" yaml:"grant_unrequested_delegations_by_default,omitempty" required:"false" doc:"When enabled, the server may grant delegations based on share access even if not explicitly requested by the client"`
-	IdentityProviderName                 string                          `json:"identity_provider_name,omitempty" yaml:"identity_provider_name,omitempty" required:"false" doc:""`
+	IdentityProviderName                 string                          `json:"identity_provider_name,omitempty" yaml:"identity_provider_name,omitempty" required:"false" doc:"The ID of a SAML provider configured on the cluster. Connects the specified provider to the tenant."`
 	IsNfsv42Supported                    bool                            `json:"is_nfsv42_supported,omitempty" yaml:"is_nfsv42_supported,omitempty" required:"false" doc:"Enable NFSv4.2"`
 	KrbProviderId                        int64                           `json:"krb_provider_id,omitempty" yaml:"krb_provider_id,omitempty" required:"false" doc:"Kerberos provider ID"`
-	LdapProviderId                       int64                           `json:"ldap_provider_id,omitempty" yaml:"ldap_provider_id,omitempty" required:"false" doc:"Open-LDAP provider ID specified separately by the user"`
-	LocalProviderId                      int64                           `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"Local provider ID"`
+	LdapProviderId                       int64                           `json:"ldap_provider_id,omitempty" yaml:"ldap_provider_id,omitempty" required:"false" doc:"The ID of an LDAP provider configured on the cluster. Enables the specified provider for the tenant."`
+	LocalProviderId                      int64                           `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"The ID of a local provider configured on the cluster. Connects the specified provider to the tenant."`
 	LoginNamePrimaryProvider             string                          `json:"login_name_primary_provider,omitempty" yaml:"login_name_primary_provider,omitempty" required:"false" doc:"Login name primary provider type"`
 	MaxViews                             int64                           `json:"max_views,omitempty" yaml:"max_views,omitempty" required:"false" doc:"Max views we can create on this tenant (0:unlimted as default)"`
-	NisProviderId                        int64                           `json:"nis_provider_id,omitempty" yaml:"nis_provider_id,omitempty" required:"false" doc:"NIS provider ID"`
+	NisProviderId                        int64                           `json:"nis_provider_id,omitempty" yaml:"nis_provider_id,omitempty" required:"false" doc:"The ID of a NIS provider configured on the cluster. Enables the specified provider for the tenant."`
 	OidcProviderId                       int64                           `json:"oidc_provider_id,omitempty" yaml:"oidc_provider_id,omitempty" required:"false" doc:"OIDC provider ID"`
-	PosixPrimaryProvider                 string                          `json:"posix_primary_provider,omitempty" yaml:"posix_primary_provider,omitempty" required:"false" doc:"POSIX primary provider type"`
+	PosixPrimaryProvider                 string                          `json:"posix_primary_provider,omitempty" yaml:"posix_primary_provider,omitempty" required:"false" doc:"Specifies which provider takes precedence over other providers in case of any conflicts between attribute values when user information is retrieved from the providers. Relevant only if more than one provider is enabled for the tenant."`
 	PreferredOwningGroup                 string                          `json:"preferred_owning_group,omitempty" yaml:"preferred_owning_group,omitempty" required:"false" doc:"Set to prefer GID of the user as the owning group of the file"`
 	Qos                                  TenantRequestBody_Qos           `json:"qos,omitempty" yaml:"qos,omitempty" required:"false" doc:""`
 	RequireSmbSigning                    bool                            `json:"require_smb_signing,omitempty" yaml:"require_smb_signing,omitempty" required:"false" doc:"Require SMB signing"`
-	SmbAdministratorsGroupName           string                          `json:"smb_administrators_group_name,omitempty" yaml:"smb_administrators_group_name,omitempty" required:"false" doc:"Optional custom name to specify a non default privileged group. If not set, privileged group is the BUILTIN\Administrators group."`
+	SmbAdministratorsGroupName           string                          `json:"smb_administrators_group_name,omitempty" yaml:"smb_administrators_group_name,omitempty" required:"false" doc:"Optional custom name to specify a non default privileged group. If not set, privileged group is the Backup Operators domain group."`
 	SmbEncryptionState                   string                          `json:"smb_encryption_state,omitempty" yaml:"smb_encryption_state,omitempty" required:"false" doc:"Defines the encryption level for SMB"`
-	SmbPrivilegedGroupFullAccess         bool                            `json:"smb_privileged_group_full_access,omitempty" yaml:"smb_privileged_group_full_access,omitempty" required:"false" doc:"If true, the privileged group has full access. Otherwise, read only"`
+	SmbPrivilegedGroupFullAccess         bool                            `json:"smb_privileged_group_full_access,omitempty" yaml:"smb_privileged_group_full_access,omitempty" required:"false" doc:"True=The SMB privileged user group has read and write control access. Members of the group can perform backup and restore operations on all files and directories, without requiring read or write access to the specific files and directories. False=the privileged group has read only access."`
 	SmbPrivilegedGroupSid                string                          `json:"smb_privileged_group_sid,omitempty" yaml:"smb_privileged_group_sid,omitempty" required:"false" doc:"Optional custom SID to specify a non default SMB privileged group. If not set, SMB privileged group is the Backup Operators domain group."`
 	SmbPrivilegedUserName                string                          `json:"smb_privileged_user_name,omitempty" yaml:"smb_privileged_user_name,omitempty" required:"false" doc:"Optional custom username for the SMB privileged user. If not set, the SMB privileged user name is 'vastadmin'"`
-	TenantAdminsGroupName                string                          `json:"tenant_admins_group_name,omitempty" yaml:"tenant_admins_group_name,omitempty" required:"false" doc:""`
-	TrashGid                             int64                           `json:"trash_gid,omitempty" yaml:"trash_gid,omitempty" required:"false" doc:"GID with permissions to the trash folder"`
+	TenantAdminsGroupName                string                          `json:"tenant_admins_group_name,omitempty" yaml:"tenant_admins_group_name,omitempty" required:"false" doc:"Specifies a group on an AD or LDAP provider. Enables users in the group to log into the tenant VMS as Tenant Admin users. In order to be granted permissions to do any configuration, the same users need to belong to groups on the provider that are associated with VMS manager user roles for tenant admin type users on the tenant."`
+	TrashGid                             int64                           `json:"trash_gid,omitempty" yaml:"trash_gid,omitempty" required:"false" doc:"GID of group of NFSv3 users to which to grant permission to move files into the trash folder. If not set, the operation of moving files into the trash folder is supported for the root user only."`
 	UseSmbNative                         bool                            `json:"use_smb_native,omitempty" yaml:"use_smb_native,omitempty" required:"false" doc:"Use native SMB authentication"`
-	UseSmbPrivilegedGroup                bool                            `json:"use_smb_privileged_group,omitempty" yaml:"use_smb_privileged_group,omitempty" required:"false" doc:"If true, the privileged group is enabled"`
-	UseSmbPrivilegedUser                 bool                            `json:"use_smb_privileged_user,omitempty" yaml:"use_smb_privileged_user,omitempty" required:"false" doc:"If true, the privileged user is enabled"`
+	UseSmbPrivilegedGroup                bool                            `json:"use_smb_privileged_group,omitempty" yaml:"use_smb_privileged_group,omitempty" required:"false" doc:"Enables SMB privileged user group"`
+	UseSmbPrivilegedUser                 bool                            `json:"use_smb_privileged_user,omitempty" yaml:"use_smb_privileged_user,omitempty" required:"false" doc:"Enables SMB privileged user"`
 }
 
 // -----------------------------------------------------
@@ -437,7 +437,7 @@ type TenantClientIpRangesModel_CapacityRules struct {
 // TenantClientIpRangesModel_LocalProvider represents a nested type for Tenant extra method response
 type TenantClientIpRangesModel_LocalProvider struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"ID of the local provider"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the local provider"`
 }
 
 // TenantClientIpRangesModel_Qos represents a nested type for Tenant extra method response
@@ -520,7 +520,7 @@ type TenantClientIpRanges_PATCH_Model struct {
 	LdapTitle                            string                                    `json:"ldap_title,omitempty" yaml:"ldap_title,omitempty" required:"false" doc:""`
 	LocalProvider                        TenantClientIpRangesModel_LocalProvider   `json:"local_provider,omitempty" yaml:"local_provider,omitempty" required:"false" doc:""`
 	LocalProviderId                      int64                                     `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"Local provider ID"`
-	LocalProviderTitle                   string                                    `json:"local_provider_title,omitempty" yaml:"local_provider_title,omitempty" required:"false" doc:"Local provider title"`
+	LocalProviderTitle                   string                                    `json:"local_provider_title,omitempty" yaml:"local_provider_title,omitempty" required:"false" doc:"The local provider associated with the tenant"`
 	LoginNamePrimaryProvider             string                                    `json:"login_name_primary_provider,omitempty" yaml:"login_name_primary_provider,omitempty" required:"false" doc:"Primary provider for the user's login name"`
 	MaxViews                             int64                                     `json:"max_views,omitempty" yaml:"max_views,omitempty" required:"false" doc:"Max views we can create on this tenant (0:unlimted as default)"`
 	NisProviderId                        int64                                     `json:"nis_provider_id,omitempty" yaml:"nis_provider_id,omitempty" required:"false" doc:"NIS provider ID"`

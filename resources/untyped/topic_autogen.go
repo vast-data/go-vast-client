@@ -48,3 +48,67 @@ func (t *Topic) TopicShowWithContext_GET(ctx context.Context, params core.Params
 func (t *Topic) TopicShow_GET(params core.Params) (core.Record, error) {
 	return t.TopicShowWithContext_GET(t.Rest.GetCtx(), params)
 }
+
+// TopicTopicsWithContext_GET
+// method: GET
+// url: /topics/
+// summary: List Kafka Topics
+func (t *Topic) TopicTopicsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+	resourcePath := "/topics/"
+	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+
+}
+
+// TopicTopics_GET
+// method: GET
+// url: /topics/
+// summary: List Kafka Topics
+func (t *Topic) TopicTopics_GET(params core.Params) (core.RecordSet, error) {
+	return t.TopicTopicsWithContext_GET(t.Rest.GetCtx(), params)
+}
+
+// TopicTopicsWithContext_PATCH
+// method: PATCH
+// url: /topics/
+// summary: Modify a Kafka Topic
+func (t *Topic) TopicTopicsWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
+	resourcePath := "/topics/"
+	result, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TopicTopics_PATCH
+// method: PATCH
+// url: /topics/
+// summary: Modify a Kafka Topic
+func (t *Topic) TopicTopics_PATCH(body core.Params) (core.Record, error) {
+	return t.TopicTopicsWithContext_PATCH(t.Rest.GetCtx(), body)
+}
+
+// TopicTopicsWithContext_POST
+// method: POST
+// url: /topics/
+// summary: Create a Kafka Topic
+func (t *Topic) TopicTopicsWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+	resourcePath := "/topics/"
+	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TopicTopics_POST
+// method: POST
+// url: /topics/
+// summary: Create a Kafka Topic
+func (t *Topic) TopicTopics_POST(body core.Params) (core.Record, error) {
+	return t.TopicTopicsWithContext_POST(t.Rest.GetCtx(), body)
+}
