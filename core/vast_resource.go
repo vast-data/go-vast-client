@@ -126,13 +126,13 @@ func (e *VastResource) UpdateWithContext(ctx context.Context, id any, body Param
 
 // DeleteWithContext deletes a resource found using searchParams, using the provided deleteParams, within the given context.
 // If the resource is not found, it returns success without error.
-func (e *VastResource) DeleteWithContext(ctx context.Context, searchParams, queryParams, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) DeleteWithContext(ctx context.Context, searchParams, queryParams, deleteParams Params) (Record, error) {
 	result, err := e.GetWithContext(ctx, searchParams)
 	if err != nil {
 		if IsNotFoundErr(err) {
 			// Resource not found. For "Delete" it is not error condition.
 			// If you want custom logic you can implement your own Get logic and then ue "DeleteById"
-			return EmptyRecord{}, nil
+			return Record{}, nil
 		}
 		return nil, err
 	}
@@ -147,9 +147,9 @@ func (e *VastResource) DeleteWithContext(ctx context.Context, searchParams, quer
 }
 
 // DeleteByIdWithContext deletes a resource by its unique ID using the provided context and delete parameters.
-func (e *VastResource) DeleteByIdWithContext(ctx context.Context, id any, queryParams, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) DeleteByIdWithContext(ctx context.Context, id any, queryParams, deleteParams Params) (Record, error) {
 	path := BuildResourcePathWithID(e.resourcePath, id)
-	result, err := Request[EmptyRecord](ctx, e, http.MethodDelete, path, queryParams, deleteParams)
+	result, err := Request[Record](ctx, e, http.MethodDelete, path, queryParams, deleteParams)
 	if !e.resourceOps.has(D) && ExpectStatusCodes(err, http.StatusNotFound) {
 		err.(*ApiError).hints = e.describeResourceFrom(e)
 	}
@@ -252,12 +252,12 @@ func (e *VastResource) Update(id any, params Params) (Record, error) {
 
 // Delete deletes a resource found with searchParams using deleteParams and the bound REST context.
 // Returns success even if the resource is not found.
-func (e *VastResource) Delete(searchParams, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) Delete(searchParams, deleteParams Params) (Record, error) {
 	return e.DeleteWithContext(e.Rest.GetCtx(), searchParams, nil, deleteParams)
 }
 
 // DeleteById deletes a resource by its ID using the bound REST context and provided deleteParams.
-func (e *VastResource) DeleteById(id any, queryParams, deleteParams Params) (EmptyRecord, error) {
+func (e *VastResource) DeleteById(id any, queryParams, deleteParams Params) (Record, error) {
 	return e.DeleteByIdWithContext(e.Rest.GetCtx(), id, queryParams, deleteParams)
 }
 

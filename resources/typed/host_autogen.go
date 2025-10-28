@@ -263,17 +263,9 @@ func (r *Host) HostDiscoverWithContext_GET(ctx context.Context, waitTimeout time
 	if err != nil {
 		return nil, err
 	}
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, result.RecordID(), r.Untyped)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+	return asyncResult, err
 
 }
 

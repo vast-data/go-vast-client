@@ -322,7 +322,7 @@ func (r *User) UserAccessKeysWithContext_DELETE(ctx context.Context, id any, acc
 	reqBody := core.Params{}
 	reqBody["access_key"] = accessKey
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -354,7 +354,7 @@ func (r *User) UserAccessKeysWithContext_PATCH(ctx context.Context, id any, acce
 	reqBody["access_key"] = accessKey
 	reqBody["enabled"] = enabled
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -444,17 +444,9 @@ func (r *User) UserCopyWithContext_POST(ctx context.Context, body *UserCopy_POST
 	if err != nil {
 		return nil, err
 	}
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, result.RecordID(), r.Untyped)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -490,7 +482,7 @@ func (r *User) UserNonLocalKeysWithContext_DELETE(ctx context.Context, body *Use
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -525,7 +517,7 @@ func (r *User) UserNonLocalKeysWithContext_PATCH(ctx context.Context, body *User
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }

@@ -23,20 +23,9 @@ func (c *Cnode) CnodeAddCnodesWithContext_POST(ctx context.Context, body core.Pa
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -78,7 +67,7 @@ func (c *Cnode) CnodeBgpconfig_GET(id any, params core.Params) (core.Record, err
 // summary: Configure BGP on CNode
 func (c *Cnode) CnodeBgpconfigWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("cnodes", id, "bgpconfig")
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -104,7 +93,7 @@ func (c *Cnode) CnodeControlLedWithContext_PATCH(ctx context.Context, id any, co
 	if control != "" {
 		body["control"] = control
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -133,20 +122,9 @@ func (c *Cnode) CnodeHighlightWithContext_PATCH(ctx context.Context, id any, bod
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -174,7 +152,7 @@ func (c *Cnode) CnodeRenameWithContext_PATCH(ctx context.Context, id any, name s
 	if name != "" {
 		body["name"] = name
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -205,7 +183,7 @@ func (c *Cnode) CnodeSetTenantsWithContext_POST(ctx context.Context, id int64, m
 	body["id"] = id
 	body["mode"] = mode
 	body["tenant_ids"] = tenantIds
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }

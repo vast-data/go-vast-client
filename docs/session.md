@@ -33,7 +33,7 @@ rest, _ := client.NewVMSRest(config)
 session := rest.GetSession()
 ```
 
-> **Note:** Session methods always return untyped data (`core.Record`, `core.RecordSet`, or `core.EmptyRecord`), even when accessed from a typed client.
+> **Note:** Session methods always return untyped data (`core.Record` or `core.RecordSet`), even when accessed from a typed client.
 
 ## Example Usage
 

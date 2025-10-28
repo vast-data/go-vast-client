@@ -457,7 +457,7 @@ func (m *mockRESTSession) Patch(ctx context.Context, url string, params Params, 
 }
 
 func (m *mockRESTSession) Delete(ctx context.Context, url string, params Params, headers []http.Header) (Renderable, error) {
-	return EmptyRecord{}, nil
+	return Record{}, nil
 }
 
 func (m *mockRESTSession) GetConfig() *VMSConfig {

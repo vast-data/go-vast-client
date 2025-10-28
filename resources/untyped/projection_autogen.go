@@ -15,7 +15,7 @@ import (
 // summary: Delete a Database Table Semi-Sorted Projection
 func (p *Projection) ProjectionDeleteWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/projections/delete/"
-	_, err := core.Request[core.EmptyRecord](ctx, p, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, p, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }
@@ -34,7 +34,7 @@ func (p *Projection) ProjectionDelete_DELETE(params core.Params) error {
 // summary: Rename a Database Table Semi-Sorted Projection
 func (p *Projection) ProjectionRenameWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/projections/rename/"
-	_, err := core.Request[core.EmptyRecord](ctx, p, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

@@ -15,7 +15,7 @@ import (
 // summary: Deactivate encryption group.
 func (e *EncryptionGroup) EncryptionGroupDeactivateEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("encryptiongroups", id, "deactivate_encryption_group")
-	_, err := core.Request[core.EmptyRecord](ctx, e, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -34,7 +34,7 @@ func (e *EncryptionGroup) EncryptionGroupDeactivateEncryptionGroup_POST(id any, 
 // summary: Reinstate Encryption Group
 func (e *EncryptionGroup) EncryptionGroupReinstateEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("encryptiongroups", id, "reinstate_encryption_group")
-	_, err := core.Request[core.EmptyRecord](ctx, e, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -53,7 +53,7 @@ func (e *EncryptionGroup) EncryptionGroupReinstateEncryptionGroup_POST(id any, b
 // summary: Revoke Encryption Group
 func (e *EncryptionGroup) EncryptionGroupRevokeEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("encryptiongroups", id, "revoke_encryption_group")
-	_, err := core.Request[core.EmptyRecord](ctx, e, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -72,7 +72,7 @@ func (e *EncryptionGroup) EncryptionGroupRevokeEncryptionGroup_POST(id any, body
 // summary: Rotate Encryption Group Key
 func (e *EncryptionGroup) EncryptionGroupRotateEncryptionGroupKeyWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("encryptiongroups", id, "rotate_encryption_group_key")
-	_, err := core.Request[core.EmptyRecord](ctx, e, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }

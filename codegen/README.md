@@ -134,7 +134,7 @@ delete:
 
 **Generated (Simplified):**
 ```go
-func (u *UserKey) UserKeyDeleteAccessKeys(id any, accessKey string) (core.EmptyRecord, error) {
+func (u *UserKey) UserKeyDeleteAccessKeys(id any, accessKey string) error {
     // Body automatically constructed: {"access_key": accessKey}
 }
 ```

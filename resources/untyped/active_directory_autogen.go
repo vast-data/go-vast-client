@@ -141,7 +141,7 @@ func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthy_POST(id any, body co
 // summary: Refresh AD
 func (a *ActiveDirectory) ActiveDirectoryRefreshWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "refresh")
-	_, err := core.Request[core.EmptyRecord](ctx, a, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, a, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

@@ -37,7 +37,7 @@ func (r *Folder) FolderDeleteFolderWithContext_DELETE(ctx context.Context, path 
 		reqBody["tenant_id"] = tenantId
 	}
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -70,7 +70,7 @@ func (r *Folder) FolderReadOnlyWithContext_DELETE(ctx context.Context, path stri
 	reqBody["path"] = path
 	reqBody["tenant_id"] = tenantId
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }

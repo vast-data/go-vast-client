@@ -15,7 +15,7 @@ import (
 // summary: Reset all dynamic configs to their default values
 func (c *Config) ConfigResetWithContext_POST(ctx context.Context, body core.Params) error {
 	resourcePath := "/config/reset/"
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }

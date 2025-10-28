@@ -22,7 +22,7 @@ func (d *Dtray) DtrayControlLedWithContext_PATCH(ctx context.Context, id any, co
 	if control != "" {
 		body["control"] = control
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, d, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, d, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -51,7 +51,7 @@ func (d *Dtray) DtrayRenameWithContext_PATCH(ctx context.Context, id any, name s
 	if name != "" {
 		body["name"] = name
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, d, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, d, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

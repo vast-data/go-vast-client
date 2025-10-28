@@ -48,7 +48,7 @@ type VMSConfig struct {
 	//
 	// Parameters:
 	//   - ctx: The request context for managing deadlines and cancellations.
-	//   - response: A Renderable result such as Record, RecordSet, or EmptyRecord.
+	//   - response: A Renderable result such as Record or RecordSet.
 	//
 	// Returns:
 	//   - A potentially modified Renderable object.

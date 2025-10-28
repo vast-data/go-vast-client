@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -315,8 +316,8 @@ type Filler interface {
 //   - Rendering themselves as human-readable output via the Renderable interface.
 //   - Filling provided container structs or slices using the Filler interface.
 //
-// This interface is implemented by Record, RecordSet, and EmptyRecord, allowing
-// generic handling of different response shapes (single item, list, or empty).
+// This interface is implemented by Record and RecordSet, allowing
+// generic handling of different response shapes (single item or list).
 type DisplayableRecord interface {
 	Renderable
 	Filler
@@ -324,23 +325,19 @@ type DisplayableRecord interface {
 
 // Record represents a single generic data object as a key-value map.
 // It's commonly used to unmarshal a single JSON object from an API response.
+// When a response is empty (e.g., 204 No Content), an empty Record{} is returned.
 type Record map[string]any
-
-// EmptyRecord represents a placeholder for methods that do not return data,
-// such as DELETE operations. It maintains the same structure as Record
-// but is used semantically to indicate the absence of returned content.
-type EmptyRecord map[string]any
 
 // RecordSet represents a list of Record objects.
 // It is typically used to represent responses containing multiple items.
 type RecordSet []Record
 
 // RecordUnion defines a union of supported record types for generic operations.
-// It can be a single Record, an EmptyRecord, or a RecordSet.
+// It can be a single Record or a RecordSet.
 // This allows functions to operate on any supported response type
 // using Go generics.
 type RecordUnion interface {
-	Record | EmptyRecord | RecordSet
+	Record | RecordSet
 }
 
 // Fill populates the exported fields of the given struct pointer using values
@@ -601,26 +598,8 @@ func (rs RecordSet) PrettyJson(indent ...string) string {
 	return string(b)
 }
 
-func (er EmptyRecord) Fill(_ any) error {
-	return nil
-}
-
-// PrettyTable EmptyRecord
-func (er EmptyRecord) PrettyTable() string {
-	return "<->"
-}
-
-func (er EmptyRecord) PrettyJson(indent ...string) string {
-	return "{}"
-}
-
-func (er EmptyRecord) String() string {
-	return er.PrettyTable()
-}
-
 // unmarshalToRecordUnion parses an HTTP response body into one of the supported record types:
-// - EmptyRecord: returned when the response body is empty or the status code is 204 No Content.
-// - Record: a map representing a single JSON object.
+// - Record: a map representing a single JSON object (empty Record{} for empty responses or 204 No Content).
 // - RecordSet: a slice of Records representing a JSON array.
 //
 // It inspects the first non-whitespace character of the response body to determine whether
@@ -631,7 +610,7 @@ func unmarshalToRecordUnion(response *http.Response) (Renderable, error) {
 
 	// Handle empty response
 	if response.ContentLength == 0 || response.StatusCode == http.StatusNoContent {
-		return EmptyRecord{}, nil
+		return Record{}, nil
 	}
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -640,7 +619,7 @@ func unmarshalToRecordUnion(response *http.Response) (Renderable, error) {
 	// Check first non-whitespace character
 	trimmed := bytes.TrimSpace(body)
 	if len(trimmed) == 0 {
-		return EmptyRecord{}, nil
+		return Record{}, nil
 	}
 	switch trimmed[0] {
 	case '{': // JSON object
@@ -675,7 +654,7 @@ func unmarshalToRecordUnion(response *http.Response) (Renderable, error) {
 
 // applyCallbackForRecordUnion applies the provided callback function to a response if
 // the response type matches the specified generic type T. It supports different types
-// of Renderable responses (Record, RecordSet, and EmptyRecord), and will only apply the
+// of Renderable responses (Record and RecordSet), and will only apply the
 // callback for the exact type matching the generic type T.
 func applyCallbackForRecordUnion[T RecordUnion](response Renderable, callback func(Renderable) (Renderable, error)) (Renderable, error) {
 	switch typed := response.(type) {
@@ -693,13 +672,6 @@ func applyCallbackForRecordUnion[T RecordUnion](response Renderable, callback fu
 		}
 		return typed, nil
 
-	case EmptyRecord:
-		var zero T
-		if _, ok := any(zero).(EmptyRecord); ok {
-			return callback(typed)
-		}
-		return typed, nil
-
 	default:
 		return nil, fmt.Errorf("unsupported type %T for result", response)
 	}
@@ -709,7 +681,7 @@ func applyCallbackForRecordUnion[T RecordUnion](response Renderable, callback fu
 // matches the generic type T at runtime.
 //
 // It is typically used to determine if a response object corresponds to
-// a specific expected data type (e.g., RecordSet, Record, or EmptyRecord).
+// a specific expected data type (e.g., RecordSet or Record).
 //
 // This function works by comparing the runtime type of the provided `val`
 // against the zero value of the generic type T using reflection.
@@ -738,8 +710,6 @@ func setResourceKey(result Renderable, resourceType string) error {
 				rec[ResourceTypeKey] = resourceType
 			}
 		}
-		return nil
-	case EmptyRecord:
 		return nil
 	default:
 		return fmt.Errorf("unsupported type")
@@ -773,4 +743,88 @@ func ModelToRecord(model any) Record {
 	record[ResourceTypeKey] = resourceType
 
 	return record
+}
+
+//  ######################################################
+//              ASYNC RESULT
+//  ######################################################
+
+// AsyncResult represents the result of an asynchronous task.
+// It contains the task's ID and necessary context for waiting on the task to complete.
+type AsyncResult struct {
+	TaskId int64
+	Rest   VastRest
+	ctx    context.Context
+}
+
+// NewAsyncResult creates a new AsyncResult from a task ID and REST client.
+//
+// This constructor is used to create an AsyncResult when you already have a task ID.
+// The context is stored for potential future use with waiting operations.
+//
+// Parameters:
+//   - ctx: The context associated with the task operation
+//   - taskId: The ID of the asynchronous task
+//   - rest: The REST client that can be used to query task status
+//
+// Returns:
+//   - *AsyncResult: A new AsyncResult instance
+func NewAsyncResult(ctx context.Context, taskId int64, rest VastRest) *AsyncResult {
+	return &AsyncResult{
+		ctx:    ctx,
+		TaskId: taskId,
+		Rest:   rest,
+	}
+}
+
+// MaybeAsyncResultFromRecord attempts to extract an async task ID from a record and create an AsyncResult.
+//
+// This function handles two common patterns in VAST API responses:
+//  1. Direct task response: The record itself has a ResourceTypeKey and represents the task
+//  2. Nested task response: The record has an "async_task" field containing the task information
+//
+// If the record doesn't contain any task information, or if the task ID cannot be extracted,
+// this function returns nil.
+//
+// Parameters:
+//   - ctx: The context to associate with the async result
+//   - record: The record that may contain async task information
+//   - rest: The REST client for task operations
+//
+// Returns:
+//   - *AsyncResult: An AsyncResult if task information was found, nil otherwise
+func MaybeAsyncResultFromRecord(ctx context.Context, record Record, rest VastRest) *AsyncResult {
+	var (
+		taskId      int64
+		asyncResult *AsyncResult
+	)
+
+	if record.Empty() {
+		return nil
+	}
+
+	// Check if the record itself is a task (has ResourceTypeKey)
+	if _, ok := record[ResourceTypeKey]; ok {
+		// Only call RecordID if "id" field exists to avoid panic
+		if _, hasId := record["id"]; hasId {
+			taskId = record.RecordID()
+		}
+	} else {
+		// Check for nested async_task field
+		if asyncTask, ok := record["async_task"]; ok {
+			var m map[string]any
+			if m, ok = asyncTask.(map[string]any); ok {
+				if _, hasId := m["id"]; hasId {
+					taskId = ToRecord(m).RecordID()
+				}
+			}
+		}
+	}
+
+	if taskId != 0 {
+		asyncResult = NewAsyncResult(ctx, taskId, rest)
+	}
+
+	return asyncResult
+
 }

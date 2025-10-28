@@ -23,7 +23,7 @@ func (c *Carrier) CarrierControlLedWithContext_PATCH(ctx context.Context, id any
 	if control != "" {
 		body["control"] = control
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -52,20 +52,9 @@ func (c *Carrier) CarrierHighlightWithContext_PATCH(ctx context.Context, id any,
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -93,20 +82,9 @@ func (c *Carrier) CarrierResetPciWithContext_PATCH(ctx context.Context, id any, 
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 

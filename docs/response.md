@@ -31,9 +31,8 @@ view, err := rest.Views.Get(searchParams)
 
 The untyped client returns **flexible map-based types**:
 
-- **`core.Record`**: Single record (key-value map: `map[string]any`)
+- **`core.Record`**: Single record (key-value map: `map[string]any`). Can be empty (`Record{}`) for operations like DELETE.
 - **`core.RecordSet`**: List of records (`[]map[string]any`)
-- **`core.EmptyRecord`**: Empty result (used in operations like DELETE)
 
 ```go
 rest, _ := client.NewVMSRest(config)

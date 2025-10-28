@@ -98,7 +98,7 @@ func (f *Folder) FolderReadOnlyWithContext_DELETE(ctx context.Context, path stri
 	body := core.Params{}
 	body["path"] = path
 	body["tenant_id"] = tenantId
-	_, err := core.Request[core.EmptyRecord](ctx, f, http.MethodDelete, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, f, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }

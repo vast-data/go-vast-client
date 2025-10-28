@@ -22,7 +22,7 @@ func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsAddWithContext_PATCH(
 	body := core.Params{}
 	body["column_type"] = columnType
 	body["name"] = name
-	_, err := core.Request[core.EmptyRecord](ctx, b, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, b, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -52,7 +52,7 @@ func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsRemoveWithContext_DEL
 	body := core.Params{}
 	body["column_type"] = columnType
 	body["name"] = name
-	_, err := core.Request[core.EmptyRecord](ctx, b, http.MethodDelete, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, b, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }

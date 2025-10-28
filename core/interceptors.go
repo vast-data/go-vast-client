@@ -122,15 +122,12 @@ func defaultResponseMutations(response Renderable) (Renderable, error) {
 			var m map[string]any
 			if m, ok = raw.(map[string]any); ok {
 				m[ResourceTypeKey] = "VTask"
-				return ToRecord(m)
+				return ToRecord(m), nil
 			}
 			return nil, fmt.Errorf("expected map[string]any under 'async_task', got %T", raw)
 		}
 		return response, nil
 	case RecordSet:
-		return typed, nil
-	case EmptyRecord:
-		// No op.
 		return typed, nil
 	}
 	return nil, fmt.Errorf("unsupported type %T for result", response)
@@ -185,7 +182,7 @@ func beforeRequestLog(verb, url string, body io.Reader) {
 // In info mode, it only logs a summary (record count, resource type, etc.).
 //
 // Parameters:
-//   - response: The response object (Record, RecordSet, or EmptyRecord)
+//   - response: The response object (Record or RecordSet)
 func afterRequestLog(response Renderable) {
 	if logLevel == "debug" {
 		// Debug mode: print full response using PrettyJson
@@ -220,8 +217,6 @@ func afterRequestLogInfo(response Renderable) {
 		} else {
 			responseStr = "RecordSet with 0 record(s)"
 		}
-	case EmptyRecord:
-		responseStr = "Empty response"
 	default:
 		responseStr = "Response received"
 	}
@@ -256,9 +251,6 @@ func afterRequestLogDebug(response Renderable) {
 			header = "response | RecordSet with 0 record(s)"
 		}
 		body = resp.PrettyJson("  ")
-	case EmptyRecord:
-		header = "response | Empty response"
-		body = "{}"
 	default:
 		header = "response | Response received"
 		body = fmt.Sprintf("%v", response)

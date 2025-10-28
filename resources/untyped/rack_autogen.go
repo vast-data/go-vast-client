@@ -15,7 +15,7 @@ import (
 // summary: Add Boxes to a Rack
 func (r *Rack) RackAddBoxesWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("racks", id, "add_boxes")
-	_, err := core.Request[core.EmptyRecord](ctx, r, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, r, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -34,7 +34,7 @@ func (r *Rack) RackAddBoxes_POST(id any, body core.Params) error {
 // summary: Configure BGP on Rack
 func (r *Rack) RackBgpconfigWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("racks", id, "bgpconfig")
-	_, err := core.Request[core.EmptyRecord](ctx, r, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, r, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -60,7 +60,7 @@ func (r *Rack) RackControlLedWithContext_PATCH(ctx context.Context, id any, cont
 	if control != "" {
 		body["control"] = control
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, r, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, r, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -89,7 +89,7 @@ func (r *Rack) RackRenameWithContext_PATCH(ctx context.Context, id any, name str
 	if name != "" {
 		body["name"] = name
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, r, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, r, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

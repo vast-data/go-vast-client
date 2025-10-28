@@ -25,7 +25,7 @@ type (
 	// RecordSet is a collection of Record objects.
 	RecordSet = core.RecordSet
 
-	// Renderable is the interface for Record, RecordSet, and EmptyRecord.
+	// Renderable is the interface for Record and RecordSet.
 	Renderable = core.Renderable
 
 	// DisplayableRecord is an interface for records that can be displayed.

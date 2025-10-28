@@ -99,7 +99,7 @@ func (t *Tenant) TenantConfiguredIdp_GET(params core.Params) (core.Record, error
 // summary: Deactivate tenant's encryption group.
 func (t *Tenant) TenantDeactivateEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "deactivate_encryption_group")
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -139,7 +139,7 @@ func (t *Tenant) TenantIsOperationHealthy_POST(id any, body core.Params) (core.R
 // summary: Remove NFSv4 delegation
 func (t *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any, params core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "nfs4_deleg")
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }
@@ -179,7 +179,7 @@ func (t *Tenant) TenantNfs4Delegs_GET(id any, params core.Params) (core.Record, 
 // summary: Reinstate tenant's encryption group.
 func (t *Tenant) TenantReinstateEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "reinstate_encryption_group")
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -220,7 +220,7 @@ func (t *Tenant) TenantRemoteObjects_GET(params core.Params) (core.RecordSet, er
 // summary: Revoke tenant's encryption group.
 func (t *Tenant) TenantRevokeEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "revoke_encryption_group")
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -239,7 +239,7 @@ func (t *Tenant) TenantRevokeEncryptionGroup_POST(id any, body core.Params) erro
 // summary: Rotate tenant's encryption group key.
 func (t *Tenant) TenantRotateEncryptionGroupKeyWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "rotate_encryption_group_key")
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }

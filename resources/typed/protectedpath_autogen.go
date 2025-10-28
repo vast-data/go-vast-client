@@ -239,17 +239,8 @@ func (r *ProtectedPath) DeleteByIdWithContext(ctx context.Context, id any, waitT
 		return nil, err
 	}
 
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, record.RecordID(), r.Untyped)
-
-	// Wait for task completion if timeout > 0
-	if waitTimeout > 0 {
-		if _, err := task.Wait(waitTimeout); err != nil {
-			return task, err
-		}
-	}
-
-	return task, nil
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
+	return asyncResult, err
 }
 
 // -----------------------------------------------------
@@ -333,7 +324,7 @@ func (r *ProtectedPath) ProtectedPathPrefetchPathWithContext_DELETE(ctx context.
 	reqBody["stop_running_prefetch"] = stopRunningPrefetch
 	reqBody["task_id"] = taskId
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -462,7 +453,7 @@ func (r *ProtectedPath) ProtectedPathRemoveStreamWithContext_PATCH(ctx context.C
 		reqBody["stream_id"] = streamId
 	}
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }

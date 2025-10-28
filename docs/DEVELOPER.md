@@ -192,9 +192,9 @@ func (r *UserKey) CreateKey(context.Context, userId int64) (Record, error) {
 	return request[Record](ctx, r, http.MethodPost, path, nil, nil)
 }
 
-func (r *UserKey) DeleteKey(context.Context, userId int64, accessKey string) (EmptyRecord, error) {
+func (r *UserKey) DeleteKey(context.Context, userId int64, accessKey string) (Record, error) {
 	path := fmt.Sprintf(r.resourcePath, userId)
-	return request[EmptyRecord](ctx, r, http.MethodDelete, path, nil, Params{"access_key": accessKey})
+	return request[Record](ctx, r, http.MethodDelete, path, nil, Params{"access_key": accessKey})
 }
 ```
 
@@ -231,7 +231,7 @@ afterRequest(ctx context.Context, response Renderable) (Renderable, error)
 Parameters:
 
 - ctx: The request context, useful for deadlines, tracing, or cancellation.
-- response: Resources that implement Renderable interface (Record, RecordSet, EmptyRecord)
+- response: Resources that implement Renderable interface (Record, RecordSet)
 
 
 At this moment I don't have practical example for `beforeRequest`. Probably it can be used for logging etc.

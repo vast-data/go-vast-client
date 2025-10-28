@@ -41,7 +41,7 @@ func (m *Manager) ManagerPasswordWithContext_PATCH(ctx context.Context, password
 	resourcePath := "/managers/password/"
 	body := core.Params{}
 	body["password"] = password
-	_, err := core.Request[core.EmptyRecord](ctx, m, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, m, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -74,7 +74,7 @@ func (m *Manager) ManagerUnlockWithContext_PATCH(ctx context.Context, id any, is
 	if password != "" {
 		body["password"] = password
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, m, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, m, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

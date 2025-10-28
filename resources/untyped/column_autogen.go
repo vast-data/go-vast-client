@@ -15,7 +15,7 @@ import (
 // summary: Delete a Database Table Column
 func (c *Column) ColumnDeleteWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/columns/delete/"
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }
@@ -34,7 +34,7 @@ func (c *Column) ColumnDelete_DELETE(params core.Params) error {
 // summary: Rename a Database Table Column
 func (c *Column) ColumnRenameWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/columns/rename/"
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
