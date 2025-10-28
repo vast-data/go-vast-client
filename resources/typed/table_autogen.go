@@ -193,7 +193,7 @@ func (r *Table) TableAddColumnsWithContext_PATCH(ctx context.Context, body *Tabl
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -228,7 +228,7 @@ func (r *Table) TableDeleteWithContext_DELETE(ctx context.Context, body *TableDe
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -264,7 +264,7 @@ func (r *Table) TableRenameWithContext_PATCH(ctx context.Context, body *TableRen
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }

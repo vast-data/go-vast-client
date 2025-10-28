@@ -386,7 +386,7 @@ func (r *Manager) ManagerPasswordWithContext_PATCH(ctx context.Context, password
 	reqBody := core.Params{}
 	reqBody["password"] = password
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -422,7 +422,7 @@ func (r *Manager) ManagerUnlockWithContext_PATCH(ctx context.Context, id any, is
 		reqBody["password"] = password
 	}
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }

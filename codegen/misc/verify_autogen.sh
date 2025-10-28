@@ -6,7 +6,7 @@
 #   2. core.Params in function signatures (untyped parameters)
 #   3. core.Record in function return types (untyped records)
 #   4. core.RecordSet in function return types (untyped record sets)
-#   5. core.EmptyRecord in function return types (untyped empty records)
+#   5. EmptyRecord references (removed type that should not appear)
 #
 # Usage: ./verify_autogen.sh [path_to_typed_resources]
 #
@@ -90,14 +90,15 @@ else
 fi
 echo ""
 
-# Check 5: core.EmptyRecord in function return types
-echo "Checking for core.EmptyRecord in function return types..."
-core_emptyrecord=$(grep -n "func.*core\.EmptyRecord" "$TYPED_DIR"/*_autogen.go 2>/dev/null | grep -v "// " | grep -v "//" || true)
+# Check 5: Verify no references to removed EmptyRecord type remain
+echo "Checking for any references to removed EmptyRecord type..."
+core_emptyrecord=$(grep -n "EmptyRecord" "$TYPED_DIR"/*_autogen.go 2>/dev/null | grep -v "// " | grep -v "//" || true)
 if [ -n "$core_emptyrecord" ]; then
+    echo "Found references to removed EmptyRecord type:"
     echo "$core_emptyrecord" | while read line; do echo "  $line"; done
     errors=$((errors + 1))
 else
-    echo "No core.EmptyRecord found in function return types"
+    echo "No references to removed EmptyRecord type found"
 fi
 echo ""
 

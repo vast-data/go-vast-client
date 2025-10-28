@@ -276,17 +276,8 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any{{range .Update
 		return nil, err
 	}
 
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, record.RecordID(), r.Untyped)
-	
-	// Wait for task completion if timeout > 0
-	if waitTimeout > 0 {
-		if _, err := task.Wait(waitTimeout); err != nil {
-			return task, err
-		}
-	}
-	
-	return task, nil
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
+	return asyncResult, err
 }
 {{else}}
 // Update updates an existing {{.LowerName}} and returns an async task{{if .UpdateSummary}}
@@ -314,17 +305,8 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}
 		return nil, err
 	}
 
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, record.RecordID(), r.Untyped)
-	
-	// Wait for task completion if timeout > 0
-	if waitTimeout > 0 {
-		if _, err := task.Wait(waitTimeout); err != nil {
-			return task, err
-		}
-	}
-	
-	return task, nil
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
+	return asyncResult, err
 }
 {{end}}
 {{else}}
@@ -440,17 +422,8 @@ func (r *{{.Name}}) DeleteWithContext(ctx context.Context, req *{{.Name}}SearchP
 		return nil, err
 	}
 
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, record.RecordID(), r.Untyped)
-	
-	// Wait for task completion if timeout > 0
-	if waitTimeout > 0 {
-		if _, err := task.Wait(waitTimeout); err != nil {
-			return task, err
-		}
-	}
-	
-	return task, nil
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
+	return asyncResult, err
 }
 {{else}}
 // Delete deletes a {{.LowerName}} with search parameters{{if or .DeleteQueryParams .DeleteBodyParams}}
@@ -520,17 +493,8 @@ func (r *{{.Name}}) DeleteByIdWithContext(ctx context.Context, id any{{range .De
 		return nil, err
 	}
 
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, record.RecordID(), r.Untyped)
-	
-	// Wait for task completion if timeout > 0
-	if waitTimeout > 0 {
-		if _, err := task.Wait(waitTimeout); err != nil {
-			return task, err
-		}
-	}
-	
-	return task, nil
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
+	return asyncResult, err
 }
 {{else}}
 // DeleteById deletes a {{.LowerName}} by ID{{if .DeleteSummary}}
@@ -710,19 +674,11 @@ func (r *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{i
 	if err != nil {
 		return nil, err
 	}
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, result.RecordID(), r.Untyped)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
-	{{else}}{{if .ReturnsNoContent}}{{if and (or (and .HasParams .BodyFields) (and .HasBody .BodyFields)) (not .SimplifiedBody)}}_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
-	return err{{else}}_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
+
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+	return asyncResult, err
+	{{else}}{{if .ReturnsNoContent}}{{if and (or (and .HasParams .BodyFields) (and .HasBody .BodyFields)) (not .SimplifiedBody)}}_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
+	return err{{else}}_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
 	return err{{end}}
 	{{else}}{{if .ReturnsTextPlain}}record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
 	if err != nil {

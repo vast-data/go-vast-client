@@ -264,17 +264,8 @@ func (r *GlobalSnapshotStream) DeleteByIdWithContext(ctx context.Context, id any
 		return nil, err
 	}
 
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, record.RecordID(), r.Untyped)
-
-	// Wait for task completion if timeout > 0
-	if waitTimeout > 0 {
-		if _, err := task.Wait(waitTimeout); err != nil {
-			return task, err
-		}
-	}
-
-	return task, nil
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
+	return asyncResult, err
 }
 
 // -----------------------------------------------------
@@ -359,17 +350,9 @@ func (r *GlobalSnapshotStream) GlobalSnapshotStreamStopWithContext_PATCH(ctx con
 	if err != nil {
 		return nil, err
 	}
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, result.RecordID(), r.Untyped)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+	return asyncResult, err
 
 }
 

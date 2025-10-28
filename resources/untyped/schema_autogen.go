@@ -26,7 +26,7 @@ func (s *Schema) SchemaDeleteWithContext_DELETE(ctx context.Context, databaseNam
 	if tenantId != 0 {
 		body["tenant_id"] = tenantId
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, s, http.MethodDelete, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, s, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -50,7 +50,7 @@ func (s *Schema) SchemaDelete_DELETE(databaseName string, name string, tenantId 
 // summary: Rename a database schema
 func (s *Schema) SchemaRenameWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/schemas/rename/"
-	_, err := core.Request[core.EmptyRecord](ctx, s, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, s, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

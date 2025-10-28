@@ -21,21 +21,18 @@ func toInt(val any) (int64, error) {
 	return idInt, nil
 }
 
-func ToRecord(m map[string]interface{}) (Record, error) {
+func ToRecord(m map[string]interface{}) Record {
 	converted := Record{}
 	for k, v := range m {
 		converted[k] = v
 	}
-	return converted, nil
+	return converted
 }
 
 func ToRecordSet(list []map[string]any) (RecordSet, error) {
 	records := make(RecordSet, 0, len(list))
 	for _, item := range list {
-		rec, err := ToRecord(item)
-		if err != nil {
-			return nil, err
-		}
+		rec := ToRecord(item)
 		records = append(records, rec)
 	}
 	return records, nil

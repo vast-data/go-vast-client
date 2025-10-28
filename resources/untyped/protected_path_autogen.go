@@ -153,7 +153,7 @@ func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_DELETE(ctx context.
 	body := core.Params{}
 	body["stop_running_prefetch"] = stopRunningPrefetch
 	body["task_id"] = taskId
-	_, err := core.Request[core.EmptyRecord](ctx, p, http.MethodDelete, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, p, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -267,7 +267,7 @@ func (p *ProtectedPath) ProtectedPathRemoveStreamWithContext_PATCH(ctx context.C
 	if streamId != "" {
 		body["stream_id"] = streamId
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, p, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

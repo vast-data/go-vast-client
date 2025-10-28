@@ -15,7 +15,7 @@ import (
 // summary: Set LDAP as POSIX Primary Provider
 func (l *Ldap) LdapSetPosixPrimaryWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("ldaps", id, "set_posix_primary")
-	_, err := core.Request[core.EmptyRecord](ctx, l, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, l, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

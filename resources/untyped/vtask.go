@@ -13,22 +13,9 @@ type VTask struct {
 	*core.VastResource
 }
 
-// AsyncResult represents the result of an asynchronous task.
-// It contains the task's ID and necessary context for waiting on the task to complete.
-type AsyncResult struct {
-	TaskId int64
-	Rest   core.VastRest
-	ctx    context.Context
-}
-
-// NewAsyncResult creates a new AsyncResult from a task ID and REST client
-func NewAsyncResult(ctx context.Context, taskId int64, rest core.VastRest) *AsyncResult {
-	return &AsyncResult{
-		ctx:    ctx,
-		TaskId: taskId,
-		Rest:   rest,
-	}
-}
+type (
+	AsyncResult = core.AsyncResult
+)
 
 // nextBackoff returns the next polling interval using additive backoff strategy.
 //
@@ -115,29 +102,54 @@ func (t *VTask) WaitTask(taskId int64, timeout time.Duration) (core.Record, erro
 	return t.WaitTaskWithContext(ctx, taskId)
 }
 
-// Wait blocks until the asynchronous task completes and returns the resulting Record.
-// If the context (ar.ctx) is not set, it falls back to the context from the associated rest client.
-func (ar *AsyncResult) Wait(timeout time.Duration) (core.Record, error) {
-	ctx := ar.ctx
-	if ctx == nil {
-		ctx = ar.Rest.GetCtx()
-	}
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-	return ar.WaitWithContext(ctx)
+// MaybeWaitAsyncResult checks if the record represents an async task result and optionally waits for it to complete.
+// It uses the context from the rest client.
+//
+// Parameters:
+//   - record: The record that may contain an async task response
+//   - rest: The REST client to use for waiting on the task
+//   - timeout: If 0, returns immediately without waiting. Otherwise, waits for task completion with the specified timeout.
+//
+// Returns:
+//   - *AsyncResult: The async result if one was found, nil otherwise
+//   - core.Record: The completed task record if timeout > 0 and task completed successfully, nil otherwise
+//   - error: Any error that occurred during waiting
+func MaybeWaitAsyncResult(record core.Record, rest core.VastRest, timeout time.Duration) (*AsyncResult, core.Record, error) {
+	return MaybeWaitAsyncResultWithContext(rest.GetCtx(), record, rest, timeout)
 }
 
-// WaitWithContext blocks until the asynchronous task completes or the provided context is canceled.
-// It delegates to the VTasks.WaitTaskWithContext method of the rest client to poll for task completion.
-func (ar *AsyncResult) WaitWithContext(ctx context.Context) (core.Record, error) {
-	return ar.Rest.GetResourceMap()["VTask"].(*VTask).WaitTaskWithContext(ctx, ar.TaskId)
-}
-
-func asyncResultFromRecord(ctx context.Context, r core.Record, rest core.VastRest) *AsyncResult {
-	taskId := r.RecordID()
-	return &AsyncResult{
-		ctx:    ctx,
-		TaskId: taskId,
-		Rest:   rest,
+// MaybeWaitAsyncResultWithContext checks if the record represents an async task result and optionally waits for it to complete.
+// This is a utility function that combines async task detection and optional waiting into a single call.
+//
+// Behavior:
+//   - If record is empty, returns (nil, nil, nil)
+//   - If record does not contain an async task, returns (nil, nil, nil)
+//   - If timeout is 0, returns immediately with (*AsyncResult, nil, nil) - async background operation
+//   - If timeout > 0, waits for task completion and returns (*AsyncResult, taskRecord, error)
+//
+// Parameters:
+//   - ctx: The context to use for waiting (will be wrapped with timeout if timeout > 0)
+//   - record: The record that may contain an async task response
+//   - rest: The REST client to use for waiting on the task
+//   - timeout: If 0, returns immediately without waiting. Otherwise, waits for task completion with the specified timeout.
+//
+// Returns:
+//   - *AsyncResult: The async result if one was found, nil otherwise
+//   - core.Record: The completed task record if timeout > 0 and task completed successfully, nil otherwise
+//   - error: Any error that occurred during waiting
+func MaybeWaitAsyncResultWithContext(ctx context.Context, record core.Record, rest core.VastRest, timeout time.Duration) (*AsyncResult, core.Record, error) {
+	var (
+		asyncResult  *AsyncResult
+		taskResponse core.Record
+		err          error
+	)
+	asyncResult = core.MaybeAsyncResultFromRecord(ctx, record, rest)
+	if asyncResult != nil && timeout > 0 {
+		ctx, cancel := context.WithTimeout(ctx, timeout)
+		defer cancel()
+		taskResponse, err = rest.GetResourceMap()["VTask"].(*VTask).WaitTaskWithContext(ctx, asyncResult.TaskId)
 	}
+
+	return asyncResult, taskResponse, err
+
 }

@@ -151,7 +151,7 @@ func (r *Config) ConfigResetWithContext_POST(ctx context.Context) error {
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	return err
 
 }

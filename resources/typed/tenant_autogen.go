@@ -345,17 +345,8 @@ func (r *Tenant) DeleteByIdWithContext(ctx context.Context, id any, forceRemove 
 		return nil, err
 	}
 
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, record.RecordID(), r.Untyped)
-
-	// Wait for task completion if timeout > 0
-	if waitTimeout > 0 {
-		if _, err := task.Wait(waitTimeout); err != nil {
-			return task, err
-		}
-	}
-
-	return task, nil
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
+	return asyncResult, err
 }
 
 // -----------------------------------------------------
@@ -638,7 +629,7 @@ func (r *Tenant) TenantDeactivateEncryptionGroupWithContext_POST(ctx context.Con
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -718,7 +709,7 @@ func (r *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any) 
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -789,7 +780,7 @@ func (r *Tenant) TenantReinstateEncryptionGroupWithContext_POST(ctx context.Cont
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -854,7 +845,7 @@ func (r *Tenant) TenantRevokeEncryptionGroupWithContext_POST(ctx context.Context
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -877,7 +868,7 @@ func (r *Tenant) TenantRotateEncryptionGroupKeyWithContext_POST(ctx context.Cont
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	return err
 
 }

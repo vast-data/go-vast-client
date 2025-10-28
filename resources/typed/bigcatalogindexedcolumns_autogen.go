@@ -158,7 +158,7 @@ func (r *BigCatalogIndexedColumns) BigCatalogIndexedColumnsAddWithContext_PATCH(
 	reqBody["column_type"] = columnType
 	reqBody["name"] = name
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -191,7 +191,7 @@ func (r *BigCatalogIndexedColumns) BigCatalogIndexedColumnsRemoveWithContext_DEL
 	reqBody["column_type"] = columnType
 	reqBody["name"] = name
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }

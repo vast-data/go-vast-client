@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.107.0
+
+BREAKING CHANGES:
+
+* **EmptyRecord Removed**: The `EmptyRecord` type has been completely removed from the library. All methods that previously returned `EmptyRecord` now return `Record` instead.
+ 
+ENHANCEMENTS:
+
+* **Async Task Processing Utilities**: Added new helper functions in the `untyped` package for simplified async task handling
+  * `MaybeWaitAsyncResult(record, rest, timeout)`: Automatically detects and waits for async tasks with a timeout
+  * `MaybeWaitAsyncResultWithContext(ctx, record, rest, timeout)`: Context-aware version with timeout support
+
 ## 0.106.0
 
 ENHANCEMENTS:

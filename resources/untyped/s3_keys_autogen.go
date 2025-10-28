@@ -15,7 +15,7 @@ import (
 // summary: Delete User's S3 Access Key Pair
 func (s *S3Keys) S3KeysWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/s3keys/{access_key}/"
-	_, err := core.Request[core.EmptyRecord](ctx, s, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, s, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }

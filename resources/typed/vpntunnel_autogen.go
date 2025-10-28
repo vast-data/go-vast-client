@@ -302,7 +302,7 @@ func (r *VpnTunnel) VpnTunnelDeleteAllWithContext_DELETE(ctx context.Context) er
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }

@@ -173,8 +173,8 @@ func (m *MockResourceWithExtraMethods) UserAccessKeys_POST(params Params) (Recor
 	return nil, nil
 }
 
-func (m *MockResourceWithExtraMethods) UserAccessKeys_DELETE(id any, params Params) (EmptyRecord, error) {
-	return EmptyRecord{}, nil
+func (m *MockResourceWithExtraMethods) UserAccessKeys_DELETE(id any, params Params) (Record, error) {
+	return Record{}, nil
 }
 
 func (m *MockResourceWithExtraMethods) UserQuery_GET(params Params) (RecordSet, error) {

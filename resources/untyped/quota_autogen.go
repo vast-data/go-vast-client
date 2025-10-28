@@ -15,7 +15,7 @@ import (
 // summary: Stop recalculation flow for all quotas
 func (q *Quota) QuotaRecalcStopWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/quotas/recalc_stop/"
-	_, err := core.Request[core.EmptyRecord](ctx, q, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -34,7 +34,7 @@ func (q *Quota) QuotaRecalcStop_PATCH(body core.Params) error {
 // summary: Start recalculation flow all quotas
 func (q *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/quotas/recalc/"
-	_, err := core.Request[core.EmptyRecord](ctx, q, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -53,7 +53,7 @@ func (q *Quota) QuotaRecalc_PATCH(body core.Params) error {
 // summary: Refresh a Quota's User Quotas
 func (q *Quota) QuotaRefreshUserQuotasWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("quotas", id, "refresh_user_quotas")
-	_, err := core.Request[core.EmptyRecord](ctx, q, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -72,7 +72,7 @@ func (q *Quota) QuotaRefreshUserQuotas_PATCH(id any, body core.Params) error {
 // summary: Reset the grace period countdown after soft limit is exceeded
 func (q *Quota) QuotaResetGracePeriodWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("quotas", id, "reset_grace_period")
-	_, err := core.Request[core.EmptyRecord](ctx, q, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

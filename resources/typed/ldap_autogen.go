@@ -339,7 +339,7 @@ func (r *Ldap) LdapSetPosixPrimaryWithContext_PATCH(ctx context.Context, id any)
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }

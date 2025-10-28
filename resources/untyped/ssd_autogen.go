@@ -28,20 +28,9 @@ func (s *Ssd) SsdControlLedWithContext_PATCH(ctx context.Context, id any, contro
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, s.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, s.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -70,20 +59,9 @@ func (s *Ssd) SsdFormatWithContext_PATCH(ctx context.Context, id any, body core.
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, s.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, s.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 

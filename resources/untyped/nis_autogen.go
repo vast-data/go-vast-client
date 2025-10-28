@@ -36,7 +36,7 @@ func (n *Nis) NisRefresh_PATCH(body core.Params) (core.Record, error) {
 // summary: Set NIS as Primary POSIX Provider
 func (n *Nis) NisSetPosixPrimaryWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("nis", id, "set_posix_primary")
-	_, err := core.Request[core.EmptyRecord](ctx, n, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, n, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

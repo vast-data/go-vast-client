@@ -16,7 +16,7 @@ import (
 // summary: Delete a Bulk Of Block Storage Volumes
 func (v *Volume) VolumeBulkWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/volumes/bulk/"
-	_, err := core.Request[core.EmptyRecord](ctx, v, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }
@@ -85,20 +85,9 @@ func (v *Volume) VolumeSetHostsWithContext_PATCH(ctx context.Context, id any, bo
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, v.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -126,20 +115,9 @@ func (v *Volume) VolumeUpdateHostsWithContext_PATCH(ctx context.Context, id any,
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, v.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 

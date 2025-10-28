@@ -15,7 +15,7 @@ import (
 // summary: refresh View policy netgroups
 func (v *ViewPolicy) ViewPolicyRefreshNetgroupsWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("viewpolicies", id, "refresh_netgroups")
-	_, err := core.Request[core.EmptyRecord](ctx, v, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -40,7 +40,7 @@ func (v *ViewPolicy) ViewPolicyRemoteMappingWithContext_DELETE(ctx context.Conte
 	if peer != "" {
 		body["peer"] = peer
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, v, http.MethodDelete, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }

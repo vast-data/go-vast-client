@@ -15,7 +15,7 @@ import (
 // summary: Close and Delete all available VPN Tunnels
 func (v *VpnTunnel) VpnTunnelDeleteAllWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/vpntunnels/delete_all/"
-	_, err := core.Request[core.EmptyRecord](ctx, v, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }

@@ -286,17 +286,8 @@ func (r *Cnode) DeleteByIdWithContext(ctx context.Context, id any, force bool, w
 		return nil, err
 	}
 
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, record.RecordID(), r.Untyped)
-
-	// Wait for task completion if timeout > 0
-	if waitTimeout > 0 {
-		if _, err := task.Wait(waitTimeout); err != nil {
-			return task, err
-		}
-	}
-
-	return task, nil
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
+	return asyncResult, err
 }
 
 // -----------------------------------------------------
@@ -394,17 +385,9 @@ func (r *Cnode) CnodeAddCnodesWithContext_POST(ctx context.Context, body *CnodeA
 	if err != nil {
 		return nil, err
 	}
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, result.RecordID(), r.Untyped)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -485,7 +468,7 @@ func (r *Cnode) CnodeBgpconfigWithContext_PATCH(ctx context.Context, id any, bod
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -514,7 +497,7 @@ func (r *Cnode) CnodeControlLedWithContext_PATCH(ctx context.Context, id any, co
 		reqBody["control"] = control
 	}
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -547,17 +530,9 @@ func (r *Cnode) CnodeHighlightWithContext_PATCH(ctx context.Context, id any, wai
 	if err != nil {
 		return nil, err
 	}
-	// Create async task from result
-	task := untyped.NewAsyncResult(ctx, result.RecordID(), r.Untyped)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -588,7 +563,7 @@ func (r *Cnode) CnodeRenameWithContext_PATCH(ctx context.Context, id any, name s
 		reqBody["name"] = name
 	}
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -622,7 +597,7 @@ func (r *Cnode) CnodeSetTenantsWithContext_POST(ctx context.Context, id int64, m
 	reqBody["mode"] = mode
 	reqBody["tenant_ids"] = tenantIds
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	return err
 
 }

@@ -322,7 +322,7 @@ func (r *Quota) QuotaRecalcStopWithContext_PATCH(ctx context.Context) error {
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -345,7 +345,7 @@ func (r *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context) error {
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -368,7 +368,7 @@ func (r *Quota) QuotaRefreshUserQuotasWithContext_PATCH(ctx context.Context, id 
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -391,7 +391,7 @@ func (r *Quota) QuotaResetGracePeriodWithContext_PATCH(ctx context.Context, id a
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }

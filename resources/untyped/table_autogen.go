@@ -15,7 +15,7 @@ import (
 // summary: Add Columns to a Database Table
 func (t *Table) TableAddColumnsWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/tables/add_columns/"
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -34,7 +34,7 @@ func (t *Table) TableAddColumns_PATCH(body core.Params) error {
 // summary: Delete a Database Table
 func (t *Table) TableDeleteWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/tables/delete/"
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }
@@ -53,7 +53,7 @@ func (t *Table) TableDelete_DELETE(params core.Params) error {
 // summary: Rename a Database Table
 func (t *Table) TableRenameWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/tables/rename/"
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

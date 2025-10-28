@@ -351,7 +351,7 @@ func (r *Rack) RackAddBoxesWithContext_POST(ctx context.Context, id any, body *R
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -385,7 +385,7 @@ func (r *Rack) RackBgpconfigWithContext_POST(ctx context.Context, id any, body *
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -414,7 +414,7 @@ func (r *Rack) RackControlLedWithContext_PATCH(ctx context.Context, id any, cont
 		reqBody["control"] = control
 	}
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }
@@ -446,7 +446,7 @@ func (r *Rack) RackRenameWithContext_PATCH(ctx context.Context, id any, name str
 		reqBody["name"] = name
 	}
 
-	_, err := core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
 	return err
 
 }

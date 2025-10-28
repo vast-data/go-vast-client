@@ -16,8 +16,8 @@ type VastResourceAPI interface {
 	List(Params) (RecordSet, error)
 	Create(Params) (Record, error)
 	Update(any, Params) (Record, error)
-	Delete(Params, Params) (EmptyRecord, error)
-	DeleteById(any, Params, Params) (EmptyRecord, error)
+	Delete(Params, Params) (Record, error)
+	DeleteById(any, Params, Params) (Record, error)
 	Ensure(Params, Params) (Record, error)
 	Get(Params) (Record, error)
 	GetById(any) (Record, error)
@@ -34,8 +34,8 @@ type VastResourceAPIWithContext interface {
 	ListWithContext(context.Context, Params) (RecordSet, error)
 	CreateWithContext(context.Context, Params) (Record, error)
 	UpdateWithContext(context.Context, any, Params) (Record, error)
-	DeleteWithContext(context.Context, Params, Params, Params) (EmptyRecord, error)
-	DeleteByIdWithContext(context.Context, any, Params, Params) (EmptyRecord, error)
+	DeleteWithContext(context.Context, Params, Params, Params) (Record, error)
+	DeleteByIdWithContext(context.Context, any, Params, Params) (Record, error)
 	EnsureWithContext(context.Context, Params, Params) (Record, error)
 	GetWithContext(context.Context, Params) (Record, error)
 	GetByIdWithContext(context.Context, any) (Record, error)
@@ -53,6 +53,15 @@ type InterceptableVastResourceAPI interface {
 type Awaitable interface {
 	WaitWithContext(context.Context) (Record, error)
 	Wait(time.Duration) (Record, error)
+}
+
+// TaskWaiter defines an interface for resources that can wait on asynchronous tasks.
+// This interface is primarily implemented by the VTask resource to provide task polling capabilities.
+// It allows the core package to call task waiting functionality without creating a circular dependency
+// with the untyped package.
+type TaskWaiter interface {
+	WaitTaskWithContext(ctx context.Context, taskId int64) (Record, error)
+	WaitTask(taskId int64, duration time.Duration) (Record, error)
 }
 
 // RequestInterceptor defines a middleware-style interface for intercepting API requests
@@ -75,7 +84,7 @@ type RequestInterceptor interface {
 	// The input and output are of type Renderable, which includes types like:
 	//   - Record: a single key-value response object
 	//   - RecordSet: a list of Record objects
-	//   - EmptyRecord: an empty object used for operations like DELETE
+	//   - Record: a map response (may be empty Record{} for DELETE operations)
 	//
 	// This method can inspect, mutate, or log the response data.
 	//

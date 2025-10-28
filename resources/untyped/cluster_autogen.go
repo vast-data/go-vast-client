@@ -23,20 +23,9 @@ func (c *Cluster) ClusterAddBoxesWithContext_PATCH(ctx context.Context, body cor
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -57,7 +46,7 @@ func (c *Cluster) ClusterAddBoxes_PATCH(body core.Params, waitTimeout time.Durat
 // summary: Add EKM
 func (c *Cluster) ClusterAddEkmWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "add_ekm")
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -212,7 +201,7 @@ func (c *Cluster) ClusterCeleryQueue_GET(id any, params core.Params) (core.Recor
 // summary: Delete all tasks of a specific name from the celery queue
 func (c *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Context, id any, params core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_remove_queued_task")
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }
@@ -471,7 +460,7 @@ func (c *Cluster) ClusterDeleteFolderWithContext_DELETE(ctx context.Context, id 
 	if tenantId != 0 {
 		body["tenant_id"] = tenantId
 	}
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodDelete, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -514,20 +503,9 @@ func (c *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, dev
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -840,20 +818,9 @@ func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -895,7 +862,7 @@ func (c *Cluster) ClusterResumeDeploy_PATCH(id any, body core.Params) (core.Reco
 // summary: Rotate master encryption group key.
 func (c *Cluster) ClusterRotateMasterEncryptionGroupKeyWithContext_POST(ctx context.Context, body core.Params) error {
 	resourcePath := "/clusters/rotate_master_encryption_group_key/"
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -960,20 +927,9 @@ func (c *Cluster) ClusterRunHardwareCheckWithContext_PATCH(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -994,7 +950,7 @@ func (c *Cluster) ClusterRunHardwareCheck_PATCH(body core.Params, waitTimeout ti
 // summary: Update EKM certificates
 func (c *Cluster) ClusterSetCertificatesWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "set_certificates")
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -1054,20 +1010,9 @@ func (c *Cluster) ClusterSetPasswordWithContext_PATCH(ctx context.Context, id an
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -1118,20 +1063,9 @@ func (c *Cluster) ClusterStopUpgradeWithContext_POST(ctx context.Context, id any
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -1157,7 +1091,7 @@ func (c *Cluster) ClusterSystemSettingsWithContext_PATCH(ctx context.Context, id
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "system_settings")
 	body := core.Params{}
 	body["settings"] = settings
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -1184,7 +1118,7 @@ func (c *Cluster) ClusterUnfreezeWithContext_POST(ctx context.Context, id any, t
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "unfreeze")
 	body := core.Params{}
 	body["token"] = token
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPost, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	return err
 
 }
@@ -1218,20 +1152,9 @@ func (c *Cluster) ClusterUpgradeOptaneWithContext_POST(ctx context.Context, id a
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -1265,20 +1188,9 @@ func (c *Cluster) ClusterUpgradeSsdWithContext_POST(ctx context.Context, id any,
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -1307,20 +1219,9 @@ func (c *Cluster) ClusterUpgradeWithoutFileWithContext_POST(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -1348,20 +1249,9 @@ func (c *Cluster) ClusterUpgradeWithContext_PATCH(ctx context.Context, id any, b
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -1389,20 +1279,9 @@ func (c *Cluster) ClusterUploadFromS3WithContext_POST(ctx context.Context, id an
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -1485,7 +1364,7 @@ func (c *Cluster) ClusterVsettingsWithContext_DELETE(ctx context.Context, id any
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "vsettings")
 	body := core.Params{}
 	body["key"] = key
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodDelete, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -1528,7 +1407,7 @@ func (c *Cluster) ClusterVsettings_GET(id any, params core.Params) (core.Record,
 // summary: Modify Cluster VSettings
 func (c *Cluster) ClusterVsettingsWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "vsettings")
-	_, err := core.Request[core.EmptyRecord](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -1554,20 +1433,9 @@ func (c *Cluster) ClusterWipeWithContext_POST(ctx context.Context, body core.Par
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, c.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 

@@ -15,7 +15,7 @@ import (
 // summary: Delete a Kafka Topic
 func (t *Topic) TopicDeleteWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/topics/delete/"
-	_, err := core.Request[core.EmptyRecord](ctx, t, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }

@@ -33,7 +33,7 @@ type MethodInfo struct {
 	HasParams        bool
 	HasBody          bool
 	ReceiverName     string
-	ReturnsNoContent bool // True if returns 204 No Content (use core.EmptyRecord)
+	ReturnsNoContent bool // True if returns 204 No Content (use core.Record)
 	ReturnsArray     bool // True if returns an array (use core.RecordSet)
 	// For simplified bodies (up to 3 fields become inline parameters)
 	SimplifiedBody   bool              // True if body has 1-3 fields
@@ -214,7 +214,7 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	returns204, err := api.Returns204NoContent(extraMethod.Method, extraMethod.Path)
 	if err == nil && returns204 {
 		methodInfo.ReturnsNoContent = true
-		fmt.Printf("  ℹ️  Method returns 204 No Content, using core.EmptyRecord\n")
+		fmt.Printf("  ℹ️  Method returns 204 No Content, using core.Record\n")
 	}
 
 	// Check if this is a bare array response BEFORE schema unwrapping
@@ -480,18 +480,10 @@ func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx c
 	if err != nil {
 		return nil, err
 	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, {{$.ReceiverName}}.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
-	{{else}}{{if .ReturnsNoContent}}_, err := core.Request[core.EmptyRecord](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if .HasParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, {{$.ReceiverName}}.Rest, waitTimeout)
+	return asyncResult, err
+	{{else}}{{if .ReturnsNoContent}}_, err := core.Request[core.Record](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if .HasParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
 	return err
 	{{else}}{{if .ReturnsArray}}result, err := core.Request[core.RecordSet](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if .HasParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
 	if err != nil {

@@ -21,7 +21,7 @@ func (u *User) UserAccessKeysWithContext_DELETE(ctx context.Context, id any, acc
 	resourcePath := core.BuildResourcePathWithID("users", id, "access_keys")
 	body := core.Params{}
 	body["access_key"] = accessKey
-	_, err := core.Request[core.EmptyRecord](ctx, u, http.MethodDelete, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, u, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -50,7 +50,7 @@ func (u *User) UserAccessKeysWithContext_PATCH(ctx context.Context, id any, acce
 	body := core.Params{}
 	body["access_key"] = accessKey
 	body["enabled"] = enabled
-	_, err := core.Request[core.EmptyRecord](ctx, u, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, u, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }
@@ -111,20 +111,9 @@ func (u *User) UserCopyWithContext_POST(ctx context.Context, body core.Params, w
 	if err != nil {
 		return nil, err
 	}
-	if result.Empty() {
-		return nil, nil
-	}
-	// Create async task from result
-	task := asyncResultFromRecord(ctx, result, u.Rest)
-	// If waitTimeout is 0, return task immediately without waiting (async background operation)
-	if waitTimeout == 0 {
-		return task, nil
-	}
-	// Wait for task completion with the specified timeout
-	if _, err := task.Wait(waitTimeout); err != nil {
-		return task, err
-	}
-	return task, nil
+
+	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, u.Rest, waitTimeout)
+	return asyncResult, err
 
 }
 
@@ -166,7 +155,7 @@ func (u *User) UserNames_GET(params core.Params) (core.Record, error) {
 // summary: Remove S3 Access Key Pair (Non-Local User)
 func (u *User) UserNonLocalKeysWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/users/non_local_keys/"
-	_, err := core.Request[core.EmptyRecord](ctx, u, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, u, http.MethodDelete, resourcePath, params, nil)
 	return err
 
 }
@@ -185,7 +174,7 @@ func (u *User) UserNonLocalKeys_DELETE(params core.Params) error {
 // summary: Enable or Disable S3 Access Key Pair (Non-Local User)
 func (u *User) UserNonLocalKeysWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/users/non_local_keys/"
-	_, err := core.Request[core.EmptyRecord](ctx, u, http.MethodPatch, resourcePath, nil, body)
+	_, err := core.Request[core.Record](ctx, u, http.MethodPatch, resourcePath, nil, body)
 	return err
 
 }

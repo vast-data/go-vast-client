@@ -174,7 +174,7 @@ func (r *Topic) TopicDeleteWithContext_DELETE(ctx context.Context, body *TopicDe
 		return err
 	}
 
-	_, err = core.Request[core.EmptyRecord](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
 	return err
 
 }
