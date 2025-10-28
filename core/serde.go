@@ -475,7 +475,7 @@ func (r Record) PrettyTable() string {
 	if name != "" {
 		return fmt.Sprintf("%s:\n%s", name, t.Render("grid"))
 	}
-	return t.Render("grid")
+	return fmt.Sprintf("\n%s", t.Render("grid"))
 }
 
 // PrettyJson prints the Record as JSON, optionally indented

@@ -23,6 +23,9 @@ func (e *EventDefinition) EventDefinitionTestWithContext_PATCH(ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, e.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)

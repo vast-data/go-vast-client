@@ -52,6 +52,9 @@ func (c *Carrier) CarrierHighlightWithContext_PATCH(ctx context.Context, id any,
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -89,6 +92,9 @@ func (c *Carrier) CarrierResetPciWithContext_PATCH(ctx context.Context, id any, 
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
+	}
+	if result.Empty() {
+		return nil, nil
 	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)

@@ -23,6 +23,9 @@ func (c *Cluster) ClusterAddBoxesWithContext_PATCH(ctx context.Context, body cor
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -511,6 +514,9 @@ func (c *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, dev
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -834,6 +840,9 @@ func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Con
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -951,6 +960,9 @@ func (c *Cluster) ClusterRunHardwareCheckWithContext_PATCH(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -1042,6 +1054,9 @@ func (c *Cluster) ClusterSetPasswordWithContext_PATCH(ctx context.Context, id an
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -1102,6 +1117,9 @@ func (c *Cluster) ClusterStopUpgradeWithContext_POST(ctx context.Context, id any
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
+	}
+	if result.Empty() {
+		return nil, nil
 	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
@@ -1200,6 +1218,9 @@ func (c *Cluster) ClusterUpgradeOptaneWithContext_POST(ctx context.Context, id a
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -1244,6 +1265,9 @@ func (c *Cluster) ClusterUpgradeSsdWithContext_POST(ctx context.Context, id any,
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -1283,6 +1307,9 @@ func (c *Cluster) ClusterUpgradeWithoutFileWithContext_POST(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -1321,6 +1348,9 @@ func (c *Cluster) ClusterUpgradeWithContext_PATCH(ctx context.Context, id any, b
 	if err != nil {
 		return nil, err
 	}
+	if result.Empty() {
+		return nil, nil
+	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
 	// If waitTimeout is 0, return task immediately without waiting (async background operation)
@@ -1358,6 +1388,9 @@ func (c *Cluster) ClusterUploadFromS3WithContext_POST(ctx context.Context, id an
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
+	}
+	if result.Empty() {
+		return nil, nil
 	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
@@ -1520,6 +1553,9 @@ func (c *Cluster) ClusterWipeWithContext_POST(ctx context.Context, body core.Par
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
+	}
+	if result.Empty() {
+		return nil, nil
 	}
 	// Create async task from result
 	task := asyncResultFromRecord(ctx, result, c.Rest)
