@@ -146,12 +146,11 @@ func (it *ResourceIterator) fetchPage(url string, params Params) error {
 // processPaginationEnvelope extracts data from a pagination envelope using ToRecordSet.
 func (it *ResourceIterator) processPaginationEnvelope(envelope Record) error {
 	// Check if this is a pagination envelope
+	// Only results and count are required; next and previous are optional
 	_, hasResults := envelope["results"]
 	_, hasCount := envelope["count"]
-	_, hasNext := envelope["next"]
-	_, hasPrev := envelope["previous"]
 
-	if hasResults && hasCount && hasNext && hasPrev {
+	if hasResults && hasCount {
 		// This is a paginated response - use ToRecordSet to convert results
 		if resultsRaw, ok := envelope["results"]; ok {
 			// Try []map[string]any first
@@ -323,7 +322,7 @@ func (it *ResourceIterator) String() string {
 	sb.WriteString(fmt.Sprintf("  Total Count:   %d\n", it.totalCount))
 
 	// Show current records with count
-	if it.current != nil && len(it.current) > 0 {
+	if len(it.current) > 0 {
 		sb.WriteString(fmt.Sprintf("  Current:       [... (%d items)]\n", len(it.current)))
 	} else {
 		sb.WriteString("  Current:       []\n")

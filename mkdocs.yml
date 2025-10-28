@@ -25,6 +25,7 @@ nav:
   - Session: session.md
   - Response: response.md
   - Resource Lock: resource-lock.md
+  - Iterators: iterators.md
   - Errors: errors.md
 
 plugins:

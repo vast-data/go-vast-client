@@ -173,10 +173,8 @@ func (e *VastResource) EnsureWithContext(ctx context.Context, searchParams Param
 // GetWithContext retrieves a single resource that matches the given parameters using the provided context.
 // Returns a NotFoundError if no resource is found.
 func (e *VastResource) GetWithContext(ctx context.Context, params Params) (Record, error) {
-	result, err := Request[RecordSet](ctx, e, http.MethodGet, e.resourcePath, params, nil)
-	if !e.resourceOps.has(L) && ExpectStatusCodes(err, http.StatusNotFound) {
-		err.(*ApiError).hints = e.describeResourceFrom(e)
-	}
+	result, err := e.ListWithContext(ctx, params)
+
 	if err != nil {
 		return nil, err
 	}

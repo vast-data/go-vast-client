@@ -213,6 +213,102 @@ func TestIterator_NonPaginatedResponse(t *testing.T) {
 	}
 }
 
+// Test response with only count and results (no next/previous fields)
+// This is a common case when there are no results or only one page
+func TestIterator_CountAndResultsOnly(t *testing.T) {
+	// Test case 1: Empty results
+	emptyResponse := Record{
+		"count":   float64(0),
+		"results": []any{},
+	}
+
+	mockSession := &mockSessionForIterator{
+		responses: map[string]Renderable{
+			"https://test.example.com:443/api/v1/resources/?name=vastdb-volume&page_size=10": emptyResponse,
+		},
+	}
+
+	mockRest := &DummyRest{
+		ctx:     context.Background(),
+		Session: mockSession,
+	}
+
+	mockResource := &mockResourceForIterator{
+		VastResource: &VastResource{
+			resourcePath: "resources",
+			resourceType: "TestResource",
+			Rest:         mockRest,
+		},
+		mockSession: mockSession,
+	}
+
+	// Create iterator with query params
+	iter := NewResourceIterator(context.Background(), mockResource, Params{"name": "vastdb-volume"}, 10)
+
+	// Should return empty RecordSet, not error
+	records, err := iter.Next()
+	if err != nil {
+		t.Fatalf("Expected no error for empty results, got: %v", err)
+	}
+	if len(records) != 0 {
+		t.Errorf("Expected 0 items, got %d", len(records))
+	}
+	if iter.Count() != 0 {
+		t.Errorf("Expected count of 0, got %d", iter.Count())
+	}
+	if iter.HasNext() {
+		t.Error("Expected HasNext to be false when no next field")
+	}
+
+	// Test case 2: Single page with results (no next/previous)
+	singlePageResponse := Record{
+		"count": float64(2),
+		"results": []any{
+			map[string]any{"id": float64(1), "name": "item1"},
+			map[string]any{"id": float64(2), "name": "item2"},
+		},
+	}
+
+	mockSession2 := &mockSessionForIterator{
+		responses: map[string]Renderable{
+			"https://test.example.com:443/api/v1/resources/?page_size=10": singlePageResponse,
+		},
+	}
+
+	mockRest2 := &DummyRest{
+		ctx:     context.Background(),
+		Session: mockSession2,
+	}
+
+	mockResource2 := &mockResourceForIterator{
+		VastResource: &VastResource{
+			resourcePath: "resources",
+			resourceType: "TestResource",
+			Rest:         mockRest2,
+		},
+		mockSession: mockSession2,
+	}
+
+	iter2 := NewResourceIterator(context.Background(), mockResource2, Params{}, 10)
+
+	records, err = iter2.Next()
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if len(records) != 2 {
+		t.Errorf("Expected 2 items, got %d", len(records))
+	}
+	if iter2.Count() != 2 {
+		t.Errorf("Expected count of 2, got %d", iter2.Count())
+	}
+	if iter2.HasNext() {
+		t.Error("Expected HasNext to be false when no next field")
+	}
+	if iter2.HasPrevious() {
+		t.Error("Expected HasPrevious to be false when no previous field")
+	}
+}
+
 // Test All() method
 func TestIterator_All(t *testing.T) {
 	// Create mock responses with multiple pages
