@@ -185,6 +185,7 @@ type UntypedVMSRest struct {
 	// +apiall:extraMethod:GET=/groups/names/
 	Groups *untyped.Group
 	// +apiall:extraMethod:GET=/iamroles/{id}/credentials/
+	// +apiall:extraMethod:PATCH=/iamroles/{id}/revoke_access_keys/
 	IamRoles   *untyped.IamRole
 	Injections *untyped.Injections
 	// +apiall:extraMethod:PATCH=/indestructibility/{id}/generate_token/
