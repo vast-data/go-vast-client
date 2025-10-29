@@ -24,8 +24,7 @@ func (c *Cluster) ClusterAddBoxesWithContext_PATCH(ctx context.Context, body cor
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -504,8 +503,7 @@ func (c *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, dev
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -819,8 +817,7 @@ func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Con
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -928,8 +925,7 @@ func (c *Cluster) ClusterRunHardwareCheckWithContext_PATCH(ctx context.Context, 
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -1011,8 +1007,7 @@ func (c *Cluster) ClusterSetPasswordWithContext_PATCH(ctx context.Context, id an
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -1064,8 +1059,7 @@ func (c *Cluster) ClusterStopUpgradeWithContext_POST(ctx context.Context, id any
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -1153,8 +1147,7 @@ func (c *Cluster) ClusterUpgradeOptaneWithContext_POST(ctx context.Context, id a
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -1189,8 +1182,7 @@ func (c *Cluster) ClusterUpgradeSsdWithContext_POST(ctx context.Context, id any,
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -1220,8 +1212,7 @@ func (c *Cluster) ClusterUpgradeWithoutFileWithContext_POST(ctx context.Context,
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -1250,8 +1241,7 @@ func (c *Cluster) ClusterUpgradeWithContext_PATCH(ctx context.Context, id any, b
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -1280,8 +1270,7 @@ func (c *Cluster) ClusterUploadFromS3WithContext_POST(ctx context.Context, id an
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -1434,8 +1423,7 @@ func (c *Cluster) ClusterWipeWithContext_POST(ctx context.Context, body core.Par
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 

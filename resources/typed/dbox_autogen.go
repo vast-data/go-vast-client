@@ -177,8 +177,7 @@ func (r *Dbox) DeleteByIdWithContext(ctx context.Context, id any, waitTimeout ti
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 
 // Exists checks if a dbox exists
@@ -235,8 +234,7 @@ func (r *Dbox) DboxControlLedWithContext_PATCH(ctx context.Context, id any, cont
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -270,8 +268,7 @@ func (r *Dbox) DboxResetDpI2cWithContext_PATCH(ctx context.Context, id any, wait
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 

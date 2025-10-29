@@ -24,8 +24,7 @@ func (h *Host) HostDiscoverWithContext_GET(ctx context.Context, params core.Para
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, h.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, h.Rest, waitTimeout)
 
 }
 

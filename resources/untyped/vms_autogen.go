@@ -109,8 +109,7 @@ func (v *Vms) VmsNetworkSettingsWithContext_PATCH(ctx context.Context, id any, b
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
 
 }
 
@@ -493,8 +492,7 @@ func (v *Vms) VmsToggleMaintenanceModeWithContext_PATCH(ctx context.Context, id 
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
 
 }
 

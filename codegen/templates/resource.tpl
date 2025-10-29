@@ -276,8 +276,7 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any{{range .Update
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 {{else}}
 // Update updates an existing {{.LowerName}} and returns an async task{{if .UpdateSummary}}
@@ -305,8 +304,7 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 {{end}}
 {{else}}
@@ -422,8 +420,7 @@ func (r *{{.Name}}) DeleteWithContext(ctx context.Context, req *{{.Name}}SearchP
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 {{else}}
 // Delete deletes a {{.LowerName}} with search parameters{{if or .DeleteQueryParams .DeleteBodyParams}}
@@ -493,8 +490,7 @@ func (r *{{.Name}}) DeleteByIdWithContext(ctx context.Context, id any{{range .De
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 {{else}}
 // DeleteById deletes a {{.LowerName}} by ID{{if .DeleteSummary}}
@@ -675,8 +671,7 @@ func (r *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{i
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 	{{else}}{{if .ReturnsNoContent}}{{if and (or (and .HasParams .BodyFields) (and .HasBody .BodyFields)) (not .SimplifiedBody)}}_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
 	return err{{else}}_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
 	return err{{end}}

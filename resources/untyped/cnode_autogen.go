@@ -24,8 +24,7 @@ func (c *Cnode) CnodeAddCnodesWithContext_POST(ctx context.Context, body core.Pa
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -123,8 +122,7 @@ func (c *Cnode) CnodeHighlightWithContext_PATCH(ctx context.Context, id any, bod
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 

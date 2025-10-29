@@ -183,8 +183,7 @@ func (v *View) ViewPermissionsRepairWithContext_POST(ctx context.Context, id any
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
 
 }
 

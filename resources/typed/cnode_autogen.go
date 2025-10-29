@@ -286,8 +286,7 @@ func (r *Cnode) DeleteByIdWithContext(ctx context.Context, id any, force bool, w
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 
 // -----------------------------------------------------
@@ -386,8 +385,7 @@ func (r *Cnode) CnodeAddCnodesWithContext_POST(ctx context.Context, body *CnodeA
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -531,8 +529,7 @@ func (r *Cnode) CnodeHighlightWithContext_PATCH(ctx context.Context, id any, wai
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 

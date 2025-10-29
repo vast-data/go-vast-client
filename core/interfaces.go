@@ -60,8 +60,8 @@ type Awaitable interface {
 // It allows the core package to call task waiting functionality without creating a circular dependency
 // with the untyped package.
 type TaskWaiter interface {
-	WaitTaskWithContext(ctx context.Context, taskId int64) (Record, error)
-	WaitTask(taskId int64, duration time.Duration) (Record, error)
+	WaitTaskWithContext(ctx context.Context, taskId int64, timeout time.Duration) (Record, error)
+	WaitTask(taskId int64, timeout time.Duration) (Record, error)
 }
 
 // RequestInterceptor defines a middleware-style interface for intercepting API requests

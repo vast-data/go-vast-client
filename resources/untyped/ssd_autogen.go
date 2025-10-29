@@ -29,8 +29,7 @@ func (s *Ssd) SsdControlLedWithContext_PATCH(ctx context.Context, id any, contro
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, s.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, s.Rest, waitTimeout)
 
 }
 
@@ -60,8 +59,7 @@ func (s *Ssd) SsdFormatWithContext_PATCH(ctx context.Context, id any, body core.
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, s.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, s.Rest, waitTimeout)
 
 }
 

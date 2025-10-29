@@ -112,8 +112,7 @@ func (u *User) UserCopyWithContext_POST(ctx context.Context, body core.Params, w
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, u.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, u.Rest, waitTimeout)
 
 }
 

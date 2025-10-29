@@ -99,8 +99,7 @@ func (r *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{i
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 	{{else}}{{if .ReturnsNoContent}}{{if and (or (and .HasParams .BodyFields) (and .HasBody .BodyFields)) (not .SimplifiedBody)}}_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
 	return err{{else}}_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.{{.GoHTTPMethod}}, resourcePath, reqParams, reqBody)
 	return err{{end}}

@@ -43,8 +43,7 @@ func (b *BlockHost) BlockHostSetVolumesWithContext_PATCH(ctx context.Context, id
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, b.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, b.Rest, waitTimeout)
 
 }
 
@@ -73,8 +72,7 @@ func (b *BlockHost) BlockHostUpdateVolumesWithContext_PATCH(ctx context.Context,
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, b.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, b.Rest, waitTimeout)
 
 }
 

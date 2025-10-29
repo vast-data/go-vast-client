@@ -2,7 +2,6 @@ package core
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -743,97 +742,4 @@ func ModelToRecord(model any) Record {
 	record[ResourceTypeKey] = resourceType
 
 	return record
-}
-
-//  ######################################################
-//              ASYNC RESULT
-//  ######################################################
-
-// AsyncResult represents the result of an asynchronous task.
-// It contains the task's ID and necessary context for waiting on the task to complete.
-type AsyncResult struct {
-	TaskId int64
-	Rest   VastRest
-	ctx    context.Context
-	Status string
-}
-
-func (ar AsyncResult) IsFailed() bool {
-	return strings.ToLower(ar.Status) == "failed"
-}
-
-// NewAsyncResult creates a new AsyncResult from a task ID and REST client.
-//
-// This constructor is used to create an AsyncResult when you already have a task ID.
-// The context is stored for potential future use with waiting operations.
-//
-// Parameters:
-//   - ctx: The context associated with the task operation
-//   - taskId: The ID of the asynchronous task
-//   - rest: The REST client that can be used to query task status
-//
-// Returns:
-//   - *AsyncResult: A new AsyncResult instance
-func NewAsyncResult(ctx context.Context, taskId int64, rest VastRest) *AsyncResult {
-	return &AsyncResult{
-		ctx:    ctx,
-		TaskId: taskId,
-		Rest:   rest,
-	}
-}
-
-// MaybeAsyncResultFromRecord attempts to extract an async task ID from a record and create an AsyncResult.
-//
-// This function handles two common patterns in VAST API responses:
-//  1. Direct task response: The record itself has a ResourceTypeKey and represents the task
-//  2. Nested task response: The record has an "async_task" field containing the task information
-//
-// If the record doesn't contain any task information, or if the task ID cannot be extracted,
-// this function returns nil.
-//
-// Parameters:
-//   - ctx: The context to associate with the async result
-//   - record: The record that may contain async task information
-//   - rest: The REST client for task operations
-//
-// Returns:
-//   - *AsyncResult: An AsyncResult if task information was found, nil otherwise
-func MaybeAsyncResultFromRecord(ctx context.Context, record Record, rest VastRest) *AsyncResult {
-	var (
-		taskId      int64
-		asyncResult *AsyncResult
-	)
-
-	if record.Empty() {
-		return nil
-	}
-
-	// Check if the record itself is a task (has ResourceTypeKey)
-	if resourceType, ok := record[ResourceTypeKey]; ok {
-		if resourceType != "VTask" {
-			return nil
-		}
-
-		// Only call RecordID if "id" field exists to avoid panic
-		if _, hasId := record["id"]; hasId {
-			taskId = record.RecordID()
-		}
-	} else {
-		// Check for nested async_task field
-		if asyncTask, ok := record["async_task"]; ok {
-			var m map[string]any
-			if m, ok = asyncTask.(map[string]any); ok {
-				if _, hasId := m["id"]; hasId {
-					taskId = ToRecord(m).RecordID()
-				}
-			}
-		}
-	}
-
-	if taskId != 0 {
-		asyncResult = NewAsyncResult(ctx, taskId, rest)
-	}
-
-	return asyncResult
-
 }

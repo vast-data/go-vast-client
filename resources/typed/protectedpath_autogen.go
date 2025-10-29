@@ -239,8 +239,7 @@ func (r *ProtectedPath) DeleteByIdWithContext(ctx context.Context, id any, waitT
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 
 // -----------------------------------------------------
