@@ -438,7 +438,7 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	rest.Dtrays = newUntypedResource[untyped.Dtray](rest, "dtrays", C, L, R, U, D)
 	rest.Eboxes = newUntypedResource[untyped.Ebox](rest, "eboxes", C, L, R, U, D)
 	rest.EncryptedPaths = newUntypedResource[untyped.EncryptedPath](rest, "encryptedpaths", C, L, R, U, D)
-	rest.EncryptionGroups = newUntypedResource[untyped.EncryptionGroup](rest, "encryptiongroups", L)
+	rest.EncryptionGroups = newUntypedResource[untyped.EncryptionGroup](rest, "encryptiongroups", L, R)
 	rest.Envs = newUntypedResource[untyped.Env](rest, "envs", L, R)
 	rest.Events = newUntypedResource[untyped.Event](rest, "events", C, L, R)
 	rest.EventDefinitions = newUntypedResource[untyped.EventDefinition](rest, "eventdefinitions", C, L, R, U)

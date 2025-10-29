@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.108.0
+## 0.109.0
 
 BREAKING CHANGES:
 

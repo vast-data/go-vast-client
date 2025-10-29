@@ -148,6 +148,11 @@ func MaybeWaitAsyncResultWithContext(ctx context.Context, record core.Record, re
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 		taskResponse, err = rest.GetResourceMap()["VTask"].(*VTask).WaitTaskWithContext(ctx, asyncResult.TaskId)
+		if err == nil && taskResponse != nil {
+			if state, ok := taskResponse["state"]; ok {
+				asyncResult.Status = state.(string)
+			}
+		}
 	}
 
 	return asyncResult, taskResponse, err

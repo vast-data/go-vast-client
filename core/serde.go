@@ -755,6 +755,11 @@ type AsyncResult struct {
 	TaskId int64
 	Rest   VastRest
 	ctx    context.Context
+	Status string
+}
+
+func (ar AsyncResult) IsFailed() bool {
+	return strings.ToLower(ar.Status) == "failed"
 }
 
 // NewAsyncResult creates a new AsyncResult from a task ID and REST client.
@@ -804,7 +809,11 @@ func MaybeAsyncResultFromRecord(ctx context.Context, record Record, rest VastRes
 	}
 
 	// Check if the record itself is a task (has ResourceTypeKey)
-	if _, ok := record[ResourceTypeKey]; ok {
+	if resourceType, ok := record[ResourceTypeKey]; ok {
+		if resourceType != "VTask" {
+			return nil
+		}
+
 		// Only call RecordID if "id" field exists to avoid panic
 		if _, hasId := record["id"]; hasId {
 			taskId = record.RecordID()

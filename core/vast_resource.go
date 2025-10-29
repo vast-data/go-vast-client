@@ -368,77 +368,54 @@ func (e *VastResource) String() string {
 func (e *VastResource) describeResourceFrom(parentResource any) string {
 	var sb strings.Builder
 
-	// Build header with resource name and operation flags
-	opsStr := e.resourceOps.String()
-	if opsStr == "-" {
-		sb.WriteString(fmt.Sprintf("| %s [-]\n", e.resourceType))
+	// Build header with resource name only (no operation flags)
+	sb.WriteString(fmt.Sprintf("| %s\n", e.resourceType))
+
+	// Check if resource has any operations
+	hasAnyOps := e.resourceOps.isListable() || e.resourceOps.isReadable() ||
+		e.resourceOps.isCreatable() || e.resourceOps.isUpdatable() || e.resourceOps.isDeletable()
+
+	if !hasAnyOps {
+		sb.WriteString("| supported hints:\n")
+		sb.WriteString("|    [-]\n")
 	} else {
-		// Expand operation flags to full names
-		var opNames []string
-		if e.resourceOps.isCreatable() {
-			opNames = append(opNames, "CREATE")
-		}
+		// Print supported hints section with operations grouped by type
+		sb.WriteString("| supported hints:\n")
+
+		// LIST operations
 		if e.resourceOps.isListable() {
-			opNames = append(opNames, "LIST")
+			sb.WriteString("|    [LIST]\n")
+			sb.WriteString("|      - List / ListWithContext\n")
+			sb.WriteString("|      - Get / GetWithContext\n")
+			sb.WriteString("|      - Exists / ExistsWithContext\n")
 		}
+
+		// DETAILS operations
 		if e.resourceOps.isReadable() {
-			opNames = append(opNames, "DETAILS")
+			sb.WriteString("|    [DETAILS]\n")
+			sb.WriteString("|      - GetById / GetByIdWithContext\n")
 		}
+
+		// CREATE operations
+		if e.resourceOps.isCreatable() {
+			sb.WriteString("|    [CREATE]\n")
+			sb.WriteString("|      - Create / CreateWithContext\n")
+			if e.resourceOps.isListable() {
+				sb.WriteString("|      - Ensure / EnsureWithContext\n")
+			}
+		}
+
+		// UPDATE operations
 		if e.resourceOps.isUpdatable() {
-			opNames = append(opNames, "UPDATE")
+			sb.WriteString("|    [UPDATE]\n")
+			sb.WriteString("|      - Update / UpdateWithContext\n")
 		}
+
+		// DELETE operations
 		if e.resourceOps.isDeletable() {
-			opNames = append(opNames, "DELETE")
-		}
-		sb.WriteString(fmt.Sprintf("| %s [%s]\n", e.resourceType, strings.Join(opNames, " ")))
-	}
-
-	// Collect standard CRUD methods
-	var standardMethods []string
-
-	if e.resourceOps.isListable() {
-		standardMethods = append(standardMethods,
-			"List / ListWithContext",
-			"Get / GetWithContext",
-			"Exists / ExistsWithContext",
-		)
-	}
-
-	if e.resourceOps.isReadable() {
-		standardMethods = append(standardMethods,
-			"GetById / GetByIdWithContext",
-		)
-	}
-
-	if e.resourceOps.isCreatable() {
-		standardMethods = append(standardMethods,
-			"Create / CreateWithContext",
-		)
-		if e.resourceOps.isListable() {
-			standardMethods = append(standardMethods,
-				"Ensure / EnsureWithContext",
-			)
-		}
-	}
-
-	if e.resourceOps.isUpdatable() {
-		standardMethods = append(standardMethods,
-			"Update / UpdateWithContext",
-		)
-	}
-
-	if e.resourceOps.isDeletable() {
-		standardMethods = append(standardMethods,
-			"Delete / DeleteWithContext",
-			"DeleteById / DeleteByIdWithContext",
-		)
-	}
-
-	// Print supported operations section
-	if len(standardMethods) > 0 {
-		sb.WriteString("| supported operations:\n")
-		for _, method := range standardMethods {
-			sb.WriteString(fmt.Sprintf("|    - %s\n", method))
+			sb.WriteString("|    [DELETE]\n")
+			sb.WriteString("|      - Delete / DeleteWithContext\n")
+			sb.WriteString("|      - DeleteById / DeleteByIdWithContext\n")
 		}
 	}
 
