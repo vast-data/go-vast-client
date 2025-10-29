@@ -368,3 +368,26 @@ func (r *IamRole) IamRoleCredentialsWithContext_GET(ctx context.Context, id any,
 func (r *IamRole) IamRoleCredentials_GET(id any, params *IamRoleCredentials_GET_Body) (*IamRoleCredentials_GET_Model, error) {
 	return r.IamRoleCredentialsWithContext_GET(r.Untyped.GetCtx(), id, params)
 }
+
+// IamRoleRevokeAccessKeysWithContext_PATCH
+// method: PATCH
+// url: /iamroles/{id}/revoke_access_keys/
+// summary: Revoke access keys of  specified IAM Role. Keys will be revoked by the revoke_time on the IAM Role.
+func (r *IamRole) IamRoleRevokeAccessKeysWithContext_PATCH(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("iamroles", id, "revoke_access_keys")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// IamRoleRevokeAccessKeys_PATCH
+// method: PATCH
+// url: /iamroles/{id}/revoke_access_keys/
+// summary: Revoke access keys of  specified IAM Role. Keys will be revoked by the revoke_time on the IAM Role.
+func (r *IamRole) IamRoleRevokeAccessKeys_PATCH(id any) error {
+	return r.IamRoleRevokeAccessKeysWithContext_PATCH(r.Untyped.GetCtx(), id)
+}
