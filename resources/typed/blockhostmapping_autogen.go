@@ -75,8 +75,7 @@ func (r *BlockHostMapping) BlockHostMappingBulkWithContext_PATCH(ctx context.Con
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 

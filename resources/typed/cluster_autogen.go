@@ -684,8 +684,7 @@ func (r *Cluster) ClusterAddBoxesWithContext_PATCH(ctx context.Context, body *Cl
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1039,8 +1038,7 @@ func (r *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, dev
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1220,8 +1218,7 @@ func (r *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Con
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1289,8 +1286,7 @@ func (r *Cluster) ClusterRunHardwareCheckWithContext_PATCH(ctx context.Context, 
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1366,8 +1362,7 @@ func (r *Cluster) ClusterSetPasswordWithContext_PATCH(ctx context.Context, id an
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1402,8 +1397,7 @@ func (r *Cluster) ClusterStopUpgradeWithContext_POST(ctx context.Context, id any
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1500,8 +1494,7 @@ func (r *Cluster) ClusterUpgradeOptaneWithContext_POST(ctx context.Context, id a
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1539,8 +1532,7 @@ func (r *Cluster) ClusterUpgradeSsdWithContext_POST(ctx context.Context, id any,
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1594,8 +1586,7 @@ func (r *Cluster) ClusterUpgradeWithoutFileWithContext_POST(ctx context.Context,
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1644,8 +1635,7 @@ func (r *Cluster) ClusterUpgradeWithContext_PATCH(ctx context.Context, id any, b
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1689,8 +1679,7 @@ func (r *Cluster) ClusterUploadFromS3WithContext_POST(ctx context.Context, id an
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -1884,8 +1873,7 @@ func (r *Cluster) ClusterWipeWithContext_POST(ctx context.Context, body *Cluster
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 

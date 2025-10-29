@@ -86,8 +86,7 @@ func (v *Volume) VolumeSetHostsWithContext_PATCH(ctx context.Context, id any, bo
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
 
 }
 
@@ -116,8 +115,7 @@ func (v *Volume) VolumeUpdateHostsWithContext_PATCH(ctx context.Context, id any,
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
 
 }
 

@@ -53,8 +53,7 @@ func (d *Dnode) DnodeHighlightWithContext_PATCH(ctx context.Context, id any, bod
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, d.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, d.Rest, waitTimeout)
 
 }
 

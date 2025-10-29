@@ -308,8 +308,7 @@ func (r *Dnode) DnodeHighlightWithContext_PATCH(ctx context.Context, id any, wai
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 

@@ -53,8 +53,7 @@ func (c *Carrier) CarrierHighlightWithContext_PATCH(ctx context.Context, id any,
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
@@ -83,8 +82,7 @@ func (c *Carrier) CarrierResetPciWithContext_PATCH(ctx context.Context, id any, 
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 

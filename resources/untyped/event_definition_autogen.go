@@ -24,8 +24,7 @@ func (e *EventDefinition) EventDefinitionTestWithContext_PATCH(ctx context.Conte
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, e.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, e.Rest, waitTimeout)
 
 }
 

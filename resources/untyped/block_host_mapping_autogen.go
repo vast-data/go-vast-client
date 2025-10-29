@@ -24,8 +24,7 @@ func (b *BlockHostMapping) BlockHostMappingBulkWithContext_PATCH(ctx context.Con
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, b.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, b.Rest, waitTimeout)
 
 }
 

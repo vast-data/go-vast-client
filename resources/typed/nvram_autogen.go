@@ -271,8 +271,7 @@ func (r *Nvram) NvramControlLedWithContext_PATCH(ctx context.Context, id any, co
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 
@@ -306,8 +305,7 @@ func (r *Nvram) NvramFormatWithContext_PATCH(ctx context.Context, id any, waitTi
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 

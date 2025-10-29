@@ -264,8 +264,7 @@ func (r *GlobalSnapshotStream) DeleteByIdWithContext(ctx context.Context, id any
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 
 // -----------------------------------------------------
@@ -351,8 +350,7 @@ func (r *GlobalSnapshotStream) GlobalSnapshotStreamStopWithContext_PATCH(ctx con
 		return nil, err
 	}
 
-	asyncResult, _, err := untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
-	return asyncResult, err
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
 
 }
 

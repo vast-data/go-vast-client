@@ -50,8 +50,7 @@ func (d *Dbox) DboxControlLedWithContext_PATCH(ctx context.Context, id any, cont
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, d.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, d.Rest, waitTimeout)
 
 }
 
@@ -81,8 +80,7 @@ func (d *Dbox) DboxResetDpI2cWithContext_PATCH(ctx context.Context, id any, body
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, d.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, d.Rest, waitTimeout)
 
 }
 

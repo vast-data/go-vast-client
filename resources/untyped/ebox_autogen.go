@@ -63,8 +63,7 @@ func (e *Ebox) EboxControlLedWithContext_PATCH(ctx context.Context, id any, cont
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, e.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, e.Rest, waitTimeout)
 
 }
 

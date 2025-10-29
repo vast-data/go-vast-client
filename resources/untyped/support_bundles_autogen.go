@@ -45,8 +45,7 @@ func (s *SupportBundles) SupportBundlesUploadWithContext_PATCH(ctx context.Conte
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, s.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, s.Rest, waitTimeout)
 
 }
 

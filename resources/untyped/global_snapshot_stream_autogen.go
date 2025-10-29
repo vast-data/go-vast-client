@@ -86,8 +86,7 @@ func (g *GlobalSnapshotStream) GlobalSnapshotStreamStopWithContext_PATCH(ctx con
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, g.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, g.Rest, waitTimeout)
 
 }
 

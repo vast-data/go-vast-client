@@ -29,8 +29,7 @@ func (c *Cbox) CboxControlLedWithContext_PATCH(ctx context.Context, id any, cont
 		return nil, err
 	}
 
-	asyncResult, _, err := MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
-	return asyncResult, err
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
 
 }
 
