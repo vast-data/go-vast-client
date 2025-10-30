@@ -54,13 +54,13 @@ type UserSearchParams struct {
 
 // UserRequestBody represents the request body for User operations
 type UserRequestBody struct {
+	LocalProviderId   int64    `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"true" doc:"The ID of the local provider to which to add the user"`
 	Name              string   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"User name"`
 	AllowCreateBucket bool     `json:"allow_create_bucket,omitempty" yaml:"allow_create_bucket,omitempty" required:"false" doc:"Set to true to give the user permission to create S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
 	AllowDeleteBucket bool     `json:"allow_delete_bucket,omitempty" yaml:"allow_delete_bucket,omitempty" required:"false" doc:"Set to true to give the user permission to delete S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
 	Gids              *[]int64 `json:"gids,omitempty" yaml:"gids,omitempty" required:"false" doc:"List of group GIDs of all groups to which the user should belong."`
 	LeadingGid        int64    `json:"leading_gid,omitempty" yaml:"leading_gid,omitempty" required:"false" doc:"Leading GID"`
 	Local             bool     `json:"local,omitempty" yaml:"local,omitempty" required:"false" doc:"Not in use"`
-	LocalProviderId   int64    `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"The ID of the local provider to which to add the user"`
 	Password          string   `json:"password,omitempty" yaml:"password,omitempty" required:"false" doc:"Password"`
 	S3Superuser       bool     `json:"s3_superuser,omitempty" yaml:"s3_superuser,omitempty" required:"false" doc:"Set to true to give the user S3 superuser permission. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
 	Uid               int64    `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"NFS UID"`
