@@ -3199,7 +3199,6 @@ type Component_Snapshot struct {
 	Indestructible       bool    `json:"indestructible,omitempty" yaml:"indestructible,omitempty" required:"false" doc:"Protected from accidental or malicious deletion by the indestructibility feature. Authorized unlocking of the cluster's indestructibility mechanism is required to do any of the following: deleting the snapshot, shortening its expiration time or disabling this setting."`
 	Locked               bool    `json:"locked,omitempty" yaml:"locked,omitempty" required:"false" doc:"Lock the snapshot from being deleted by cleanup"`
 	Policy               string  `json:"policy,omitempty" yaml:"policy,omitempty" required:"false" doc:"Associated snapshot policy"`
-	PolicyId             int64   `json:"policy_id,omitempty" yaml:"policy_id,omitempty" required:"false" doc:"Associated snapshot policy ID"`
 	ProtectionPolicy     string  `json:"protection_policy,omitempty" yaml:"protection_policy,omitempty" required:"false" doc:"Protection Policy Name"`
 	ProtectionPolicyId   int64   `json:"protection_policy_id,omitempty" yaml:"protection_policy_id,omitempty" required:"false" doc:""`
 	State                string  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Snapshot stats"`
@@ -3299,6 +3298,44 @@ type Component_SupportBundle struct {
 	Text            bool    `json:"text,omitempty" yaml:"text,omitempty" required:"false" doc:"Include only textual logs in bundle"`
 	Traces          bool    `json:"traces,omitempty" yaml:"traces,omitempty" required:"false" doc:""`
 	Url             string  `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+}
+
+// Component_SupportedDrive represents the OpenAPI component schema
+// Component: #/components/schemas/SupportedDrive
+type Component_SupportedDrive struct {
+	DriveType string                 `json:"drive_type,omitempty" yaml:"drive_type,omitempty" required:"false" doc:""`
+	Id        int64                  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	ModelName string                 `json:"model_name,omitempty" yaml:"model_name,omitempty" required:"false" doc:""`
+	RawData   SupportedDrive_RawData `json:"raw_data,omitempty" yaml:"raw_data,omitempty" required:"false" doc:""`
+	Synced    bool                   `json:"synced,omitempty" yaml:"synced,omitempty" required:"false" doc:""`
+}
+
+// Component_SupportedDriveInput represents the OpenAPI component schema
+// Component: #/components/schemas/SupportedDriveInput
+type Component_SupportedDriveInput struct {
+	CapacityTb int64                         `json:"capacity_tb,omitempty" yaml:"capacity_tb,omitempty" required:"false" doc:""`
+	Fw         *[]SupportedDriveInput_FwItem `json:"fw,omitempty" yaml:"fw,omitempty" required:"false" doc:""`
+	HwPlatform *[]string                     `json:"hw_platform,omitempty" yaml:"hw_platform,omitempty" required:"false" doc:""`
+	Model      string                        `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:""`
+	Name       string                        `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Type       string                        `json:"type,omitempty" yaml:"type,omitempty" required:"false" doc:""`
+}
+
+// Component_SupportedPlatform represents the OpenAPI component schema
+// Component: #/components/schemas/SupportedPlatform
+type Component_SupportedPlatform struct {
+	DefaultLayout string                    `json:"default_layout,omitempty" yaml:"default_layout,omitempty" required:"false" doc:""`
+	PlatformName  string                    `json:"platform_name,omitempty" yaml:"platform_name,omitempty" required:"false" doc:""`
+	RawData       SupportedPlatform_RawData `json:"raw_data,omitempty" yaml:"raw_data,omitempty" required:"false" doc:""`
+	SsdCapacityTb int64                     `json:"ssd_capacity_tb,omitempty" yaml:"ssd_capacity_tb,omitempty" required:"false" doc:""`
+}
+
+// Component_SupportedPlatformInput represents the OpenAPI component schema
+// Component: #/components/schemas/SupportedPlatformInput
+type Component_SupportedPlatformInput struct {
+	DefaultSectionLayout string `json:"default_section_layout,omitempty" yaml:"default_section_layout,omitempty" required:"false" doc:""`
+	Name                 string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	SsdCapacityTb        int64  `json:"ssd_capacity_tb,omitempty" yaml:"ssd_capacity_tb,omitempty" required:"false" doc:""`
 }
 
 // Component_Switch represents the OpenAPI component schema
@@ -4013,7 +4050,7 @@ type Component_View struct {
 type Component_ViewPolicy struct {
 	Name                               string                    `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the policy"`
 	AccessFlavor                       string                    `json:"access_flavor,omitempty" yaml:"access_flavor,omitempty" required:"false" doc:"Applicable with MIXED_LAST_WINS security flavor (Access can be set via NFSv3 regardless of this option)"`
-	AllowedCharacters                  string                    `json:"allowed_characters,omitempty" yaml:"allowed_characters,omitempty" required:"false" doc:"How to determine which characters are allowed in file names. 'LCD' (default): Allows only characters allowed by all VAST Cluster-supported protocols, regardless of the specific protocol enabled on a specific view. With this (default) option, the limitation on the length of a single component of the path is 255 characters. 'YOYO': Imposes no limitation beyond that of the client protocol."`
+	AllowedCharacters                  string                    `json:"allowed_characters,omitempty" yaml:"allowed_characters,omitempty" required:"false" doc:"How to determine which characters are allowed in file names. 'LCD' (default): Allows only characters allowed by all VAST Cluster-supported protocols, regardless of the specific protocol enabled on a specific view. With this (default) option, the limitation on the length of a single component of the path is 255 characters. 'NPL': Imposes no limitation beyond that of the client protocol."`
 	AppleSid                           bool                      `json:"apple_sid,omitempty" yaml:"apple_sid,omitempty" required:"false" doc:"For use when connecting from Mac clients to SMB shares, this option enables Security IDs (SIDs) to be returned in Apple compatible representation."`
 	AtimeFrequency                     string                    `json:"atime_frequency,omitempty" yaml:"atime_frequency,omitempty" required:"false" doc:"Frequency for updating the atime attribute of NFS files. atime is updated on read operations if the difference between the current time and the file's atime value is greater than the atime frequency. Default: 3600"`
 	AuthSource                         string                    `json:"auth_source,omitempty" yaml:"auth_source,omitempty" required:"false" doc:"Specifies which source is trusted for the user's group memberships, when users' access to the view is authorized."`
@@ -4056,7 +4093,7 @@ type Component_ViewPolicy struct {
 	NfsReadWrite                       *[]string                 `json:"nfs_read_write,omitempty" yaml:"nfs_read_write,omitempty" required:"false" doc:"Hosts with NFS read/write permissions"`
 	NfsReturnOpenPermissions           bool                      `json:"nfs_return_open_permissions,omitempty" yaml:"nfs_return_open_permissions,omitempty" required:"false" doc:"when using smb use open permissions for files"`
 	NfsRootSquash                      *[]string                 `json:"nfs_root_squash,omitempty" yaml:"nfs_root_squash,omitempty" required:"false" doc:"Hosts with root squash policy"`
-	PathLength                         string                    `json:"path_length,omitempty" yaml:"path_length,omitempty" required:"false" doc:"How to determine the maximum allowed path component name length. 'LCD' (default): Imposes the lowest common denominator file length limit of all VAST Cluster-supported protocols, regardless of the specific protocol enabled on a specific view. 'YOYO': Imposes no limitation beyond that of the client protocol."`
+	PathLength                         string                    `json:"path_length,omitempty" yaml:"path_length,omitempty" required:"false" doc:"How to determine the maximum allowed path component name length. 'LCD' (default): Imposes the lowest common denominator file length limit of all VAST Cluster-supported protocols, regardless of the specific protocol enabled on a specific view. 'NPL': Imposes no limitation beyond that of the client protocol."`
 	PermissionPerVipPool               map[string]string         `json:"permission_per_vip_pool,omitempty" yaml:"permission_per_vip_pool,omitempty" required:"false" doc:""`
 	PrettyAtimeFrequency               string                    `json:"pretty_atime_frequency,omitempty" yaml:"pretty_atime_frequency,omitempty" required:"false" doc:""`
 	PrettyAuthSource                   string                    `json:"pretty_auth_source,omitempty" yaml:"pretty_auth_source,omitempty" required:"false" doc:""`
@@ -4937,6 +4974,35 @@ type S3Key_Tenant struct {
 type S3Key_User struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"User ID"`
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"User Name"`
+}
+
+// SupportedDriveInput_FwItem represents a nested type within components
+type SupportedDriveInput_FwItem struct {
+	Latest bool   `json:"latest,omitempty" yaml:"latest,omitempty" required:"false" doc:""`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+}
+
+// SupportedDrive_RawData represents a nested type within components
+type SupportedDrive_RawData struct {
+	CapacityTb int64                            `json:"capacity_tb,omitempty" yaml:"capacity_tb,omitempty" required:"false" doc:""`
+	Fw         *[]SupportedDrive_RawData_FwItem `json:"fw,omitempty" yaml:"fw,omitempty" required:"false" doc:""`
+	HwPlatform *[]string                        `json:"hw_platform,omitempty" yaml:"hw_platform,omitempty" required:"false" doc:""`
+	Model      string                           `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:""`
+	Name       string                           `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Type       string                           `json:"type,omitempty" yaml:"type,omitempty" required:"false" doc:""`
+}
+
+// SupportedDrive_RawData_FwItem represents a nested type within components
+type SupportedDrive_RawData_FwItem struct {
+	Latest bool   `json:"latest,omitempty" yaml:"latest,omitempty" required:"false" doc:""`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+}
+
+// SupportedPlatform_RawData represents a nested type within components
+type SupportedPlatform_RawData struct {
+	DefaultSectionLayout string `json:"default_section_layout,omitempty" yaml:"default_section_layout,omitempty" required:"false" doc:""`
+	Name                 string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	SsdCapacityTb        int64  `json:"ssd_capacity_tb,omitempty" yaml:"ssd_capacity_tb,omitempty" required:"false" doc:""`
 }
 
 // TableAddColumnsParams_ArrowSchemaItem represents a nested type within components

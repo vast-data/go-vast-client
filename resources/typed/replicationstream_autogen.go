@@ -57,7 +57,6 @@ type ReplicationStreamRequestBody struct {
 	Name                  string  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
 	Enabled               bool    `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enable/pause replication stream"`
 	IsManualPriorityScore bool    `json:"is_manual_priority_score,omitempty" yaml:"is_manual_priority_score,omitempty" required:"false" doc:"Indicates whether the priority score is set manually by a user."`
-	PolicyId              string  `json:"policy_id,omitempty" yaml:"policy_id,omitempty" required:"false" doc:"replication policy id"`
 	PriorityScore         float64 `json:"priority_score,omitempty" yaml:"priority_score,omitempty" required:"false" doc:"Indicates how close replication is to missing its RPO in relation to their current interval. A lower score means a higher priority."`
 	ProtectedPathId       string  `json:"protected_path_id,omitempty" yaml:"protected_path_id,omitempty" required:"false" doc:"protected path id"`
 	ProtectionPolicyId    string  `json:"protection_policy_id,omitempty" yaml:"protection_policy_id,omitempty" required:"false" doc:"Protection policy id"`
