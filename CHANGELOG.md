@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.112.0
+
+ENHANCEMENTS:
+
+* **Proxy Environment Variable Support**: The HTTP client now respects standard proxy environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`) for routing requests through proxy servers.
+
 ## 0.109.0
 
 BREAKING CHANGES:
