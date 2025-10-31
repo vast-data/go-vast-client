@@ -156,6 +156,8 @@ func (auth *JWTAuthenticator) authorize() error {
 	)
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: !auth.SslVerify},
+		// Ensure proxy environment variables are respected during authentication
+		Proxy: http.ProxyFromEnvironment,
 	}
 	client := &http.Client{
 		Transport: tr,

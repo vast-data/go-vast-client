@@ -104,6 +104,8 @@ func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: !config.SslVerify}
 	transport.MaxConnsPerHost = config.MaxConnections
 	transport.IdleConnTimeout = *config.Timeout
+	// Ensure proxy environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY) are respected
+	transport.Proxy = http.ProxyFromEnvironment
 	client := &http.Client{Transport: transport}
 	authenticator, err := createAuthenticator(config)
 	if err != nil {
