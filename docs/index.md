@@ -18,7 +18,7 @@ The VAST Go client provides an interface to the VAST Data REST API. It wraps low
 ## Installation
 
 ```bash
-go get github.com/vast-data/go-vast-client@v0.103.0  # Replace with the latest available tag
+go get github.com/vast-data/go-vast-client@v0.113.0  # Replace with the latest available tag
 ```
 
 Import it in your Go code:

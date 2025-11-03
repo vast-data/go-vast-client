@@ -46,13 +46,14 @@ func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 		}
 	} else if config.Username != "" && config.Password != "" {
 		authenticator = &JWTAuthenticator{
-			Host:      config.Host,
-			Port:      config.Port,
-			SslVerify: config.SslVerify,
-			Username:  config.Username,
-			Password:  config.Password,
-			Tenant:    config.Tenant,
-			Token:     &jwtToken{},
+			Host:         config.Host,
+			Port:         config.Port,
+			SslVerify:    config.SslVerify,
+			RespectProxy: config.RespectProxy,
+			Username:     config.Username,
+			Password:     config.Password,
+			Tenant:       config.Tenant,
+			Token:        &jwtToken{},
 		}
 	}
 	if authenticator != nil {
@@ -77,14 +78,15 @@ type jwtToken struct {
 }
 
 type JWTAuthenticator struct {
-	Host        string
-	Port        uint64
-	SslVerify   bool
-	Username    string
-	Password    string
-	Token       *jwtToken
-	Tenant      string
-	initialized bool
+	Host         string
+	Port         uint64
+	SslVerify    bool
+	RespectProxy bool
+	Username     string
+	Password     string
+	Token        *jwtToken
+	Tenant       string
+	initialized  bool
 }
 
 func parseToken(rsp *http.Response) (*jwtToken, error) {
@@ -156,8 +158,10 @@ func (auth *JWTAuthenticator) authorize() error {
 	)
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: !auth.SslVerify},
+	}
+	if auth.RespectProxy {
 		// Ensure proxy environment variables are respected during authentication
-		Proxy: http.ProxyFromEnvironment,
+		tr.Proxy = http.ProxyFromEnvironment
 	}
 	client := &http.Client{
 		Transport: tr,
