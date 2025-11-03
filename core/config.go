@@ -20,6 +20,7 @@ type VMSConfig struct {
 	UseBasicAuth   bool           // If true, use HTTP Basic Authentication instead of JWT (requires Username/Password).
 	Tenant         string         // Optional tenant name for tenant scoped authentication (tenant admin).
 	SslVerify      bool           // Whether to verify SSL certificates.
+	RespectProxy   bool           // Whether to respect proxy environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY).
 	Timeout        *time.Duration // HTTP client timeout. If nil, a default is applied by validators.
 	MaxConnections int            // Maximum number of concurrent HTTP connections.
 	UserAgent      string         // Optional custom User-Agent header to use in HTTP requests. If empty, a default may be applied.

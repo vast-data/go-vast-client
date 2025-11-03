@@ -5,6 +5,7 @@
 Iterators provide low-level access to paginated API responses. **For most use cases, you should use `List()` or `ListWithContext()` methods instead**, which automatically fetch all pages and return complete results.
 
 Use iterators only when you need fine-grained control over pagination, such as:
+
 - Processing very large datasets page-by-page to limit memory usage
 - Implementing custom pagination logic
 - Early termination based on page contents
