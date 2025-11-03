@@ -2301,7 +2301,7 @@ type Component_NativeReplicationRemoteTarget struct {
 	PeerCertificate  string    `json:"peer_certificate,omitempty" yaml:"peer_certificate,omitempty" required:"false" doc:"A certificate to use for authentication with the peer."`
 	PeerName         string    `json:"peer_name,omitempty" yaml:"peer_name,omitempty" required:"false" doc:"Name of remote peer"`
 	Pool             string    `json:"pool,omitempty" yaml:"pool,omitempty" required:"false" doc:""`
-	PoolId           string    `json:"pool_id,omitempty" yaml:"pool_id,omitempty" required:"false" doc:"The ID of the VIP pool on the local cluster configured with the replication role"`
+	PoolId           int64     `json:"pool_id,omitempty" yaml:"pool_id,omitempty" required:"false" doc:"The ID of the VIP pool on the local cluster configured with the replication role"`
 	PoolName         string    `json:"pool_name,omitempty" yaml:"pool_name,omitempty" required:"false" doc:""`
 	RemoteVersion    string    `json:"remote_version,omitempty" yaml:"remote_version,omitempty" required:"false" doc:"The VAST software version running on the remote peer."`
 	RemoteVipRange   string    `json:"remote_vip_range,omitempty" yaml:"remote_vip_range,omitempty" required:"false" doc:"VIP range of the remote peer's replication VIP Pool"`
@@ -2738,7 +2738,6 @@ type Component_Quota struct {
 	EnableAlarms                bool                    `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enable alarms when users or groups are exceeding their limit"`
 	EnableEmailProviders        bool                    `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Enable this setting to query Active Directory and LDAP services for user emails when sending userquota alert emails. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global email suffix is used if configured in cluster settings. If no suffix is set, default_email is used."`
 	GracePeriod                 string                  `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
-	GroupQuotas                 *[]string               `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:""`
 	Guid                        string                  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
 	HardLimit                   int64                   `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage space usage limit beyond which no writes are allowed."`
 	HardLimitInodes             int64                   `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
@@ -2769,7 +2768,6 @@ type Component_Quota struct {
 	UsedEffectiveCapacityTb     float32                 `json:"used_effective_capacity_tb,omitempty" yaml:"used_effective_capacity_tb,omitempty" required:"false" doc:"Used effective capacity in TB"`
 	UsedInodes                  int64                   `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path"`
 	UsedLimitedCapacity         int64                   `json:"used_limited_capacity,omitempty" yaml:"used_limited_capacity,omitempty" required:"false" doc:""`
-	UserQuotas                  *[]string               `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
 }
 
 // Component_QuotaEntityInfo represents the OpenAPI component schema
@@ -2919,23 +2917,23 @@ type Component_ReplicationStream struct {
 // Component_ReplicationTarget represents the OpenAPI component schema
 // Component: #/components/schemas/ReplicationTarget
 type Component_ReplicationTarget struct {
-	AccessKey        string `json:"access_key,omitempty" yaml:"access_key,omitempty" required:"true" doc:"Authentication access key"`
-	BucketName       string `json:"bucket_name,omitempty" yaml:"bucket_name,omitempty" required:"true" doc:"Bucket name"`
-	HttpProtocol     string `json:"http_protocol,omitempty" yaml:"http_protocol,omitempty" required:"true" doc:"http/https"`
-	Name             string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	Type             string `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
-	AwsAccountId     string `json:"aws_account_id,omitempty" yaml:"aws_account_id,omitempty" required:"false" doc:"Not yet implemented"`
-	AwsRegion        string `json:"aws_region,omitempty" yaml:"aws_region,omitempty" required:"false" doc:"Amazon only field for region"`
-	AwsRole          string `json:"aws_role,omitempty" yaml:"aws_role,omitempty" required:"false" doc:"Not yet implemented"`
-	Created          string `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:""`
-	CustomBucketUrl  string `json:"custom_bucket_url,omitempty" yaml:"custom_bucket_url,omitempty" required:"false" doc:"Custom bucket url"`
-	DecodedAccessKey string `json:"decoded_access_key,omitempty" yaml:"decoded_access_key,omitempty" required:"false" doc:""`
-	Guid             string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	Id               int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	Proxies          string `json:"proxies,omitempty" yaml:"proxies,omitempty" required:"false" doc:"A list of canonical urls separated by a comma."`
-	State            string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
-	StateDescription string `json:"state_description,omitempty" yaml:"state_description,omitempty" required:"false" doc:""`
-	Url              string `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+	AccessKey        string    `json:"access_key,omitempty" yaml:"access_key,omitempty" required:"true" doc:"Authentication access key"`
+	BucketName       string    `json:"bucket_name,omitempty" yaml:"bucket_name,omitempty" required:"true" doc:"Bucket name"`
+	HttpProtocol     string    `json:"http_protocol,omitempty" yaml:"http_protocol,omitempty" required:"true" doc:"http/https"`
+	Name             string    `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Type             string    `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
+	AwsAccountId     string    `json:"aws_account_id,omitempty" yaml:"aws_account_id,omitempty" required:"false" doc:"Not yet implemented"`
+	AwsRegion        string    `json:"aws_region,omitempty" yaml:"aws_region,omitempty" required:"false" doc:"Amazon only field for region"`
+	AwsRole          string    `json:"aws_role,omitempty" yaml:"aws_role,omitempty" required:"false" doc:"Not yet implemented"`
+	Created          string    `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:""`
+	CustomBucketUrl  string    `json:"custom_bucket_url,omitempty" yaml:"custom_bucket_url,omitempty" required:"false" doc:"Custom bucket url"`
+	DecodedAccessKey string    `json:"decoded_access_key,omitempty" yaml:"decoded_access_key,omitempty" required:"false" doc:""`
+	Guid             string    `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	Id               int64     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Proxies          *[]string `json:"proxies,omitempty" yaml:"proxies,omitempty" required:"false" doc:"A list of canonical urls separated by a comma."`
+	State            string    `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
+	StateDescription string    `json:"state_description,omitempty" yaml:"state_description,omitempty" required:"false" doc:""`
+	Url              string    `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
 }
 
 // Component_RequestQOSDynamicLimits represents the OpenAPI component schema
@@ -3991,7 +3989,7 @@ type Component_View struct {
 	BulkPermissionUpdateState     string                         `json:"bulk_permission_update_state,omitempty" yaml:"bulk_permission_update_state,omitempty" required:"false" doc:"State"`
 	Cluster                       string                         `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
 	ClusterId                     int64                          `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"Parent Cluster ID"`
-	CreateDir                     string                         `json:"create_dir,omitempty" yaml:"create_dir,omitempty" required:"false" doc:"Creates the directory specified by the path"`
+	CreateDir                     bool                           `json:"create_dir,omitempty" yaml:"create_dir,omitempty" required:"false" doc:"Creates the directory specified by the path"`
 	Created                       string                         `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:""`
 	DefaultRetentionPeriod        string                         `json:"default_retention_period,omitempty" yaml:"default_retention_period,omitempty" required:"false" doc:"Default retention period for objects in the bucket. Required if s3_locks_retention_mode is set to governance or compliance. Object versions that are placed in the bucket are automatically protected with the specified retention for the specified amount of time. Otherwise, by default, each object version has no automatic protection but can be configured with a retention period or legal hold. Specify as an integer followed by h for hours, d for days, m for months, or y for years. For example: 2d or 1y."`
 	Directory                     bool                           `json:"directory,omitempty" yaml:"directory,omitempty" required:"false" doc:"Create the directory if it does not exist"`
@@ -4089,7 +4087,7 @@ type Component_ViewPolicy struct {
 	NfsMinimalProtectionLevel          string                    `json:"nfs_minimal_protection_level,omitempty" yaml:"nfs_minimal_protection_level,omitempty" required:"false" doc:"Minimal Protection Level for NFSv4 client mounts: 'KRB_AUTH_ONLY' allows client mounts with Kerberos authentication only (using the RPCSEC_GSS authentication service), 'SYSTEM' allows client mounts using either the AUTH_SYS RCP security flavor (the traditional default NFS authentication scheme) or with Kerberos authentication, 'NONE' (default) allows client mounts with the AUTH_NONE (anonymous access), or AUTH_SYS RCP security flavors, or with Kerberos authentication."`
 	NfsNoSquash                        *[]string                 `json:"nfs_no_squash,omitempty" yaml:"nfs_no_squash,omitempty" required:"false" doc:"Hosts with no squash policy"`
 	NfsPosixAcl                        bool                      `json:"nfs_posix_acl,omitempty" yaml:"nfs_posix_acl,omitempty" required:"false" doc:"True if support is enabled for extended POSIX Access Control Lists (ACL) for NFSv3 clients."`
-	NfsReadOnly                        string                    `json:"nfs_read_only,omitempty" yaml:"nfs_read_only,omitempty" required:"false" doc:"Hosts with NFS read only permissions"`
+	NfsReadOnly                        *[]string                 `json:"nfs_read_only,omitempty" yaml:"nfs_read_only,omitempty" required:"false" doc:"Hosts with NFS read only permissions"`
 	NfsReadWrite                       *[]string                 `json:"nfs_read_write,omitempty" yaml:"nfs_read_write,omitempty" required:"false" doc:"Hosts with NFS read/write permissions"`
 	NfsReturnOpenPermissions           bool                      `json:"nfs_return_open_permissions,omitempty" yaml:"nfs_return_open_permissions,omitempty" required:"false" doc:"when using smb use open permissions for files"`
 	NfsRootSquash                      *[]string                 `json:"nfs_root_squash,omitempty" yaml:"nfs_root_squash,omitempty" required:"false" doc:"Hosts with root squash policy"`
@@ -4102,7 +4100,6 @@ type Component_ViewPolicy struct {
 	Read                               *[]string                 `json:"read,omitempty" yaml:"read,omitempty" required:"false" doc:"Hosts with read permissions"`
 	ReadOnly                           *[]string                 `json:"read_only,omitempty" yaml:"read_only,omitempty" required:"false" doc:"Hosts with NFS read only permissions"`
 	ReadWrite                          *[]string                 `json:"read_write,omitempty" yaml:"read_write,omitempty" required:"false" doc:"Hosts with NFS read/write permissions"`
-	S3BucketFullControl                string                    `json:"s3_bucket_full_control,omitempty" yaml:"s3_bucket_full_control,omitempty" required:"false" doc:"Hosts with full permissions"`
 	S3BucketListing                    string                    `json:"s3_bucket_listing,omitempty" yaml:"s3_bucket_listing,omitempty" required:"false" doc:"Hosts with full permissions"`
 	S3BucketRead                       string                    `json:"s3_bucket_read,omitempty" yaml:"s3_bucket_read,omitempty" required:"false" doc:"Hosts with full permissions"`
 	S3BucketReadAcp                    string                    `json:"s3_bucket_read_acp,omitempty" yaml:"s3_bucket_read_acp,omitempty" required:"false" doc:"Hosts with full permissions"`
