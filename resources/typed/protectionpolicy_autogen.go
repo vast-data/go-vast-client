@@ -55,8 +55,6 @@ type ProtectionPolicyRequestBody struct {
 	Name             string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
 	Prefix           string `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"true" doc:"The prefix for names of snapshots created by the policy"`
 	BigCatalog       bool   `json:"big_catalog,omitempty" yaml:"big_catalog,omitempty" required:"false" doc:"Indicates if Protection Policy will be used for VAST Catalog. There may only be 1 such policy."`
-	Guid             string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Do not specify this parameter."`
-	Id               int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Do not specify this parameter."`
 	Indestructible   bool   `json:"indestructible,omitempty" yaml:"indestructible,omitempty" required:"false" doc:"Set to true to protect the protection policy from accidental or malicious deletion with the indestructibility feature. If this setting is enabled, authorized unlocking of the cluster's indestructibility mechanism is required to do any of the following: modifying the policy, deleting the policy or disabling this setting."`
 	RemoteTenantGuid string `json:"remote_tenant_guid,omitempty" yaml:"remote_tenant_guid,omitempty" required:"false" doc:"remote tenant guid"`
 	TargetObjectId   int64  `json:"target_object_id,omitempty" yaml:"target_object_id,omitempty" required:"false" doc:"ID of the remote peer. Specify ID of a ReplicationTarget (aka S3 replication peer) if clone_type is CLOUD_REPLICATION. Specify the ID of a NativeReplicationRemoteTarget if clone_type is NATIVE_REPLICATION."`

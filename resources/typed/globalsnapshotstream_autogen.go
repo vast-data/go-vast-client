@@ -61,8 +61,6 @@ type GlobalsnapstreamRequestBody_OwnerRootSnapshot struct {
 // GlobalSnapshotStreamRequestBody represents the request body for GlobalSnapshotStream operations
 type GlobalSnapshotStreamRequestBody struct {
 	Enabled           bool                                          `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enables background sync, in which the snapshot data is copied from the source to the destination after the clone is created. During the copying stage, read requests are directed to the source if the requested data is not yet copied. If false, the snapshot data is not copied to the destination. Requests to read data from the cloned directory continue to read data from the cloned source."`
-	Guid              string                                        `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Do not specify this parameter."`
-	Id                int64                                         `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Do not specify this parameter."`
 	LoaneeRootPath    string                                        `json:"loanee_root_path,omitempty" yaml:"loanee_root_path,omitempty" required:"false" doc:"ID of the path you want to clone. Specify only if cloning from a snapshot on the local cluster."`
 	LoaneeSnapshot    string                                        `json:"loanee_snapshot,omitempty" yaml:"loanee_snapshot,omitempty" required:"false" doc:"Loanee snapshot name"`
 	LoaneeSnapshotId  int64                                         `json:"loanee_snapshot_id,omitempty" yaml:"loanee_snapshot_id,omitempty" required:"false" doc:"ID of local snapshot to clone. Specify only if cloning from a snapshot on the local cluster."`
