@@ -15,16 +15,11 @@ import (
 // url: /eboxes/add/
 // summary: Add EBox
 //
-// Parameters:
-//   - enodeIp (body): Specify the internal bond IP of ENode.
-//   - clusterId (body): The cluster ID
-func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, enodeIp string, clusterId int64) (core.Record, error) {
+// Body:
+//   - cluster_id: The cluster ID
+//   - enode_ip: Specify the internal bond IP of ENode.
+func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/eboxes/add/"
-	body := core.Params{}
-	body["enode_ip"] = enodeIp
-	if clusterId != 0 {
-		body["cluster_id"] = clusterId
-	}
 	result, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -37,11 +32,11 @@ func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, enodeIp string, clus
 // url: /eboxes/add/
 // summary: Add EBox
 //
-// Parameters:
-//   - enodeIp (body): Specify the internal bond IP of ENode.
-//   - clusterId (body): The cluster ID
-func (e *Ebox) EboxAdd_POST(enodeIp string, clusterId int64) (core.Record, error) {
-	return e.EboxAddWithContext_POST(e.Rest.GetCtx(), enodeIp, clusterId)
+// Body:
+//   - cluster_id: The cluster ID
+//   - enode_ip: Specify the internal bond IP of ENode.
+func (e *Ebox) EboxAdd_POST(body core.Params) (core.Record, error) {
+	return e.EboxAddWithContext_POST(e.Rest.GetCtx(), body)
 }
 
 // EboxControlLedWithContext_PATCH
@@ -49,15 +44,13 @@ func (e *Ebox) EboxAdd_POST(enodeIp string, clusterId int64) (core.Record, error
 // url: /eboxes/{id}/control_led/
 // summary: Control EBox LEDs
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (e *Ebox) EboxControlLedWithContext_PATCH(ctx context.Context, id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
+func (e *Ebox) EboxControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("eboxes", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	result, err := core.Request[core.Record](ctx, e, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -72,9 +65,11 @@ func (e *Ebox) EboxControlLedWithContext_PATCH(ctx context.Context, id any, cont
 // url: /eboxes/{id}/control_led/
 // summary: Control EBox LEDs
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (e *Ebox) EboxControlLed_PATCH(id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
-	return e.EboxControlLedWithContext_PATCH(e.Rest.GetCtx(), id, control, waitTimeout)
+func (e *Ebox) EboxControlLed_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return e.EboxControlLedWithContext_PATCH(e.Rest.GetCtx(), id, body, waitTimeout)
 }

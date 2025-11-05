@@ -35,18 +35,11 @@ func (d *Delta) DeltaConfig_GET() (core.Record, error) {
 // url: /delta/config/
 // summary: Update Delta config
 //
-// Parameters:
-//   - enabled (body): enable/disable delta
-//   - ignoredObjectsPrefix (body): set prefix to ignore objects in delta
-func (d *Delta) DeltaConfigWithContext_PATCH(ctx context.Context, enabled bool, ignoredObjectsPrefix bool) (core.Record, error) {
+// Body:
+//   - enabled: enable/disable delta
+//   - ignored_objects_prefix: set prefix to ignore objects in delta
+func (d *Delta) DeltaConfigWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/delta/config/"
-	body := core.Params{}
-	if enabled != false {
-		body["enabled"] = enabled
-	}
-	if ignoredObjectsPrefix != false {
-		body["ignored_objects_prefix"] = ignoredObjectsPrefix
-	}
 	result, err := core.Request[core.Record](ctx, d, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -59,9 +52,9 @@ func (d *Delta) DeltaConfigWithContext_PATCH(ctx context.Context, enabled bool, 
 // url: /delta/config/
 // summary: Update Delta config
 //
-// Parameters:
-//   - enabled (body): enable/disable delta
-//   - ignoredObjectsPrefix (body): set prefix to ignore objects in delta
-func (d *Delta) DeltaConfig_PATCH(enabled bool, ignoredObjectsPrefix bool) (core.Record, error) {
-	return d.DeltaConfigWithContext_PATCH(d.Rest.GetCtx(), enabled, ignoredObjectsPrefix)
+// Body:
+//   - enabled: enable/disable delta
+//   - ignored_objects_prefix: set prefix to ignore objects in delta
+func (d *Delta) DeltaConfig_PATCH(body core.Params) (core.Record, error) {
+	return d.DeltaConfigWithContext_PATCH(d.Rest.GetCtx(), body)
 }

@@ -15,6 +15,10 @@ import (
 // url: /eventdefinitions/{id}/test/
 // summary: Test Event Definition
 //
+// Body:
+//
+//	< not declared in schema >
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (e *EventDefinition) EventDefinitionTestWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -32,6 +36,10 @@ func (e *EventDefinition) EventDefinitionTestWithContext_PATCH(ctx context.Conte
 // method: PATCH
 // url: /eventdefinitions/{id}/test/
 // summary: Test Event Definition
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

@@ -13,6 +13,13 @@ import (
 // method: POST
 // url: /filesystem/clone/
 // summary: Clone path
+//
+// Body:
+//   - dest_path: Full destination path
+//   - is_snapshot: Clone is snapshot (file is cloned within the same directory)
+//   - source_path: Full source path
+//   - tenant_id: Tenant ID
+//   - unique_id: Unique ID
 func (f *Filesystem) FilesystemCloneWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/filesystem/clone/"
 	result, err := core.Request[core.Record](ctx, f, http.MethodPost, resourcePath, nil, body)
@@ -26,6 +33,13 @@ func (f *Filesystem) FilesystemCloneWithContext_POST(ctx context.Context, body c
 // method: POST
 // url: /filesystem/clone/
 // summary: Clone path
+//
+// Body:
+//   - dest_path: Full destination path
+//   - is_snapshot: Clone is snapshot (file is cloned within the same directory)
+//   - source_path: Full source path
+//   - tenant_id: Tenant ID
+//   - unique_id: Unique ID
 func (f *Filesystem) FilesystemClone_POST(body core.Params) (core.Record, error) {
 	return f.FilesystemCloneWithContext_POST(f.Rest.GetCtx(), body)
 }

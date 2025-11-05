@@ -13,6 +13,14 @@ import (
 // method: GET
 // url: /permissions/objects/
 // summary: List Object Permissions
+//
+// Params:
+//   - object_type
+//   - object_id
+//   - realm
+//   - permissions
+//   - manager_id
+//   - role_id
 func (p *Permissions) PermissionsObjectsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
 	resourcePath := "/permissions/objects/"
 	result, err := core.Request[core.RecordSet](ctx, p, http.MethodGet, resourcePath, params, nil)
@@ -27,6 +35,14 @@ func (p *Permissions) PermissionsObjectsWithContext_GET(ctx context.Context, par
 // method: GET
 // url: /permissions/objects/
 // summary: List Object Permissions
+//
+// Params:
+//   - object_type
+//   - object_id
+//   - realm
+//   - permissions
+//   - manager_id
+//   - role_id
 func (p *Permissions) PermissionsObjects_GET(params core.Params) (core.RecordSet, error) {
 	return p.PermissionsObjectsWithContext_GET(p.Rest.GetCtx(), params)
 }

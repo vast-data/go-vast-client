@@ -14,14 +14,10 @@ import (
 // url: /indestructibility/{id}/generate_token/
 // summary: Generate Indestructibility Token
 //
-// Parameters:
-//   - indestructibilityPasswd (body): Request parameter
-func (i *Indestructibility) IndestructibilityGenerateTokenWithContext_PATCH(ctx context.Context, id any, indestructibilityPasswd string) (core.Record, error) {
+// Body:
+//   - indestructibility_passwd
+func (i *Indestructibility) IndestructibilityGenerateTokenWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("indestructibility", id, "generate_token")
-	body := core.Params{}
-	if indestructibilityPasswd != "" {
-		body["indestructibility_passwd"] = indestructibilityPasswd
-	}
 	result, err := core.Request[core.Record](ctx, i, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -34,16 +30,20 @@ func (i *Indestructibility) IndestructibilityGenerateTokenWithContext_PATCH(ctx 
 // url: /indestructibility/{id}/generate_token/
 // summary: Generate Indestructibility Token
 //
-// Parameters:
-//   - indestructibilityPasswd (body): Request parameter
-func (i *Indestructibility) IndestructibilityGenerateToken_PATCH(id any, indestructibilityPasswd string) (core.Record, error) {
-	return i.IndestructibilityGenerateTokenWithContext_PATCH(i.Rest.GetCtx(), id, indestructibilityPasswd)
+// Body:
+//   - indestructibility_passwd
+func (i *Indestructibility) IndestructibilityGenerateToken_PATCH(id any, body core.Params) (core.Record, error) {
+	return i.IndestructibilityGenerateTokenWithContext_PATCH(i.Rest.GetCtx(), id, body)
 }
 
 // IndestructibilityResetPasswdWithContext_PATCH
 // method: PATCH
 // url: /indestructibility/{id}/reset_passwd/
 // summary: Reset Indestructibility Password
+//
+// Body:
+//
+//	< not declared in schema >
 func (i *Indestructibility) IndestructibilityResetPasswdWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("indestructibility", id, "reset_passwd")
 	result, err := core.Request[core.Record](ctx, i, http.MethodPatch, resourcePath, nil, body)
@@ -57,6 +57,10 @@ func (i *Indestructibility) IndestructibilityResetPasswdWithContext_PATCH(ctx co
 // method: PATCH
 // url: /indestructibility/{id}/reset_passwd/
 // summary: Reset Indestructibility Password
+//
+// Body:
+//
+//	< not declared in schema >
 func (i *Indestructibility) IndestructibilityResetPasswd_PATCH(id any, body core.Params) (core.Record, error) {
 	return i.IndestructibilityResetPasswdWithContext_PATCH(i.Rest.GetCtx(), id, body)
 }
@@ -66,14 +70,10 @@ func (i *Indestructibility) IndestructibilityResetPasswd_PATCH(id any, body core
 // url: /indestructibility/{id}/unlock/
 // summary: Unlock Indestructibility
 //
-// Parameters:
-//   - challengeToken (body): A challenge token, provided by Support. To obtain a challenge token, first generate an indestructibility token and provide it to Support with any additional identifying details required by Support.
-func (i *Indestructibility) IndestructibilityUnlockWithContext_PATCH(ctx context.Context, id any, challengeToken string) (core.Record, error) {
+// Body:
+//   - challenge_token: A challenge token, provided by Support. To obtain a challenge token, first generate an indestructibility token and provide it to Support with any additional identifying details required by Support.
+func (i *Indestructibility) IndestructibilityUnlockWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("indestructibility", id, "unlock")
-	body := core.Params{}
-	if challengeToken != "" {
-		body["challenge_token"] = challengeToken
-	}
 	result, err := core.Request[core.Record](ctx, i, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -86,8 +86,8 @@ func (i *Indestructibility) IndestructibilityUnlockWithContext_PATCH(ctx context
 // url: /indestructibility/{id}/unlock/
 // summary: Unlock Indestructibility
 //
-// Parameters:
-//   - challengeToken (body): A challenge token, provided by Support. To obtain a challenge token, first generate an indestructibility token and provide it to Support with any additional identifying details required by Support.
-func (i *Indestructibility) IndestructibilityUnlock_PATCH(id any, challengeToken string) (core.Record, error) {
-	return i.IndestructibilityUnlockWithContext_PATCH(i.Rest.GetCtx(), id, challengeToken)
+// Body:
+//   - challenge_token: A challenge token, provided by Support. To obtain a challenge token, first generate an indestructibility token and provide it to Support with any additional identifying details required by Support.
+func (i *Indestructibility) IndestructibilityUnlock_PATCH(id any, body core.Params) (core.Record, error) {
+	return i.IndestructibilityUnlockWithContext_PATCH(i.Rest.GetCtx(), id, body)
 }

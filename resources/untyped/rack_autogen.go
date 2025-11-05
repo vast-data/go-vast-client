@@ -13,6 +13,10 @@ import (
 // method: POST
 // url: /racks/{id}/add_boxes/
 // summary: Add Boxes to a Rack
+//
+// Body:
+//   - cbox
+//   - dbox
 func (r *Rack) RackAddBoxesWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("racks", id, "add_boxes")
 	_, err := core.Request[core.Record](ctx, r, http.MethodPost, resourcePath, nil, body)
@@ -24,6 +28,10 @@ func (r *Rack) RackAddBoxesWithContext_POST(ctx context.Context, id any, body co
 // method: POST
 // url: /racks/{id}/add_boxes/
 // summary: Add Boxes to a Rack
+//
+// Body:
+//   - cbox
+//   - dbox
 func (r *Rack) RackAddBoxes_POST(id any, body core.Params) error {
 	return r.RackAddBoxesWithContext_POST(r.Rest.GetCtx(), id, body)
 }
@@ -32,6 +40,12 @@ func (r *Rack) RackAddBoxes_POST(id any, body core.Params) error {
 // method: POST
 // url: /racks/{id}/bgpconfig/
 // summary: Configure BGP on Rack
+//
+// Body:
+//   - ip_ranges
+//   - ips_represent: IP address representation (odd/even)
+//   - self_asn: ASN
+//   - subnet_bits: Subnet bits
 func (r *Rack) RackBgpconfigWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("racks", id, "bgpconfig")
 	_, err := core.Request[core.Record](ctx, r, http.MethodPost, resourcePath, nil, body)
@@ -43,6 +57,12 @@ func (r *Rack) RackBgpconfigWithContext_POST(ctx context.Context, id any, body c
 // method: POST
 // url: /racks/{id}/bgpconfig/
 // summary: Configure BGP on Rack
+//
+// Body:
+//   - ip_ranges
+//   - ips_represent: IP address representation (odd/even)
+//   - self_asn: ASN
+//   - subnet_bits: Subnet bits
 func (r *Rack) RackBgpconfig_POST(id any, body core.Params) error {
 	return r.RackBgpconfigWithContext_POST(r.Rest.GetCtx(), id, body)
 }
@@ -52,14 +72,10 @@ func (r *Rack) RackBgpconfig_POST(id any, body core.Params) error {
 // url: /racks/{id}/control_led/
 // summary: Control Rack Boxes LED
 //
-// Parameters:
-//   - control (body): LED state
-func (r *Rack) RackControlLedWithContext_PATCH(ctx context.Context, id any, control string) error {
+// Body:
+//   - control: LED state
+func (r *Rack) RackControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("racks", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	_, err := core.Request[core.Record](ctx, r, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -70,10 +86,10 @@ func (r *Rack) RackControlLedWithContext_PATCH(ctx context.Context, id any, cont
 // url: /racks/{id}/control_led/
 // summary: Control Rack Boxes LED
 //
-// Parameters:
-//   - control (body): LED state
-func (r *Rack) RackControlLed_PATCH(id any, control string) error {
-	return r.RackControlLedWithContext_PATCH(r.Rest.GetCtx(), id, control)
+// Body:
+//   - control: LED state
+func (r *Rack) RackControlLed_PATCH(id any, body core.Params) error {
+	return r.RackControlLedWithContext_PATCH(r.Rest.GetCtx(), id, body)
 }
 
 // RackRenameWithContext_PATCH
@@ -81,14 +97,10 @@ func (r *Rack) RackControlLed_PATCH(id any, control string) error {
 // url: /racks/{id}/rename/
 // summary: Rename Rack
 //
-// Parameters:
-//   - name (body): New Rack name
-func (r *Rack) RackRenameWithContext_PATCH(ctx context.Context, id any, name string) error {
+// Body:
+//   - name: New Rack name
+func (r *Rack) RackRenameWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("racks", id, "rename")
-	body := core.Params{}
-	if name != "" {
-		body["name"] = name
-	}
 	_, err := core.Request[core.Record](ctx, r, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -99,8 +111,8 @@ func (r *Rack) RackRenameWithContext_PATCH(ctx context.Context, id any, name str
 // url: /racks/{id}/rename/
 // summary: Rename Rack
 //
-// Parameters:
-//   - name (body): New Rack name
-func (r *Rack) RackRename_PATCH(id any, name string) error {
-	return r.RackRenameWithContext_PATCH(r.Rest.GetCtx(), id, name)
+// Body:
+//   - name: New Rack name
+func (r *Rack) RackRename_PATCH(id any, body core.Params) error {
+	return r.RackRenameWithContext_PATCH(r.Rest.GetCtx(), id, body)
 }

@@ -13,6 +13,14 @@ import (
 // method: GET
 // url: /projectioncolumns/show/
 // summary: Return a Database Table Semi-Sorted Projection Column
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - table_name: Getting list of objects by table_name
+//   - projection_name: Getting list of objects by projection_name
+//   - name: Getting object by exact match
 func (p *ProjectionColumn) ProjectionColumnShowWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/projectioncolumns/show/"
 	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
@@ -26,6 +34,14 @@ func (p *ProjectionColumn) ProjectionColumnShowWithContext_GET(ctx context.Conte
 // method: GET
 // url: /projectioncolumns/show/
 // summary: Return a Database Table Semi-Sorted Projection Column
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - table_name: Getting list of objects by table_name
+//   - projection_name: Getting list of objects by projection_name
+//   - name: Getting object by exact match
 func (p *ProjectionColumn) ProjectionColumnShow_GET(params core.Params) (core.Record, error) {
 	return p.ProjectionColumnShowWithContext_GET(p.Rest.GetCtx(), params)
 }

@@ -15,14 +15,10 @@ import (
 // url: /volumes/bulk/
 // summary: Delete a Bulk Of Block Storage Volumes
 //
-// Parameters:
-//   - Force (query): Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
-func (v *Volume) VolumeBulkWithContext_DELETE(ctx context.Context, Force bool) error {
+// Params:
+//   - force: Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
+func (v *Volume) VolumeBulkWithContext_DELETE(ctx context.Context, params core.Params) error {
 	resourcePath := "/volumes/bulk/"
-	params := core.Params{}
-	if Force != false {
-		params["force"] = Force
-	}
 	_, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, params, nil)
 	return err
 
@@ -33,10 +29,10 @@ func (v *Volume) VolumeBulkWithContext_DELETE(ctx context.Context, Force bool) e
 // url: /volumes/bulk/
 // summary: Delete a Bulk Of Block Storage Volumes
 //
-// Parameters:
-//   - Force (query): Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
-func (v *Volume) VolumeBulk_DELETE(Force bool) error {
-	return v.VolumeBulkWithContext_DELETE(v.Rest.GetCtx(), Force)
+// Params:
+//   - force: Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
+func (v *Volume) VolumeBulk_DELETE(params core.Params) error {
+	return v.VolumeBulkWithContext_DELETE(v.Rest.GetCtx(), params)
 }
 
 // VolumeFetchCapacityWithContext_GET
@@ -87,6 +83,10 @@ func (v *Volume) VolumeGetSnapshots_GET(id any) (core.RecordSet, error) {
 // url: /volumes/{id}/set_hosts/
 // summary: Map a Volume to Block Hosts
 //
+// Body:
+//   - ids
+//   - snapshot_id
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (v *Volume) VolumeSetHostsWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -105,6 +105,10 @@ func (v *Volume) VolumeSetHostsWithContext_PATCH(ctx context.Context, id any, bo
 // url: /volumes/{id}/set_hosts/
 // summary: Map a Volume to Block Hosts
 //
+// Body:
+//   - ids
+//   - snapshot_id
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (v *Volume) VolumeSetHosts_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -115,6 +119,11 @@ func (v *Volume) VolumeSetHosts_PATCH(id any, body core.Params, waitTimeout time
 // method: PATCH
 // url: /volumes/{id}/update_hosts/
 // summary: Update Mapping of a Volume to Block Hosts
+//
+// Body:
+//   - ids_to_add
+//   - ids_to_remove
+//   - snapshot_id
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -133,6 +142,11 @@ func (v *Volume) VolumeUpdateHostsWithContext_PATCH(ctx context.Context, id any,
 // method: PATCH
 // url: /volumes/{id}/update_hosts/
 // summary: Update Mapping of a Volume to Block Hosts
+//
+// Body:
+//   - ids_to_add
+//   - ids_to_remove
+//   - snapshot_id
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

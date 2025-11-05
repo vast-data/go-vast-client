@@ -13,6 +13,14 @@ import (
 // method: GET
 // url: /managers/authorized_status/
 // summary: Get authorized status for a user
+//
+// Params:
+//   - leading_vid
+//   - bucket_name
+//   - object_path
+//   - action
+//   - owner_vid
+//   - tenant_id: Filter by tenant. Specify tenant ID.
 func (m *Manager) ManagerAuthorizedStatusWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/managers/authorized_status/"
 	result, err := core.Request[core.Record](ctx, m, http.MethodGet, resourcePath, params, nil)
@@ -26,6 +34,14 @@ func (m *Manager) ManagerAuthorizedStatusWithContext_GET(ctx context.Context, pa
 // method: GET
 // url: /managers/authorized_status/
 // summary: Get authorized status for a user
+//
+// Params:
+//   - leading_vid
+//   - bucket_name
+//   - object_path
+//   - action
+//   - owner_vid
+//   - tenant_id: Filter by tenant. Specify tenant ID.
 func (m *Manager) ManagerAuthorizedStatus_GET(params core.Params) (core.Record, error) {
 	return m.ManagerAuthorizedStatusWithContext_GET(m.Rest.GetCtx(), params)
 }
@@ -35,12 +51,10 @@ func (m *Manager) ManagerAuthorizedStatus_GET(params core.Params) (core.Record, 
 // url: /managers/password/
 // summary: Change user's password
 //
-// Parameters:
-//   - password (body): New password.
-func (m *Manager) ManagerPasswordWithContext_PATCH(ctx context.Context, password string) error {
+// Body:
+//   - password: New password.
+func (m *Manager) ManagerPasswordWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/managers/password/"
-	body := core.Params{}
-	body["password"] = password
 	_, err := core.Request[core.Record](ctx, m, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -51,10 +65,10 @@ func (m *Manager) ManagerPasswordWithContext_PATCH(ctx context.Context, password
 // url: /managers/password/
 // summary: Change user's password
 //
-// Parameters:
-//   - password (body): New password.
-func (m *Manager) ManagerPassword_PATCH(password string) error {
-	return m.ManagerPasswordWithContext_PATCH(m.Rest.GetCtx(), password)
+// Body:
+//   - password: New password.
+func (m *Manager) ManagerPassword_PATCH(body core.Params) error {
+	return m.ManagerPasswordWithContext_PATCH(m.Rest.GetCtx(), body)
 }
 
 // ManagerUnlockWithContext_PATCH
@@ -62,18 +76,11 @@ func (m *Manager) ManagerPassword_PATCH(password string) error {
 // url: /managers/{id}/unlock/
 // summary: Unlock a Manager
 //
-// Parameters:
-//   - isTemporaryPassword (body): Sets the password to be temporary. Expiration of temporary passwords is controlled by the tmp_pwd_expiration_timeout setting, which you can modify and retrieve through the /vms/{id}/pwd_settings/ path.
-//   - password (body): The manager's (new) password.
-func (m *Manager) ManagerUnlockWithContext_PATCH(ctx context.Context, id any, isTemporaryPassword bool, password string) error {
+// Body:
+//   - is_temporary_password: Sets the password to be temporary. Expiration of temporary passwords is controlled by the tmp_pwd_expiration_timeout setting, which you can modify and retrieve through the /vms/{id}/pwd_settings/ path.
+//   - password: The manager's (new) password.
+func (m *Manager) ManagerUnlockWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("managers", id, "unlock")
-	body := core.Params{}
-	if isTemporaryPassword != false {
-		body["is_temporary_password"] = isTemporaryPassword
-	}
-	if password != "" {
-		body["password"] = password
-	}
 	_, err := core.Request[core.Record](ctx, m, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -84,9 +91,9 @@ func (m *Manager) ManagerUnlockWithContext_PATCH(ctx context.Context, id any, is
 // url: /managers/{id}/unlock/
 // summary: Unlock a Manager
 //
-// Parameters:
-//   - isTemporaryPassword (body): Sets the password to be temporary. Expiration of temporary passwords is controlled by the tmp_pwd_expiration_timeout setting, which you can modify and retrieve through the /vms/{id}/pwd_settings/ path.
-//   - password (body): The manager's (new) password.
-func (m *Manager) ManagerUnlock_PATCH(id any, isTemporaryPassword bool, password string) error {
-	return m.ManagerUnlockWithContext_PATCH(m.Rest.GetCtx(), id, isTemporaryPassword, password)
+// Body:
+//   - is_temporary_password: Sets the password to be temporary. Expiration of temporary passwords is controlled by the tmp_pwd_expiration_timeout setting, which you can modify and retrieve through the /vms/{id}/pwd_settings/ path.
+//   - password: The manager's (new) password.
+func (m *Manager) ManagerUnlock_PATCH(id any, body core.Params) error {
+	return m.ManagerUnlockWithContext_PATCH(m.Rest.GetCtx(), id, body)
 }

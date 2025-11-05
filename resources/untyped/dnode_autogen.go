@@ -15,14 +15,10 @@ import (
 // url: /dnodes/{id}/control_led/
 // summary: Control DNode LED
 //
-// Parameters:
-//   - control (body): LED state
-func (d *Dnode) DnodeControlLedWithContext_PATCH(ctx context.Context, id any, control string) error {
+// Body:
+//   - control: LED state
+func (d *Dnode) DnodeControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("dnodes", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	_, err := core.Request[core.Record](ctx, d, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -33,16 +29,20 @@ func (d *Dnode) DnodeControlLedWithContext_PATCH(ctx context.Context, id any, co
 // url: /dnodes/{id}/control_led/
 // summary: Control DNode LED
 //
-// Parameters:
-//   - control (body): LED state
-func (d *Dnode) DnodeControlLed_PATCH(id any, control string) error {
-	return d.DnodeControlLedWithContext_PATCH(d.Rest.GetCtx(), id, control)
+// Body:
+//   - control: LED state
+func (d *Dnode) DnodeControlLed_PATCH(id any, body core.Params) error {
+	return d.DnodeControlLedWithContext_PATCH(d.Rest.GetCtx(), id, body)
 }
 
 // DnodeHighlightWithContext_PATCH
 // method: PATCH
 // url: /dnodes/{id}/highlight/
 // summary: Highlight DNode
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -62,6 +62,10 @@ func (d *Dnode) DnodeHighlightWithContext_PATCH(ctx context.Context, id any, bod
 // url: /dnodes/{id}/highlight/
 // summary: Highlight DNode
 //
+// Body:
+//
+//	< not declared in schema >
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (d *Dnode) DnodeHighlight_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -73,14 +77,10 @@ func (d *Dnode) DnodeHighlight_PATCH(id any, body core.Params, waitTimeout time.
 // url: /dnodes/{id}/rename/
 // summary: Rename DNode
 //
-// Parameters:
-//   - name (body): New DNode name
-func (d *Dnode) DnodeRenameWithContext_PATCH(ctx context.Context, id any, name string) error {
+// Body:
+//   - name: New DNode name
+func (d *Dnode) DnodeRenameWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("dnodes", id, "rename")
-	body := core.Params{}
-	if name != "" {
-		body["name"] = name
-	}
 	_, err := core.Request[core.Record](ctx, d, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -91,8 +91,8 @@ func (d *Dnode) DnodeRenameWithContext_PATCH(ctx context.Context, id any, name s
 // url: /dnodes/{id}/rename/
 // summary: Rename DNode
 //
-// Parameters:
-//   - name (body): New DNode name
-func (d *Dnode) DnodeRename_PATCH(id any, name string) error {
-	return d.DnodeRenameWithContext_PATCH(d.Rest.GetCtx(), id, name)
+// Body:
+//   - name: New DNode name
+func (d *Dnode) DnodeRename_PATCH(id any, body core.Params) error {
+	return d.DnodeRenameWithContext_PATCH(d.Rest.GetCtx(), id, body)
 }

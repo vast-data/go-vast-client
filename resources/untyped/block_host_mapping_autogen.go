@@ -15,6 +15,13 @@ import (
 // url: /blockmappings/bulk/
 // summary: Map Block Hosts to Volumes
 //
+// Body:
+//   - pairs_to_add
+//   - pairs_to_add_by_path
+//   - pairs_to_remove
+//   - pairs_to_remove_by_path
+//   - snapshot_id
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (b *BlockHostMapping) BlockHostMappingBulkWithContext_PATCH(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -32,6 +39,13 @@ func (b *BlockHostMapping) BlockHostMappingBulkWithContext_PATCH(ctx context.Con
 // method: PATCH
 // url: /blockmappings/bulk/
 // summary: Map Block Hosts to Volumes
+//
+// Body:
+//   - pairs_to_add
+//   - pairs_to_add_by_path
+//   - pairs_to_remove
+//   - pairs_to_remove_by_path
+//   - snapshot_id
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

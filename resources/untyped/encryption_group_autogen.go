@@ -13,6 +13,10 @@ import (
 // method: POST
 // url: /encryptiongroups/{id}/deactivate_encryption_group/
 // summary: Deactivate encryption group.
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EncryptionGroup) EncryptionGroupDeactivateEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("encryptiongroups", id, "deactivate_encryption_group")
 	_, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
@@ -24,6 +28,10 @@ func (e *EncryptionGroup) EncryptionGroupDeactivateEncryptionGroupWithContext_PO
 // method: POST
 // url: /encryptiongroups/{id}/deactivate_encryption_group/
 // summary: Deactivate encryption group.
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EncryptionGroup) EncryptionGroupDeactivateEncryptionGroup_POST(id any, body core.Params) error {
 	return e.EncryptionGroupDeactivateEncryptionGroupWithContext_POST(e.Rest.GetCtx(), id, body)
 }
@@ -32,6 +40,10 @@ func (e *EncryptionGroup) EncryptionGroupDeactivateEncryptionGroup_POST(id any, 
 // method: POST
 // url: /encryptiongroups/{id}/reinstate_encryption_group/
 // summary: Reinstate Encryption Group
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EncryptionGroup) EncryptionGroupReinstateEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("encryptiongroups", id, "reinstate_encryption_group")
 	_, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
@@ -43,6 +55,10 @@ func (e *EncryptionGroup) EncryptionGroupReinstateEncryptionGroupWithContext_POS
 // method: POST
 // url: /encryptiongroups/{id}/reinstate_encryption_group/
 // summary: Reinstate Encryption Group
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EncryptionGroup) EncryptionGroupReinstateEncryptionGroup_POST(id any, body core.Params) error {
 	return e.EncryptionGroupReinstateEncryptionGroupWithContext_POST(e.Rest.GetCtx(), id, body)
 }
@@ -51,6 +67,10 @@ func (e *EncryptionGroup) EncryptionGroupReinstateEncryptionGroup_POST(id any, b
 // method: POST
 // url: /encryptiongroups/{id}/revoke_encryption_group/
 // summary: Revoke Encryption Group
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EncryptionGroup) EncryptionGroupRevokeEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("encryptiongroups", id, "revoke_encryption_group")
 	_, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
@@ -62,6 +82,10 @@ func (e *EncryptionGroup) EncryptionGroupRevokeEncryptionGroupWithContext_POST(c
 // method: POST
 // url: /encryptiongroups/{id}/revoke_encryption_group/
 // summary: Revoke Encryption Group
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EncryptionGroup) EncryptionGroupRevokeEncryptionGroup_POST(id any, body core.Params) error {
 	return e.EncryptionGroupRevokeEncryptionGroupWithContext_POST(e.Rest.GetCtx(), id, body)
 }
@@ -70,6 +94,10 @@ func (e *EncryptionGroup) EncryptionGroupRevokeEncryptionGroup_POST(id any, body
 // method: POST
 // url: /encryptiongroups/{id}/rotate_encryption_group_key/
 // summary: Rotate Encryption Group Key
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EncryptionGroup) EncryptionGroupRotateEncryptionGroupKeyWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("encryptiongroups", id, "rotate_encryption_group_key")
 	_, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
@@ -81,6 +109,10 @@ func (e *EncryptionGroup) EncryptionGroupRotateEncryptionGroupKeyWithContext_POS
 // method: POST
 // url: /encryptiongroups/{id}/rotate_encryption_group_key/
 // summary: Rotate Encryption Group Key
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EncryptionGroup) EncryptionGroupRotateEncryptionGroupKey_POST(id any, body core.Params) error {
 	return e.EncryptionGroupRotateEncryptionGroupKeyWithContext_POST(e.Rest.GetCtx(), id, body)
 }

@@ -15,6 +15,14 @@ import (
 // url: /cnodes/add_cnodes/
 // summary: Add multiple CNodes to the cluster
 //
+// Body:
+//   - cluster_id
+//   - cores: The number of cores the CNode will use
+//   - dpu_ips: A list of IPv4 addresses and IP ranges for DPU CNodes.
+//   - force: Force adding the CNode
+//   - ips: A list of IPv4 addresses and IP ranges for regular CNodes.
+//   - num_of_virtual_dpus: Number of virtual DPUs to bring up on a physical CNode
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cnode) CnodeAddCnodesWithContext_POST(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -32,6 +40,14 @@ func (c *Cnode) CnodeAddCnodesWithContext_POST(ctx context.Context, body core.Pa
 // method: POST
 // url: /cnodes/add_cnodes/
 // summary: Add multiple CNodes to the cluster
+//
+// Body:
+//   - cluster_id
+//   - cores: The number of cores the CNode will use
+//   - dpu_ips: A list of IPv4 addresses and IP ranges for DPU CNodes.
+//   - force: Force adding the CNode
+//   - ips: A list of IPv4 addresses and IP ranges for regular CNodes.
+//   - num_of_virtual_dpus: Number of virtual DPUs to bring up on a physical CNode
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -64,6 +80,15 @@ func (c *Cnode) CnodeBgpconfig_GET(id any) (core.Record, error) {
 // method: PATCH
 // url: /cnodes/{id}/bgpconfig
 // summary: Configure BGP on CNode
+//
+// Body:
+//   - enabled: Enable BGP
+//   - port1_peer_address: Port1 peer address
+//   - port1_self_address: Port1 self address
+//   - port2_peer_address: Port2 peer address
+//   - port2_self_address: Port2 self address
+//   - self_asn: ASN
+//   - subnet_bits: Subnet bits
 func (c *Cnode) CnodeBgpconfigWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("cnodes", id, "bgpconfig")
 	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
@@ -75,6 +100,15 @@ func (c *Cnode) CnodeBgpconfigWithContext_PATCH(ctx context.Context, id any, bod
 // method: PATCH
 // url: /cnodes/{id}/bgpconfig
 // summary: Configure BGP on CNode
+//
+// Body:
+//   - enabled: Enable BGP
+//   - port1_peer_address: Port1 peer address
+//   - port1_self_address: Port1 self address
+//   - port2_peer_address: Port2 peer address
+//   - port2_self_address: Port2 self address
+//   - self_asn: ASN
+//   - subnet_bits: Subnet bits
 func (c *Cnode) CnodeBgpconfig_PATCH(id any, body core.Params) error {
 	return c.CnodeBgpconfigWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
@@ -84,14 +118,10 @@ func (c *Cnode) CnodeBgpconfig_PATCH(id any, body core.Params) error {
 // url: /cnodes/{id}/control_led/
 // summary: Control CNode LED
 //
-// Parameters:
-//   - control (body): LED state
-func (c *Cnode) CnodeControlLedWithContext_PATCH(ctx context.Context, id any, control string) error {
+// Body:
+//   - control: LED state
+func (c *Cnode) CnodeControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("cnodes", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -102,16 +132,20 @@ func (c *Cnode) CnodeControlLedWithContext_PATCH(ctx context.Context, id any, co
 // url: /cnodes/{id}/control_led/
 // summary: Control CNode LED
 //
-// Parameters:
-//   - control (body): LED state
-func (c *Cnode) CnodeControlLed_PATCH(id any, control string) error {
-	return c.CnodeControlLedWithContext_PATCH(c.Rest.GetCtx(), id, control)
+// Body:
+//   - control: LED state
+func (c *Cnode) CnodeControlLed_PATCH(id any, body core.Params) error {
+	return c.CnodeControlLedWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
 
 // CnodeHighlightWithContext_PATCH
 // method: PATCH
 // url: /cnodes/{id}/highlight/
 // summary: HighLight CNode
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -131,6 +165,10 @@ func (c *Cnode) CnodeHighlightWithContext_PATCH(ctx context.Context, id any, bod
 // url: /cnodes/{id}/highlight/
 // summary: HighLight CNode
 //
+// Body:
+//
+//	< not declared in schema >
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cnode) CnodeHighlight_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -142,14 +180,10 @@ func (c *Cnode) CnodeHighlight_PATCH(id any, body core.Params, waitTimeout time.
 // url: /cnodes/{id}/rename/
 // summary: Rename CNode
 //
-// Parameters:
-//   - name (body): New CNode name
-func (c *Cnode) CnodeRenameWithContext_PATCH(ctx context.Context, id any, name string) error {
+// Body:
+//   - name: New CNode name
+func (c *Cnode) CnodeRenameWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("cnodes", id, "rename")
-	body := core.Params{}
-	if name != "" {
-		body["name"] = name
-	}
 	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -160,10 +194,10 @@ func (c *Cnode) CnodeRenameWithContext_PATCH(ctx context.Context, id any, name s
 // url: /cnodes/{id}/rename/
 // summary: Rename CNode
 //
-// Parameters:
-//   - name (body): New CNode name
-func (c *Cnode) CnodeRename_PATCH(id any, name string) error {
-	return c.CnodeRenameWithContext_PATCH(c.Rest.GetCtx(), id, name)
+// Body:
+//   - name: New CNode name
+func (c *Cnode) CnodeRename_PATCH(id any, body core.Params) error {
+	return c.CnodeRenameWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
 
 // CnodeSetTenantsWithContext_POST
@@ -171,16 +205,12 @@ func (c *Cnode) CnodeRename_PATCH(id any, name string) error {
 // url: /cnodes/set_tenants/
 // summary: Attach tenants to a CNode
 //
-// Parameters:
-//   - id (body): CNode ID
-//   - mode (body): NONE/DEDICATED/SHARED
-//   - tenantIds (body): A list of tenet IDs
-func (c *Cnode) CnodeSetTenantsWithContext_POST(ctx context.Context, id int64, mode string, tenantIds string) error {
+// Body:
+//   - id: CNode ID
+//   - mode: NONE/DEDICATED/SHARED
+//   - tenant_ids: A list of tenet IDs
+func (c *Cnode) CnodeSetTenantsWithContext_POST(ctx context.Context, body core.Params) error {
 	resourcePath := "/cnodes/set_tenants/"
-	body := core.Params{}
-	body["id"] = id
-	body["mode"] = mode
-	body["tenant_ids"] = tenantIds
 	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	return err
 
@@ -191,10 +221,10 @@ func (c *Cnode) CnodeSetTenantsWithContext_POST(ctx context.Context, id int64, m
 // url: /cnodes/set_tenants/
 // summary: Attach tenants to a CNode
 //
-// Parameters:
-//   - id (body): CNode ID
-//   - mode (body): NONE/DEDICATED/SHARED
-//   - tenantIds (body): A list of tenet IDs
-func (c *Cnode) CnodeSetTenants_POST(id int64, mode string, tenantIds string) error {
-	return c.CnodeSetTenantsWithContext_POST(c.Rest.GetCtx(), id, mode, tenantIds)
+// Body:
+//   - id: CNode ID
+//   - mode: NONE/DEDICATED/SHARED
+//   - tenant_ids: A list of tenet IDs
+func (c *Cnode) CnodeSetTenants_POST(body core.Params) error {
+	return c.CnodeSetTenantsWithContext_POST(c.Rest.GetCtx(), body)
 }

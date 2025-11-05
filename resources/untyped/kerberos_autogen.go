@@ -14,14 +14,11 @@ import (
 // url: /kerberos/{id}/keytab/
 // summary: Generate keytab for the Kerberos Provider
 //
-// Parameters:
-//   - adminPassword (body): Request parameter
-//   - adminUsername (body): Request parameter
-func (k *Kerberos) KerberosKeytabWithContext_POST(ctx context.Context, id any, adminPassword string, adminUsername string) (core.Record, error) {
+// Body:
+//   - admin_password
+//   - admin_username
+func (k *Kerberos) KerberosKeytabWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("kerberos", id, "keytab")
-	body := core.Params{}
-	body["admin_password"] = adminPassword
-	body["admin_username"] = adminUsername
 	result, err := core.Request[core.Record](ctx, k, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -34,9 +31,9 @@ func (k *Kerberos) KerberosKeytabWithContext_POST(ctx context.Context, id any, a
 // url: /kerberos/{id}/keytab/
 // summary: Generate keytab for the Kerberos Provider
 //
-// Parameters:
-//   - adminPassword (body): Request parameter
-//   - adminUsername (body): Request parameter
-func (k *Kerberos) KerberosKeytab_POST(id any, adminPassword string, adminUsername string) (core.Record, error) {
-	return k.KerberosKeytabWithContext_POST(k.Rest.GetCtx(), id, adminPassword, adminUsername)
+// Body:
+//   - admin_password
+//   - admin_username
+func (k *Kerberos) KerberosKeytab_POST(id any, body core.Params) (core.Record, error) {
+	return k.KerberosKeytabWithContext_POST(k.Rest.GetCtx(), id, body)
 }

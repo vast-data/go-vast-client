@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /apitokens/{id}/revoke/
 // summary: Revoke API Token
+//
+// Body:
+//
+//	< not declared in schema >
 func (a *ApiToken) ApiTokenRevokeWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("apitokens", id, "revoke")
 	result, err := core.Request[core.Record](ctx, a, http.MethodPatch, resourcePath, nil, body)
@@ -26,6 +30,10 @@ func (a *ApiToken) ApiTokenRevokeWithContext_PATCH(ctx context.Context, id any, 
 // method: PATCH
 // url: /apitokens/{id}/revoke/
 // summary: Revoke API Token
+//
+// Body:
+//
+//	< not declared in schema >
 func (a *ApiToken) ApiTokenRevoke_PATCH(id any, body core.Params) (core.Record, error) {
 	return a.ApiTokenRevokeWithContext_PATCH(a.Rest.GetCtx(), id, body)
 }

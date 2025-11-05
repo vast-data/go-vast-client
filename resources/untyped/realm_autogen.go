@@ -14,14 +14,10 @@ import (
 // url: /realms/{id}/assign/
 // summary: Assign object type to realm
 //
-// Parameters:
-//   - objectType (body): Object
-func (r *Realm) RealmAssignWithContext_PATCH(ctx context.Context, id any, objectType string) (core.Record, error) {
+// Body:
+//   - object_type: Object
+func (r *Realm) RealmAssignWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("realms", id, "assign")
-	body := core.Params{}
-	if objectType != "" {
-		body["object_type"] = objectType
-	}
 	result, err := core.Request[core.Record](ctx, r, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -34,10 +30,10 @@ func (r *Realm) RealmAssignWithContext_PATCH(ctx context.Context, id any, object
 // url: /realms/{id}/assign/
 // summary: Assign object type to realm
 //
-// Parameters:
-//   - objectType (body): Object
-func (r *Realm) RealmAssign_PATCH(id any, objectType string) (core.Record, error) {
-	return r.RealmAssignWithContext_PATCH(r.Rest.GetCtx(), id, objectType)
+// Body:
+//   - object_type: Object
+func (r *Realm) RealmAssign_PATCH(id any, body core.Params) (core.Record, error) {
+	return r.RealmAssignWithContext_PATCH(r.Rest.GetCtx(), id, body)
 }
 
 // RealmUnassignWithContext_PATCH
@@ -45,14 +41,10 @@ func (r *Realm) RealmAssign_PATCH(id any, objectType string) (core.Record, error
 // url: /realms/{id}/unassign/
 // summary: Unassign object type from realm
 //
-// Parameters:
-//   - objectType (body): Object
-func (r *Realm) RealmUnassignWithContext_PATCH(ctx context.Context, id any, objectType string) (core.Record, error) {
+// Body:
+//   - object_type: Object
+func (r *Realm) RealmUnassignWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("realms", id, "unassign")
-	body := core.Params{}
-	if objectType != "" {
-		body["object_type"] = objectType
-	}
 	result, err := core.Request[core.Record](ctx, r, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -65,8 +57,8 @@ func (r *Realm) RealmUnassignWithContext_PATCH(ctx context.Context, id any, obje
 // url: /realms/{id}/unassign/
 // summary: Unassign object type from realm
 //
-// Parameters:
-//   - objectType (body): Object
-func (r *Realm) RealmUnassign_PATCH(id any, objectType string) (core.Record, error) {
-	return r.RealmUnassignWithContext_PATCH(r.Rest.GetCtx(), id, objectType)
+// Body:
+//   - object_type: Object
+func (r *Realm) RealmUnassign_PATCH(id any, body core.Params) (core.Record, error) {
+	return r.RealmUnassignWithContext_PATCH(r.Rest.GetCtx(), id, body)
 }

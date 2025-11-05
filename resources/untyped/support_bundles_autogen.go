@@ -15,12 +15,10 @@ import (
 // url: /supportbundles/{id}/download/
 // summary: Download a Support Bundle
 //
-// Parameters:
-//   - Secret (query): Bundle secret key
-func (s *SupportBundles) SupportBundlesDownloadWithContext_GET(ctx context.Context, id any, Secret string) (core.Record, error) {
+// Params:
+//   - secret: Bundle secret key
+func (s *SupportBundles) SupportBundlesDownloadWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("supportbundles", id, "download")
-	params := core.Params{}
-	params["secret"] = Secret
 	result, err := core.Request[core.Record](ctx, s, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -33,16 +31,23 @@ func (s *SupportBundles) SupportBundlesDownloadWithContext_GET(ctx context.Conte
 // url: /supportbundles/{id}/download/
 // summary: Download a Support Bundle
 //
-// Parameters:
-//   - Secret (query): Bundle secret key
-func (s *SupportBundles) SupportBundlesDownload_GET(id any, Secret string) (core.Record, error) {
-	return s.SupportBundlesDownloadWithContext_GET(s.Rest.GetCtx(), id, Secret)
+// Params:
+//   - secret: Bundle secret key
+func (s *SupportBundles) SupportBundlesDownload_GET(id any, params core.Params) (core.Record, error) {
+	return s.SupportBundlesDownloadWithContext_GET(s.Rest.GetCtx(), id, params)
 }
 
 // SupportBundlesUploadWithContext_PATCH
 // method: PATCH
 // url: /supportbundles/{id}/upload/
 // summary: Upload Support Bundle to AWS S3.
+//
+// Body:
+//   - access_key: S3 Bucket access key
+//   - bucket_name: S3 Bucket for upload
+//   - bucket_subdir: Subdirectory in support bucket
+//   - secret_key: S3 Bucket secret key
+//   - upload_via_vms: If true, upload non-aggregated Support Bundle via VMS. Otherwise, upload from each node.
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -61,6 +66,13 @@ func (s *SupportBundles) SupportBundlesUploadWithContext_PATCH(ctx context.Conte
 // method: PATCH
 // url: /supportbundles/{id}/upload/
 // summary: Upload Support Bundle to AWS S3.
+//
+// Body:
+//   - access_key: S3 Bucket access key
+//   - bucket_name: S3 Bucket for upload
+//   - bucket_subdir: Subdirectory in support bucket
+//   - secret_key: S3 Bucket secret key
+//   - upload_via_vms: If true, upload non-aggregated Support Bundle via VMS. Otherwise, upload from each node.
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

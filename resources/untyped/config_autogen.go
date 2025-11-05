@@ -13,6 +13,10 @@ import (
 // method: POST
 // url: /config/reset/
 // summary: Reset all dynamic configs to their default values
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *Config) ConfigResetWithContext_POST(ctx context.Context, body core.Params) error {
 	resourcePath := "/config/reset/"
 	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
@@ -24,6 +28,10 @@ func (c *Config) ConfigResetWithContext_POST(ctx context.Context, body core.Para
 // method: POST
 // url: /config/reset/
 // summary: Reset all dynamic configs to their default values
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *Config) ConfigReset_POST(body core.Params) error {
 	return c.ConfigResetWithContext_POST(c.Rest.GetCtx(), body)
 }

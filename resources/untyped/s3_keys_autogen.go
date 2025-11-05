@@ -13,9 +13,9 @@ import (
 // method: DELETE
 // url: /s3keys/{access_key}/
 // summary: Delete User's S3 Access Key Pair
-func (s *S3Keys) S3KeysWithContext_DELETE(ctx context.Context, params core.Params) error {
+func (s *S3Keys) S3KeysWithContext_DELETE(ctx context.Context) error {
 	resourcePath := "/s3keys/{access_key}/"
-	_, err := core.Request[core.Record](ctx, s, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, s, http.MethodDelete, resourcePath, nil, nil)
 	return err
 
 }
@@ -24,6 +24,6 @@ func (s *S3Keys) S3KeysWithContext_DELETE(ctx context.Context, params core.Param
 // method: DELETE
 // url: /s3keys/{access_key}/
 // summary: Delete User's S3 Access Key Pair
-func (s *S3Keys) S3Keys_DELETE(params core.Params) error {
-	return s.S3KeysWithContext_DELETE(s.Rest.GetCtx(), params)
+func (s *S3Keys) S3Keys_DELETE() error {
+	return s.S3KeysWithContext_DELETE(s.Rest.GetCtx())
 }

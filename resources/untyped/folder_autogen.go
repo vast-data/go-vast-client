@@ -13,6 +13,15 @@ import (
 // method: POST
 // url: /folders/create_folder/
 // summary: Create Folder
+//
+// Body:
+//   - create_dir_mode: Unix permissions mode for the new dir
+//   - group: The owning group
+//   - inherit_acl: Indicates whether the directory should inherit ACLs from its parent directory
+//   - owner_is_group: Set to true if the owning user is a group. This feature is used to enable setting a group as a user owner, as supported by SMB.
+//   - path: Folder path to create
+//   - tenant_id: Tenant ID
+//   - user: The owning user
 func (f *Folder) FolderCreateFolderWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/folders/create_folder/"
 	result, err := core.Request[core.Record](ctx, f, http.MethodPost, resourcePath, nil, body)
@@ -26,6 +35,15 @@ func (f *Folder) FolderCreateFolderWithContext_POST(ctx context.Context, body co
 // method: POST
 // url: /folders/create_folder/
 // summary: Create Folder
+//
+// Body:
+//   - create_dir_mode: Unix permissions mode for the new dir
+//   - group: The owning group
+//   - inherit_acl: Indicates whether the directory should inherit ACLs from its parent directory
+//   - owner_is_group: Set to true if the owning user is a group. This feature is used to enable setting a group as a user owner, as supported by SMB.
+//   - path: Folder path to create
+//   - tenant_id: Tenant ID
+//   - user: The owning user
 func (f *Folder) FolderCreateFolder_POST(body core.Params) (core.Record, error) {
 	return f.FolderCreateFolderWithContext_POST(f.Rest.GetCtx(), body)
 }
@@ -35,16 +53,11 @@ func (f *Folder) FolderCreateFolder_POST(body core.Params) (core.Record, error) 
 // url: /folders/delete_folder/
 // summary: Delete Folder
 //
-// Parameters:
-//   - path (body): Folder path to delete
-//   - tenantId (body): Tenant ID
-func (f *Folder) FolderDeleteFolderWithContext_DELETE(ctx context.Context, path string, tenantId int64) (core.Record, error) {
+// Body:
+//   - path: Folder path to delete
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderDeleteFolderWithContext_DELETE(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/folders/delete_folder/"
-	body := core.Params{}
-	body["path"] = path
-	if tenantId != 0 {
-		body["tenant_id"] = tenantId
-	}
 	result, err := core.Request[core.Record](ctx, f, http.MethodDelete, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -57,17 +70,24 @@ func (f *Folder) FolderDeleteFolderWithContext_DELETE(ctx context.Context, path 
 // url: /folders/delete_folder/
 // summary: Delete Folder
 //
-// Parameters:
-//   - path (body): Folder path to delete
-//   - tenantId (body): Tenant ID
-func (f *Folder) FolderDeleteFolder_DELETE(path string, tenantId int64) (core.Record, error) {
-	return f.FolderDeleteFolderWithContext_DELETE(f.Rest.GetCtx(), path, tenantId)
+// Body:
+//   - path: Folder path to delete
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderDeleteFolder_DELETE(body core.Params) (core.Record, error) {
+	return f.FolderDeleteFolderWithContext_DELETE(f.Rest.GetCtx(), body)
 }
 
 // FolderModifyFolderWithContext_PATCH
 // method: PATCH
 // url: /folders/modify_folder/
 // summary: Modify Folder
+//
+// Body:
+//   - group: The owning group
+//   - owner_is_group: Set to true if the owning user is a group. This feature is used to enable setting a group as a user owner, as supported by SMB.
+//   - path: Folder path to modify
+//   - tenant_id: Tenant ID
+//   - user: The owning user
 func (f *Folder) FolderModifyFolderWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/folders/modify_folder/"
 	result, err := core.Request[core.Record](ctx, f, http.MethodPatch, resourcePath, nil, body)
@@ -81,6 +101,13 @@ func (f *Folder) FolderModifyFolderWithContext_PATCH(ctx context.Context, body c
 // method: PATCH
 // url: /folders/modify_folder/
 // summary: Modify Folder
+//
+// Body:
+//   - group: The owning group
+//   - owner_is_group: Set to true if the owning user is a group. This feature is used to enable setting a group as a user owner, as supported by SMB.
+//   - path: Folder path to modify
+//   - tenant_id: Tenant ID
+//   - user: The owning user
 func (f *Folder) FolderModifyFolder_PATCH(body core.Params) (core.Record, error) {
 	return f.FolderModifyFolderWithContext_PATCH(f.Rest.GetCtx(), body)
 }
@@ -90,14 +117,11 @@ func (f *Folder) FolderModifyFolder_PATCH(body core.Params) (core.Record, error)
 // url: /folders/read_only/
 // summary: Unlock Read-Only Folder
 //
-// Parameters:
-//   - path (body): Path
-//   - tenantId (body): Tenant ID
-func (f *Folder) FolderReadOnlyWithContext_DELETE(ctx context.Context, path string, tenantId int64) error {
+// Body:
+//   - path: Path
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderReadOnlyWithContext_DELETE(ctx context.Context, body core.Params) error {
 	resourcePath := "/folders/read_only/"
-	body := core.Params{}
-	body["path"] = path
-	body["tenant_id"] = tenantId
 	_, err := core.Request[core.Record](ctx, f, http.MethodDelete, resourcePath, nil, body)
 	return err
 
@@ -108,11 +132,11 @@ func (f *Folder) FolderReadOnlyWithContext_DELETE(ctx context.Context, path stri
 // url: /folders/read_only/
 // summary: Unlock Read-Only Folder
 //
-// Parameters:
-//   - path (body): Path
-//   - tenantId (body): Tenant ID
-func (f *Folder) FolderReadOnly_DELETE(path string, tenantId int64) error {
-	return f.FolderReadOnlyWithContext_DELETE(f.Rest.GetCtx(), path, tenantId)
+// Body:
+//   - path: Path
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderReadOnly_DELETE(body core.Params) error {
+	return f.FolderReadOnlyWithContext_DELETE(f.Rest.GetCtx(), body)
 }
 
 // FolderReadOnlyWithContext_GET
@@ -120,14 +144,11 @@ func (f *Folder) FolderReadOnly_DELETE(path string, tenantId int64) error {
 // url: /folders/read_only/
 // summary: Return Details of Read-Only Folder
 //
-// Parameters:
-//   - Path (query): Path to get read-only folder details
-//   - TenantId (query): Tenant ID
-func (f *Folder) FolderReadOnlyWithContext_GET(ctx context.Context, Path string, TenantId int64) (core.Record, error) {
+// Params:
+//   - path: Path to get read-only folder details
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderReadOnlyWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/folders/read_only/"
-	params := core.Params{}
-	params["path"] = Path
-	params["tenant_id"] = TenantId
 	result, err := core.Request[core.Record](ctx, f, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -140,11 +161,11 @@ func (f *Folder) FolderReadOnlyWithContext_GET(ctx context.Context, Path string,
 // url: /folders/read_only/
 // summary: Return Details of Read-Only Folder
 //
-// Parameters:
-//   - Path (query): Path to get read-only folder details
-//   - TenantId (query): Tenant ID
-func (f *Folder) FolderReadOnly_GET(Path string, TenantId int64) (core.Record, error) {
-	return f.FolderReadOnlyWithContext_GET(f.Rest.GetCtx(), Path, TenantId)
+// Params:
+//   - path: Path to get read-only folder details
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderReadOnly_GET(params core.Params) (core.Record, error) {
+	return f.FolderReadOnlyWithContext_GET(f.Rest.GetCtx(), params)
 }
 
 // FolderReadOnlyWithContext_POST
@@ -152,14 +173,11 @@ func (f *Folder) FolderReadOnly_GET(Path string, TenantId int64) (core.Record, e
 // url: /folders/read_only/
 // summary: Make a Folder Read-Only
 //
-// Parameters:
-//   - path (body): Path
-//   - tenantId (body): Tenant ID
-func (f *Folder) FolderReadOnlyWithContext_POST(ctx context.Context, path string, tenantId int64) (core.Record, error) {
+// Body:
+//   - path: Path
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderReadOnlyWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/folders/read_only/"
-	body := core.Params{}
-	body["path"] = path
-	body["tenant_id"] = tenantId
 	result, err := core.Request[core.Record](ctx, f, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -172,11 +190,11 @@ func (f *Folder) FolderReadOnlyWithContext_POST(ctx context.Context, path string
 // url: /folders/read_only/
 // summary: Make a Folder Read-Only
 //
-// Parameters:
-//   - path (body): Path
-//   - tenantId (body): Tenant ID
-func (f *Folder) FolderReadOnly_POST(path string, tenantId int64) (core.Record, error) {
-	return f.FolderReadOnlyWithContext_POST(f.Rest.GetCtx(), path, tenantId)
+// Body:
+//   - path: Path
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderReadOnly_POST(body core.Params) (core.Record, error) {
+	return f.FolderReadOnlyWithContext_POST(f.Rest.GetCtx(), body)
 }
 
 // FolderStatPathWithContext_POST
@@ -184,14 +202,11 @@ func (f *Folder) FolderReadOnly_POST(path string, tenantId int64) (core.Record, 
 // url: /folders/stat_path/
 // summary: Get Owning User and Group for a Path
 //
-// Parameters:
-//   - path (body): Path
-//   - tenantId (body): Tenant ID
-func (f *Folder) FolderStatPathWithContext_POST(ctx context.Context, path string, tenantId int64) (core.Record, error) {
+// Body:
+//   - path: Path
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderStatPathWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/folders/stat_path/"
-	body := core.Params{}
-	body["path"] = path
-	body["tenant_id"] = tenantId
 	result, err := core.Request[core.Record](ctx, f, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -204,9 +219,9 @@ func (f *Folder) FolderStatPathWithContext_POST(ctx context.Context, path string
 // url: /folders/stat_path/
 // summary: Get Owning User and Group for a Path
 //
-// Parameters:
-//   - path (body): Path
-//   - tenantId (body): Tenant ID
-func (f *Folder) FolderStatPath_POST(path string, tenantId int64) (core.Record, error) {
-	return f.FolderStatPathWithContext_POST(f.Rest.GetCtx(), path, tenantId)
+// Body:
+//   - path: Path
+//   - tenant_id: Tenant ID
+func (f *Folder) FolderStatPath_POST(body core.Params) (core.Record, error) {
+	return f.FolderStatPathWithContext_POST(f.Rest.GetCtx(), body)
 }

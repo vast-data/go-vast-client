@@ -13,6 +13,12 @@ import (
 // method: POST
 // url: /snapshots/{id}/clone/
 // summary: Clone a Snapshot
+//
+// Body:
+//   - enabled: Enabled
+//   - loanee_root_path: Target path for the clone
+//   - loanee_tenant_id: Target tenant's ID
+//   - name: Name for the clone
 func (s *Snapshot) SnapshotCloneWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("snapshots", id, "clone")
 	result, err := core.Request[core.Record](ctx, s, http.MethodPost, resourcePath, nil, body)
@@ -26,6 +32,12 @@ func (s *Snapshot) SnapshotCloneWithContext_POST(ctx context.Context, id any, bo
 // method: POST
 // url: /snapshots/{id}/clone/
 // summary: Clone a Snapshot
+//
+// Body:
+//   - enabled: Enabled
+//   - loanee_root_path: Target path for the clone
+//   - loanee_tenant_id: Target tenant's ID
+//   - name: Name for the clone
 func (s *Snapshot) SnapshotClone_POST(id any, body core.Params) (core.Record, error) {
 	return s.SnapshotCloneWithContext_POST(s.Rest.GetCtx(), id, body)
 }

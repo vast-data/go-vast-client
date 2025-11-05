@@ -14,6 +14,17 @@ import (
 // method: POST
 // url: /dboxes/add/
 // summary: Add DBox
+//
+// Body:
+//   - cluster_id: The cluster ID
+//   - dnode_ips: Specify the internal bond IPs of both DNodes in the DNodes as an array.
+//   - drive_size: Optional drive size (for tests)
+//   - empty_box: Without SSD, NVRAM devices (for dbox replacement)
+//   - lab_deploy: Execute in lab deploy mode (lab only!)
+//   - migrate_target: DBox will act as a DBox Migration target, has SSDs and NVRAMs
+//   - nvram_size: Optional NVRAM size (for tests)
+//   - rack_name: Rack name
+//   - rack_unit: Rack unit name
 func (d *Dbox) DboxAddWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/dboxes/add/"
 	result, err := core.Request[core.Record](ctx, d, http.MethodPost, resourcePath, nil, body)
@@ -27,6 +38,17 @@ func (d *Dbox) DboxAddWithContext_POST(ctx context.Context, body core.Params) (c
 // method: POST
 // url: /dboxes/add/
 // summary: Add DBox
+//
+// Body:
+//   - cluster_id: The cluster ID
+//   - dnode_ips: Specify the internal bond IPs of both DNodes in the DNodes as an array.
+//   - drive_size: Optional drive size (for tests)
+//   - empty_box: Without SSD, NVRAM devices (for dbox replacement)
+//   - lab_deploy: Execute in lab deploy mode (lab only!)
+//   - migrate_target: DBox will act as a DBox Migration target, has SSDs and NVRAMs
+//   - nvram_size: Optional NVRAM size (for tests)
+//   - rack_name: Rack name
+//   - rack_unit: Rack unit name
 func (d *Dbox) DboxAdd_POST(body core.Params) (core.Record, error) {
 	return d.DboxAddWithContext_POST(d.Rest.GetCtx(), body)
 }
@@ -36,15 +58,13 @@ func (d *Dbox) DboxAdd_POST(body core.Params) (core.Record, error) {
 // url: /dboxes/{id}/control_led/
 // summary: Control DBox LEDs
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (d *Dbox) DboxControlLedWithContext_PATCH(ctx context.Context, id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
+func (d *Dbox) DboxControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("dboxes", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	result, err := core.Request[core.Record](ctx, d, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -59,17 +79,23 @@ func (d *Dbox) DboxControlLedWithContext_PATCH(ctx context.Context, id any, cont
 // url: /dboxes/{id}/control_led/
 // summary: Control DBox LEDs
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (d *Dbox) DboxControlLed_PATCH(id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
-	return d.DboxControlLedWithContext_PATCH(d.Rest.GetCtx(), id, control, waitTimeout)
+func (d *Dbox) DboxControlLed_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return d.DboxControlLedWithContext_PATCH(d.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // DboxResetDpI2cWithContext_PATCH
 // method: PATCH
 // url: /dboxes/{id}/reset_dp_i2c/
 // summary: Reset dp i2c
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -88,6 +114,10 @@ func (d *Dbox) DboxResetDpI2cWithContext_PATCH(ctx context.Context, id any, body
 // method: PATCH
 // url: /dboxes/{id}/reset_dp_i2c/
 // summary: Reset dp i2c
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

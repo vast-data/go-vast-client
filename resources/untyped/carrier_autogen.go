@@ -15,14 +15,10 @@ import (
 // url: /carriers/{id}/control_led/
 // summary: Control Slot LED
 //
-// Parameters:
-//   - control (body): LED state
-func (c *Carrier) CarrierControlLedWithContext_PATCH(ctx context.Context, id any, control string) error {
+// Body:
+//   - control: LED state
+func (c *Carrier) CarrierControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("carriers", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -33,16 +29,20 @@ func (c *Carrier) CarrierControlLedWithContext_PATCH(ctx context.Context, id any
 // url: /carriers/{id}/control_led/
 // summary: Control Slot LED
 //
-// Parameters:
-//   - control (body): LED state
-func (c *Carrier) CarrierControlLed_PATCH(id any, control string) error {
-	return c.CarrierControlLedWithContext_PATCH(c.Rest.GetCtx(), id, control)
+// Body:
+//   - control: LED state
+func (c *Carrier) CarrierControlLed_PATCH(id any, body core.Params) error {
+	return c.CarrierControlLedWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
 
 // CarrierHighlightWithContext_PATCH
 // method: PATCH
 // url: /carriers/{id}/highlight/
 // summary: Highlight the Control Slot
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -62,6 +62,10 @@ func (c *Carrier) CarrierHighlightWithContext_PATCH(ctx context.Context, id any,
 // url: /carriers/{id}/highlight/
 // summary: Highlight the Control Slot
 //
+// Body:
+//
+//	< not declared in schema >
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Carrier) CarrierHighlight_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -72,6 +76,10 @@ func (c *Carrier) CarrierHighlight_PATCH(id any, body core.Params, waitTimeout t
 // method: PATCH
 // url: /carriers/{id}/reset_pci/
 // summary: Power Cycles a Slot
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -90,6 +98,10 @@ func (c *Carrier) CarrierResetPciWithContext_PATCH(ctx context.Context, id any, 
 // method: PATCH
 // url: /carriers/{id}/reset_pci/
 // summary: Power Cycles a Slot
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

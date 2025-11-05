@@ -35,6 +35,13 @@ func (v *VastAuditLog) VastAuditLogColumns_GET() (core.RecordSet, error) {
 // method: GET
 // url: /vastauditlog/query_data/
 // summary: Queries data based on provided params
+//
+// Params:
+//   - page
+//   - limit
+//   - ordering
+//   - fields: Defines which fields should be displayed
+//   - filters: URL-encoded JSON-string - actually an encoded mapping. Keys are column names. E.g. `{"creation_time": [{"gt": "1727863200000"}, {"lt": "1729591200000"}], "atime": [{"gt": "1727776800000", "lt": "1729591200000"}]}'`. Elements within a list per column are OR'ed, elements withing a map inside a list are AND'ed.
 func (v *VastAuditLog) VastAuditLogQueryDataWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/vastauditlog/query_data/"
 	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
@@ -48,6 +55,13 @@ func (v *VastAuditLog) VastAuditLogQueryDataWithContext_GET(ctx context.Context,
 // method: GET
 // url: /vastauditlog/query_data/
 // summary: Queries data based on provided params
+//
+// Params:
+//   - page
+//   - limit
+//   - ordering
+//   - fields: Defines which fields should be displayed
+//   - filters: URL-encoded JSON-string - actually an encoded mapping. Keys are column names. E.g. `{"creation_time": [{"gt": "1727863200000"}, {"lt": "1729591200000"}], "atime": [{"gt": "1727776800000", "lt": "1729591200000"}]}'`. Elements within a list per column are OR'ed, elements withing a map inside a list are AND'ed.
 func (v *VastAuditLog) VastAuditLogQueryData_GET(params core.Params) (core.Record, error) {
 	return v.VastAuditLogQueryDataWithContext_GET(v.Rest.GetCtx(), params)
 }

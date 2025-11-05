@@ -57,6 +57,20 @@ func (v *Vms) VmsLoginBanner_GET(id any) (core.Record, error) {
 // method: POST
 // url: /vms/{id}/network_settings_summary/
 // summary: Preview summary of changes to the network settings of VMS
+//
+// Body:
+//   - auto_ports_ext_iface
+//   - b2b_ipmi
+//   - dns
+//   - eth_mtu: The MTU size for the CNode and DNode internal network interfaces, for clusters with Ethernet internal network infrastructure. The MTU should be aligned with the switches. Default=9216.
+//   - ext_netmask: The subnet mask of the management subnet
+//   - external_gateways
+//   - hosts
+//   - ib_mtu: The MTU size for the CNode and DNode internal network interfaces, for clusters with IB internal network infrastructure. Default=2044. Set a supported MTU for the NIC mode: If IB type is Connected, the maximum IB NB MTU is 65520. If IB type is Datagram, the maximum IB NB MTU is 4092
+//   - ipmi_gateway: The IP of a default gateway for the IPMI interfaces on the CNodes and DNodes, if different from the management network default gateway.
+//   - ipmi_netmask: The network mask for the IPMI default gateway.
+//   - management_vips
+//   - ntp
 func (v *Vms) VmsNetworkSettingsSummaryWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "network_settings_summary")
 	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, nil, body)
@@ -70,6 +84,20 @@ func (v *Vms) VmsNetworkSettingsSummaryWithContext_POST(ctx context.Context, id 
 // method: POST
 // url: /vms/{id}/network_settings_summary/
 // summary: Preview summary of changes to the network settings of VMS
+//
+// Body:
+//   - auto_ports_ext_iface
+//   - b2b_ipmi
+//   - dns
+//   - eth_mtu: The MTU size for the CNode and DNode internal network interfaces, for clusters with Ethernet internal network infrastructure. The MTU should be aligned with the switches. Default=9216.
+//   - ext_netmask: The subnet mask of the management subnet
+//   - external_gateways
+//   - hosts
+//   - ib_mtu: The MTU size for the CNode and DNode internal network interfaces, for clusters with IB internal network infrastructure. Default=2044. Set a supported MTU for the NIC mode: If IB type is Connected, the maximum IB NB MTU is 65520. If IB type is Datagram, the maximum IB NB MTU is 4092
+//   - ipmi_gateway: The IP of a default gateway for the IPMI interfaces on the CNodes and DNodes, if different from the management network default gateway.
+//   - ipmi_netmask: The network mask for the IPMI default gateway.
+//   - management_vips
+//   - ntp
 func (v *Vms) VmsNetworkSettingsSummary_POST(id any, body core.Params) (core.Record, error) {
 	return v.VmsNetworkSettingsSummaryWithContext_POST(v.Rest.GetCtx(), id, body)
 }
@@ -100,6 +128,20 @@ func (v *Vms) VmsNetworkSettings_GET(id any) (core.Record, error) {
 // url: /vms/{id}/network_settings/
 // summary: Modify the network settings of VMS
 //
+// Body:
+//   - auto_ports_ext_iface
+//   - b2b_ipmi
+//   - dns
+//   - eth_mtu: The MTU size for the CNode and DNode internal network interfaces, for clusters with Ethernet internal network infrastructure. The MTU should be aligned with the switches. Default=9216.
+//   - ext_netmask: The subnet mask of the management subnet
+//   - external_gateways
+//   - hosts
+//   - ib_mtu: The MTU size for the CNode and DNode internal network interfaces, for clusters with IB internal network infrastructure. Default=2044. Set a supported MTU for the NIC mode: If IB type is Connected, the maximum IB NB MTU is 65520. If IB type is Datagram, the maximum IB NB MTU is 4092
+//   - ipmi_gateway: The IP of a default gateway for the IPMI interfaces on the CNodes and DNodes, if different from the management network default gateway.
+//   - ipmi_netmask: The network mask for the IPMI default gateway.
+//   - management_vips
+//   - ntp
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (v *Vms) VmsNetworkSettingsWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -117,6 +159,20 @@ func (v *Vms) VmsNetworkSettingsWithContext_PATCH(ctx context.Context, id any, b
 // method: PATCH
 // url: /vms/{id}/network_settings/
 // summary: Modify the network settings of VMS
+//
+// Body:
+//   - auto_ports_ext_iface
+//   - b2b_ipmi
+//   - dns
+//   - eth_mtu: The MTU size for the CNode and DNode internal network interfaces, for clusters with Ethernet internal network infrastructure. The MTU should be aligned with the switches. Default=9216.
+//   - ext_netmask: The subnet mask of the management subnet
+//   - external_gateways
+//   - hosts
+//   - ib_mtu: The MTU size for the CNode and DNode internal network interfaces, for clusters with IB internal network infrastructure. Default=2044. Set a supported MTU for the NIC mode: If IB type is Connected, the maximum IB NB MTU is 65520. If IB type is Datagram, the maximum IB NB MTU is 4092
+//   - ipmi_gateway: The IP of a default gateway for the IPMI interfaces on the CNodes and DNodes, if different from the management network default gateway.
+//   - ipmi_netmask: The network mask for the IPMI default gateway.
+//   - management_vips
+//   - ntp
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -149,6 +205,22 @@ func (v *Vms) VmsPwdSettings_GET(id any) (core.Record, error) {
 // method: PATCH
 // url: /vms/{id}/pwd_settings/
 // summary: Modify password settings of VMS
+//
+// Body:
+//   - max_failed_login_attempts: The number of failed login attempts after which password lockout occurs if enabled. Default: 10
+//   - max_failed_login_attempts_enabled: Password lockout after failed log in attempts. The number of failed login attempts is configured by max_failed_login_attempts.
+//   - min_pwd_length: Minimum password length for new VMS managers
+//   - pwd_change_timeout: The time frame within which VMS managers may not change their passwords again after setting a new password if password change timeout is enabled. Default: 24H
+//   - pwd_change_timeout_enabled: Prevents password change for VMS users (managers) for a period after the last password change. The period is configured by pwd_change_timeout.
+//   - pwd_expiration_timeout: Password expiration timeout, which applies if password expiration timeout is enabled. Default: 180D
+//   - pwd_expiration_timeout_enabled: Password expiration, timeout configured by pwd_expiration_timeout.
+//   - pwd_history_no_reuse_count: The number of previous passwords that VMS managers may not reuse if prevention of password reuse is enabled. Default: 8
+//   - pwd_history_no_reuse_count_enabled: Prevention of reuse of previous passwords. Affects the number of previous passwords set by pwd_histor_no_reuse_count.
+//   - pwd_requires_lowercase: Password requires at least one lowercase character
+//   - pwd_requires_numeric: Password requires at least one numeric character
+//   - pwd_requires_special_chars: Password requires at least one non-alphanumeric character
+//   - pwd_requires_uppercase: Password requires at least one uppercase character
+//   - tmp_pwd_expiration_timeout: Expiration timeout for new managers' temporary passwords. Default: 7D
 func (v *Vms) VmsPwdSettingsWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "pwd_settings")
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
@@ -162,6 +234,22 @@ func (v *Vms) VmsPwdSettingsWithContext_PATCH(ctx context.Context, id any, body 
 // method: PATCH
 // url: /vms/{id}/pwd_settings/
 // summary: Modify password settings of VMS
+//
+// Body:
+//   - max_failed_login_attempts: The number of failed login attempts after which password lockout occurs if enabled. Default: 10
+//   - max_failed_login_attempts_enabled: Password lockout after failed log in attempts. The number of failed login attempts is configured by max_failed_login_attempts.
+//   - min_pwd_length: Minimum password length for new VMS managers
+//   - pwd_change_timeout: The time frame within which VMS managers may not change their passwords again after setting a new password if password change timeout is enabled. Default: 24H
+//   - pwd_change_timeout_enabled: Prevents password change for VMS users (managers) for a period after the last password change. The period is configured by pwd_change_timeout.
+//   - pwd_expiration_timeout: Password expiration timeout, which applies if password expiration timeout is enabled. Default: 180D
+//   - pwd_expiration_timeout_enabled: Password expiration, timeout configured by pwd_expiration_timeout.
+//   - pwd_history_no_reuse_count: The number of previous passwords that VMS managers may not reuse if prevention of password reuse is enabled. Default: 8
+//   - pwd_history_no_reuse_count_enabled: Prevention of reuse of previous passwords. Affects the number of previous passwords set by pwd_histor_no_reuse_count.
+//   - pwd_requires_lowercase: Password requires at least one lowercase character
+//   - pwd_requires_numeric: Password requires at least one numeric character
+//   - pwd_requires_special_chars: Password requires at least one non-alphanumeric character
+//   - pwd_requires_uppercase: Password requires at least one uppercase character
+//   - tmp_pwd_expiration_timeout: Expiration timeout for new managers' temporary passwords. Default: 7D
 func (v *Vms) VmsPwdSettings_PATCH(id any, body core.Params) (core.Record, error) {
 	return v.VmsPwdSettingsWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
@@ -170,6 +258,10 @@ func (v *Vms) VmsPwdSettings_PATCH(id any, body core.Params) (core.Record, error
 // method: PATCH
 // url: /vms/{id}/remove_client_certificate/
 // summary: Remove VMS SSL Client Certificate
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *Vms) VmsRemoveClientCertificateWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "remove_client_certificate")
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
@@ -183,6 +275,10 @@ func (v *Vms) VmsRemoveClientCertificateWithContext_PATCH(ctx context.Context, i
 // method: PATCH
 // url: /vms/{id}/remove_client_certificate/
 // summary: Remove VMS SSL Client Certificate
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *Vms) VmsRemoveClientCertificate_PATCH(id any, body core.Params) (core.Record, error) {
 	return v.VmsRemoveClientCertificateWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
@@ -191,6 +287,10 @@ func (v *Vms) VmsRemoveClientCertificate_PATCH(id any, body core.Params) (core.R
 // method: PATCH
 // url: /vms/{id}/reset_certificate/
 // summary: Reset VMS SSL Certificate to Default
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *Vms) VmsResetCertificateWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "reset_certificate")
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
@@ -204,6 +304,10 @@ func (v *Vms) VmsResetCertificateWithContext_PATCH(ctx context.Context, id any, 
 // method: PATCH
 // url: /vms/{id}/reset_certificate/
 // summary: Reset VMS SSL Certificate to Default
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *Vms) VmsResetCertificate_PATCH(id any, body core.Params) (core.Record, error) {
 	return v.VmsResetCertificateWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
@@ -212,6 +316,10 @@ func (v *Vms) VmsResetCertificate_PATCH(id any, body core.Params) (core.Record, 
 // method: PATCH
 // url: /vms/{id}/reset_ssl_ciphers/
 // summary: Reset VMS SSL Ciphers to Default
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *Vms) VmsResetSslCiphersWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "reset_ssl_ciphers")
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
@@ -225,6 +333,10 @@ func (v *Vms) VmsResetSslCiphersWithContext_PATCH(ctx context.Context, id any, b
 // method: PATCH
 // url: /vms/{id}/reset_ssl_ciphers/
 // summary: Reset VMS SSL Ciphers to Default
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *Vms) VmsResetSslCiphers_PATCH(id any, body core.Params) (core.Record, error) {
 	return v.VmsResetSslCiphersWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
@@ -233,9 +345,12 @@ func (v *Vms) VmsResetSslCiphers_PATCH(id any, body core.Params) (core.Record, e
 // method: DELETE
 // url: /vms/{id}/saml_config/
 // summary: Delete SAML configuration for a specific IdP
-func (v *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any) (core.Record, error) {
+//
+// Params:
+//   - idp_name: SAML IDP name
+func (v *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
-	result, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, nil, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +361,11 @@ func (v *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any) (core
 // method: DELETE
 // url: /vms/{id}/saml_config/
 // summary: Delete SAML configuration for a specific IdP
-func (v *Vms) VmsSamlConfig_DELETE(id any) (core.Record, error) {
-	return v.VmsSamlConfigWithContext_DELETE(v.Rest.GetCtx(), id)
+//
+// Params:
+//   - idp_name: SAML IDP name
+func (v *Vms) VmsSamlConfig_DELETE(id any, params core.Params) (core.Record, error) {
+	return v.VmsSamlConfigWithContext_DELETE(v.Rest.GetCtx(), id, params)
 }
 
 // VmsSamlConfigWithContext_GET
@@ -255,12 +373,10 @@ func (v *Vms) VmsSamlConfig_DELETE(id any) (core.Record, error) {
 // url: /vms/{id}/saml_config/
 // summary: Returns a SAML configuration for a specified IdP.
 //
-// Parameters:
-//   - IdpName (query): SAML IDP name
-func (v *Vms) VmsSamlConfigWithContext_GET(ctx context.Context, id any, IdpName string) (core.Record, error) {
+// Params:
+//   - idp_name: SAML IDP name
+func (v *Vms) VmsSamlConfigWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
-	params := core.Params{}
-	params["idp_name"] = IdpName
 	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -273,10 +389,10 @@ func (v *Vms) VmsSamlConfigWithContext_GET(ctx context.Context, id any, IdpName 
 // url: /vms/{id}/saml_config/
 // summary: Returns a SAML configuration for a specified IdP.
 //
-// Parameters:
-//   - IdpName (query): SAML IDP name
-func (v *Vms) VmsSamlConfig_GET(id any, IdpName string) (core.Record, error) {
-	return v.VmsSamlConfigWithContext_GET(v.Rest.GetCtx(), id, IdpName)
+// Params:
+//   - idp_name: SAML IDP name
+func (v *Vms) VmsSamlConfig_GET(id any, params core.Params) (core.Record, error) {
+	return v.VmsSamlConfigWithContext_GET(v.Rest.GetCtx(), id, params)
 }
 
 // VmsSamlConfigWithContext_PATCH
@@ -284,12 +400,14 @@ func (v *Vms) VmsSamlConfig_GET(id any, IdpName string) (core.Record, error) {
 // url: /vms/{id}/saml_config/
 // summary: Remove SP sign response or assertions request from an IdP
 //
-// Parameters:
-//   - IdpName (query): SAML IDP name
-func (v *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any, IdpName string, body core.Params) (core.Record, error) {
+// Params:
+//   - idp_name: SAML IDP name
+//
+// Body:
+//
+//	< not declared in schema >
+func (v *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any, params core.Params, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
-	params := core.Params{}
-	params["idp_name"] = IdpName
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, params, body)
 	if err != nil {
 		return nil, err
@@ -302,10 +420,14 @@ func (v *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any, IdpNam
 // url: /vms/{id}/saml_config/
 // summary: Remove SP sign response or assertions request from an IdP
 //
-// Parameters:
-//   - IdpName (query): SAML IDP name
-func (v *Vms) VmsSamlConfig_PATCH(id any, IdpName string, body core.Params) (core.Record, error) {
-	return v.VmsSamlConfigWithContext_PATCH(v.Rest.GetCtx(), id, IdpName, body)
+// Params:
+//   - idp_name: SAML IDP name
+//
+// Body:
+//
+//	< not declared in schema >
+func (v *Vms) VmsSamlConfig_PATCH(id any, params core.Params, body core.Params) (core.Record, error) {
+	return v.VmsSamlConfigWithContext_PATCH(v.Rest.GetCtx(), id, params, body)
 }
 
 // VmsSamlConfigWithContext_POST
@@ -313,12 +435,13 @@ func (v *Vms) VmsSamlConfig_PATCH(id any, IdpName string, body core.Params) (cor
 // url: /vms/{id}/saml_config/
 // summary: Modify or Create a SAML configuration for a specific IdP.
 //
-// Parameters:
-//   - IdpName (query): SAML IDP name
-func (v *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, IdpName string, body core.Params) (core.Record, error) {
+// Params:
+//   - idp_name: SAML IDP name
+//
+// Body:
+//   - saml_settings
+func (v *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, params core.Params, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
-	params := core.Params{}
-	params["idp_name"] = IdpName
 	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
@@ -331,10 +454,13 @@ func (v *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, IdpName
 // url: /vms/{id}/saml_config/
 // summary: Modify or Create a SAML configuration for a specific IdP.
 //
-// Parameters:
-//   - IdpName (query): SAML IDP name
-func (v *Vms) VmsSamlConfig_POST(id any, IdpName string, body core.Params) (core.Record, error) {
-	return v.VmsSamlConfigWithContext_POST(v.Rest.GetCtx(), id, IdpName, body)
+// Params:
+//   - idp_name: SAML IDP name
+//
+// Body:
+//   - saml_settings
+func (v *Vms) VmsSamlConfig_POST(id any, params core.Params, body core.Params) (core.Record, error) {
+	return v.VmsSamlConfigWithContext_POST(v.Rest.GetCtx(), id, params, body)
 }
 
 // VmsSetCertificateWithContext_PATCH
@@ -342,18 +468,11 @@ func (v *Vms) VmsSamlConfig_POST(id any, IdpName string, body core.Params) (core
 // url: /vms/{id}/set_certificate/
 // summary: Install SSL certificate and key on VMS
 //
-// Parameters:
-//   - sslCertificate (body): The SSL Certificate file content, including the BEGIN CERTIFICATE and END CERTIFICATE lines
-//   - sslKeyfile (body): The SSL private key file content, include the BEGIN PRIVATE KEY and END PRIVATE KEY lines
-func (v *Vms) VmsSetCertificateWithContext_PATCH(ctx context.Context, id any, sslCertificate string, sslKeyfile string) (core.Record, error) {
+// Body:
+//   - ssl_certificate: The SSL Certificate file content, including the BEGIN CERTIFICATE and END CERTIFICATE lines
+//   - ssl_keyfile: The SSL private key file content, include the BEGIN PRIVATE KEY and END PRIVATE KEY lines
+func (v *Vms) VmsSetCertificateWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "set_certificate")
-	body := core.Params{}
-	if sslCertificate != "" {
-		body["ssl_certificate"] = sslCertificate
-	}
-	if sslKeyfile != "" {
-		body["ssl_keyfile"] = sslKeyfile
-	}
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -366,11 +485,11 @@ func (v *Vms) VmsSetCertificateWithContext_PATCH(ctx context.Context, id any, ss
 // url: /vms/{id}/set_certificate/
 // summary: Install SSL certificate and key on VMS
 //
-// Parameters:
-//   - sslCertificate (body): The SSL Certificate file content, including the BEGIN CERTIFICATE and END CERTIFICATE lines
-//   - sslKeyfile (body): The SSL private key file content, include the BEGIN PRIVATE KEY and END PRIVATE KEY lines
-func (v *Vms) VmsSetCertificate_PATCH(id any, sslCertificate string, sslKeyfile string) (core.Record, error) {
-	return v.VmsSetCertificateWithContext_PATCH(v.Rest.GetCtx(), id, sslCertificate, sslKeyfile)
+// Body:
+//   - ssl_certificate: The SSL Certificate file content, including the BEGIN CERTIFICATE and END CERTIFICATE lines
+//   - ssl_keyfile: The SSL private key file content, include the BEGIN PRIVATE KEY and END PRIVATE KEY lines
+func (v *Vms) VmsSetCertificate_PATCH(id any, body core.Params) (core.Record, error) {
+	return v.VmsSetCertificateWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
 
 // VmsSetClientCertificateWithContext_PATCH
@@ -378,18 +497,11 @@ func (v *Vms) VmsSetCertificate_PATCH(id any, sslCertificate string, sslKeyfile 
 // url: /vms/{id}/set_client_certificate/
 // summary: Install SSL certificate and key on VMS
 //
-// Parameters:
-//   - sslClientCertificate (body): SSL Client Certificate file content (can be root), including the BEGIN CERTIFICATE and END CERTIFICATE lines
-//   - sslClientKeyfile (body): SSL client private key file content, include the BEGIN PRIVATE KEY and END PRIVATE KEY lines
-func (v *Vms) VmsSetClientCertificateWithContext_PATCH(ctx context.Context, id any, sslClientCertificate string, sslClientKeyfile string) (core.Record, error) {
+// Body:
+//   - ssl_client_certificate: SSL Client Certificate file content (can be root), including the BEGIN CERTIFICATE and END CERTIFICATE lines
+//   - ssl_client_keyfile: SSL client private key file content, include the BEGIN PRIVATE KEY and END PRIVATE KEY lines
+func (v *Vms) VmsSetClientCertificateWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "set_client_certificate")
-	body := core.Params{}
-	if sslClientCertificate != "" {
-		body["ssl_client_certificate"] = sslClientCertificate
-	}
-	if sslClientKeyfile != "" {
-		body["ssl_client_keyfile"] = sslClientKeyfile
-	}
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -402,11 +514,11 @@ func (v *Vms) VmsSetClientCertificateWithContext_PATCH(ctx context.Context, id a
 // url: /vms/{id}/set_client_certificate/
 // summary: Install SSL certificate and key on VMS
 //
-// Parameters:
-//   - sslClientCertificate (body): SSL Client Certificate file content (can be root), including the BEGIN CERTIFICATE and END CERTIFICATE lines
-//   - sslClientKeyfile (body): SSL client private key file content, include the BEGIN PRIVATE KEY and END PRIVATE KEY lines
-func (v *Vms) VmsSetClientCertificate_PATCH(id any, sslClientCertificate string, sslClientKeyfile string) (core.Record, error) {
-	return v.VmsSetClientCertificateWithContext_PATCH(v.Rest.GetCtx(), id, sslClientCertificate, sslClientKeyfile)
+// Body:
+//   - ssl_client_certificate: SSL Client Certificate file content (can be root), including the BEGIN CERTIFICATE and END CERTIFICATE lines
+//   - ssl_client_keyfile: SSL client private key file content, include the BEGIN PRIVATE KEY and END PRIVATE KEY lines
+func (v *Vms) VmsSetClientCertificate_PATCH(id any, body core.Params) (core.Record, error) {
+	return v.VmsSetClientCertificateWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
 
 // VmsSetMaxApiTokensPerUserWithContext_PATCH
@@ -414,14 +526,10 @@ func (v *Vms) VmsSetClientCertificate_PATCH(id any, sslClientCertificate string,
 // url: /vms/{id}/set_max_api_tokens_per_user/
 // summary: Set max API tokens per user
 //
-// Parameters:
-//   - maxApiTokensPerUser (body): Maximum number of API tokens per user
-func (v *Vms) VmsSetMaxApiTokensPerUserWithContext_PATCH(ctx context.Context, id any, maxApiTokensPerUser int64) (core.Record, error) {
+// Body:
+//   - max_api_tokens_per_user: Maximum number of API tokens per user
+func (v *Vms) VmsSetMaxApiTokensPerUserWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "set_max_api_tokens_per_user")
-	body := core.Params{}
-	if maxApiTokensPerUser != 0 {
-		body["max_api_tokens_per_user"] = maxApiTokensPerUser
-	}
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -434,10 +542,10 @@ func (v *Vms) VmsSetMaxApiTokensPerUserWithContext_PATCH(ctx context.Context, id
 // url: /vms/{id}/set_max_api_tokens_per_user/
 // summary: Set max API tokens per user
 //
-// Parameters:
-//   - maxApiTokensPerUser (body): Maximum number of API tokens per user
-func (v *Vms) VmsSetMaxApiTokensPerUser_PATCH(id any, maxApiTokensPerUser int64) (core.Record, error) {
-	return v.VmsSetMaxApiTokensPerUserWithContext_PATCH(v.Rest.GetCtx(), id, maxApiTokensPerUser)
+// Body:
+//   - max_api_tokens_per_user: Maximum number of API tokens per user
+func (v *Vms) VmsSetMaxApiTokensPerUser_PATCH(id any, body core.Params) (core.Record, error) {
+	return v.VmsSetMaxApiTokensPerUserWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
 
 // VmsSetSslCiphersWithContext_PATCH
@@ -445,14 +553,10 @@ func (v *Vms) VmsSetMaxApiTokensPerUser_PATCH(id any, maxApiTokensPerUser int64)
 // url: /vms/{id}/set_ssl_ciphers/
 // summary: Set SSL ciphers use by VMS
 //
-// Parameters:
-//   - sslCiphers (body): SSL Ciphers, e.g. AES256+EECDH:AES256+EDH:!aNULL:!SHA1:!SHA256:!SHA384
-func (v *Vms) VmsSetSslCiphersWithContext_PATCH(ctx context.Context, id any, sslCiphers string) (core.Record, error) {
+// Body:
+//   - ssl_ciphers: SSL Ciphers, e.g. AES256+EECDH:AES256+EDH:!aNULL:!SHA1:!SHA256:!SHA384
+func (v *Vms) VmsSetSslCiphersWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "set_ssl_ciphers")
-	body := core.Params{}
-	if sslCiphers != "" {
-		body["ssl_ciphers"] = sslCiphers
-	}
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -465,10 +569,10 @@ func (v *Vms) VmsSetSslCiphersWithContext_PATCH(ctx context.Context, id any, ssl
 // url: /vms/{id}/set_ssl_ciphers/
 // summary: Set SSL ciphers use by VMS
 //
-// Parameters:
-//   - sslCiphers (body): SSL Ciphers, e.g. AES256+EECDH:AES256+EDH:!aNULL:!SHA1:!SHA256:!SHA384
-func (v *Vms) VmsSetSslCiphers_PATCH(id any, sslCiphers string) (core.Record, error) {
-	return v.VmsSetSslCiphersWithContext_PATCH(v.Rest.GetCtx(), id, sslCiphers)
+// Body:
+//   - ssl_ciphers: SSL Ciphers, e.g. AES256+EECDH:AES256+EDH:!aNULL:!SHA1:!SHA256:!SHA384
+func (v *Vms) VmsSetSslCiphers_PATCH(id any, body core.Params) (core.Record, error) {
+	return v.VmsSetSslCiphersWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
 
 // VmsSetSslPortWithContext_PATCH
@@ -476,14 +580,10 @@ func (v *Vms) VmsSetSslCiphers_PATCH(id any, sslCiphers string) (core.Record, er
 // url: /vms/{id}/set_ssl_port/
 // summary: Change VMS SSL Port
 //
-// Parameters:
-//   - sslPort (body): SSL port number
-func (v *Vms) VmsSetSslPortWithContext_PATCH(ctx context.Context, id any, sslPort int64) (core.Record, error) {
+// Body:
+//   - ssl_port: SSL port number
+func (v *Vms) VmsSetSslPortWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "set_ssl_port")
-	body := core.Params{}
-	if sslPort != 0 {
-		body["ssl_port"] = sslPort
-	}
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -496,16 +596,20 @@ func (v *Vms) VmsSetSslPortWithContext_PATCH(ctx context.Context, id any, sslPor
 // url: /vms/{id}/set_ssl_port/
 // summary: Change VMS SSL Port
 //
-// Parameters:
-//   - sslPort (body): SSL port number
-func (v *Vms) VmsSetSslPort_PATCH(id any, sslPort int64) (core.Record, error) {
-	return v.VmsSetSslPortWithContext_PATCH(v.Rest.GetCtx(), id, sslPort)
+// Body:
+//   - ssl_port: SSL port number
+func (v *Vms) VmsSetSslPort_PATCH(id any, body core.Params) (core.Record, error) {
+	return v.VmsSetSslPortWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
 
 // VmsToggleMaintenanceModeWithContext_PATCH
 // method: PATCH
 // url: /vms/{id}/toggle_maintenance_mode/
 // summary: Toggle maintenance mode
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -524,6 +628,10 @@ func (v *Vms) VmsToggleMaintenanceModeWithContext_PATCH(ctx context.Context, id 
 // method: PATCH
 // url: /vms/{id}/toggle_maintenance_mode/
 // summary: Toggle maintenance mode
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

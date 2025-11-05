@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /tenants/{id}/client_ip_ranges/
 // summary: Update tenant Client IP ranges
+//
+// Body:
+//   - client_ip_ranges_to_add: Array of source IP ranges to allow for the tenant.
+//   - client_ip_ranges_to_remove: Array of source IP ranges to disallow for the tenant.
 func (t *Tenant) TenantClientIpRangesWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "client_ip_ranges")
 	result, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
@@ -26,6 +30,10 @@ func (t *Tenant) TenantClientIpRangesWithContext_PATCH(ctx context.Context, id a
 // method: PATCH
 // url: /tenants/{id}/client_ip_ranges/
 // summary: Update tenant Client IP ranges
+//
+// Body:
+//   - client_ip_ranges_to_add: Array of source IP ranges to allow for the tenant.
+//   - client_ip_ranges_to_remove: Array of source IP ranges to disallow for the tenant.
 func (t *Tenant) TenantClientIpRanges_PATCH(id any, body core.Params) (core.Record, error) {
 	return t.TenantClientIpRangesWithContext_PATCH(t.Rest.GetCtx(), id, body)
 }
@@ -55,6 +63,10 @@ func (t *Tenant) TenantClientMetrics_GET(id any) (core.Record, error) {
 // method: PATCH
 // url: /tenants/{id}/client_metrics/
 // summary: Update Tenant Client Metrics Settings
+//
+// Body:
+//   - config
+//   - user_defined_columns: Description of table columns
 func (t *Tenant) TenantClientMetricsWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "client_metrics")
 	result, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
@@ -68,6 +80,10 @@ func (t *Tenant) TenantClientMetricsWithContext_PATCH(ctx context.Context, id an
 // method: PATCH
 // url: /tenants/{id}/client_metrics/
 // summary: Update Tenant Client Metrics Settings
+//
+// Body:
+//   - config
+//   - user_defined_columns: Description of table columns
 func (t *Tenant) TenantClientMetrics_PATCH(id any, body core.Params) (core.Record, error) {
 	return t.TenantClientMetricsWithContext_PATCH(t.Rest.GetCtx(), id, body)
 }
@@ -77,12 +93,10 @@ func (t *Tenant) TenantClientMetrics_PATCH(id any, body core.Params) (core.Recor
 // url: /tenants/configured_idp/
 // summary: Return Configured Identity Provider for Tenant
 //
-// Parameters:
-//   - Name (query): Tenant name
-func (t *Tenant) TenantConfiguredIdpWithContext_GET(ctx context.Context, Name string) (core.Record, error) {
+// Params:
+//   - name: Tenant name
+func (t *Tenant) TenantConfiguredIdpWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/tenants/configured_idp/"
-	params := core.Params{}
-	params["name"] = Name
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -95,16 +109,20 @@ func (t *Tenant) TenantConfiguredIdpWithContext_GET(ctx context.Context, Name st
 // url: /tenants/configured_idp/
 // summary: Return Configured Identity Provider for Tenant
 //
-// Parameters:
-//   - Name (query): Tenant name
-func (t *Tenant) TenantConfiguredIdp_GET(Name string) (core.Record, error) {
-	return t.TenantConfiguredIdpWithContext_GET(t.Rest.GetCtx(), Name)
+// Params:
+//   - name: Tenant name
+func (t *Tenant) TenantConfiguredIdp_GET(params core.Params) (core.Record, error) {
+	return t.TenantConfiguredIdpWithContext_GET(t.Rest.GetCtx(), params)
 }
 
 // TenantDeactivateEncryptionGroupWithContext_POST
 // method: POST
 // url: /tenants/{id}/deactivate_encryption_group/
 // summary: Deactivate tenant's encryption group.
+//
+// Body:
+//
+//	< not declared in schema >
 func (t *Tenant) TenantDeactivateEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "deactivate_encryption_group")
 	_, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
@@ -116,6 +134,10 @@ func (t *Tenant) TenantDeactivateEncryptionGroupWithContext_POST(ctx context.Con
 // method: POST
 // url: /tenants/{id}/deactivate_encryption_group/
 // summary: Deactivate tenant's encryption group.
+//
+// Body:
+//
+//	< not declared in schema >
 func (t *Tenant) TenantDeactivateEncryptionGroup_POST(id any, body core.Params) error {
 	return t.TenantDeactivateEncryptionGroupWithContext_POST(t.Rest.GetCtx(), id, body)
 }
@@ -125,14 +147,26 @@ func (t *Tenant) TenantDeactivateEncryptionGroup_POST(id any, body core.Params) 
 // url: /tenants/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
 //
-// Parameters:
-//   - Operation (query)
-func (t *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, id any, Operation string, body core.Params) (core.Record, error) {
+// Params:
+//   - operation
+//
+// Body:
+//   - ad_provider_id: Active Directory provider ID
+//   - client_ip_ranges: Array of source IP ranges to allow for the tenant.
+//   - default_others_share_level_perm: Default Share-level permissions for Others
+//   - ldap_provider_id: Open-LDAP provider ID specified separately by the user
+//   - local_provider_id: Local provider ID
+//   - nis_provider_id: NIS provider ID
+//   - posix_primary_provider: POSIX primary provider type
+//   - smb_administrators_group_name: Optional custom name to specify a non default privileged group. If not set, privileged group is the BUILTIN\Administrators group.
+//   - smb_privileged_group_full_access: If true, the privileged group has full access. Otherwise, read only
+//   - smb_privileged_group_sid: Optional custom SID to specify a non default SMB privileged group. If not set, SMB privileged group is the Backup Operators domain group.
+//   - smb_privileged_user_name: Optional custom username for the SMB privileged user. If not set, the SMB privileged user name is 'vastadmin'
+//   - trash_gid: GID with permissions to the trash folder
+//   - use_smb_privileged_group: If true, the privileged group is enabled
+//   - use_smb_privileged_user: If true, the privileged user is enabled
+func (t *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, id any, params core.Params, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "is_operation_healthy")
-	params := core.Params{}
-	if Operation != "" {
-		params["operation"] = Operation
-	}
 	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
@@ -145,10 +179,26 @@ func (t *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, i
 // url: /tenants/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
 //
-// Parameters:
-//   - Operation (query)
-func (t *Tenant) TenantIsOperationHealthy_POST(id any, Operation string, body core.Params) (core.Record, error) {
-	return t.TenantIsOperationHealthyWithContext_POST(t.Rest.GetCtx(), id, Operation, body)
+// Params:
+//   - operation
+//
+// Body:
+//   - ad_provider_id: Active Directory provider ID
+//   - client_ip_ranges: Array of source IP ranges to allow for the tenant.
+//   - default_others_share_level_perm: Default Share-level permissions for Others
+//   - ldap_provider_id: Open-LDAP provider ID specified separately by the user
+//   - local_provider_id: Local provider ID
+//   - nis_provider_id: NIS provider ID
+//   - posix_primary_provider: POSIX primary provider type
+//   - smb_administrators_group_name: Optional custom name to specify a non default privileged group. If not set, privileged group is the BUILTIN\Administrators group.
+//   - smb_privileged_group_full_access: If true, the privileged group has full access. Otherwise, read only
+//   - smb_privileged_group_sid: Optional custom SID to specify a non default SMB privileged group. If not set, SMB privileged group is the Backup Operators domain group.
+//   - smb_privileged_user_name: Optional custom username for the SMB privileged user. If not set, the SMB privileged user name is 'vastadmin'
+//   - trash_gid: GID with permissions to the trash folder
+//   - use_smb_privileged_group: If true, the privileged group is enabled
+//   - use_smb_privileged_user: If true, the privileged user is enabled
+func (t *Tenant) TenantIsOperationHealthy_POST(id any, params core.Params, body core.Params) (core.Record, error) {
+	return t.TenantIsOperationHealthyWithContext_POST(t.Rest.GetCtx(), id, params, body)
 }
 
 // TenantNfs4DelegWithContext_DELETE
@@ -156,16 +206,12 @@ func (t *Tenant) TenantIsOperationHealthy_POST(id any, Operation string, body co
 // url: /tenants/{id}/nfs4_deleg/
 // summary: Remove NFSv4 delegation
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - ClientId (query): Client ID
-//   - DelegationStateid (query): Delegation state ID
-func (t *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any, FilePath string, ClientId int64, DelegationStateid int64) error {
+// Params:
+//   - file_path: File path
+//   - client_id: Client ID
+//   - delegation_stateid: Delegation state ID
+func (t *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any, params core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "nfs4_deleg")
-	params := core.Params{}
-	params["file_path"] = FilePath
-	params["client_id"] = ClientId
-	params["delegation_stateid"] = DelegationStateid
 	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, params, nil)
 	return err
 
@@ -176,12 +222,12 @@ func (t *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any, 
 // url: /tenants/{id}/nfs4_deleg/
 // summary: Remove NFSv4 delegation
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - ClientId (query): Client ID
-//   - DelegationStateid (query): Delegation state ID
-func (t *Tenant) TenantNfs4Deleg_DELETE(id any, FilePath string, ClientId int64, DelegationStateid int64) error {
-	return t.TenantNfs4DelegWithContext_DELETE(t.Rest.GetCtx(), id, FilePath, ClientId, DelegationStateid)
+// Params:
+//   - file_path: File path
+//   - client_id: Client ID
+//   - delegation_stateid: Delegation state ID
+func (t *Tenant) TenantNfs4Deleg_DELETE(id any, params core.Params) error {
+	return t.TenantNfs4DelegWithContext_DELETE(t.Rest.GetCtx(), id, params)
 }
 
 // TenantNfs4DelegsWithContext_GET
@@ -189,16 +235,11 @@ func (t *Tenant) TenantNfs4Deleg_DELETE(id any, FilePath string, ClientId int64,
 // url: /tenants/{id}/nfs4_delegs/
 // summary: Query list of NFSv4 delegations
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - XeystorePaginationNextClientId (query): Xeystore pagination
-func (t *Tenant) TenantNfs4DelegsWithContext_GET(ctx context.Context, id any, FilePath string, XeystorePaginationNextClientId int64) (core.Record, error) {
+// Params:
+//   - file_path: File path
+//   - xeystore_pagination_next_client_id: Xeystore pagination
+func (t *Tenant) TenantNfs4DelegsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "nfs4_delegs")
-	params := core.Params{}
-	params["file_path"] = FilePath
-	if XeystorePaginationNextClientId != 0 {
-		params["xeystore_pagination_next_client_id"] = XeystorePaginationNextClientId
-	}
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -211,17 +252,21 @@ func (t *Tenant) TenantNfs4DelegsWithContext_GET(ctx context.Context, id any, Fi
 // url: /tenants/{id}/nfs4_delegs/
 // summary: Query list of NFSv4 delegations
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - XeystorePaginationNextClientId (query): Xeystore pagination
-func (t *Tenant) TenantNfs4Delegs_GET(id any, FilePath string, XeystorePaginationNextClientId int64) (core.Record, error) {
-	return t.TenantNfs4DelegsWithContext_GET(t.Rest.GetCtx(), id, FilePath, XeystorePaginationNextClientId)
+// Params:
+//   - file_path: File path
+//   - xeystore_pagination_next_client_id: Xeystore pagination
+func (t *Tenant) TenantNfs4Delegs_GET(id any, params core.Params) (core.Record, error) {
+	return t.TenantNfs4DelegsWithContext_GET(t.Rest.GetCtx(), id, params)
 }
 
 // TenantReinstateEncryptionGroupWithContext_POST
 // method: POST
 // url: /tenants/{id}/reinstate_encryption_group/
 // summary: Reinstate tenant's encryption group.
+//
+// Body:
+//
+//	< not declared in schema >
 func (t *Tenant) TenantReinstateEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "reinstate_encryption_group")
 	_, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
@@ -233,6 +278,10 @@ func (t *Tenant) TenantReinstateEncryptionGroupWithContext_POST(ctx context.Cont
 // method: POST
 // url: /tenants/{id}/reinstate_encryption_group/
 // summary: Reinstate tenant's encryption group.
+//
+// Body:
+//
+//	< not declared in schema >
 func (t *Tenant) TenantReinstateEncryptionGroup_POST(id any, body core.Params) error {
 	return t.TenantReinstateEncryptionGroupWithContext_POST(t.Rest.GetCtx(), id, body)
 }
@@ -242,18 +291,11 @@ func (t *Tenant) TenantReinstateEncryptionGroup_POST(id any, body core.Params) e
 // url: /tenants/remote_objects/
 // summary: Return Details of Remote Tenants
 //
-// Parameters:
-//   - Name (query): Filter remote tenants by name
-//   - TargetId (query): Filter remote tenants by target
-func (t *Tenant) TenantRemoteObjectsWithContext_GET(ctx context.Context, Name string, TargetId string) (core.RecordSet, error) {
+// Params:
+//   - name: Filter remote tenants by name
+//   - target_id: Filter remote tenants by target
+func (t *Tenant) TenantRemoteObjectsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
 	resourcePath := "/tenants/remote_objects/"
-	params := core.Params{}
-	if Name != "" {
-		params["name"] = Name
-	}
-	if TargetId != "" {
-		params["target_id"] = TargetId
-	}
 	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -267,17 +309,21 @@ func (t *Tenant) TenantRemoteObjectsWithContext_GET(ctx context.Context, Name st
 // url: /tenants/remote_objects/
 // summary: Return Details of Remote Tenants
 //
-// Parameters:
-//   - Name (query): Filter remote tenants by name
-//   - TargetId (query): Filter remote tenants by target
-func (t *Tenant) TenantRemoteObjects_GET(Name string, TargetId string) (core.RecordSet, error) {
-	return t.TenantRemoteObjectsWithContext_GET(t.Rest.GetCtx(), Name, TargetId)
+// Params:
+//   - name: Filter remote tenants by name
+//   - target_id: Filter remote tenants by target
+func (t *Tenant) TenantRemoteObjects_GET(params core.Params) (core.RecordSet, error) {
+	return t.TenantRemoteObjectsWithContext_GET(t.Rest.GetCtx(), params)
 }
 
 // TenantRevokeEncryptionGroupWithContext_POST
 // method: POST
 // url: /tenants/{id}/revoke_encryption_group/
 // summary: Revoke tenant's encryption group.
+//
+// Body:
+//
+//	< not declared in schema >
 func (t *Tenant) TenantRevokeEncryptionGroupWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "revoke_encryption_group")
 	_, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
@@ -289,6 +335,10 @@ func (t *Tenant) TenantRevokeEncryptionGroupWithContext_POST(ctx context.Context
 // method: POST
 // url: /tenants/{id}/revoke_encryption_group/
 // summary: Revoke tenant's encryption group.
+//
+// Body:
+//
+//	< not declared in schema >
 func (t *Tenant) TenantRevokeEncryptionGroup_POST(id any, body core.Params) error {
 	return t.TenantRevokeEncryptionGroupWithContext_POST(t.Rest.GetCtx(), id, body)
 }
@@ -297,6 +347,10 @@ func (t *Tenant) TenantRevokeEncryptionGroup_POST(id any, body core.Params) erro
 // method: POST
 // url: /tenants/{id}/rotate_encryption_group_key/
 // summary: Rotate tenant's encryption group key.
+//
+// Body:
+//
+//	< not declared in schema >
 func (t *Tenant) TenantRotateEncryptionGroupKeyWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "rotate_encryption_group_key")
 	_, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
@@ -308,6 +362,10 @@ func (t *Tenant) TenantRotateEncryptionGroupKeyWithContext_POST(ctx context.Cont
 // method: POST
 // url: /tenants/{id}/rotate_encryption_group_key/
 // summary: Rotate tenant's encryption group key.
+//
+// Body:
+//
+//	< not declared in schema >
 func (t *Tenant) TenantRotateEncryptionGroupKey_POST(id any, body core.Params) error {
 	return t.TenantRotateEncryptionGroupKeyWithContext_POST(t.Rest.GetCtx(), id, body)
 }

@@ -13,9 +13,16 @@ import (
 // method: DELETE
 // url: /topics/delete/
 // summary: Delete a Kafka Topic
-func (t *Topic) TopicDeleteWithContext_DELETE(ctx context.Context) error {
+//
+// Body:
+//   - database_name: Name of the Database
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Name of the object
+//   - schema_name: Name of the Schema
+//   - tenant_id: Tenant ID
+func (t *Topic) TopicDeleteWithContext_DELETE(ctx context.Context, body core.Params) error {
 	resourcePath := "/topics/delete/"
-	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -24,8 +31,15 @@ func (t *Topic) TopicDeleteWithContext_DELETE(ctx context.Context) error {
 // method: DELETE
 // url: /topics/delete/
 // summary: Delete a Kafka Topic
-func (t *Topic) TopicDelete_DELETE() error {
-	return t.TopicDeleteWithContext_DELETE(t.Rest.GetCtx())
+//
+// Body:
+//   - database_name: Name of the Database
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Name of the object
+//   - schema_name: Name of the Schema
+//   - tenant_id: Tenant ID
+func (t *Topic) TopicDelete_DELETE(body core.Params) error {
+	return t.TopicDeleteWithContext_DELETE(t.Rest.GetCtx(), body)
 }
 
 // TopicShowWithContext_GET
@@ -33,14 +47,11 @@ func (t *Topic) TopicDelete_DELETE() error {
 // url: /topics/show/
 // summary: Show a Kafka Topic
 //
-// Parameters:
-//   - DatabaseName (query): Getting list of objects by database_name
-//   - Name (query): Getting object by exact match
-func (t *Topic) TopicShowWithContext_GET(ctx context.Context, DatabaseName string, Name string) (core.Record, error) {
+// Params:
+//   - database_name: Getting list of objects by database_name
+//   - name: Getting object by exact match
+func (t *Topic) TopicShowWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/topics/show/"
-	params := core.Params{}
-	params["database_name"] = DatabaseName
-	params["name"] = Name
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -53,17 +64,25 @@ func (t *Topic) TopicShowWithContext_GET(ctx context.Context, DatabaseName strin
 // url: /topics/show/
 // summary: Show a Kafka Topic
 //
-// Parameters:
-//   - DatabaseName (query): Getting list of objects by database_name
-//   - Name (query): Getting object by exact match
-func (t *Topic) TopicShow_GET(DatabaseName string, Name string) (core.Record, error) {
-	return t.TopicShowWithContext_GET(t.Rest.GetCtx(), DatabaseName, Name)
+// Params:
+//   - database_name: Getting list of objects by database_name
+//   - name: Getting object by exact match
+func (t *Topic) TopicShow_GET(params core.Params) (core.Record, error) {
+	return t.TopicShowWithContext_GET(t.Rest.GetCtx(), params)
 }
 
 // TopicTopicsWithContext_GET
 // method: GET
 // url: /topics/
 // summary: List Kafka Topics
+//
+// Params:
+//   - page
+//   - page_size
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - name: Getting list of objects by exact match
+//   - count_only: Whether to only return count of objects
 func (t *Topic) TopicTopicsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
 	resourcePath := "/topics/"
 	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
@@ -78,6 +97,14 @@ func (t *Topic) TopicTopicsWithContext_GET(ctx context.Context, params core.Para
 // method: GET
 // url: /topics/
 // summary: List Kafka Topics
+//
+// Params:
+//   - page
+//   - page_size
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - name: Getting list of objects by exact match
+//   - count_only: Whether to only return count of objects
 func (t *Topic) TopicTopics_GET(params core.Params) (core.RecordSet, error) {
 	return t.TopicTopicsWithContext_GET(t.Rest.GetCtx(), params)
 }
@@ -86,6 +113,15 @@ func (t *Topic) TopicTopics_GET(params core.Params) (core.RecordSet, error) {
 // method: PATCH
 // url: /topics/
 // summary: Modify a Kafka Topic
+//
+// Body:
+//   - database_name: Name of the Database
+//   - message_timestamp_after_max_ms: Message timestamp 'after' threshold in milli-seconds
+//   - message_timestamp_before_max_ms: Message timestamp 'before' threshold in milli-seconds
+//   - message_timestamp_type: Message timestamp type
+//   - name: Name of the Topic
+//   - new_name: New name of the topic
+//   - retention_ms: Retention period in milli-seconds
 func (t *Topic) TopicTopicsWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/topics/"
 	result, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
@@ -99,6 +135,15 @@ func (t *Topic) TopicTopicsWithContext_PATCH(ctx context.Context, body core.Para
 // method: PATCH
 // url: /topics/
 // summary: Modify a Kafka Topic
+//
+// Body:
+//   - database_name: Name of the Database
+//   - message_timestamp_after_max_ms: Message timestamp 'after' threshold in milli-seconds
+//   - message_timestamp_before_max_ms: Message timestamp 'before' threshold in milli-seconds
+//   - message_timestamp_type: Message timestamp type
+//   - name: Name of the Topic
+//   - new_name: New name of the topic
+//   - retention_ms: Retention period in milli-seconds
 func (t *Topic) TopicTopics_PATCH(body core.Params) (core.Record, error) {
 	return t.TopicTopicsWithContext_PATCH(t.Rest.GetCtx(), body)
 }
@@ -107,6 +152,15 @@ func (t *Topic) TopicTopics_PATCH(body core.Params) (core.Record, error) {
 // method: POST
 // url: /topics/
 // summary: Create a Kafka Topic
+//
+// Body:
+//   - database_name: Name of the Database
+//   - message_timestamp_after_max_ms: Message timestamp 'after' threshold in milli-seconds
+//   - message_timestamp_before_max_ms: Message timestamp 'before' threshold in milli-seconds
+//   - message_timestamp_type: Message timestamp type
+//   - name: Name of the Topic
+//   - retention_ms: Retention period in milli-seconds
+//   - topic_partitions: Amount of Kafka Topic partitions
 func (t *Topic) TopicTopicsWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/topics/"
 	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
@@ -120,6 +174,15 @@ func (t *Topic) TopicTopicsWithContext_POST(ctx context.Context, body core.Param
 // method: POST
 // url: /topics/
 // summary: Create a Kafka Topic
+//
+// Body:
+//   - database_name: Name of the Database
+//   - message_timestamp_after_max_ms: Message timestamp 'after' threshold in milli-seconds
+//   - message_timestamp_before_max_ms: Message timestamp 'before' threshold in milli-seconds
+//   - message_timestamp_type: Message timestamp type
+//   - name: Name of the Topic
+//   - retention_ms: Retention period in milli-seconds
+//   - topic_partitions: Amount of Kafka Topic partitions
 func (t *Topic) TopicTopics_POST(body core.Params) (core.Record, error) {
 	return t.TopicTopicsWithContext_POST(t.Rest.GetCtx(), body)
 }

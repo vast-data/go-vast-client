@@ -15,15 +15,13 @@ import (
 // url: /cboxes/{id}/control_led/
 // summary: Control CBox LEDs
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cbox) CboxControlLedWithContext_PATCH(ctx context.Context, id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
+func (c *Cbox) CboxControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("cboxes", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -38,17 +36,23 @@ func (c *Cbox) CboxControlLedWithContext_PATCH(ctx context.Context, id any, cont
 // url: /cboxes/{id}/control_led/
 // summary: Control CBox LEDs
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cbox) CboxControlLed_PATCH(id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
-	return c.CboxControlLedWithContext_PATCH(c.Rest.GetCtx(), id, control, waitTimeout)
+func (c *Cbox) CboxControlLed_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.CboxControlLedWithContext_PATCH(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // CboxRefreshUidWithContext_PATCH
 // method: PATCH
 // url: /cboxes/{id}/refresh_uid/
 // summary: Refreshes cbox uid to match it's cnodes chassis serial
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *Cbox) CboxRefreshUidWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("cboxes", id, "refresh_uid")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
@@ -62,6 +66,10 @@ func (c *Cbox) CboxRefreshUidWithContext_PATCH(ctx context.Context, id any, body
 // method: PATCH
 // url: /cboxes/{id}/refresh_uid/
 // summary: Refreshes cbox uid to match it's cnodes chassis serial
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *Cbox) CboxRefreshUid_PATCH(id any, body core.Params) (core.Record, error) {
 	return c.CboxRefreshUidWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }

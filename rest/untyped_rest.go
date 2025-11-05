@@ -195,7 +195,8 @@ type UntypedVMSRest struct {
 	IoData            *untyped.IoData
 	// +apiall:extraMethod:GET=/kafkabrokers/{id}/list_topics/
 	KafkaBrokers *untyped.KafkaBroker
-	Kerberos     *untyped.Kerberos
+	// +apiall:extraMethod:POST=/kerberos/{id}/keytab/
+	Kerberos *untyped.Kerberos
 	// +apiall:extraMethod:PATCH=/ldaps/{id}/set_posix_primary/
 	Ldaps               *untyped.Ldap
 	Licenses            *untyped.License
@@ -276,7 +277,8 @@ type UntypedVMSRest struct {
 	ReplicationRestorePoints *untyped.ReplicationRestorePoint
 	ReplicationStreams       *untyped.ReplicationStream
 	Roles                    *untyped.Role
-	S3Keys                   *untyped.S3Keys
+	// +apiall:extraMethod:DELETE=/s3keys/{access_key}/
+	S3Keys *untyped.S3Keys
 	// +apiall:extraMethod:GET=/s3lifecyclerules/get_object_expiration/
 	S3LifeCycleRules   *untyped.S3LifeCycleRule
 	S3Policies         *untyped.S3Policy

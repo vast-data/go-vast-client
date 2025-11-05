@@ -35,6 +35,16 @@ func (b *BigCatalogConfig) BigCatalogConfigColumns_GET() (core.RecordSet, error)
 // method: GET
 // url: /bigcatalogconfig/query_data/
 // summary: Queries data based on provided params
+//
+// Params:
+//   - page
+//   - limit
+//   - ordering
+//   - path: Target source path
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - snapshot: The name of the snapshot, the latest version is taken by default
+//   - fields: Defines which fields should be displayed
+//   - filters: URL-encoded JSON-string - actually an encoded mapping. Keys are column names. E.g. `{"creation_time": [{"gt": "1727863200000"}, {"lt": "1729591200000"}], "atime": [{"gt": "1727776800000", "lt": "1729591200000"}]}'`. Elements within a list per column are OR'ed, elements withing a map inside a list are AND'ed.
 func (b *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/bigcatalogconfig/query_data/"
 	result, err := core.Request[core.Record](ctx, b, http.MethodGet, resourcePath, params, nil)
@@ -48,6 +58,16 @@ func (b *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_GET(ctx context.
 // method: GET
 // url: /bigcatalogconfig/query_data/
 // summary: Queries data based on provided params
+//
+// Params:
+//   - page
+//   - limit
+//   - ordering
+//   - path: Target source path
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - snapshot: The name of the snapshot, the latest version is taken by default
+//   - fields: Defines which fields should be displayed
+//   - filters: URL-encoded JSON-string - actually an encoded mapping. Keys are column names. E.g. `{"creation_time": [{"gt": "1727863200000"}, {"lt": "1729591200000"}], "atime": [{"gt": "1727776800000", "lt": "1729591200000"}]}'`. Elements within a list per column are OR'ed, elements withing a map inside a list are AND'ed.
 func (b *BigCatalogConfig) BigCatalogConfigQueryData_GET(params core.Params) (core.Record, error) {
 	return b.BigCatalogConfigQueryDataWithContext_GET(b.Rest.GetCtx(), params)
 }
@@ -57,22 +77,19 @@ func (b *BigCatalogConfig) BigCatalogConfigQueryData_GET(params core.Params) (co
 // url: /bigcatalogconfig/query_data/
 // summary: Query VAST Catalog
 //
-// Parameters:
-//   - Page (query)
-//   - Limit (query)
-//   - Ordering (query)
-func (b *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context.Context, Page int64, Limit int64, Ordering string, body core.Params) (core.Record, error) {
+// Params:
+//   - page
+//   - limit
+//   - ordering
+//
+// Body:
+//   - fields: Defines which fields should be displayed
+//   - filters: Defines the filters
+//   - path: Target source path
+//   - snapshot: The name of the snapshot, the latest version is taken by default
+//   - tenant_id: Tenant ID
+func (b *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context.Context, params core.Params, body core.Params) (core.Record, error) {
 	resourcePath := "/bigcatalogconfig/query_data/"
-	params := core.Params{}
-	if Page != 0 {
-		params["page"] = Page
-	}
-	if Limit != 0 {
-		params["limit"] = Limit
-	}
-	if Ordering != "" {
-		params["ordering"] = Ordering
-	}
 	result, err := core.Request[core.Record](ctx, b, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
@@ -85,12 +102,19 @@ func (b *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context
 // url: /bigcatalogconfig/query_data/
 // summary: Query VAST Catalog
 //
-// Parameters:
-//   - Page (query)
-//   - Limit (query)
-//   - Ordering (query)
-func (b *BigCatalogConfig) BigCatalogConfigQueryData_POST(Page int64, Limit int64, Ordering string, body core.Params) (core.Record, error) {
-	return b.BigCatalogConfigQueryDataWithContext_POST(b.Rest.GetCtx(), Page, Limit, Ordering, body)
+// Params:
+//   - page
+//   - limit
+//   - ordering
+//
+// Body:
+//   - fields: Defines which fields should be displayed
+//   - filters: Defines the filters
+//   - path: Target source path
+//   - snapshot: The name of the snapshot, the latest version is taken by default
+//   - tenant_id: Tenant ID
+func (b *BigCatalogConfig) BigCatalogConfigQueryData_POST(params core.Params, body core.Params) (core.Record, error) {
+	return b.BigCatalogConfigQueryDataWithContext_POST(b.Rest.GetCtx(), params, body)
 }
 
 // BigCatalogConfigStatsWithContext_GET

@@ -212,3 +212,19 @@ validate-api: ## Validate Swagger/OpenAPI schema with detailed diagnostics
 	echo "🔍 Running Swagger/OpenAPI schema validation..."; \
 	python3 $(CURDIR)/codegen/misc/validate_swagger.py $$args; \
 	echo "✅ Validation completed!"
+
+# Test core package only with coverage
+.PHONY: test-core
+test-core:
+	@echo "Running core package tests with coverage..."
+	@go test ./core -v -coverprofile=core_coverage.out -coverpkg=./core
+	@echo ""
+	@echo "Coverage summary:"
+	@go tool cover -func=core_coverage.out | tail -1
+	@echo ""
+	@echo "For detailed coverage report, run: go tool cover -html=core_coverage.out"
+
+.PHONY: test-core-coverage
+test-core-coverage: test-core
+	@go tool cover -html=core_coverage.out
+

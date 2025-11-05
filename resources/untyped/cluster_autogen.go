@@ -15,6 +15,24 @@ import (
 // url: /clusters/add_boxes/
 // summary: Start Add Boxes procedure
 //
+// Body:
+//   - cboxes
+//   - cnode_ipmi_pool
+//   - cnode_management_ip_pool
+//   - cnode_start_index: CNode start index valid range: [1, 99], for null value index will be selected automatically, as max_existed_index + 1
+//   - continue_migration
+//   - dboxes
+//   - dnode_ipmi_pool
+//   - dnode_management_ip_pool
+//   - dnode_start_index: CNode start index valid range: [100, 254], for null value index will be selected automatically, as max_existed_index + 1
+//   - empty_dbox
+//   - external_gateway
+//   - hostname_prefix
+//   - ipv6_prefix
+//   - management_cidr
+//   - migrate_target
+//   - rack_pools
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cluster) ClusterAddBoxesWithContext_PATCH(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -33,6 +51,24 @@ func (c *Cluster) ClusterAddBoxesWithContext_PATCH(ctx context.Context, body cor
 // url: /clusters/add_boxes/
 // summary: Start Add Boxes procedure
 //
+// Body:
+//   - cboxes
+//   - cnode_ipmi_pool
+//   - cnode_management_ip_pool
+//   - cnode_start_index: CNode start index valid range: [1, 99], for null value index will be selected automatically, as max_existed_index + 1
+//   - continue_migration
+//   - dboxes
+//   - dnode_ipmi_pool
+//   - dnode_management_ip_pool
+//   - dnode_start_index: CNode start index valid range: [100, 254], for null value index will be selected automatically, as max_existed_index + 1
+//   - empty_dbox
+//   - external_gateway
+//   - hostname_prefix
+//   - ipv6_prefix
+//   - management_cidr
+//   - migrate_target
+//   - rack_pools
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cluster) ClusterAddBoxes_PATCH(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -43,6 +79,17 @@ func (c *Cluster) ClusterAddBoxes_PATCH(body core.Params, waitTimeout time.Durat
 // method: POST
 // url: /clusters/{id}/add_ekm/
 // summary: Add EKM
+//
+// Body:
+//   - ekm_auth_domain: Auth domain (Thales)
+//   - ekm_bypass_validation: Bypass key and cert validation (VMS)
+//   - ekm_ca_certificate: EKM CA certificate
+//   - ekm_certificate: EKM certificate
+//   - ekm_domain: Domain (Thales)
+//   - ekm_private_key: EKM private key
+//   - ekm_proxy_address: Thales EKM proxy address: https://proxy-address:port
+//   - ekm_servers: List of EKM servers: 10.0.0.1:5696,11.0.0.1:5697
+//   - encryption_type: Encryption type
 func (c *Cluster) ClusterAddEkmWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "add_ekm")
 	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
@@ -54,6 +101,17 @@ func (c *Cluster) ClusterAddEkmWithContext_POST(ctx context.Context, id any, bod
 // method: POST
 // url: /clusters/{id}/add_ekm/
 // summary: Add EKM
+//
+// Body:
+//   - ekm_auth_domain: Auth domain (Thales)
+//   - ekm_bypass_validation: Bypass key and cert validation (VMS)
+//   - ekm_ca_certificate: EKM CA certificate
+//   - ekm_certificate: EKM certificate
+//   - ekm_domain: Domain (Thales)
+//   - ekm_private_key: EKM private key
+//   - ekm_proxy_address: Thales EKM proxy address: https://proxy-address:port
+//   - ekm_servers: List of EKM servers: 10.0.0.1:5696,11.0.0.1:5697
+//   - encryption_type: Encryption type
 func (c *Cluster) ClusterAddEkm_POST(id any, body core.Params) error {
 	return c.ClusterAddEkmWithContext_POST(c.Rest.GetCtx(), id, body)
 }
@@ -104,6 +162,19 @@ func (c *Cluster) ClusterAuditing_GET(id any) (core.Record, error) {
 // method: PATCH
 // url: /clusters/{id}/auditing/
 // summary: Modify Cluster Audit Settings
+//
+// Body:
+//   - audit_dir_name: Name of the audit directory, which is located under the root directory.
+//   - enable_json_audit: If enabled, audit logs are saved in JSON format into a file in the directory specified as audit_dir_name. Can be enabled in addition to enable_vast_db_audit.
+//   - enable_vast_db_audit: If enabled, audit logs are saved in a VAST DataBase table. Can be enabled in addition to enable_json_audit.
+//   - max_audit_dir_size: Maximum audit directory size
+//   - max_file_size: Maximum audit file size for each CNode core
+//   - max_retention_period: Max retention period for audit files
+//   - max_retention_timeunit: Max retention period timeunit for audit files
+//   - protocols: Protocols to audit
+//   - protocols_audit: Map of protocols audit configurations
+//   - read_access_users: Enter users here to grant them read access to all files in the audit directory. To make the audit directory accessible to clients, create a view on the directory.
+//   - read_access_users_groups: Enter groups here to grant them read access to all files in the audit directory. To make the audit directory accessible to clients, create a view on the directory.
 func (c *Cluster) ClusterAuditingWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "auditing")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
@@ -117,6 +188,19 @@ func (c *Cluster) ClusterAuditingWithContext_PATCH(ctx context.Context, id any, 
 // method: PATCH
 // url: /clusters/{id}/auditing/
 // summary: Modify Cluster Audit Settings
+//
+// Body:
+//   - audit_dir_name: Name of the audit directory, which is located under the root directory.
+//   - enable_json_audit: If enabled, audit logs are saved in JSON format into a file in the directory specified as audit_dir_name. Can be enabled in addition to enable_vast_db_audit.
+//   - enable_vast_db_audit: If enabled, audit logs are saved in a VAST DataBase table. Can be enabled in addition to enable_json_audit.
+//   - max_audit_dir_size: Maximum audit directory size
+//   - max_file_size: Maximum audit file size for each CNode core
+//   - max_retention_period: Max retention period for audit files
+//   - max_retention_timeunit: Max retention period timeunit for audit files
+//   - protocols: Protocols to audit
+//   - protocols_audit: Map of protocols audit configurations
+//   - read_access_users: Enter users here to grant them read access to all files in the audit directory. To make the audit directory accessible to clients, create a view on the directory.
+//   - read_access_users_groups: Enter groups here to grant them read access to all files in the audit directory. To make the audit directory accessible to clients, create a view on the directory.
 func (c *Cluster) ClusterAuditing_PATCH(id any, body core.Params) (core.Record, error) {
 	return c.ClusterAuditingWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
@@ -147,14 +231,10 @@ func (c *Cluster) ClusterBgpTable_GET() (core.Record, error) {
 // url: /clusters/block_providers/
 // summary: Block Authentication Providers
 //
-// Parameters:
-//   - blocked (body): Request parameter
-func (c *Cluster) ClusterBlockProvidersWithContext_PATCH(ctx context.Context, blocked bool) (core.Record, error) {
+// Body:
+//   - blocked
+func (c *Cluster) ClusterBlockProvidersWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/clusters/block_providers/"
-	body := core.Params{}
-	if blocked != false {
-		body["blocked"] = blocked
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -167,10 +247,10 @@ func (c *Cluster) ClusterBlockProvidersWithContext_PATCH(ctx context.Context, bl
 // url: /clusters/block_providers/
 // summary: Block Authentication Providers
 //
-// Parameters:
-//   - blocked (body): Request parameter
-func (c *Cluster) ClusterBlockProviders_PATCH(blocked bool) (core.Record, error) {
-	return c.ClusterBlockProvidersWithContext_PATCH(c.Rest.GetCtx(), blocked)
+// Body:
+//   - blocked
+func (c *Cluster) ClusterBlockProviders_PATCH(body core.Params) (core.Record, error) {
+	return c.ClusterBlockProvidersWithContext_PATCH(c.Rest.GetCtx(), body)
 }
 
 // ClusterCeleryQueueWithContext_GET
@@ -178,14 +258,10 @@ func (c *Cluster) ClusterBlockProviders_PATCH(blocked bool) (core.Record, error)
 // url: /clusters/{id}/celery_queue/
 // summary: List celery queue
 //
-// Parameters:
-//   - TaskName (query): Task name
-func (c *Cluster) ClusterCeleryQueueWithContext_GET(ctx context.Context, id any, TaskName string) (core.Record, error) {
+// Params:
+//   - task_name: Task name
+func (c *Cluster) ClusterCeleryQueueWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_queue")
-	params := core.Params{}
-	if TaskName != "" {
-		params["task_name"] = TaskName
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -198,10 +274,10 @@ func (c *Cluster) ClusterCeleryQueueWithContext_GET(ctx context.Context, id any,
 // url: /clusters/{id}/celery_queue/
 // summary: List celery queue
 //
-// Parameters:
-//   - TaskName (query): Task name
-func (c *Cluster) ClusterCeleryQueue_GET(id any, TaskName string) (core.Record, error) {
-	return c.ClusterCeleryQueueWithContext_GET(c.Rest.GetCtx(), id, TaskName)
+// Params:
+//   - task_name: Task name
+func (c *Cluster) ClusterCeleryQueue_GET(id any, params core.Params) (core.Record, error) {
+	return c.ClusterCeleryQueueWithContext_GET(c.Rest.GetCtx(), id, params)
 }
 
 // ClusterCeleryRemoveQueuedTaskWithContext_DELETE
@@ -209,12 +285,10 @@ func (c *Cluster) ClusterCeleryQueue_GET(id any, TaskName string) (core.Record, 
 // url: /clusters/{id}/celery_remove_queued_task/
 // summary: Delete all tasks of a specific name from the celery queue
 //
-// Parameters:
-//   - TaskName (query): Task name
-func (c *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Context, id any, TaskName string) error {
+// Params:
+//   - task_name: Task name
+func (c *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Context, id any, params core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_remove_queued_task")
-	params := core.Params{}
-	params["task_name"] = TaskName
 	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, params, nil)
 	return err
 
@@ -225,10 +299,10 @@ func (c *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Co
 // url: /clusters/{id}/celery_remove_queued_task/
 // summary: Delete all tasks of a specific name from the celery queue
 //
-// Parameters:
-//   - TaskName (query): Task name
-func (c *Cluster) ClusterCeleryRemoveQueuedTask_DELETE(id any, TaskName string) error {
-	return c.ClusterCeleryRemoveQueuedTaskWithContext_DELETE(c.Rest.GetCtx(), id, TaskName)
+// Params:
+//   - task_name: Task name
+func (c *Cluster) ClusterCeleryRemoveQueuedTask_DELETE(id any, params core.Params) error {
+	return c.ClusterCeleryRemoveQueuedTaskWithContext_DELETE(c.Rest.GetCtx(), id, params)
 }
 
 // ClusterCeleryReservedWithContext_GET
@@ -298,6 +372,12 @@ func (c *Cluster) ClusterCeleryStatus_GET(id any) (core.Record, error) {
 // method: DELETE
 // url: /clusters/close_protocol_handle/
 // summary: Close open protocol filehandles
+//
+// Params:
+//   - file_path: File path
+//   - session_id: Session ID
+//   - session_handle_unique_id: Handle ID
+//   - tenant_guid: Tenant GUID
 func (c *Cluster) ClusterCloseProtocolHandleWithContext_DELETE(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/close_protocol_handle/"
 	result, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, params, nil)
@@ -311,6 +391,12 @@ func (c *Cluster) ClusterCloseProtocolHandleWithContext_DELETE(ctx context.Conte
 // method: DELETE
 // url: /clusters/close_protocol_handle/
 // summary: Close open protocol filehandles
+//
+// Params:
+//   - file_path: File path
+//   - session_id: Session ID
+//   - session_handle_unique_id: Handle ID
+//   - tenant_guid: Tenant GUID
 func (c *Cluster) ClusterCloseProtocolHandle_DELETE(params core.Params) (core.Record, error) {
 	return c.ClusterCloseProtocolHandleWithContext_DELETE(c.Rest.GetCtx(), params)
 }
@@ -320,14 +406,10 @@ func (c *Cluster) ClusterCloseProtocolHandle_DELETE(params core.Params) (core.Re
 // url: /clusters/dbox_migration_status/
 // summary: DBox migration status
 //
-// Parameters:
-//   - WithCapacity (query): The flag to show the migration status with capacity
-func (c *Cluster) ClusterDboxMigrationStatusWithContext_GET(ctx context.Context, WithCapacity bool) (core.Record, error) {
+// Params:
+//   - with_capacity: The flag to show the migration status with capacity
+func (c *Cluster) ClusterDboxMigrationStatusWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/dbox_migration_status/"
-	params := core.Params{}
-	if WithCapacity != false {
-		params["with_capacity"] = WithCapacity
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -340,10 +422,10 @@ func (c *Cluster) ClusterDboxMigrationStatusWithContext_GET(ctx context.Context,
 // url: /clusters/dbox_migration_status/
 // summary: DBox migration status
 //
-// Parameters:
-//   - WithCapacity (query): The flag to show the migration status with capacity
-func (c *Cluster) ClusterDboxMigrationStatus_GET(WithCapacity bool) (core.Record, error) {
-	return c.ClusterDboxMigrationStatusWithContext_GET(c.Rest.GetCtx(), WithCapacity)
+// Params:
+//   - with_capacity: The flag to show the migration status with capacity
+func (c *Cluster) ClusterDboxMigrationStatus_GET(params core.Params) (core.Record, error) {
+	return c.ClusterDboxMigrationStatusWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterDboxMigrationUpdateSourceTargetWithContext_GET
@@ -371,6 +453,10 @@ func (c *Cluster) ClusterDboxMigrationUpdateSourceTarget_GET() (core.Record, err
 // method: PATCH
 // url: /clusters/dbox_migration_update_source_target/
 // summary: Dbox migration update source target
+//
+// Body:
+//   - source_ids: Source DBox ids
+//   - target_ids: Target DBox ids
 func (c *Cluster) ClusterDboxMigrationUpdateSourceTargetWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/clusters/dbox_migration_update_source_target/"
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
@@ -384,6 +470,10 @@ func (c *Cluster) ClusterDboxMigrationUpdateSourceTargetWithContext_PATCH(ctx co
 // method: PATCH
 // url: /clusters/dbox_migration_update_source_target/
 // summary: Dbox migration update source target
+//
+// Body:
+//   - source_ids: Source DBox ids
+//   - target_ids: Target DBox ids
 func (c *Cluster) ClusterDboxMigrationUpdateSourceTarget_PATCH(body core.Params) (core.Record, error) {
 	return c.ClusterDboxMigrationUpdateSourceTargetWithContext_PATCH(c.Rest.GetCtx(), body)
 }
@@ -434,6 +524,12 @@ func (c *Cluster) ClusterDboxMigrationValidate_GET() (core.Record, error) {
 // method: POST
 // url: /clusters/dbox_migration/
 // summary: Dbox migration
+//
+// Body:
+//   - allow_unhealthy_raid: Allow unhealthy RAID state
+//   - dbox_ids: Source DBox ids
+//   - nvram_section_layout: Optional NVRAM section layout for DBox expansion
+//   - use_spare_mem: Use spare mem
 func (c *Cluster) ClusterDboxMigrationWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/clusters/dbox_migration/"
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
@@ -447,6 +543,12 @@ func (c *Cluster) ClusterDboxMigrationWithContext_POST(ctx context.Context, body
 // method: POST
 // url: /clusters/dbox_migration/
 // summary: Dbox migration
+//
+// Body:
+//   - allow_unhealthy_raid: Allow unhealthy RAID state
+//   - dbox_ids: Source DBox ids
+//   - nvram_section_layout: Optional NVRAM section layout for DBox expansion
+//   - use_spare_mem: Use spare mem
 func (c *Cluster) ClusterDboxMigration_POST(body core.Params) (core.Record, error) {
 	return c.ClusterDboxMigrationWithContext_POST(c.Rest.GetCtx(), body)
 }
@@ -456,12 +558,10 @@ func (c *Cluster) ClusterDboxMigration_POST(body core.Params) (core.Record, erro
 // url: /clusters/dboxes_total_capacity/
 // summary: DBoxes total capacity
 //
-// Parameters:
-//   - Ids (query): DBox ids separated by comma
-func (c *Cluster) ClusterDboxesTotalCapacityWithContext_GET(ctx context.Context, Ids string) (core.Record, error) {
+// Params:
+//   - ids: DBox ids separated by comma
+func (c *Cluster) ClusterDboxesTotalCapacityWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/dboxes_total_capacity/"
-	params := core.Params{}
-	params["ids"] = Ids
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -474,10 +574,10 @@ func (c *Cluster) ClusterDboxesTotalCapacityWithContext_GET(ctx context.Context,
 // url: /clusters/dboxes_total_capacity/
 // summary: DBoxes total capacity
 //
-// Parameters:
-//   - Ids (query): DBox ids separated by comma
-func (c *Cluster) ClusterDboxesTotalCapacity_GET(Ids string) (core.Record, error) {
-	return c.ClusterDboxesTotalCapacityWithContext_GET(c.Rest.GetCtx(), Ids)
+// Params:
+//   - ids: DBox ids separated by comma
+func (c *Cluster) ClusterDboxesTotalCapacity_GET(params core.Params) (core.Record, error) {
+	return c.ClusterDboxesTotalCapacityWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterDeleteFolderWithContext_DELETE
@@ -485,16 +585,11 @@ func (c *Cluster) ClusterDboxesTotalCapacity_GET(Ids string) (core.Record, error
 // url: /clusters/{id}/delete_folder/
 // summary: Delete Cluster Folder
 //
-// Parameters:
-//   - path (body): Folder path to delete
-//   - tenantId (body): Tenant ID
-func (c *Cluster) ClusterDeleteFolderWithContext_DELETE(ctx context.Context, id any, path string, tenantId int64) error {
+// Body:
+//   - path: Folder path to delete
+//   - tenant_id: Tenant ID
+func (c *Cluster) ClusterDeleteFolderWithContext_DELETE(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "delete_folder")
-	body := core.Params{}
-	body["path"] = path
-	if tenantId != 0 {
-		body["tenant_id"] = tenantId
-	}
 	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, body)
 	return err
 
@@ -505,11 +600,11 @@ func (c *Cluster) ClusterDeleteFolderWithContext_DELETE(ctx context.Context, id 
 // url: /clusters/{id}/delete_folder/
 // summary: Delete Cluster Folder
 //
-// Parameters:
-//   - path (body): Folder path to delete
-//   - tenantId (body): Tenant ID
-func (c *Cluster) ClusterDeleteFolder_DELETE(id any, path string, tenantId int64) error {
-	return c.ClusterDeleteFolderWithContext_DELETE(c.Rest.GetCtx(), id, path, tenantId)
+// Body:
+//   - path: Folder path to delete
+//   - tenant_id: Tenant ID
+func (c *Cluster) ClusterDeleteFolder_DELETE(id any, body core.Params) error {
+	return c.ClusterDeleteFolderWithContext_DELETE(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterExpandWithContext_POST
@@ -517,23 +612,15 @@ func (c *Cluster) ClusterDeleteFolder_DELETE(id any, path string, tenantId int64
 // url: /clusters/{id}/expand/
 // summary: Expand Cluster
 //
+// Body:
+//   - devices_mock: Devices Mock for NVRAM section layout (only for loopback)
+//   - nvram_section_layout: NVRAM section layout
+//   - skip_layout_validation: skip layout validation
+//
 // Parameters:
-//   - devicesMock (body): Devices Mock for NVRAM section layout (only for loopback)
-//   - nvramSectionLayout (body): NVRAM section layout
-//   - skipLayoutValidation (body): skip layout validation
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, devicesMock string, nvramSectionLayout string, skipLayoutValidation string, waitTimeout time.Duration) (*AsyncResult, error) {
+func (c *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "expand")
-	body := core.Params{}
-	if devicesMock != "" {
-		body["devices_mock"] = devicesMock
-	}
-	if nvramSectionLayout != "" {
-		body["nvram_section_layout"] = nvramSectionLayout
-	}
-	if skipLayoutValidation != "" {
-		body["skip_layout_validation"] = skipLayoutValidation
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -548,13 +635,15 @@ func (c *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, dev
 // url: /clusters/{id}/expand/
 // summary: Expand Cluster
 //
+// Body:
+//   - devices_mock: Devices Mock for NVRAM section layout (only for loopback)
+//   - nvram_section_layout: NVRAM section layout
+//   - skip_layout_validation: skip layout validation
+//
 // Parameters:
-//   - devicesMock (body): Devices Mock for NVRAM section layout (only for loopback)
-//   - nvramSectionLayout (body): NVRAM section layout
-//   - skipLayoutValidation (body): skip layout validation
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterExpand_POST(id any, devicesMock string, nvramSectionLayout string, skipLayoutValidation string, waitTimeout time.Duration) (*AsyncResult, error) {
-	return c.ClusterExpandWithContext_POST(c.Rest.GetCtx(), id, devicesMock, nvramSectionLayout, skipLayoutValidation, waitTimeout)
+func (c *Cluster) ClusterExpand_POST(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.ClusterExpandWithContext_POST(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // ClusterGenerateUnfreezeTokenWithContext_POST
@@ -562,12 +651,10 @@ func (c *Cluster) ClusterExpand_POST(id any, devicesMock string, nvramSectionLay
 // url: /clusters/{id}/generate_unfreeze_token/
 // summary: Generate Token to Unlock Indestructibility
 //
-// Parameters:
-//   - password (body): Unfreeze password
-func (c *Cluster) ClusterGenerateUnfreezeTokenWithContext_POST(ctx context.Context, id any, password string) (core.Record, error) {
+// Body:
+//   - password: Unfreeze password
+func (c *Cluster) ClusterGenerateUnfreezeTokenWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "generate_unfreeze_token")
-	body := core.Params{}
-	body["password"] = password
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -580,10 +667,10 @@ func (c *Cluster) ClusterGenerateUnfreezeTokenWithContext_POST(ctx context.Conte
 // url: /clusters/{id}/generate_unfreeze_token/
 // summary: Generate Token to Unlock Indestructibility
 //
-// Parameters:
-//   - password (body): Unfreeze password
-func (c *Cluster) ClusterGenerateUnfreezeToken_POST(id any, password string) (core.Record, error) {
-	return c.ClusterGenerateUnfreezeTokenWithContext_POST(c.Rest.GetCtx(), id, password)
+// Body:
+//   - password: Unfreeze password
+func (c *Cluster) ClusterGenerateUnfreezeToken_POST(id any, body core.Params) (core.Record, error) {
+	return c.ClusterGenerateUnfreezeTokenWithContext_POST(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterGetShardExpansionStatusWithContext_GET
@@ -612,14 +699,10 @@ func (c *Cluster) ClusterGetShardExpansionStatus_GET() (core.Record, error) {
 // url: /clusters/get_snapshoted_paths/
 // summary: Return Paths that have Snapshots
 //
-// Parameters:
-//   - TenantId (query): Tenant ID
-func (c *Cluster) ClusterGetSnapshotedPathsWithContext_GET(ctx context.Context, TenantId string) (core.Record, error) {
+// Params:
+//   - tenant_id: Tenant ID
+func (c *Cluster) ClusterGetSnapshotedPathsWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/get_snapshoted_paths/"
-	params := core.Params{}
-	if TenantId != "" {
-		params["tenant_id"] = TenantId
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -632,10 +715,10 @@ func (c *Cluster) ClusterGetSnapshotedPathsWithContext_GET(ctx context.Context, 
 // url: /clusters/get_snapshoted_paths/
 // summary: Return Paths that have Snapshots
 //
-// Parameters:
-//   - TenantId (query): Tenant ID
-func (c *Cluster) ClusterGetSnapshotedPaths_GET(TenantId string) (core.Record, error) {
-	return c.ClusterGetSnapshotedPathsWithContext_GET(c.Rest.GetCtx(), TenantId)
+// Params:
+//   - tenant_id: Tenant ID
+func (c *Cluster) ClusterGetSnapshotedPaths_GET(params core.Params) (core.Record, error) {
+	return c.ClusterGetSnapshotedPathsWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterListCloneSnapshotedPathsRemoteWithContext_GET
@@ -643,18 +726,12 @@ func (c *Cluster) ClusterGetSnapshotedPaths_GET(TenantId string) (core.Record, e
 // url: /clusters/list_clone_snapshoted_paths_remote/
 // summary: List snapshots on a remote replication peer
 //
-// Parameters:
-//   - RemoteTargetGuid (query): remote target GUID
-//   - Handle (query): Provide the handle from a GET /cluster/list_snapshoted_paths_remote/ response
-//   - StartSnapshotId (query): Start snapshot ID
-func (c *Cluster) ClusterListCloneSnapshotedPathsRemoteWithContext_GET(ctx context.Context, RemoteTargetGuid string, Handle string, StartSnapshotId string) (core.Record, error) {
+// Params:
+//   - remote_target_guid: remote target GUID
+//   - handle: Provide the handle from a GET /cluster/list_snapshoted_paths_remote/ response
+//   - start_snapshot_id: Start snapshot ID
+func (c *Cluster) ClusterListCloneSnapshotedPathsRemoteWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/list_clone_snapshoted_paths_remote/"
-	params := core.Params{}
-	params["remote_target_guid"] = RemoteTargetGuid
-	params["handle"] = Handle
-	if StartSnapshotId != "" {
-		params["start_snapshot_id"] = StartSnapshotId
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -667,12 +744,12 @@ func (c *Cluster) ClusterListCloneSnapshotedPathsRemoteWithContext_GET(ctx conte
 // url: /clusters/list_clone_snapshoted_paths_remote/
 // summary: List snapshots on a remote replication peer
 //
-// Parameters:
-//   - RemoteTargetGuid (query): remote target GUID
-//   - Handle (query): Provide the handle from a GET /cluster/list_snapshoted_paths_remote/ response
-//   - StartSnapshotId (query): Start snapshot ID
-func (c *Cluster) ClusterListCloneSnapshotedPathsRemote_GET(RemoteTargetGuid string, Handle string, StartSnapshotId string) (core.Record, error) {
-	return c.ClusterListCloneSnapshotedPathsRemoteWithContext_GET(c.Rest.GetCtx(), RemoteTargetGuid, Handle, StartSnapshotId)
+// Params:
+//   - remote_target_guid: remote target GUID
+//   - handle: Provide the handle from a GET /cluster/list_snapshoted_paths_remote/ response
+//   - start_snapshot_id: Start snapshot ID
+func (c *Cluster) ClusterListCloneSnapshotedPathsRemote_GET(params core.Params) (core.Record, error) {
+	return c.ClusterListCloneSnapshotedPathsRemoteWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterListOpenProtocolHandlesWithContext_GET
@@ -680,16 +757,11 @@ func (c *Cluster) ClusterListCloneSnapshotedPathsRemote_GET(RemoteTargetGuid str
 // url: /clusters/list_open_protocol_handles/
 // summary: Query open protocol filehandles
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - TenantGuid (query): Tenant GUID
-func (c *Cluster) ClusterListOpenProtocolHandlesWithContext_GET(ctx context.Context, FilePath string, TenantGuid string) (core.Record, error) {
+// Params:
+//   - file_path: File path
+//   - tenant_guid: Tenant GUID
+func (c *Cluster) ClusterListOpenProtocolHandlesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/list_open_protocol_handles/"
-	params := core.Params{}
-	params["file_path"] = FilePath
-	if TenantGuid != "" {
-		params["tenant_guid"] = TenantGuid
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -702,11 +774,11 @@ func (c *Cluster) ClusterListOpenProtocolHandlesWithContext_GET(ctx context.Cont
 // url: /clusters/list_open_protocol_handles/
 // summary: Query open protocol filehandles
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - TenantGuid (query): Tenant GUID
-func (c *Cluster) ClusterListOpenProtocolHandles_GET(FilePath string, TenantGuid string) (core.Record, error) {
-	return c.ClusterListOpenProtocolHandlesWithContext_GET(c.Rest.GetCtx(), FilePath, TenantGuid)
+// Params:
+//   - file_path: File path
+//   - tenant_guid: Tenant GUID
+func (c *Cluster) ClusterListOpenProtocolHandles_GET(params core.Params) (core.Record, error) {
+	return c.ClusterListOpenProtocolHandlesWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterListPrefetchPathsInfoWithContext_GET
@@ -735,16 +807,11 @@ func (c *Cluster) ClusterListPrefetchPathsInfo_GET() (core.Record, error) {
 // url: /clusters/list_smb_client_connections/
 // summary: Query SMB client connections
 //
-// Parameters:
-//   - ClientIp (query): Client IP
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-func (c *Cluster) ClusterListSmbClientConnectionsWithContext_GET(ctx context.Context, ClientIp string, TenantId int64) (core.Record, error) {
+// Params:
+//   - client_ip: Client IP
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+func (c *Cluster) ClusterListSmbClientConnectionsWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/list_smb_client_connections/"
-	params := core.Params{}
-	params["client_ip"] = ClientIp
-	if TenantId != 0 {
-		params["tenant_id"] = TenantId
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -757,11 +824,11 @@ func (c *Cluster) ClusterListSmbClientConnectionsWithContext_GET(ctx context.Con
 // url: /clusters/list_smb_client_connections/
 // summary: Query SMB client connections
 //
-// Parameters:
-//   - ClientIp (query): Client IP
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-func (c *Cluster) ClusterListSmbClientConnections_GET(ClientIp string, TenantId int64) (core.Record, error) {
-	return c.ClusterListSmbClientConnectionsWithContext_GET(c.Rest.GetCtx(), ClientIp, TenantId)
+// Params:
+//   - client_ip: Client IP
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+func (c *Cluster) ClusterListSmbClientConnections_GET(params core.Params) (core.Record, error) {
+	return c.ClusterListSmbClientConnectionsWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterListSmbOpenFilesWithContext_GET
@@ -769,16 +836,11 @@ func (c *Cluster) ClusterListSmbClientConnections_GET(ClientIp string, TenantId 
 // url: /clusters/list_smb_open_files/
 // summary: Query SMB open files
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - TenantGuid (query): Tenant GUID
-func (c *Cluster) ClusterListSmbOpenFilesWithContext_GET(ctx context.Context, FilePath string, TenantGuid string) (core.Record, error) {
+// Params:
+//   - file_path: File path
+//   - tenant_guid: Tenant GUID
+func (c *Cluster) ClusterListSmbOpenFilesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/list_smb_open_files/"
-	params := core.Params{}
-	params["file_path"] = FilePath
-	if TenantGuid != "" {
-		params["tenant_guid"] = TenantGuid
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -791,11 +853,11 @@ func (c *Cluster) ClusterListSmbOpenFilesWithContext_GET(ctx context.Context, Fi
 // url: /clusters/list_smb_open_files/
 // summary: Query SMB open files
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - TenantGuid (query): Tenant GUID
-func (c *Cluster) ClusterListSmbOpenFiles_GET(FilePath string, TenantGuid string) (core.Record, error) {
-	return c.ClusterListSmbOpenFilesWithContext_GET(c.Rest.GetCtx(), FilePath, TenantGuid)
+// Params:
+//   - file_path: File path
+//   - tenant_guid: Tenant GUID
+func (c *Cluster) ClusterListSmbOpenFiles_GET(params core.Params) (core.Record, error) {
+	return c.ClusterListSmbOpenFilesWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterListSnapshotedPathsRemoteWithContext_GET
@@ -803,14 +865,11 @@ func (c *Cluster) ClusterListSmbOpenFiles_GET(FilePath string, TenantGuid string
 // url: /clusters/list_snapshoted_paths_remote/
 // summary: List snapshoted paths on remote target
 //
-// Parameters:
-//   - RemoteTargetGuid (query): The GUID of the remote target, which you can obtain from a GET /replicationtargets/ request
-//   - RemoteTenantGuid (query): The GUID of the remote tenant
-func (c *Cluster) ClusterListSnapshotedPathsRemoteWithContext_GET(ctx context.Context, RemoteTargetGuid string, RemoteTenantGuid string) (core.Record, error) {
+// Params:
+//   - remote_target_guid: The GUID of the remote target, which you can obtain from a GET /replicationtargets/ request
+//   - remote_tenant_guid: The GUID of the remote tenant
+func (c *Cluster) ClusterListSnapshotedPathsRemoteWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/list_snapshoted_paths_remote/"
-	params := core.Params{}
-	params["remote_target_guid"] = RemoteTargetGuid
-	params["remote_tenant_guid"] = RemoteTenantGuid
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -823,11 +882,11 @@ func (c *Cluster) ClusterListSnapshotedPathsRemoteWithContext_GET(ctx context.Co
 // url: /clusters/list_snapshoted_paths_remote/
 // summary: List snapshoted paths on remote target
 //
-// Parameters:
-//   - RemoteTargetGuid (query): The GUID of the remote target, which you can obtain from a GET /replicationtargets/ request
-//   - RemoteTenantGuid (query): The GUID of the remote tenant
-func (c *Cluster) ClusterListSnapshotedPathsRemote_GET(RemoteTargetGuid string, RemoteTenantGuid string) (core.Record, error) {
-	return c.ClusterListSnapshotedPathsRemoteWithContext_GET(c.Rest.GetCtx(), RemoteTargetGuid, RemoteTenantGuid)
+// Params:
+//   - remote_target_guid: The GUID of the remote target, which you can obtain from a GET /replicationtargets/ request
+//   - remote_tenant_guid: The GUID of the remote tenant
+func (c *Cluster) ClusterListSnapshotedPathsRemote_GET(params core.Params) (core.Record, error) {
+	return c.ClusterListSnapshotedPathsRemoteWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterListTenantsRemoteWithContext_GET
@@ -835,12 +894,10 @@ func (c *Cluster) ClusterListSnapshotedPathsRemote_GET(RemoteTargetGuid string, 
 // url: /clusters/list_tenants_remote/
 // summary: List tenants on remote target
 //
-// Parameters:
-//   - RemoteTargetGuid (query): remote target GUID
-func (c *Cluster) ClusterListTenantsRemoteWithContext_GET(ctx context.Context, RemoteTargetGuid string) (core.Record, error) {
+// Params:
+//   - remote_target_guid: remote target GUID
+func (c *Cluster) ClusterListTenantsRemoteWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/clusters/list_tenants_remote/"
-	params := core.Params{}
-	params["remote_target_guid"] = RemoteTargetGuid
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -853,16 +910,24 @@ func (c *Cluster) ClusterListTenantsRemoteWithContext_GET(ctx context.Context, R
 // url: /clusters/list_tenants_remote/
 // summary: List tenants on remote target
 //
-// Parameters:
-//   - RemoteTargetGuid (query): remote target GUID
-func (c *Cluster) ClusterListTenantsRemote_GET(RemoteTargetGuid string) (core.Record, error) {
-	return c.ClusterListTenantsRemoteWithContext_GET(c.Rest.GetCtx(), RemoteTargetGuid)
+// Params:
+//   - remote_target_guid: remote target GUID
+func (c *Cluster) ClusterListTenantsRemote_GET(params core.Params) (core.Record, error) {
+	return c.ClusterListTenantsRemoteWithContext_GET(c.Rest.GetCtx(), params)
 }
 
 // ClusterLocksWithContext_POST
 // method: POST
 // url: /clusters/{id}/locks/
 // summary: List NLM Locks
+//
+// Body:
+//   - direction: Pagination direction.
+//   - lock_type: Lock type. Specify if unlock_type is SINGLE.
+//   - path: The full path to a locked file, formed as: VIEW_PATH/FILE_PATH, where VIEW_PATH is the VAST Cluster view path, and FILE_PATH is the client path to a locked file, relative to the mount point.
+//   - tenant_id
+//   - unlock_id: Unlock ID. Specify if unlock_type is SINGLE.
+//   - unlock_type: The type of unlock operation to perform. 'SINGLE' unlocks a single specified lock, 'ALL' unlocks all locks.
 func (c *Cluster) ClusterLocksWithContext_POST(ctx context.Context, id any, body core.Params) (core.RecordSet, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "locks")
 	result, err := core.Request[core.RecordSet](ctx, c, http.MethodPost, resourcePath, nil, body)
@@ -877,6 +942,14 @@ func (c *Cluster) ClusterLocksWithContext_POST(ctx context.Context, id any, body
 // method: POST
 // url: /clusters/{id}/locks/
 // summary: List NLM Locks
+//
+// Body:
+//   - direction: Pagination direction.
+//   - lock_type: Lock type. Specify if unlock_type is SINGLE.
+//   - path: The full path to a locked file, formed as: VIEW_PATH/FILE_PATH, where VIEW_PATH is the VAST Cluster view path, and FILE_PATH is the client path to a locked file, relative to the mount point.
+//   - tenant_id
+//   - unlock_id: Unlock ID. Specify if unlock_type is SINGLE.
+//   - unlock_type: The type of unlock operation to perform. 'SINGLE' unlocks a single specified lock, 'ALL' unlocks all locks.
 func (c *Cluster) ClusterLocks_POST(id any, body core.Params) (core.RecordSet, error) {
 	return c.ClusterLocksWithContext_POST(c.Rest.GetCtx(), id, body)
 }
@@ -885,6 +958,15 @@ func (c *Cluster) ClusterLocks_POST(id any, body core.Params) (core.RecordSet, e
 // method: POST
 // url: /clusters/{id}/notify_new_version/
 // summary: Notify of New Version Available for Download
+//
+// Body:
+//   - bmc_fw_version: bmc_fw_version
+//   - build: build
+//   - nvram_version: nvram_version
+//   - os_version: os_version
+//   - s3_url: link to download new version
+//   - ssd_version: ssd_version
+//   - sys_version: sys_version
 func (c *Cluster) ClusterNotifyNewVersionWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "notify_new_version")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
@@ -898,6 +980,15 @@ func (c *Cluster) ClusterNotifyNewVersionWithContext_POST(ctx context.Context, i
 // method: POST
 // url: /clusters/{id}/notify_new_version/
 // summary: Notify of New Version Available for Download
+//
+// Body:
+//   - bmc_fw_version: bmc_fw_version
+//   - build: build
+//   - nvram_version: nvram_version
+//   - os_version: os_version
+//   - s3_url: link to download new version
+//   - ssd_version: ssd_version
+//   - sys_version: sys_version
 func (c *Cluster) ClusterNotifyNewVersion_POST(id any, body core.Params) (core.Record, error) {
 	return c.ClusterNotifyNewVersionWithContext_POST(c.Rest.GetCtx(), id, body)
 }
@@ -928,11 +1019,18 @@ func (c *Cluster) ClusterPreUpgradeValidationExceptions_GET(id any) (core.Record
 // url: /clusters/{id}/release_recursive_locks/
 // summary: Deletes NLM Locks Recursively
 //
+// Body:
+//   - lock_type: Lock type. Specify if unlock_type is SINGLE.
+//   - path: The full path to a locked file, formed as: VIEW_PATH/FILE_PATH, where VIEW_PATH is the VAST Cluster view path, and FILE_PATH is the client path to a locked file, relative to the mount point.
+//   - tenant_id
+//   - unlock_id: Unlock ID. Specify if unlock_type is SINGLE.
+//   - unlock_type: The type of unlock operation to perform. 'SINGLE' unlocks a single specified lock, 'ALL' unlocks all locks.
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Context, id any, waitTimeout time.Duration) (*AsyncResult, error) {
+func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "release_recursive_locks")
-	result, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
@@ -946,16 +1044,27 @@ func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Con
 // url: /clusters/{id}/release_recursive_locks/
 // summary: Deletes NLM Locks Recursively
 //
+// Body:
+//   - lock_type: Lock type. Specify if unlock_type is SINGLE.
+//   - path: The full path to a locked file, formed as: VIEW_PATH/FILE_PATH, where VIEW_PATH is the VAST Cluster view path, and FILE_PATH is the client path to a locked file, relative to the mount point.
+//   - tenant_id
+//   - unlock_id: Unlock ID. Specify if unlock_type is SINGLE.
+//   - unlock_type: The type of unlock operation to perform. 'SINGLE' unlocks a single specified lock, 'ALL' unlocks all locks.
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterReleaseRecursiveLocks_DELETE(id any, waitTimeout time.Duration) (*AsyncResult, error) {
-	return c.ClusterReleaseRecursiveLocksWithContext_DELETE(c.Rest.GetCtx(), id, waitTimeout)
+func (c *Cluster) ClusterReleaseRecursiveLocks_DELETE(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.ClusterReleaseRecursiveLocksWithContext_DELETE(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // ClusterResumeDeployWithContext_PATCH
 // method: PATCH
 // url: /clusters/{id}/resume_deploy/
 // summary: Resume failed deploy
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *Cluster) ClusterResumeDeployWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "resume_deploy")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
@@ -969,6 +1078,10 @@ func (c *Cluster) ClusterResumeDeployWithContext_PATCH(ctx context.Context, id a
 // method: PATCH
 // url: /clusters/{id}/resume_deploy/
 // summary: Resume failed deploy
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *Cluster) ClusterResumeDeploy_PATCH(id any, body core.Params) (core.Record, error) {
 	return c.ClusterResumeDeployWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
@@ -977,6 +1090,10 @@ func (c *Cluster) ClusterResumeDeploy_PATCH(id any, body core.Params) (core.Reco
 // method: POST
 // url: /clusters/rotate_master_encryption_group_key/
 // summary: Rotate master encryption group key.
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *Cluster) ClusterRotateMasterEncryptionGroupKeyWithContext_POST(ctx context.Context, body core.Params) error {
 	resourcePath := "/clusters/rotate_master_encryption_group_key/"
 	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
@@ -988,6 +1105,10 @@ func (c *Cluster) ClusterRotateMasterEncryptionGroupKeyWithContext_POST(ctx cont
 // method: POST
 // url: /clusters/rotate_master_encryption_group_key/
 // summary: Rotate master encryption group key.
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *Cluster) ClusterRotateMasterEncryptionGroupKey_POST(body core.Params) error {
 	return c.ClusterRotateMasterEncryptionGroupKeyWithContext_POST(c.Rest.GetCtx(), body)
 }
@@ -997,20 +1118,12 @@ func (c *Cluster) ClusterRotateMasterEncryptionGroupKey_POST(body core.Params) e
 // url: /clusters/{id}/rpc/
 // summary: This endpoint runs cluster rpc.
 //
-// Parameters:
-//   - rpc (body): rpc name to execute
-//   - moduleType (body): Module type for the commander connection
-//   - params (body): params for rpc call
-func (c *Cluster) ClusterRpcWithContext_PATCH(ctx context.Context, id any, rpc string, moduleType string, params string) (core.Record, error) {
+// Body:
+//   - module_type: Module type for the commander connection
+//   - params: params for rpc call
+//   - rpc: rpc name to execute
+func (c *Cluster) ClusterRpcWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "rpc")
-	body := core.Params{}
-	body["rpc"] = rpc
-	if moduleType != "" {
-		body["module_type"] = moduleType
-	}
-	if params != "" {
-		body["params"] = params
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -1023,18 +1136,25 @@ func (c *Cluster) ClusterRpcWithContext_PATCH(ctx context.Context, id any, rpc s
 // url: /clusters/{id}/rpc/
 // summary: This endpoint runs cluster rpc.
 //
-// Parameters:
-//   - rpc (body): rpc name to execute
-//   - moduleType (body): Module type for the commander connection
-//   - params (body): params for rpc call
-func (c *Cluster) ClusterRpc_PATCH(id any, rpc string, moduleType string, params string) (core.Record, error) {
-	return c.ClusterRpcWithContext_PATCH(c.Rest.GetCtx(), id, rpc, moduleType, params)
+// Body:
+//   - module_type: Module type for the commander connection
+//   - params: params for rpc call
+//   - rpc: rpc name to execute
+func (c *Cluster) ClusterRpc_PATCH(id any, body core.Params) (core.Record, error) {
+	return c.ClusterRpcWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterRunHardwareCheckWithContext_PATCH
 // method: PATCH
 // url: /clusters/run_hardware_check/
 // summary: Run Hardware Validations
+//
+// Body:
+//   - bmc_upgrade: is bmc upgrade
+//   - force: force
+//   - skip_hw_check: Skip hardware related checks
+//   - skip_os_upgrade: skip os upgrade related checks
+//   - skip_sw_validations: Skip SW validations
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -1054,6 +1174,13 @@ func (c *Cluster) ClusterRunHardwareCheckWithContext_PATCH(ctx context.Context, 
 // url: /clusters/run_hardware_check/
 // summary: Run Hardware Validations
 //
+// Body:
+//   - bmc_upgrade: is bmc upgrade
+//   - force: force
+//   - skip_hw_check: Skip hardware related checks
+//   - skip_os_upgrade: skip os upgrade related checks
+//   - skip_sw_validations: Skip SW validations
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cluster) ClusterRunHardwareCheck_PATCH(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -1064,6 +1191,17 @@ func (c *Cluster) ClusterRunHardwareCheck_PATCH(body core.Params, waitTimeout ti
 // method: POST
 // url: /clusters/{id}/set_certificates/
 // summary: Update EKM certificates
+//
+// Body:
+//   - ekm_auth_domain: Auth domain (Thales)
+//   - ekm_bypass_validation: Bypass key and cert validation (VMS)
+//   - ekm_ca_certificate: EKM CA certificate
+//   - ekm_certificate: EKM certificate
+//   - ekm_domain: Domain (Thales)
+//   - ekm_private_key: EKM private key
+//   - ekm_proxy_address: Thales EKM proxy address: https://proxy-address:port
+//   - ekm_servers: List of EKM servers: 10.0.0.1:5696,11.0.0.1:5697
+//   - encryption_type: Encryption type
 func (c *Cluster) ClusterSetCertificatesWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "set_certificates")
 	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
@@ -1075,6 +1213,17 @@ func (c *Cluster) ClusterSetCertificatesWithContext_POST(ctx context.Context, id
 // method: POST
 // url: /clusters/{id}/set_certificates/
 // summary: Update EKM certificates
+//
+// Body:
+//   - ekm_auth_domain: Auth domain (Thales)
+//   - ekm_bypass_validation: Bypass key and cert validation (VMS)
+//   - ekm_ca_certificate: EKM CA certificate
+//   - ekm_certificate: EKM certificate
+//   - ekm_domain: Domain (Thales)
+//   - ekm_private_key: EKM private key
+//   - ekm_proxy_address: Thales EKM proxy address: https://proxy-address:port
+//   - ekm_servers: List of EKM servers: 10.0.0.1:5696,11.0.0.1:5697
+//   - encryption_type: Encryption type
 func (c *Cluster) ClusterSetCertificates_POST(id any, body core.Params) error {
 	return c.ClusterSetCertificatesWithContext_POST(c.Rest.GetCtx(), id, body)
 }
@@ -1084,12 +1233,10 @@ func (c *Cluster) ClusterSetCertificates_POST(id any, body core.Params) error {
 // url: /clusters/{id}/set_drive_fw_upgrade/
 // summary: Set true/false to upgrade non-active drives fw
 //
-// Parameters:
-//   - enabled (body): Enable/disable flag
-func (c *Cluster) ClusterSetDriveFwUpgradeWithContext_POST(ctx context.Context, id any, enabled bool) (core.Record, error) {
+// Body:
+//   - enabled: Enable/disable flag
+func (c *Cluster) ClusterSetDriveFwUpgradeWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "set_drive_fw_upgrade")
-	body := core.Params{}
-	body["enabled"] = enabled
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -1102,10 +1249,10 @@ func (c *Cluster) ClusterSetDriveFwUpgradeWithContext_POST(ctx context.Context, 
 // url: /clusters/{id}/set_drive_fw_upgrade/
 // summary: Set true/false to upgrade non-active drives fw
 //
-// Parameters:
-//   - enabled (body): Enable/disable flag
-func (c *Cluster) ClusterSetDriveFwUpgrade_POST(id any, enabled bool) (core.Record, error) {
-	return c.ClusterSetDriveFwUpgradeWithContext_POST(c.Rest.GetCtx(), id, enabled)
+// Body:
+//   - enabled: Enable/disable flag
+func (c *Cluster) ClusterSetDriveFwUpgrade_POST(id any, body core.Params) (core.Record, error) {
+	return c.ClusterSetDriveFwUpgradeWithContext_POST(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterSetPasswordWithContext_PATCH
@@ -1113,15 +1260,14 @@ func (c *Cluster) ClusterSetDriveFwUpgrade_POST(id any, enabled bool) (core.Reco
 // url: /clusters/{id}/set_password/
 // summary: Change Cluster Passwords
 //
+// Body:
+//   - password: The new given password
+//   - username: The given username for password change
+//
 // Parameters:
-//   - password (body): The new given password
-//   - username (body): The given username for password change
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterSetPasswordWithContext_PATCH(ctx context.Context, id any, password string, username string, waitTimeout time.Duration) (*AsyncResult, error) {
+func (c *Cluster) ClusterSetPasswordWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "set_password")
-	body := core.Params{}
-	body["password"] = password
-	body["username"] = username
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -1136,18 +1282,26 @@ func (c *Cluster) ClusterSetPasswordWithContext_PATCH(ctx context.Context, id an
 // url: /clusters/{id}/set_password/
 // summary: Change Cluster Passwords
 //
+// Body:
+//   - password: The new given password
+//   - username: The given username for password change
+//
 // Parameters:
-//   - password (body): The new given password
-//   - username (body): The given username for password change
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterSetPassword_PATCH(id any, password string, username string, waitTimeout time.Duration) (*AsyncResult, error) {
-	return c.ClusterSetPasswordWithContext_PATCH(c.Rest.GetCtx(), id, password, username, waitTimeout)
+func (c *Cluster) ClusterSetPassword_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.ClusterSetPasswordWithContext_PATCH(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // ClusterShardExpandWithContext_POST
 // method: POST
 // url: /clusters/shard_expand/
 // summary: Shard expansion
+//
+// Body:
+//   - dr_shard_count: DR shard count
+//   - dr_wb_shard_count: DR WB shard count
+//   - estore_shard_count: EStore shard count
+//   - force: Force shard expansion. Use if you want to run shard expansion even though shards are denylisted (indicated by MAINTENANCE_DENYLIST_EXISTS in error code when running without 'force').
 func (c *Cluster) ClusterShardExpandWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/clusters/shard_expand/"
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
@@ -1161,6 +1315,12 @@ func (c *Cluster) ClusterShardExpandWithContext_POST(ctx context.Context, body c
 // method: POST
 // url: /clusters/shard_expand/
 // summary: Shard expansion
+//
+// Body:
+//   - dr_shard_count: DR shard count
+//   - dr_wb_shard_count: DR WB shard count
+//   - estore_shard_count: EStore shard count
+//   - force: Force shard expansion. Use if you want to run shard expansion even though shards are denylisted (indicated by MAINTENANCE_DENYLIST_EXISTS in error code when running without 'force').
 func (c *Cluster) ClusterShardExpand_POST(body core.Params) (core.Record, error) {
 	return c.ClusterShardExpandWithContext_POST(c.Rest.GetCtx(), body)
 }
@@ -1169,6 +1329,10 @@ func (c *Cluster) ClusterShardExpand_POST(body core.Params) (core.Record, error)
 // method: POST
 // url: /clusters/{id}/stop_upgrade/
 // summary: Stop Running Upgrade
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -1188,6 +1352,10 @@ func (c *Cluster) ClusterStopUpgradeWithContext_POST(ctx context.Context, id any
 // url: /clusters/{id}/stop_upgrade/
 // summary: Stop Running Upgrade
 //
+// Body:
+//
+//	< not declared in schema >
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cluster) ClusterStopUpgrade_POST(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -1199,12 +1367,10 @@ func (c *Cluster) ClusterStopUpgrade_POST(id any, body core.Params, waitTimeout 
 // url: /clusters/{id}/system_settings/
 // summary: Set Cluster System Settings
 //
-// Parameters:
-//   - settings (body): system settings to modify
-func (c *Cluster) ClusterSystemSettingsWithContext_PATCH(ctx context.Context, id any, settings string) error {
+// Body:
+//   - settings: system settings to modify
+func (c *Cluster) ClusterSystemSettingsWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "system_settings")
-	body := core.Params{}
-	body["settings"] = settings
 	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -1215,10 +1381,10 @@ func (c *Cluster) ClusterSystemSettingsWithContext_PATCH(ctx context.Context, id
 // url: /clusters/{id}/system_settings/
 // summary: Set Cluster System Settings
 //
-// Parameters:
-//   - settings (body): system settings to modify
-func (c *Cluster) ClusterSystemSettings_PATCH(id any, settings string) error {
-	return c.ClusterSystemSettingsWithContext_PATCH(c.Rest.GetCtx(), id, settings)
+// Body:
+//   - settings: system settings to modify
+func (c *Cluster) ClusterSystemSettings_PATCH(id any, body core.Params) error {
+	return c.ClusterSystemSettingsWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterUnfreezeWithContext_POST
@@ -1226,12 +1392,10 @@ func (c *Cluster) ClusterSystemSettings_PATCH(id any, settings string) error {
 // url: /clusters/{id}/unfreeze/
 // summary: Unfreeze Cluster
 //
-// Parameters:
-//   - token (body): Token
-func (c *Cluster) ClusterUnfreezeWithContext_POST(ctx context.Context, id any, token string) error {
+// Body:
+//   - token: Token
+func (c *Cluster) ClusterUnfreezeWithContext_POST(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "unfreeze")
-	body := core.Params{}
-	body["token"] = token
 	_, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	return err
 
@@ -1242,10 +1406,10 @@ func (c *Cluster) ClusterUnfreezeWithContext_POST(ctx context.Context, id any, t
 // url: /clusters/{id}/unfreeze/
 // summary: Unfreeze Cluster
 //
-// Parameters:
-//   - token (body): Token
-func (c *Cluster) ClusterUnfreeze_POST(id any, token string) error {
-	return c.ClusterUnfreezeWithContext_POST(c.Rest.GetCtx(), id, token)
+// Body:
+//   - token: Token
+func (c *Cluster) ClusterUnfreeze_POST(id any, body core.Params) error {
+	return c.ClusterUnfreezeWithContext_POST(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterUpgradeOptaneWithContext_POST
@@ -1253,15 +1417,13 @@ func (c *Cluster) ClusterUnfreeze_POST(id any, token string) error {
 // url: /clusters/{id}/upgrade_optane/
 // summary: Upgrade Optane NVRAM
 //
+// Body:
+//   - force: Force upgrade regardless of version
+//
 // Parameters:
-//   - force (body): Force upgrade regardless of version
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterUpgradeOptaneWithContext_POST(ctx context.Context, id any, force bool, waitTimeout time.Duration) (*AsyncResult, error) {
+func (c *Cluster) ClusterUpgradeOptaneWithContext_POST(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "upgrade_optane")
-	body := core.Params{}
-	if force != false {
-		body["force"] = force
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -1276,11 +1438,13 @@ func (c *Cluster) ClusterUpgradeOptaneWithContext_POST(ctx context.Context, id a
 // url: /clusters/{id}/upgrade_optane/
 // summary: Upgrade Optane NVRAM
 //
+// Body:
+//   - force: Force upgrade regardless of version
+//
 // Parameters:
-//   - force (body): Force upgrade regardless of version
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterUpgradeOptane_POST(id any, force bool, waitTimeout time.Duration) (*AsyncResult, error) {
-	return c.ClusterUpgradeOptaneWithContext_POST(c.Rest.GetCtx(), id, force, waitTimeout)
+func (c *Cluster) ClusterUpgradeOptane_POST(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.ClusterUpgradeOptaneWithContext_POST(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // ClusterUpgradeSsdWithContext_POST
@@ -1288,15 +1452,13 @@ func (c *Cluster) ClusterUpgradeOptane_POST(id any, force bool, waitTimeout time
 // url: /clusters/{id}/upgrade_ssd/
 // summary: Upgrade SSD
 //
+// Body:
+//   - force: Forces upgrade regardless of version
+//
 // Parameters:
-//   - force (body): Forces upgrade regardless of version
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterUpgradeSsdWithContext_POST(ctx context.Context, id any, force bool, waitTimeout time.Duration) (*AsyncResult, error) {
+func (c *Cluster) ClusterUpgradeSsdWithContext_POST(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "upgrade_ssd")
-	body := core.Params{}
-	if force != false {
-		body["force"] = force
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -1311,17 +1473,34 @@ func (c *Cluster) ClusterUpgradeSsdWithContext_POST(ctx context.Context, id any,
 // url: /clusters/{id}/upgrade_ssd/
 // summary: Upgrade SSD
 //
+// Body:
+//   - force: Forces upgrade regardless of version
+//
 // Parameters:
-//   - force (body): Forces upgrade regardless of version
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterUpgradeSsd_POST(id any, force bool, waitTimeout time.Duration) (*AsyncResult, error) {
-	return c.ClusterUpgradeSsdWithContext_POST(c.Rest.GetCtx(), id, force, waitTimeout)
+func (c *Cluster) ClusterUpgradeSsd_POST(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.ClusterUpgradeSsdWithContext_POST(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // ClusterUpgradeWithoutFileWithContext_POST
 // method: POST
 // url: /clusters/{id}/upgrade_without_file/
 // summary: Upgrade Cluster from Pre-Uploaded Bundle
+//
+// Body:
+//   - bmc_upgrade: BMC upgrade
+//   - cnodes_batch_size_percentage: Overrides default percentage of CNodes to upgrade in parallel. Max 50
+//   - dnodes_batch_size_percentage: Overrides default percentage of DNodes to upgrade in parallel. Max 37.5. Not relevant during os upgrade
+//   - dpus_batch_size_percentage: Overrides default percentage of DPUs to upgrade in parallel. Max 37.5.
+//   - drives_fw_upgrade: Upgrade FW for SSD/SCMs exclusively
+//   - enable_dr: Enables data reduction (DR) for a cluster without DR enabled prior to upgrade
+//   - force: Forces upgrade regardless of version or upgrade state
+//   - fw_upgrade: Upgrade FWs: BMC, MCU, PCI, NIC
+//   - isolcpus: Resets the configuration of isolated CPUs according to a formula
+//   - os_upgrade: Performs OS upgrade on CNodes and DNodes in addition to upgrading core platform build
+//   - skip_hw_check: Skips validation of hardware component health. Use with caution since component redundancy is important in NDU. Do not use with OS upgrade.
+//   - skip_sw_validations: Skips SW validations (e.g. deny list)
+//   - vms_only_upgrade: Forces upgrade of VMS only
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -1341,6 +1520,21 @@ func (c *Cluster) ClusterUpgradeWithoutFileWithContext_POST(ctx context.Context,
 // url: /clusters/{id}/upgrade_without_file/
 // summary: Upgrade Cluster from Pre-Uploaded Bundle
 //
+// Body:
+//   - bmc_upgrade: BMC upgrade
+//   - cnodes_batch_size_percentage: Overrides default percentage of CNodes to upgrade in parallel. Max 50
+//   - dnodes_batch_size_percentage: Overrides default percentage of DNodes to upgrade in parallel. Max 37.5. Not relevant during os upgrade
+//   - dpus_batch_size_percentage: Overrides default percentage of DPUs to upgrade in parallel. Max 37.5.
+//   - drives_fw_upgrade: Upgrade FW for SSD/SCMs exclusively
+//   - enable_dr: Enables data reduction (DR) for a cluster without DR enabled prior to upgrade
+//   - force: Forces upgrade regardless of version or upgrade state
+//   - fw_upgrade: Upgrade FWs: BMC, MCU, PCI, NIC
+//   - isolcpus: Resets the configuration of isolated CPUs according to a formula
+//   - os_upgrade: Performs OS upgrade on CNodes and DNodes in addition to upgrading core platform build
+//   - skip_hw_check: Skips validation of hardware component health. Use with caution since component redundancy is important in NDU. Do not use with OS upgrade.
+//   - skip_sw_validations: Skips SW validations (e.g. deny list)
+//   - vms_only_upgrade: Forces upgrade of VMS only
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cluster) ClusterUpgradeWithoutFile_POST(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -1351,6 +1545,17 @@ func (c *Cluster) ClusterUpgradeWithoutFile_POST(id any, body core.Params, waitT
 // method: PATCH
 // url: /clusters/{id}/upgrade/
 // summary: Upgrade Cluster
+//
+// Body:
+//   - bmc_upgrade: BMC upgrade
+//   - build: Specifies the build for upgrade
+//   - drives_fw_upgrade: Exclusive flag to perform SSD/SCM FW upgrade
+//   - enable_dr: Enables data reduction (DR) for a cluster without DR enabled prior to upgrade
+//   - force: Forces upgrade regardless of version or upgrade state
+//   - os_upgrade: OS upgrade
+//   - prepare: Pull docker images only
+//   - skip_hw_check: Skips validation of hardware component health. Use with caution since component redundancy is important in NDU. Do not use with OS upgrade.
+//   - skip_sw_validations: Skips SW validations (e.g. deny list)
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -1370,6 +1575,17 @@ func (c *Cluster) ClusterUpgradeWithContext_PATCH(ctx context.Context, id any, b
 // url: /clusters/{id}/upgrade/
 // summary: Upgrade Cluster
 //
+// Body:
+//   - bmc_upgrade: BMC upgrade
+//   - build: Specifies the build for upgrade
+//   - drives_fw_upgrade: Exclusive flag to perform SSD/SCM FW upgrade
+//   - enable_dr: Enables data reduction (DR) for a cluster without DR enabled prior to upgrade
+//   - force: Forces upgrade regardless of version or upgrade state
+//   - os_upgrade: OS upgrade
+//   - prepare: Pull docker images only
+//   - skip_hw_check: Skips validation of hardware component health. Use with caution since component redundancy is important in NDU. Do not use with OS upgrade.
+//   - skip_sw_validations: Skips SW validations (e.g. deny list)
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cluster) ClusterUpgrade_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -1380,6 +1596,12 @@ func (c *Cluster) ClusterUpgrade_PATCH(id any, body core.Params, waitTimeout tim
 // method: POST
 // url: /clusters/{id}/upload_from_s3/
 // summary: Upload Upgrade Bundle from S3 URL
+//
+// Body:
+//   - s3_url: S3 URL to upgrade package. If not provided, will be taken from db
+//   - skip_hw_check: Skips validation of hardware component health. Use with caution since component redundancy is important in NDU. Do not use with OS upgrade.
+//   - skip_prepare: Skips preparing the cluster for upgrade, including: pre-upgrade validations, copying the bundle to other hosts, and pulling the image on all CNodes.
+//   - skip_sw_validations: Skips SW validations (e.g. deny list)
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -1398,6 +1620,12 @@ func (c *Cluster) ClusterUploadFromS3WithContext_POST(ctx context.Context, id an
 // method: POST
 // url: /clusters/{id}/upload_from_s3/
 // summary: Upload Upgrade Bundle from S3 URL
+//
+// Body:
+//   - s3_url: S3 URL to upgrade package. If not provided, will be taken from db
+//   - skip_hw_check: Skips validation of hardware component health. Use with caution since component redundancy is important in NDU. Do not use with OS upgrade.
+//   - skip_prepare: Skips preparing the cluster for upgrade, including: pre-upgrade validations, copying the bundle to other hosts, and pulling the image on all CNodes.
+//   - skip_sw_validations: Skips SW validations (e.g. deny list)
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -1431,18 +1659,11 @@ func (c *Cluster) ClusterVastDb_GET(id any) (core.Record, error) {
 // url: /clusters/{id}/vast_db/
 // summary: Modify Cluster Vast DB Settings
 //
-// Parameters:
-//   - vastDbSplits (body): The number of splits used for query_data scanning speed. Default 8.
-//   - vastDbSubSplits (body): The number of sub-splits used for query_data scanning speed. Default 8.
-func (c *Cluster) ClusterVastDbWithContext_PATCH(ctx context.Context, id any, vastDbSplits int64, vastDbSubSplits int64) (core.Record, error) {
+// Body:
+//   - vast_db_splits: The number of splits used for query_data scanning speed. Default 8.
+//   - vast_db_sub_splits: The number of sub-splits used for query_data scanning speed. Default 8.
+func (c *Cluster) ClusterVastDbWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "vast_db")
-	body := core.Params{}
-	if vastDbSplits != 0 {
-		body["vast_db_splits"] = vastDbSplits
-	}
-	if vastDbSubSplits != 0 {
-		body["vast_db_sub_splits"] = vastDbSubSplits
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -1455,11 +1676,11 @@ func (c *Cluster) ClusterVastDbWithContext_PATCH(ctx context.Context, id any, va
 // url: /clusters/{id}/vast_db/
 // summary: Modify Cluster Vast DB Settings
 //
-// Parameters:
-//   - vastDbSplits (body): The number of splits used for query_data scanning speed. Default 8.
-//   - vastDbSubSplits (body): The number of sub-splits used for query_data scanning speed. Default 8.
-func (c *Cluster) ClusterVastDb_PATCH(id any, vastDbSplits int64, vastDbSubSplits int64) (core.Record, error) {
-	return c.ClusterVastDbWithContext_PATCH(c.Rest.GetCtx(), id, vastDbSplits, vastDbSubSplits)
+// Body:
+//   - vast_db_splits: The number of splits used for query_data scanning speed. Default 8.
+//   - vast_db_sub_splits: The number of sub-splits used for query_data scanning speed. Default 8.
+func (c *Cluster) ClusterVastDb_PATCH(id any, body core.Params) (core.Record, error) {
+	return c.ClusterVastDbWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterVsettingsWithContext_DELETE
@@ -1467,12 +1688,10 @@ func (c *Cluster) ClusterVastDb_PATCH(id any, vastDbSplits int64, vastDbSubSplit
 // url: /clusters/{id}/vsettings/
 // summary: Delete Cluster VSetting by key
 //
-// Parameters:
-//   - key (body): vsetting key
-func (c *Cluster) ClusterVsettingsWithContext_DELETE(ctx context.Context, id any, key string) error {
+// Body:
+//   - key: vsetting key
+func (c *Cluster) ClusterVsettingsWithContext_DELETE(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "vsettings")
-	body := core.Params{}
-	body["key"] = key
 	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, body)
 	return err
 
@@ -1483,10 +1702,10 @@ func (c *Cluster) ClusterVsettingsWithContext_DELETE(ctx context.Context, id any
 // url: /clusters/{id}/vsettings/
 // summary: Delete Cluster VSetting by key
 //
-// Parameters:
-//   - key (body): vsetting key
-func (c *Cluster) ClusterVsettings_DELETE(id any, key string) error {
-	return c.ClusterVsettingsWithContext_DELETE(c.Rest.GetCtx(), id, key)
+// Body:
+//   - key: vsetting key
+func (c *Cluster) ClusterVsettings_DELETE(id any, body core.Params) error {
+	return c.ClusterVsettingsWithContext_DELETE(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterVsettingsWithContext_GET
@@ -1494,14 +1713,10 @@ func (c *Cluster) ClusterVsettings_DELETE(id any, key string) error {
 // url: /clusters/{id}/vsettings/
 // summary: Show or list cluster vsettings
 //
-// Parameters:
-//   - Key (query): VSetting key
-func (c *Cluster) ClusterVsettingsWithContext_GET(ctx context.Context, id any, Key string) (core.Record, error) {
+// Params:
+//   - key: VSetting key
+func (c *Cluster) ClusterVsettingsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "vsettings")
-	params := core.Params{}
-	if Key != "" {
-		params["key"] = Key
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -1514,16 +1729,19 @@ func (c *Cluster) ClusterVsettingsWithContext_GET(ctx context.Context, id any, K
 // url: /clusters/{id}/vsettings/
 // summary: Show or list cluster vsettings
 //
-// Parameters:
-//   - Key (query): VSetting key
-func (c *Cluster) ClusterVsettings_GET(id any, Key string) (core.Record, error) {
-	return c.ClusterVsettingsWithContext_GET(c.Rest.GetCtx(), id, Key)
+// Params:
+//   - key: VSetting key
+func (c *Cluster) ClusterVsettings_GET(id any, params core.Params) (core.Record, error) {
+	return c.ClusterVsettingsWithContext_GET(c.Rest.GetCtx(), id, params)
 }
 
 // ClusterVsettingsWithContext_PATCH
 // method: PATCH
 // url: /clusters/{id}/vsettings/
 // summary: Modify Cluster VSettings
+//
+// Body:
+//   - vsettings
 func (c *Cluster) ClusterVsettingsWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "vsettings")
 	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
@@ -1535,6 +1753,9 @@ func (c *Cluster) ClusterVsettingsWithContext_PATCH(ctx context.Context, id any,
 // method: PATCH
 // url: /clusters/{id}/vsettings/
 // summary: Modify Cluster VSettings
+//
+// Body:
+//   - vsettings
 func (c *Cluster) ClusterVsettings_PATCH(id any, body core.Params) error {
 	return c.ClusterVsettingsWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
@@ -1543,6 +1764,13 @@ func (c *Cluster) ClusterVsettings_PATCH(id any, body core.Params) error {
 // method: POST
 // url: /clusters/wipe/
 // summary: Stop Cluster s/w on All Nodes
+//
+// Body:
+//   - cnode_list: The list of C-Nodes
+//   - dnode_list: The list of DNodes
+//   - loopback: Loopback (single node) installation
+//   - loopback_ip: Loopback IP
+//   - loopback_user: Loopback User
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -1561,6 +1789,13 @@ func (c *Cluster) ClusterWipeWithContext_POST(ctx context.Context, body core.Par
 // method: POST
 // url: /clusters/wipe/
 // summary: Stop Cluster s/w on All Nodes
+//
+// Body:
+//   - cnode_list: The list of C-Nodes
+//   - dnode_list: The list of DNodes
+//   - loopback: Loopback (single node) installation
+//   - loopback_ip: Loopback IP
+//   - loopback_user: Loopback User
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

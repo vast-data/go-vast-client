@@ -13,6 +13,18 @@ import (
 // method: PATCH
 // url: /protectedpaths/{id}/add_stream/
 // summary: Add a Replication Stream to a Protected Path
+//
+// Body:
+//   - capabilities: Indicates if the protected path supports global access streams ("STARED_GLOBAL_NAMESPACE") or async replication streams ("ASYNC_REPLICATION").
+//   - lease_expiry_time: The lease expiry time, in seconds, for a global access protected path stream. This is the duration for which data that was already requested at the destination path can be read locally from cache without the destination peer requesting it from the source peer. When the lease expires, the cache is invalidated and the next read request for the data is requested again from the source peer.
+//   - name: A name for the replication stream
+//   - protection_policy_id: The ID of the protection policy that defines the replicaiton peer and schedule
+//   - remote_target_id: Remote target ID for streams with global namespace or synchronous replication capability.
+//   - remote_tenant_guid: The GUID of the tenant on the remote target where the target directory should be created
+//   - source_member_capabilities: Source member capabilities
+//   - sync_disconnect_time: For a synchronous replication, a period of time, in seconds, without communication between sync replication peers, after which the peers are disconnected.
+//   - sync_interval: Minimal duration, in seconds, since the last snapshot shared between all destination peers in the replication group.
+//   - target_exported_dir: The directory to which to replicate the local path on the remote peer
 func (p *ProtectedPath) ProtectedPathAddStreamWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "add_stream")
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
@@ -26,6 +38,18 @@ func (p *ProtectedPath) ProtectedPathAddStreamWithContext_PATCH(ctx context.Cont
 // method: PATCH
 // url: /protectedpaths/{id}/add_stream/
 // summary: Add a Replication Stream to a Protected Path
+//
+// Body:
+//   - capabilities: Indicates if the protected path supports global access streams ("STARED_GLOBAL_NAMESPACE") or async replication streams ("ASYNC_REPLICATION").
+//   - lease_expiry_time: The lease expiry time, in seconds, for a global access protected path stream. This is the duration for which data that was already requested at the destination path can be read locally from cache without the destination peer requesting it from the source peer. When the lease expires, the cache is invalidated and the next read request for the data is requested again from the source peer.
+//   - name: A name for the replication stream
+//   - protection_policy_id: The ID of the protection policy that defines the replicaiton peer and schedule
+//   - remote_target_id: Remote target ID for streams with global namespace or synchronous replication capability.
+//   - remote_tenant_guid: The GUID of the tenant on the remote target where the target directory should be created
+//   - source_member_capabilities: Source member capabilities
+//   - sync_disconnect_time: For a synchronous replication, a period of time, in seconds, without communication between sync replication peers, after which the peers are disconnected.
+//   - sync_interval: Minimal duration, in seconds, since the last snapshot shared between all destination peers in the replication group.
+//   - target_exported_dir: The directory to which to replicate the local path on the remote peer
 func (p *ProtectedPath) ProtectedPathAddStream_PATCH(id any, body core.Params) (core.Record, error) {
 	return p.ProtectedPathAddStreamWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
@@ -34,6 +58,10 @@ func (p *ProtectedPath) ProtectedPathAddStream_PATCH(id any, body core.Params) (
 // method: PATCH
 // url: /protectedpaths/{id}/commit/
 // summary: Commit a Restored Protected Path
+//
+// Body:
+//
+//	< not declared in schema >
 func (p *ProtectedPath) ProtectedPathCommitWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "commit")
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
@@ -47,6 +75,10 @@ func (p *ProtectedPath) ProtectedPathCommitWithContext_PATCH(ctx context.Context
 // method: PATCH
 // url: /protectedpaths/{id}/commit/
 // summary: Commit a Restored Protected Path
+//
+// Body:
+//
+//	< not declared in schema >
 func (p *ProtectedPath) ProtectedPathCommit_PATCH(id any, body core.Params) (core.Record, error) {
 	return p.ProtectedPathCommitWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
@@ -55,6 +87,10 @@ func (p *ProtectedPath) ProtectedPathCommit_PATCH(id any, body core.Params) (cor
 // method: PATCH
 // url: /protectedpaths/{id}/force_failover/
 // summary: Force failover on a protected path
+//
+// Body:
+//
+//	< not declared in schema >
 func (p *ProtectedPath) ProtectedPathForceFailoverWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "force_failover")
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
@@ -68,6 +104,10 @@ func (p *ProtectedPath) ProtectedPathForceFailoverWithContext_PATCH(ctx context.
 // method: PATCH
 // url: /protectedpaths/{id}/force_failover/
 // summary: Force failover on a protected path
+//
+// Body:
+//
+//	< not declared in schema >
 func (p *ProtectedPath) ProtectedPathForceFailover_PATCH(id any, body core.Params) (core.Record, error) {
 	return p.ProtectedPathForceFailoverWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
@@ -77,18 +117,12 @@ func (p *ProtectedPath) ProtectedPathForceFailover_PATCH(id any, body core.Param
 // url: /protectedpaths/{id}/modify_member/
 // summary: Modify Capability of a Replication Stream that Belongs to a Protected Path
 //
-// Parameters:
-//   - capabilities (body): The type of protection capability to apply to the stream. If ASYNC_REPLICATION, the stream replicates the path from source peer to destination peer periodically. If SYNC_REPLICATION, the stream replicates the path from source peer to destination peer continuously.
-//   - streamId (body): The ID of a stream that belongs to the protected path
-//   - sourceMemberCapabilities (body): Source member capabilities
-func (p *ProtectedPath) ProtectedPathModifyMemberWithContext_PATCH(ctx context.Context, id any, capabilities string, streamId string, sourceMemberCapabilities string) (core.Record, error) {
+// Body:
+//   - capabilities: The type of protection capability to apply to the stream. If ASYNC_REPLICATION, the stream replicates the path from source peer to destination peer periodically. If SYNC_REPLICATION, the stream replicates the path from source peer to destination peer continuously.
+//   - source_member_capabilities: Source member capabilities
+//   - stream_id: The ID of a stream that belongs to the protected path
+func (p *ProtectedPath) ProtectedPathModifyMemberWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "modify_member")
-	body := core.Params{}
-	body["capabilities"] = capabilities
-	body["stream_id"] = streamId
-	if sourceMemberCapabilities != "" {
-		body["source_member_capabilities"] = sourceMemberCapabilities
-	}
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -101,12 +135,12 @@ func (p *ProtectedPath) ProtectedPathModifyMemberWithContext_PATCH(ctx context.C
 // url: /protectedpaths/{id}/modify_member/
 // summary: Modify Capability of a Replication Stream that Belongs to a Protected Path
 //
-// Parameters:
-//   - capabilities (body): The type of protection capability to apply to the stream. If ASYNC_REPLICATION, the stream replicates the path from source peer to destination peer periodically. If SYNC_REPLICATION, the stream replicates the path from source peer to destination peer continuously.
-//   - streamId (body): The ID of a stream that belongs to the protected path
-//   - sourceMemberCapabilities (body): Source member capabilities
-func (p *ProtectedPath) ProtectedPathModifyMember_PATCH(id any, capabilities string, streamId string, sourceMemberCapabilities string) (core.Record, error) {
-	return p.ProtectedPathModifyMemberWithContext_PATCH(p.Rest.GetCtx(), id, capabilities, streamId, sourceMemberCapabilities)
+// Body:
+//   - capabilities: The type of protection capability to apply to the stream. If ASYNC_REPLICATION, the stream replicates the path from source peer to destination peer periodically. If SYNC_REPLICATION, the stream replicates the path from source peer to destination peer continuously.
+//   - source_member_capabilities: Source member capabilities
+//   - stream_id: The ID of a stream that belongs to the protected path
+func (p *ProtectedPath) ProtectedPathModifyMember_PATCH(id any, body core.Params) (core.Record, error) {
+	return p.ProtectedPathModifyMemberWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
 
 // ProtectedPathPauseWithContext_PATCH
@@ -114,14 +148,10 @@ func (p *ProtectedPath) ProtectedPathModifyMember_PATCH(id any, capabilities str
 // url: /protectedpaths/{id}/pause/
 // summary: Pause Restore on a Protected Path
 //
-// Parameters:
-//   - enabled (body): Set to False to pause snapshot restore
-func (p *ProtectedPath) ProtectedPathPauseWithContext_PATCH(ctx context.Context, id any, enabled bool) (core.Record, error) {
+// Body:
+//   - enabled: Set to False to pause snapshot restore
+func (p *ProtectedPath) ProtectedPathPauseWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "pause")
-	body := core.Params{}
-	if enabled != false {
-		body["enabled"] = enabled
-	}
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -134,10 +164,10 @@ func (p *ProtectedPath) ProtectedPathPauseWithContext_PATCH(ctx context.Context,
 // url: /protectedpaths/{id}/pause/
 // summary: Pause Restore on a Protected Path
 //
-// Parameters:
-//   - enabled (body): Set to False to pause snapshot restore
-func (p *ProtectedPath) ProtectedPathPause_PATCH(id any, enabled bool) (core.Record, error) {
-	return p.ProtectedPathPauseWithContext_PATCH(p.Rest.GetCtx(), id, enabled)
+// Body:
+//   - enabled: Set to False to pause snapshot restore
+func (p *ProtectedPath) ProtectedPathPause_PATCH(id any, body core.Params) (core.Record, error) {
+	return p.ProtectedPathPauseWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
 
 // ProtectedPathPrefetchPathWithContext_DELETE
@@ -145,14 +175,11 @@ func (p *ProtectedPath) ProtectedPathPause_PATCH(id any, enabled bool) (core.Rec
 // url: /protectedpaths/{id}/prefetch_path/
 // summary: Delete Path Prefetch Task
 //
-// Parameters:
-//   - stopRunningPrefetch (body): If true, stops the prefetch task running if it's still running.
-//   - taskId (body): ID of the prefetch task to delete.
-func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_DELETE(ctx context.Context, id any, stopRunningPrefetch bool, taskId int64) error {
+// Body:
+//   - stop_running_prefetch: If true, stops the prefetch task running if it's still running.
+//   - task_id: ID of the prefetch task to delete.
+func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_DELETE(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "prefetch_path")
-	body := core.Params{}
-	body["stop_running_prefetch"] = stopRunningPrefetch
-	body["task_id"] = taskId
 	_, err := core.Request[core.Record](ctx, p, http.MethodDelete, resourcePath, nil, body)
 	return err
 
@@ -163,11 +190,11 @@ func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_DELETE(ctx context.
 // url: /protectedpaths/{id}/prefetch_path/
 // summary: Delete Path Prefetch Task
 //
-// Parameters:
-//   - stopRunningPrefetch (body): If true, stops the prefetch task running if it's still running.
-//   - taskId (body): ID of the prefetch task to delete.
-func (p *ProtectedPath) ProtectedPathPrefetchPath_DELETE(id any, stopRunningPrefetch bool, taskId int64) error {
-	return p.ProtectedPathPrefetchPathWithContext_DELETE(p.Rest.GetCtx(), id, stopRunningPrefetch, taskId)
+// Body:
+//   - stop_running_prefetch: If true, stops the prefetch task running if it's still running.
+//   - task_id: ID of the prefetch task to delete.
+func (p *ProtectedPath) ProtectedPathPrefetchPath_DELETE(id any, body core.Params) error {
+	return p.ProtectedPathPrefetchPathWithContext_DELETE(p.Rest.GetCtx(), id, body)
 }
 
 // ProtectedPathPrefetchPathWithContext_GET
@@ -175,12 +202,10 @@ func (p *ProtectedPath) ProtectedPathPrefetchPath_DELETE(id any, stopRunningPref
 // url: /protectedpaths/{id}/prefetch_path/
 // summary: Return Status for Prefetch Path
 //
-// Parameters:
-//   - TaskId (query): ID of task for which to get the prefetch status
-func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_GET(ctx context.Context, id any, TaskId int64) (core.Record, error) {
+// Params:
+//   - task_id: ID of task for which to get the prefetch status
+func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "prefetch_path")
-	params := core.Params{}
-	params["task_id"] = TaskId
 	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -193,10 +218,10 @@ func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_GET(ctx context.Con
 // url: /protectedpaths/{id}/prefetch_path/
 // summary: Return Status for Prefetch Path
 //
-// Parameters:
-//   - TaskId (query): ID of task for which to get the prefetch status
-func (p *ProtectedPath) ProtectedPathPrefetchPath_GET(id any, TaskId int64) (core.Record, error) {
-	return p.ProtectedPathPrefetchPathWithContext_GET(p.Rest.GetCtx(), id, TaskId)
+// Params:
+//   - task_id: ID of task for which to get the prefetch status
+func (p *ProtectedPath) ProtectedPathPrefetchPath_GET(id any, params core.Params) (core.Record, error) {
+	return p.ProtectedPathPrefetchPathWithContext_GET(p.Rest.GetCtx(), id, params)
 }
 
 // ProtectedPathPrefetchPathWithContext_POST
@@ -204,19 +229,14 @@ func (p *ProtectedPath) ProtectedPathPrefetchPath_GET(id any, TaskId int64) (cor
 // url: /protectedpaths/{id}/prefetch_path/
 // summary: Prefetch a Path to Global Access Cache
 //
-// Parameters:
-//   - Force (query): Force prefetch even if it is already running
-//   - path (body): The path on the destination peer for which to prefetch data from the equivalent source path to the global access cache. The path can be the entire protected path or a subdirectory.
-//   - prefetchType (body): Whether to prefetch full data or only metadata.
-func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Context, id any, Force bool, path string, prefetchType string) (core.Record, error) {
+// Params:
+//   - force: Force prefetch even if it is already running
+//
+// Body:
+//   - path: The path on the destination peer for which to prefetch data from the equivalent source path to the global access cache. The path can be the entire protected path or a subdirectory.
+//   - prefetch_type: Whether to prefetch full data or only metadata.
+func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Context, id any, params core.Params, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "prefetch_path")
-	params := core.Params{}
-	if Force != false {
-		params["force"] = Force
-	}
-	body := core.Params{}
-	body["path"] = path
-	body["prefetch_type"] = prefetchType
 	result, err := core.Request[core.Record](ctx, p, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
@@ -229,12 +249,14 @@ func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Co
 // url: /protectedpaths/{id}/prefetch_path/
 // summary: Prefetch a Path to Global Access Cache
 //
-// Parameters:
-//   - Force (query): Force prefetch even if it is already running
-//   - path (body): The path on the destination peer for which to prefetch data from the equivalent source path to the global access cache. The path can be the entire protected path or a subdirectory.
-//   - prefetchType (body): Whether to prefetch full data or only metadata.
-func (p *ProtectedPath) ProtectedPathPrefetchPath_POST(id any, Force bool, path string, prefetchType string) (core.Record, error) {
-	return p.ProtectedPathPrefetchPathWithContext_POST(p.Rest.GetCtx(), id, Force, path, prefetchType)
+// Params:
+//   - force: Force prefetch even if it is already running
+//
+// Body:
+//   - path: The path on the destination peer for which to prefetch data from the equivalent source path to the global access cache. The path can be the entire protected path or a subdirectory.
+//   - prefetch_type: Whether to prefetch full data or only metadata.
+func (p *ProtectedPath) ProtectedPathPrefetchPath_POST(id any, params core.Params, body core.Params) (core.Record, error) {
+	return p.ProtectedPathPrefetchPathWithContext_POST(p.Rest.GetCtx(), id, params, body)
 }
 
 // ProtectedPathReattachStreamWithContext_PATCH
@@ -242,14 +264,10 @@ func (p *ProtectedPath) ProtectedPathPrefetchPath_POST(id any, Force bool, path 
 // url: /protectedpaths/{id}/reattach_stream/
 // summary: Reattach a Stream to a Protected Path
 //
-// Parameters:
-//   - streamId (body): The ID of the replication stream
-func (p *ProtectedPath) ProtectedPathReattachStreamWithContext_PATCH(ctx context.Context, id any, streamId string) (core.Record, error) {
+// Body:
+//   - stream_id: The ID of the replication stream
+func (p *ProtectedPath) ProtectedPathReattachStreamWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "reattach_stream")
-	body := core.Params{}
-	if streamId != "" {
-		body["stream_id"] = streamId
-	}
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -262,10 +280,10 @@ func (p *ProtectedPath) ProtectedPathReattachStreamWithContext_PATCH(ctx context
 // url: /protectedpaths/{id}/reattach_stream/
 // summary: Reattach a Stream to a Protected Path
 //
-// Parameters:
-//   - streamId (body): The ID of the replication stream
-func (p *ProtectedPath) ProtectedPathReattachStream_PATCH(id any, streamId string) (core.Record, error) {
-	return p.ProtectedPathReattachStreamWithContext_PATCH(p.Rest.GetCtx(), id, streamId)
+// Body:
+//   - stream_id: The ID of the replication stream
+func (p *ProtectedPath) ProtectedPathReattachStream_PATCH(id any, body core.Params) (core.Record, error) {
+	return p.ProtectedPathReattachStreamWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
 
 // ProtectedPathRemoveStreamWithContext_PATCH
@@ -273,14 +291,10 @@ func (p *ProtectedPath) ProtectedPathReattachStream_PATCH(id any, streamId strin
 // url: /protectedpaths/{id}/remove_stream/
 // summary: Remove a Stream from a Protected Path
 //
-// Parameters:
-//   - streamId (body): The ID of the replication stream
-func (p *ProtectedPath) ProtectedPathRemoveStreamWithContext_PATCH(ctx context.Context, id any, streamId string) error {
+// Body:
+//   - stream_id: The ID of the replication stream
+func (p *ProtectedPath) ProtectedPathRemoveStreamWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "remove_stream")
-	body := core.Params{}
-	if streamId != "" {
-		body["stream_id"] = streamId
-	}
 	_, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -291,10 +305,10 @@ func (p *ProtectedPath) ProtectedPathRemoveStreamWithContext_PATCH(ctx context.C
 // url: /protectedpaths/{id}/remove_stream/
 // summary: Remove a Stream from a Protected Path
 //
-// Parameters:
-//   - streamId (body): The ID of the replication stream
-func (p *ProtectedPath) ProtectedPathRemoveStream_PATCH(id any, streamId string) error {
-	return p.ProtectedPathRemoveStreamWithContext_PATCH(p.Rest.GetCtx(), id, streamId)
+// Body:
+//   - stream_id: The ID of the replication stream
+func (p *ProtectedPath) ProtectedPathRemoveStream_PATCH(id any, body core.Params) error {
+	return p.ProtectedPathRemoveStreamWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
 
 // ProtectedPathReplicateNowWithContext_PATCH
@@ -302,14 +316,11 @@ func (p *ProtectedPath) ProtectedPathRemoveStream_PATCH(id any, streamId string)
 // url: /protectedpaths/{id}/replicate_now/
 // summary: Trigger Replication on all the Streams of a Protected Path
 //
-// Parameters:
-//   - timeExpiresLocal (body): Request parameter
-//   - timeExpiresTarget (body): Request parameter
-func (p *ProtectedPath) ProtectedPathReplicateNowWithContext_PATCH(ctx context.Context, id any, timeExpiresLocal string, timeExpiresTarget string) (core.Record, error) {
+// Body:
+//   - time_expires_local
+//   - time_expires_target
+func (p *ProtectedPath) ProtectedPathReplicateNowWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "replicate_now")
-	body := core.Params{}
-	body["time_expires_local"] = timeExpiresLocal
-	body["time_expires_target"] = timeExpiresTarget
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -322,11 +333,11 @@ func (p *ProtectedPath) ProtectedPathReplicateNowWithContext_PATCH(ctx context.C
 // url: /protectedpaths/{id}/replicate_now/
 // summary: Trigger Replication on all the Streams of a Protected Path
 //
-// Parameters:
-//   - timeExpiresLocal (body): Request parameter
-//   - timeExpiresTarget (body): Request parameter
-func (p *ProtectedPath) ProtectedPathReplicateNow_PATCH(id any, timeExpiresLocal string, timeExpiresTarget string) (core.Record, error) {
-	return p.ProtectedPathReplicateNowWithContext_PATCH(p.Rest.GetCtx(), id, timeExpiresLocal, timeExpiresTarget)
+// Body:
+//   - time_expires_local
+//   - time_expires_target
+func (p *ProtectedPath) ProtectedPathReplicateNow_PATCH(id any, body core.Params) (core.Record, error) {
+	return p.ProtectedPathReplicateNowWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
 
 // ProtectedPathRestoreWithContext_POST
@@ -334,18 +345,11 @@ func (p *ProtectedPath) ProtectedPathReplicateNow_PATCH(id any, timeExpiresLocal
 // url: /protectedpaths/{id}/restore/
 // summary: Create a Clone to Restore a Path.
 //
-// Parameters:
-//   - loaneeSnapshotId (body): Id of Snapshot to restore
-//   - name (body): Request parameter
-func (p *ProtectedPath) ProtectedPathRestoreWithContext_POST(ctx context.Context, id any, loaneeSnapshotId int64, name string) (core.Record, error) {
+// Body:
+//   - loanee_snapshot_id: Id of Snapshot to restore
+//   - name
+func (p *ProtectedPath) ProtectedPathRestoreWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "restore")
-	body := core.Params{}
-	if loaneeSnapshotId != 0 {
-		body["loanee_snapshot_id"] = loaneeSnapshotId
-	}
-	if name != "" {
-		body["name"] = name
-	}
 	result, err := core.Request[core.Record](ctx, p, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -358,11 +362,11 @@ func (p *ProtectedPath) ProtectedPathRestoreWithContext_POST(ctx context.Context
 // url: /protectedpaths/{id}/restore/
 // summary: Create a Clone to Restore a Path.
 //
-// Parameters:
-//   - loaneeSnapshotId (body): Id of Snapshot to restore
-//   - name (body): Request parameter
-func (p *ProtectedPath) ProtectedPathRestore_POST(id any, loaneeSnapshotId int64, name string) (core.Record, error) {
-	return p.ProtectedPathRestoreWithContext_POST(p.Rest.GetCtx(), id, loaneeSnapshotId, name)
+// Body:
+//   - loanee_snapshot_id: Id of Snapshot to restore
+//   - name
+func (p *ProtectedPath) ProtectedPathRestore_POST(id any, body core.Params) (core.Record, error) {
+	return p.ProtectedPathRestoreWithContext_POST(p.Rest.GetCtx(), id, body)
 }
 
 // ProtectedPathResumeWithContext_PATCH
@@ -370,14 +374,10 @@ func (p *ProtectedPath) ProtectedPathRestore_POST(id any, loaneeSnapshotId int64
 // url: /protectedpaths/{id}/resume/
 // summary: Resume Restore on a Protected Path
 //
-// Parameters:
-//   - enabled (body): Set to False to resume restore
-func (p *ProtectedPath) ProtectedPathResumeWithContext_PATCH(ctx context.Context, id any, enabled bool) (core.Record, error) {
+// Body:
+//   - enabled: Set to False to resume restore
+func (p *ProtectedPath) ProtectedPathResumeWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "resume")
-	body := core.Params{}
-	if enabled != false {
-		body["enabled"] = enabled
-	}
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -390,16 +390,20 @@ func (p *ProtectedPath) ProtectedPathResumeWithContext_PATCH(ctx context.Context
 // url: /protectedpaths/{id}/resume/
 // summary: Resume Restore on a Protected Path
 //
-// Parameters:
-//   - enabled (body): Set to False to resume restore
-func (p *ProtectedPath) ProtectedPathResume_PATCH(id any, enabled bool) (core.Record, error) {
-	return p.ProtectedPathResumeWithContext_PATCH(p.Rest.GetCtx(), id, enabled)
+// Body:
+//   - enabled: Set to False to resume restore
+func (p *ProtectedPath) ProtectedPathResume_PATCH(id any, body core.Params) (core.Record, error) {
+	return p.ProtectedPathResumeWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }
 
 // ProtectedPathStopWithContext_PATCH
 // method: PATCH
 // url: /protectedpaths/{id}/stop/
 // summary: Stops snapshot restore on protected path.
+//
+// Body:
+//
+//	< not declared in schema >
 func (p *ProtectedPath) ProtectedPathStopWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "stop")
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
@@ -413,6 +417,10 @@ func (p *ProtectedPath) ProtectedPathStopWithContext_PATCH(ctx context.Context, 
 // method: PATCH
 // url: /protectedpaths/{id}/stop/
 // summary: Stops snapshot restore on protected path.
+//
+// Body:
+//
+//	< not declared in schema >
 func (p *ProtectedPath) ProtectedPathStop_PATCH(id any, body core.Params) (core.Record, error) {
 	return p.ProtectedPathStopWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }

@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /quotas/recalc_stop/
 // summary: Stop recalculation flow for all quotas
+//
+// Body:
+//
+//	< not declared in schema >
 func (q *Quota) QuotaRecalcStopWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/quotas/recalc_stop/"
 	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, nil, body)
@@ -24,6 +28,10 @@ func (q *Quota) QuotaRecalcStopWithContext_PATCH(ctx context.Context, body core.
 // method: PATCH
 // url: /quotas/recalc_stop/
 // summary: Stop recalculation flow for all quotas
+//
+// Body:
+//
+//	< not declared in schema >
 func (q *Quota) QuotaRecalcStop_PATCH(body core.Params) error {
 	return q.QuotaRecalcStopWithContext_PATCH(q.Rest.GetCtx(), body)
 }
@@ -33,14 +41,14 @@ func (q *Quota) QuotaRecalcStop_PATCH(body core.Params) error {
 // url: /quotas/recalc/
 // summary: Start recalculation flow all quotas
 //
-// Parameters:
-//   - Id (query): Quota ID - if not given, will be applied to all quotas
-func (q *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context, Id string, body core.Params) error {
+// Params:
+//   - id: Quota ID - if not given, will be applied to all quotas
+//
+// Body:
+//
+//	< not declared in schema >
+func (q *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context, params core.Params, body core.Params) error {
 	resourcePath := "/quotas/recalc/"
-	params := core.Params{}
-	if Id != "" {
-		params["id"] = Id
-	}
 	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, params, body)
 	return err
 
@@ -51,16 +59,24 @@ func (q *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context, Id string, bod
 // url: /quotas/recalc/
 // summary: Start recalculation flow all quotas
 //
-// Parameters:
-//   - Id (query): Quota ID - if not given, will be applied to all quotas
-func (q *Quota) QuotaRecalc_PATCH(Id string, body core.Params) error {
-	return q.QuotaRecalcWithContext_PATCH(q.Rest.GetCtx(), Id, body)
+// Params:
+//   - id: Quota ID - if not given, will be applied to all quotas
+//
+// Body:
+//
+//	< not declared in schema >
+func (q *Quota) QuotaRecalc_PATCH(params core.Params, body core.Params) error {
+	return q.QuotaRecalcWithContext_PATCH(q.Rest.GetCtx(), params, body)
 }
 
 // QuotaRefreshUserQuotasWithContext_PATCH
 // method: PATCH
 // url: /quotas/{id}/refresh_user_quotas/
 // summary: Refresh a Quota's User Quotas
+//
+// Body:
+//
+//	< not declared in schema >
 func (q *Quota) QuotaRefreshUserQuotasWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("quotas", id, "refresh_user_quotas")
 	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, nil, body)
@@ -72,6 +88,10 @@ func (q *Quota) QuotaRefreshUserQuotasWithContext_PATCH(ctx context.Context, id 
 // method: PATCH
 // url: /quotas/{id}/refresh_user_quotas/
 // summary: Refresh a Quota's User Quotas
+//
+// Body:
+//
+//	< not declared in schema >
 func (q *Quota) QuotaRefreshUserQuotas_PATCH(id any, body core.Params) error {
 	return q.QuotaRefreshUserQuotasWithContext_PATCH(q.Rest.GetCtx(), id, body)
 }
@@ -80,6 +100,10 @@ func (q *Quota) QuotaRefreshUserQuotas_PATCH(id any, body core.Params) error {
 // method: PATCH
 // url: /quotas/{id}/reset_grace_period/
 // summary: Reset the grace period countdown after soft limit is exceeded
+//
+// Body:
+//
+//	< not declared in schema >
 func (q *Quota) QuotaResetGracePeriodWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("quotas", id, "reset_grace_period")
 	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, nil, body)
@@ -91,6 +115,10 @@ func (q *Quota) QuotaResetGracePeriodWithContext_PATCH(ctx context.Context, id a
 // method: PATCH
 // url: /quotas/{id}/reset_grace_period/
 // summary: Reset the grace period countdown after soft limit is exceeded
+//
+// Body:
+//
+//	< not declared in schema >
 func (q *Quota) QuotaResetGracePeriod_PATCH(id any, body core.Params) error {
 	return q.QuotaResetGracePeriodWithContext_PATCH(q.Rest.GetCtx(), id, body)
 }

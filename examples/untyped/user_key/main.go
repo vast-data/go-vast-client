@@ -22,7 +22,7 @@ func main() {
 	tenantId := int64(1)
 
 	// Create
-	record, err := rest.Users.UserAccessKeys_POST(userId, tenantId)
+	record, err := rest.Users.UserAccessKeys_POST(userId, map[string]any{"tenant_id": tenantId})
 	if err != nil {
 		panic(err)
 	}
@@ -32,12 +32,15 @@ func main() {
 	accessKey := record["access_key"].(string)
 
 	// Modify
-	if err := rest.Users.UserAccessKeys_PATCH(userId, accessKey, false); err != nil {
+	if err := rest.Users.UserAccessKeys_PATCH(userId, map[string]any{
+		"access_key": accessKey,
+		"enabled":    false,
+	}); err != nil {
 		panic(err)
 	}
 
 	// Delete
-	if err := rest.Users.UserAccessKeys_DELETE(userId, accessKey); err != nil {
+	if err := rest.Users.UserAccessKeys_DELETE(userId, map[string]any{"access_key": accessKey}); err != nil {
 		panic(err)
 	}
 

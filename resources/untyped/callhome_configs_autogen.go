@@ -14,22 +14,12 @@ import (
 // url: /callhomeconfigs/{id}/register-cluster/
 // summary: Register Cluster with Uplink
 //
-// Parameters:
-//   - email (body): VAST Uplink super user login email
-//   - password (body): VAST Uplink super user password
-//   - token (body): VAST Uplink cluster registration token
-func (c *CallhomeConfigs) CallhomeConfigsRegisterClusterWithContext_PATCH(ctx context.Context, id any, email string, password string, token string) (core.Record, error) {
+// Body:
+//   - email: VAST Uplink super user login email
+//   - password: VAST Uplink super user password
+//   - token: VAST Uplink cluster registration token
+func (c *CallhomeConfigs) CallhomeConfigsRegisterClusterWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("callhomeconfigs", id, "register-cluster")
-	body := core.Params{}
-	if email != "" {
-		body["email"] = email
-	}
-	if password != "" {
-		body["password"] = password
-	}
-	if token != "" {
-		body["token"] = token
-	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -42,18 +32,22 @@ func (c *CallhomeConfigs) CallhomeConfigsRegisterClusterWithContext_PATCH(ctx co
 // url: /callhomeconfigs/{id}/register-cluster/
 // summary: Register Cluster with Uplink
 //
-// Parameters:
-//   - email (body): VAST Uplink super user login email
-//   - password (body): VAST Uplink super user password
-//   - token (body): VAST Uplink cluster registration token
-func (c *CallhomeConfigs) CallhomeConfigsRegisterCluster_PATCH(id any, email string, password string, token string) (core.Record, error) {
-	return c.CallhomeConfigsRegisterClusterWithContext_PATCH(c.Rest.GetCtx(), id, email, password, token)
+// Body:
+//   - email: VAST Uplink super user login email
+//   - password: VAST Uplink super user password
+//   - token: VAST Uplink cluster registration token
+func (c *CallhomeConfigs) CallhomeConfigsRegisterCluster_PATCH(id any, body core.Params) (core.Record, error) {
+	return c.CallhomeConfigsRegisterClusterWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
 
 // CallhomeConfigsSendWithContext_PATCH
 // method: PATCH
 // url: /callhomeconfigs/{id}/send/
 // summary: Send a Call Home Message
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *CallhomeConfigs) CallhomeConfigsSendWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("callhomeconfigs", id, "send")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
@@ -67,6 +61,10 @@ func (c *CallhomeConfigs) CallhomeConfigsSendWithContext_PATCH(ctx context.Conte
 // method: PATCH
 // url: /callhomeconfigs/{id}/send/
 // summary: Send a Call Home Message
+//
+// Body:
+//
+//	< not declared in schema >
 func (c *CallhomeConfigs) CallhomeConfigsSend_PATCH(id any, body core.Params) (core.Record, error) {
 	return c.CallhomeConfigsSendWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }

@@ -13,6 +13,15 @@ import (
 // method: PATCH
 // url: /tables/add_columns/
 // summary: Add Columns to a Database Table
+//
+// Body:
+//   - arrow_schema: Description of table columns
+//   - database_name: Name of the Database
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Name of the object
+//   - schema_name: Name of the Schema
+//   - sorted_column_names: Array of sorted column names
+//   - tenant_id: Tenant ID
 func (t *Table) TableAddColumnsWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/tables/add_columns/"
 	_, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
@@ -24,6 +33,15 @@ func (t *Table) TableAddColumnsWithContext_PATCH(ctx context.Context, body core.
 // method: PATCH
 // url: /tables/add_columns/
 // summary: Add Columns to a Database Table
+//
+// Body:
+//   - arrow_schema: Description of table columns
+//   - database_name: Name of the Database
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Name of the object
+//   - schema_name: Name of the Schema
+//   - sorted_column_names: Array of sorted column names
+//   - tenant_id: Tenant ID
 func (t *Table) TableAddColumns_PATCH(body core.Params) error {
 	return t.TableAddColumnsWithContext_PATCH(t.Rest.GetCtx(), body)
 }
@@ -32,9 +50,16 @@ func (t *Table) TableAddColumns_PATCH(body core.Params) error {
 // method: DELETE
 // url: /tables/delete/
 // summary: Delete a Database Table
-func (t *Table) TableDeleteWithContext_DELETE(ctx context.Context) error {
+//
+// Body:
+//   - database_name: Name of the Database
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Name of the object
+//   - schema_name: Name of the Schema
+//   - tenant_id: Tenant ID
+func (t *Table) TableDeleteWithContext_DELETE(ctx context.Context, body core.Params) error {
 	resourcePath := "/tables/delete/"
-	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -43,14 +68,29 @@ func (t *Table) TableDeleteWithContext_DELETE(ctx context.Context) error {
 // method: DELETE
 // url: /tables/delete/
 // summary: Delete a Database Table
-func (t *Table) TableDelete_DELETE() error {
-	return t.TableDeleteWithContext_DELETE(t.Rest.GetCtx())
+//
+// Body:
+//   - database_name: Name of the Database
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Name of the object
+//   - schema_name: Name of the Schema
+//   - tenant_id: Tenant ID
+func (t *Table) TableDelete_DELETE(body core.Params) error {
+	return t.TableDeleteWithContext_DELETE(t.Rest.GetCtx(), body)
 }
 
 // TableRenameWithContext_PATCH
 // method: PATCH
 // url: /tables/rename/
 // summary: Rename a Database Table
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - new_name: New name of the Table
+//   - new_table_name: New name of the Table (deprecated since 5.0)
+//   - schema_name: Name of the Schema
+//   - tenant_id: Tenant ID
 func (t *Table) TableRenameWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/tables/rename/"
 	_, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
@@ -62,6 +102,14 @@ func (t *Table) TableRenameWithContext_PATCH(ctx context.Context, body core.Para
 // method: PATCH
 // url: /tables/rename/
 // summary: Rename a Database Table
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - new_name: New name of the Table
+//   - new_table_name: New name of the Table (deprecated since 5.0)
+//   - schema_name: Name of the Schema
+//   - tenant_id: Tenant ID
 func (t *Table) TableRename_PATCH(body core.Params) error {
 	return t.TableRenameWithContext_PATCH(t.Rest.GetCtx(), body)
 }
@@ -70,6 +118,13 @@ func (t *Table) TableRename_PATCH(body core.Params) error {
 // method: GET
 // url: /tables/show/
 // summary: Show a Database Table
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Getting object by exact match
 func (t *Table) TableShowWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/tables/show/"
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
@@ -83,6 +138,13 @@ func (t *Table) TableShowWithContext_GET(ctx context.Context, params core.Params
 // method: GET
 // url: /tables/show/
 // summary: Show a Database Table
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Getting object by exact match
 func (t *Table) TableShow_GET(params core.Params) (core.Record, error) {
 	return t.TableShowWithContext_GET(t.Rest.GetCtx(), params)
 }

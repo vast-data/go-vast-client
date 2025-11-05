@@ -14,22 +14,12 @@ import (
 // url: /groups/names/
 // summary: Find Group by prefix and domain details
 //
-// Parameters:
-//   - Prefix (query): Prefix to find the group
-//   - Domain (query): Domain details to find the group (ALL by default). Format: BASE_DN|FQDN|SID
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-func (g *Group) GroupNamesWithContext_GET(ctx context.Context, Prefix string, Domain string, TenantId int64) (core.Record, error) {
+// Params:
+//   - prefix: Prefix to find the group
+//   - domain: Domain details to find the group (ALL by default). Format: BASE_DN|FQDN|SID
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+func (g *Group) GroupNamesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/groups/names/"
-	params := core.Params{}
-	if Prefix != "" {
-		params["prefix"] = Prefix
-	}
-	if Domain != "" {
-		params["domain"] = Domain
-	}
-	if TenantId != 0 {
-		params["tenant_id"] = TenantId
-	}
 	result, err := core.Request[core.Record](ctx, g, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -42,18 +32,26 @@ func (g *Group) GroupNamesWithContext_GET(ctx context.Context, Prefix string, Do
 // url: /groups/names/
 // summary: Find Group by prefix and domain details
 //
-// Parameters:
-//   - Prefix (query): Prefix to find the group
-//   - Domain (query): Domain details to find the group (ALL by default). Format: BASE_DN|FQDN|SID
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-func (g *Group) GroupNames_GET(Prefix string, Domain string, TenantId int64) (core.Record, error) {
-	return g.GroupNamesWithContext_GET(g.Rest.GetCtx(), Prefix, Domain, TenantId)
+// Params:
+//   - prefix: Prefix to find the group
+//   - domain: Domain details to find the group (ALL by default). Format: BASE_DN|FQDN|SID
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+func (g *Group) GroupNames_GET(params core.Params) (core.Record, error) {
+	return g.GroupNamesWithContext_GET(g.Rest.GetCtx(), params)
 }
 
 // GroupQueryWithContext_GET
 // method: GET
 // url: /groups/query/
 // summary: Query Group
+//
+// Params:
+//   - gid: Group GID
+//   - groupname: Groupname
+//   - sid: Group SID
+//   - vaid: Group VAID (a VAST identifier for groups)
+//   - context: The provider to query
+//   - tenant_id: Filter by tenant. Specify tenant ID.
 func (g *Group) GroupQueryWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/groups/query/"
 	result, err := core.Request[core.Record](ctx, g, http.MethodGet, resourcePath, params, nil)
@@ -67,6 +65,14 @@ func (g *Group) GroupQueryWithContext_GET(ctx context.Context, params core.Param
 // method: GET
 // url: /groups/query/
 // summary: Query Group
+//
+// Params:
+//   - gid: Group GID
+//   - groupname: Groupname
+//   - sid: Group SID
+//   - vaid: Group VAID (a VAST identifier for groups)
+//   - context: The provider to query
+//   - tenant_id: Filter by tenant. Specify tenant ID.
 func (g *Group) GroupQuery_GET(params core.Params) (core.Record, error) {
 	return g.GroupQueryWithContext_GET(g.Rest.GetCtx(), params)
 }
@@ -75,6 +81,14 @@ func (g *Group) GroupQuery_GET(params core.Params) (core.Record, error) {
 // method: PATCH
 // url: /groups/query/
 // summary: Modify non-Local Group
+//
+// Body:
+//   - gid: Group GID
+//   - groupname: Group name
+//   - s3_policies_ids: list of s3 policy ids
+//   - sid: Group SID
+//   - tenant_id: Tenant ID
+//   - vaid: Group vast ID
 func (g *Group) GroupQueryWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/groups/query/"
 	result, err := core.Request[core.Record](ctx, g, http.MethodPatch, resourcePath, nil, body)
@@ -88,6 +102,14 @@ func (g *Group) GroupQueryWithContext_PATCH(ctx context.Context, body core.Param
 // method: PATCH
 // url: /groups/query/
 // summary: Modify non-Local Group
+//
+// Body:
+//   - gid: Group GID
+//   - groupname: Group name
+//   - s3_policies_ids: list of s3 policy ids
+//   - sid: Group SID
+//   - tenant_id: Tenant ID
+//   - vaid: Group vast ID
 func (g *Group) GroupQuery_PATCH(body core.Params) (core.Record, error) {
 	return g.GroupQueryWithContext_PATCH(g.Rest.GetCtx(), body)
 }

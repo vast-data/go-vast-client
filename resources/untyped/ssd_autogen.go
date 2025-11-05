@@ -15,15 +15,13 @@ import (
 // url: /ssds/{id}/control_led/
 // summary: Turn SSD identification LED on and off
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (s *Ssd) SsdControlLedWithContext_PATCH(ctx context.Context, id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
+func (s *Ssd) SsdControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("ssds", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	result, err := core.Request[core.Record](ctx, s, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -38,17 +36,23 @@ func (s *Ssd) SsdControlLedWithContext_PATCH(ctx context.Context, id any, contro
 // url: /ssds/{id}/control_led/
 // summary: Turn SSD identification LED on and off
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (s *Ssd) SsdControlLed_PATCH(id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
-	return s.SsdControlLedWithContext_PATCH(s.Rest.GetCtx(), id, control, waitTimeout)
+func (s *Ssd) SsdControlLed_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return s.SsdControlLedWithContext_PATCH(s.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // SsdFormatWithContext_PATCH
 // method: PATCH
 // url: /ssds/{id}/format/
 // summary: Format SSD
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -67,6 +71,10 @@ func (s *Ssd) SsdFormatWithContext_PATCH(ctx context.Context, id any, body core.
 // method: PATCH
 // url: /ssds/{id}/format/
 // summary: Format SSD
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

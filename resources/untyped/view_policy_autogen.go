@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /viewpolicies/{id}/refresh_netgroups/
 // summary: refresh View policy netgroups
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *ViewPolicy) ViewPolicyRefreshNetgroupsWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("viewpolicies", id, "refresh_netgroups")
 	_, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
@@ -24,6 +28,10 @@ func (v *ViewPolicy) ViewPolicyRefreshNetgroupsWithContext_PATCH(ctx context.Con
 // method: PATCH
 // url: /viewpolicies/{id}/refresh_netgroups/
 // summary: refresh View policy netgroups
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *ViewPolicy) ViewPolicyRefreshNetgroups_PATCH(id any, body core.Params) error {
 	return v.ViewPolicyRefreshNetgroupsWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
@@ -32,14 +40,10 @@ func (v *ViewPolicy) ViewPolicyRefreshNetgroups_PATCH(id any, body core.Params) 
 // method: DELETE
 // url: /viewpolicies/{id}/remote_mapping/
 //
-// Parameters:
-//   - peer (body): Peer name
-func (v *ViewPolicy) ViewPolicyRemoteMappingWithContext_DELETE(ctx context.Context, id any, peer string) error {
+// Body:
+//   - peer: Peer name
+func (v *ViewPolicy) ViewPolicyRemoteMappingWithContext_DELETE(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("viewpolicies", id, "remote_mapping")
-	body := core.Params{}
-	if peer != "" {
-		body["peer"] = peer
-	}
 	_, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, nil, body)
 	return err
 
@@ -49,28 +53,21 @@ func (v *ViewPolicy) ViewPolicyRemoteMappingWithContext_DELETE(ctx context.Conte
 // method: DELETE
 // url: /viewpolicies/{id}/remote_mapping/
 //
-// Parameters:
-//   - peer (body): Peer name
-func (v *ViewPolicy) ViewPolicyRemoteMapping_DELETE(id any, peer string) error {
-	return v.ViewPolicyRemoteMappingWithContext_DELETE(v.Rest.GetCtx(), id, peer)
+// Body:
+//   - peer: Peer name
+func (v *ViewPolicy) ViewPolicyRemoteMapping_DELETE(id any, body core.Params) error {
+	return v.ViewPolicyRemoteMappingWithContext_DELETE(v.Rest.GetCtx(), id, body)
 }
 
 // ViewPolicyRemoteMappingWithContext_POST
 // method: POST
 // url: /viewpolicies/{id}/remote_mapping/
 //
-// Parameters:
-//   - peer (body): Peer name
-//   - remotePolicy (body): Remote policy name
-func (v *ViewPolicy) ViewPolicyRemoteMappingWithContext_POST(ctx context.Context, id any, peer string, remotePolicy string) (core.Record, error) {
+// Body:
+//   - peer: Peer name
+//   - remote_policy: Remote policy name
+func (v *ViewPolicy) ViewPolicyRemoteMappingWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("viewpolicies", id, "remote_mapping")
-	body := core.Params{}
-	if peer != "" {
-		body["peer"] = peer
-	}
-	if remotePolicy != "" {
-		body["remote_policy"] = remotePolicy
-	}
 	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -82,9 +79,9 @@ func (v *ViewPolicy) ViewPolicyRemoteMappingWithContext_POST(ctx context.Context
 // method: POST
 // url: /viewpolicies/{id}/remote_mapping/
 //
-// Parameters:
-//   - peer (body): Peer name
-//   - remotePolicy (body): Remote policy name
-func (v *ViewPolicy) ViewPolicyRemoteMapping_POST(id any, peer string, remotePolicy string) (core.Record, error) {
-	return v.ViewPolicyRemoteMappingWithContext_POST(v.Rest.GetCtx(), id, peer, remotePolicy)
+// Body:
+//   - peer: Peer name
+//   - remote_policy: Remote policy name
+func (v *ViewPolicy) ViewPolicyRemoteMapping_POST(id any, body core.Params) (core.Record, error) {
+	return v.ViewPolicyRemoteMappingWithContext_POST(v.Rest.GetCtx(), id, body)
 }

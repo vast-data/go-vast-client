@@ -14,14 +14,11 @@ import (
 // url: /bigcatalogindexedcolumns/add/
 // summary: Add Indexed Column to VAST Catalog
 //
-// Parameters:
-//   - columnType (body): Type of indexed column
-//   - name (body): Column name
-func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsAddWithContext_PATCH(ctx context.Context, columnType string, name string) error {
+// Body:
+//   - column_type: Type of indexed column
+//   - name: Column name
+func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsAddWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/bigcatalogindexedcolumns/add/"
-	body := core.Params{}
-	body["column_type"] = columnType
-	body["name"] = name
 	_, err := core.Request[core.Record](ctx, b, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -32,11 +29,11 @@ func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsAddWithContext_PATCH(
 // url: /bigcatalogindexedcolumns/add/
 // summary: Add Indexed Column to VAST Catalog
 //
-// Parameters:
-//   - columnType (body): Type of indexed column
-//   - name (body): Column name
-func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsAdd_PATCH(columnType string, name string) error {
-	return b.BigCatalogIndexedColumnsAddWithContext_PATCH(b.Rest.GetCtx(), columnType, name)
+// Body:
+//   - column_type: Type of indexed column
+//   - name: Column name
+func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsAdd_PATCH(body core.Params) error {
+	return b.BigCatalogIndexedColumnsAddWithContext_PATCH(b.Rest.GetCtx(), body)
 }
 
 // BigCatalogIndexedColumnsRemoveWithContext_DELETE
@@ -44,14 +41,11 @@ func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsAdd_PATCH(columnType 
 // url: /bigcatalogindexedcolumns/remove/
 // summary: Remove VAST Catalog Indexed Column
 //
-// Parameters:
-//   - columnType (body): Type of indexed column
-//   - name (body): Column name
-func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsRemoveWithContext_DELETE(ctx context.Context, columnType string, name string) error {
+// Body:
+//   - column_type: Type of indexed column
+//   - name: Column name
+func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsRemoveWithContext_DELETE(ctx context.Context, body core.Params) error {
 	resourcePath := "/bigcatalogindexedcolumns/remove/"
-	body := core.Params{}
-	body["column_type"] = columnType
-	body["name"] = name
 	_, err := core.Request[core.Record](ctx, b, http.MethodDelete, resourcePath, nil, body)
 	return err
 
@@ -62,9 +56,9 @@ func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsRemoveWithContext_DEL
 // url: /bigcatalogindexedcolumns/remove/
 // summary: Remove VAST Catalog Indexed Column
 //
-// Parameters:
-//   - columnType (body): Type of indexed column
-//   - name (body): Column name
-func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsRemove_DELETE(columnType string, name string) error {
-	return b.BigCatalogIndexedColumnsRemoveWithContext_DELETE(b.Rest.GetCtx(), columnType, name)
+// Body:
+//   - column_type: Type of indexed column
+//   - name: Column name
+func (b *BigCatalogIndexedColumns) BigCatalogIndexedColumnsRemove_DELETE(body core.Params) error {
+	return b.BigCatalogIndexedColumnsRemoveWithContext_DELETE(b.Rest.GetCtx(), body)
 }

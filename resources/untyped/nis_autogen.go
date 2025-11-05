@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /nis/refresh/
 // summary: Refresh NIS Cache
+//
+// Body:
+//
+//	< not declared in schema >
 func (n *Nis) NisRefreshWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/nis/refresh/"
 	result, err := core.Request[core.Record](ctx, n, http.MethodPatch, resourcePath, nil, body)
@@ -26,6 +30,10 @@ func (n *Nis) NisRefreshWithContext_PATCH(ctx context.Context, body core.Params)
 // method: PATCH
 // url: /nis/refresh/
 // summary: Refresh NIS Cache
+//
+// Body:
+//
+//	< not declared in schema >
 func (n *Nis) NisRefresh_PATCH(body core.Params) (core.Record, error) {
 	return n.NisRefreshWithContext_PATCH(n.Rest.GetCtx(), body)
 }
@@ -34,6 +42,10 @@ func (n *Nis) NisRefresh_PATCH(body core.Params) (core.Record, error) {
 // method: PATCH
 // url: /nis/{id}/set_posix_primary/
 // summary: Set NIS as Primary POSIX Provider
+//
+// Body:
+//
+//	< not declared in schema >
 func (n *Nis) NisSetPosixPrimaryWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("nis", id, "set_posix_primary")
 	_, err := core.Request[core.Record](ctx, n, http.MethodPatch, resourcePath, nil, body)
@@ -45,6 +57,10 @@ func (n *Nis) NisSetPosixPrimaryWithContext_PATCH(ctx context.Context, id any, b
 // method: PATCH
 // url: /nis/{id}/set_posix_primary/
 // summary: Set NIS as Primary POSIX Provider
+//
+// Body:
+//
+//	< not declared in schema >
 func (n *Nis) NisSetPosixPrimary_PATCH(id any, body core.Params) error {
 	return n.NisSetPosixPrimaryWithContext_PATCH(n.Rest.GetCtx(), id, body)
 }

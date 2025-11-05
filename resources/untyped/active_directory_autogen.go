@@ -13,6 +13,10 @@ import (
 // method: POST
 // url: /activedirectory/{id}/change_machine_account_password/
 // summary: Change machine account password
+//
+// Body:
+//
+//	< not declared in schema >
 func (a *ActiveDirectory) ActiveDirectoryChangeMachineAccountPasswordWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "change_machine_account_password")
 	result, err := core.Request[core.Record](ctx, a, http.MethodPost, resourcePath, nil, body)
@@ -26,6 +30,10 @@ func (a *ActiveDirectory) ActiveDirectoryChangeMachineAccountPasswordWithContext
 // method: POST
 // url: /activedirectory/{id}/change_machine_account_password/
 // summary: Change machine account password
+//
+// Body:
+//
+//	< not declared in schema >
 func (a *ActiveDirectory) ActiveDirectoryChangeMachineAccountPassword_POST(id any, body core.Params) (core.Record, error) {
 	return a.ActiveDirectoryChangeMachineAccountPasswordWithContext_POST(a.Rest.GetCtx(), id, body)
 }
@@ -55,6 +63,12 @@ func (a *ActiveDirectory) ActiveDirectoryCurrentGc_GET(id any) (core.Record, err
 // method: GET
 // url: /activedirectory/{id}/dcs/
 // summary: Get Active Directory DCs
+//
+// Params:
+//   - state
+//   - is_closest
+//   - uri
+//   - port
 func (a *ActiveDirectory) ActiveDirectoryDcsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "dcs")
 	result, err := core.Request[core.Record](ctx, a, http.MethodGet, resourcePath, params, nil)
@@ -68,6 +82,12 @@ func (a *ActiveDirectory) ActiveDirectoryDcsWithContext_GET(ctx context.Context,
 // method: GET
 // url: /activedirectory/{id}/dcs/
 // summary: Get Active Directory DCs
+//
+// Params:
+//   - state
+//   - is_closest
+//   - uri
+//   - port
 func (a *ActiveDirectory) ActiveDirectoryDcs_GET(id any, params core.Params) (core.Record, error) {
 	return a.ActiveDirectoryDcsWithContext_GET(a.Rest.GetCtx(), id, params)
 }
@@ -77,22 +97,12 @@ func (a *ActiveDirectory) ActiveDirectoryDcs_GET(id any, params core.Params) (co
 // url: /activedirectory/{id}/domains/
 // summary: Get Active Directory domains
 //
-// Parameters:
-//   - BaseDn (query)
-//   - Fqdn (query)
-//   - Sid (query)
-func (a *ActiveDirectory) ActiveDirectoryDomainsWithContext_GET(ctx context.Context, id any, BaseDn string, Fqdn string, Sid string) (core.Record, error) {
+// Params:
+//   - base_dn
+//   - fqdn
+//   - sid
+func (a *ActiveDirectory) ActiveDirectoryDomainsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "domains")
-	params := core.Params{}
-	if BaseDn != "" {
-		params["base_dn"] = BaseDn
-	}
-	if Fqdn != "" {
-		params["fqdn"] = Fqdn
-	}
-	if Sid != "" {
-		params["sid"] = Sid
-	}
 	result, err := core.Request[core.Record](ctx, a, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -105,18 +115,24 @@ func (a *ActiveDirectory) ActiveDirectoryDomainsWithContext_GET(ctx context.Cont
 // url: /activedirectory/{id}/domains/
 // summary: Get Active Directory domains
 //
-// Parameters:
-//   - BaseDn (query)
-//   - Fqdn (query)
-//   - Sid (query)
-func (a *ActiveDirectory) ActiveDirectoryDomains_GET(id any, BaseDn string, Fqdn string, Sid string) (core.Record, error) {
-	return a.ActiveDirectoryDomainsWithContext_GET(a.Rest.GetCtx(), id, BaseDn, Fqdn, Sid)
+// Params:
+//   - base_dn
+//   - fqdn
+//   - sid
+func (a *ActiveDirectory) ActiveDirectoryDomains_GET(id any, params core.Params) (core.Record, error) {
+	return a.ActiveDirectoryDomainsWithContext_GET(a.Rest.GetCtx(), id, params)
 }
 
 // ActiveDirectoryGcsWithContext_GET
 // method: GET
 // url: /activedirectory/{id}/gcs/
 // summary: Get Active Directory GCs
+//
+// Params:
+//   - state
+//   - is_closest
+//   - uri
+//   - port
 func (a *ActiveDirectory) ActiveDirectoryGcsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "gcs")
 	result, err := core.Request[core.Record](ctx, a, http.MethodGet, resourcePath, params, nil)
@@ -130,6 +146,12 @@ func (a *ActiveDirectory) ActiveDirectoryGcsWithContext_GET(ctx context.Context,
 // method: GET
 // url: /activedirectory/{id}/gcs/
 // summary: Get Active Directory GCs
+//
+// Params:
+//   - state
+//   - is_closest
+//   - uri
+//   - port
 func (a *ActiveDirectory) ActiveDirectoryGcs_GET(id any, params core.Params) (core.Record, error) {
 	return a.ActiveDirectoryGcsWithContext_GET(a.Rest.GetCtx(), id, params)
 }
@@ -139,14 +161,17 @@ func (a *ActiveDirectory) ActiveDirectoryGcs_GET(id any, params core.Params) (co
 // url: /activedirectory/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
 //
-// Parameters:
-//   - Operation (query)
-func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx context.Context, id any, Operation string, body core.Params) (core.Record, error) {
+// Params:
+//   - operation
+//
+// Body:
+//   - admin_passwd: The password for the specified Active Directory admin user.
+//   - admin_username: An Active Directory admin user with permission to join the Active Directory server.
+//   - enabled: Set to true to join Active Directory. Set to false to leave Active Directory.
+//   - ntlm_enabled: Manages support of NTLM authentication method for SMB protocol.
+//   - smb_allowed: Indicates if the Active Directory configuration is allowed to serve as a provider for SMB attributes.
+func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx context.Context, id any, params core.Params, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "is_operation_healthy")
-	params := core.Params{}
-	if Operation != "" {
-		params["operation"] = Operation
-	}
 	result, err := core.Request[core.Record](ctx, a, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
@@ -159,16 +184,27 @@ func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx 
 // url: /activedirectory/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
 //
-// Parameters:
-//   - Operation (query)
-func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthy_POST(id any, Operation string, body core.Params) (core.Record, error) {
-	return a.ActiveDirectoryIsOperationHealthyWithContext_POST(a.Rest.GetCtx(), id, Operation, body)
+// Params:
+//   - operation
+//
+// Body:
+//   - admin_passwd: The password for the specified Active Directory admin user.
+//   - admin_username: An Active Directory admin user with permission to join the Active Directory server.
+//   - enabled: Set to true to join Active Directory. Set to false to leave Active Directory.
+//   - ntlm_enabled: Manages support of NTLM authentication method for SMB protocol.
+//   - smb_allowed: Indicates if the Active Directory configuration is allowed to serve as a provider for SMB attributes.
+func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthy_POST(id any, params core.Params, body core.Params) (core.Record, error) {
+	return a.ActiveDirectoryIsOperationHealthyWithContext_POST(a.Rest.GetCtx(), id, params, body)
 }
 
 // ActiveDirectoryRefreshWithContext_PATCH
 // method: PATCH
 // url: /activedirectory/{id}/refresh/
 // summary: Refresh AD
+//
+// Body:
+//
+//	< not declared in schema >
 func (a *ActiveDirectory) ActiveDirectoryRefreshWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "refresh")
 	_, err := core.Request[core.Record](ctx, a, http.MethodPatch, resourcePath, nil, body)
@@ -180,6 +216,10 @@ func (a *ActiveDirectory) ActiveDirectoryRefreshWithContext_PATCH(ctx context.Co
 // method: PATCH
 // url: /activedirectory/{id}/refresh/
 // summary: Refresh AD
+//
+// Body:
+//
+//	< not declared in schema >
 func (a *ActiveDirectory) ActiveDirectoryRefresh_PATCH(id any, body core.Params) error {
 	return a.ActiveDirectoryRefreshWithContext_PATCH(a.Rest.GetCtx(), id, body)
 }

@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /alarms/clear/
 // summary: Clear Alarms
+//
+// Body:
+//
+//	< not declared in schema >
 func (a *Alarm) AlarmClearWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/alarms/clear/"
 	result, err := core.Request[core.Record](ctx, a, http.MethodPatch, resourcePath, nil, body)
@@ -26,6 +30,10 @@ func (a *Alarm) AlarmClearWithContext_PATCH(ctx context.Context, body core.Param
 // method: PATCH
 // url: /alarms/clear/
 // summary: Clear Alarms
+//
+// Body:
+//
+//	< not declared in schema >
 func (a *Alarm) AlarmClear_PATCH(body core.Params) (core.Record, error) {
 	return a.AlarmClearWithContext_PATCH(a.Rest.GetCtx(), body)
 }

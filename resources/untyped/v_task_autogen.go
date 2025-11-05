@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /vtasks/{id}/retry/
 // summary: Retry/Rerun VTask
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *VTask) VTaskRetryWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vtasks", id, "retry")
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
@@ -26,6 +30,10 @@ func (v *VTask) VTaskRetryWithContext_PATCH(ctx context.Context, id any, body co
 // method: PATCH
 // url: /vtasks/{id}/retry/
 // summary: Retry/Rerun VTask
+//
+// Body:
+//
+//	< not declared in schema >
 func (v *VTask) VTaskRetry_PATCH(id any, body core.Params) (core.Record, error) {
 	return v.VTaskRetryWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }

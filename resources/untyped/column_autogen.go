@@ -13,9 +13,16 @@ import (
 // method: DELETE
 // url: /columns/delete/
 // summary: Delete a Database Table Column
-func (c *Column) ColumnDeleteWithContext_DELETE(ctx context.Context) error {
+//
+// Body:
+//   - arrow_schema
+//   - database_name: Name of the Database
+//   - schema_name: Name of the Schema
+//   - table_name: Name of the Table
+//   - tenant_id: Tenant ID
+func (c *Column) ColumnDeleteWithContext_DELETE(ctx context.Context, body core.Params) error {
 	resourcePath := "/columns/delete/"
-	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, nil)
+	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -24,14 +31,30 @@ func (c *Column) ColumnDeleteWithContext_DELETE(ctx context.Context) error {
 // method: DELETE
 // url: /columns/delete/
 // summary: Delete a Database Table Column
-func (c *Column) ColumnDelete_DELETE() error {
-	return c.ColumnDeleteWithContext_DELETE(c.Rest.GetCtx())
+//
+// Body:
+//   - arrow_schema
+//   - database_name: Name of the Database
+//   - schema_name: Name of the Schema
+//   - table_name: Name of the Table
+//   - tenant_id: Tenant ID
+func (c *Column) ColumnDelete_DELETE(body core.Params) error {
+	return c.ColumnDeleteWithContext_DELETE(c.Rest.GetCtx(), body)
 }
 
 // ColumnRenameWithContext_PATCH
 // method: PATCH
 // url: /columns/rename/
 // summary: Rename a Database Table Column
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - new_column_name: New Name of the Column (deprecated since 5.0)
+//   - new_name: New name of the Column
+//   - schema_name: Name of the Schema
+//   - table_name: Name of the Table
+//   - tenant_id: Tenant ID
 func (c *Column) ColumnRenameWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/columns/rename/"
 	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
@@ -43,6 +66,15 @@ func (c *Column) ColumnRenameWithContext_PATCH(ctx context.Context, body core.Pa
 // method: PATCH
 // url: /columns/rename/
 // summary: Rename a Database Table Column
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - new_column_name: New Name of the Column (deprecated since 5.0)
+//   - new_name: New name of the Column
+//   - schema_name: Name of the Schema
+//   - table_name: Name of the Table
+//   - tenant_id: Tenant ID
 func (c *Column) ColumnRename_PATCH(body core.Params) error {
 	return c.ColumnRenameWithContext_PATCH(c.Rest.GetCtx(), body)
 }
@@ -51,6 +83,14 @@ func (c *Column) ColumnRename_PATCH(body core.Params) error {
 // method: GET
 // url: /columns/show/
 // summary: Show a Database Table Column
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - table_name: Getting list of objects by table_name
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Getting object by exact match
 func (c *Column) ColumnShowWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/columns/show/"
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
@@ -64,6 +104,14 @@ func (c *Column) ColumnShowWithContext_GET(ctx context.Context, params core.Para
 // method: GET
 // url: /columns/show/
 // summary: Show a Database Table Column
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - table_name: Getting list of objects by table_name
+//   - is_imports_table: Is table actually a sub-table to track imported .parquet files.
+//   - name: Getting object by exact match
 func (c *Column) ColumnShow_GET(params core.Params) (core.Record, error) {
 	return c.ColumnShowWithContext_GET(c.Rest.GetCtx(), params)
 }

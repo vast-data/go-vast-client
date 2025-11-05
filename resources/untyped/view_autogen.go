@@ -14,6 +14,12 @@ import (
 // method: POST
 // url: /views/{id}/check_permissions_templates/
 // summary: Check Permissions Templates Before Bulk Permission Update
+//
+// Body:
+//   - target_path: Target dir path
+//   - template_dir_path: Template dir path
+//   - template_file_path: Template file path
+//   - template_view_id: Template view ID
 func (v *View) ViewCheckPermissionsTemplatesWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("views", id, "check_permissions_templates")
 	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, nil, body)
@@ -27,6 +33,12 @@ func (v *View) ViewCheckPermissionsTemplatesWithContext_POST(ctx context.Context
 // method: POST
 // url: /views/{id}/check_permissions_templates/
 // summary: Check Permissions Templates Before Bulk Permission Update
+//
+// Body:
+//   - target_path: Target dir path
+//   - template_dir_path: Template dir path
+//   - template_file_path: Template file path
+//   - template_view_id: Template view ID
 func (v *View) ViewCheckPermissionsTemplates_POST(id any, body core.Params) (core.Record, error) {
 	return v.ViewCheckPermissionsTemplatesWithContext_POST(v.Rest.GetCtx(), id, body)
 }
@@ -35,6 +47,12 @@ func (v *View) ViewCheckPermissionsTemplates_POST(id any, body core.Params) (cor
 // method: DELETE
 // url: /views/close_smb_handle/
 // summary: Close open SMB filehandles
+//
+// Params:
+//   - file_path: File path
+//   - session_id: Session ID
+//   - session_handle_unique_id: Handle ID
+//   - tenant_guid: Tenant GUID
 func (v *View) ViewCloseSmbHandleWithContext_DELETE(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/views/close_smb_handle/"
 	result, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, params, nil)
@@ -48,6 +66,12 @@ func (v *View) ViewCloseSmbHandleWithContext_DELETE(ctx context.Context, params 
 // method: DELETE
 // url: /views/close_smb_handle/
 // summary: Close open SMB filehandles
+//
+// Params:
+//   - file_path: File path
+//   - session_id: Session ID
+//   - session_handle_unique_id: Handle ID
+//   - tenant_guid: Tenant GUID
 func (v *View) ViewCloseSmbHandle_DELETE(params core.Params) (core.Record, error) {
 	return v.ViewCloseSmbHandleWithContext_DELETE(v.Rest.GetCtx(), params)
 }
@@ -57,12 +81,10 @@ func (v *View) ViewCloseSmbHandle_DELETE(params core.Params) (core.Record, error
 // url: /views/{id}/legal_hold/
 // summary: Get legal hold
 //
-// Parameters:
-//   - LegalHoldPath (query): Path to get legal hold
-func (v *View) ViewLegalHoldWithContext_GET(ctx context.Context, id any, LegalHoldPath string) (core.Record, error) {
+// Params:
+//   - legal_hold_path: Path to get legal hold
+func (v *View) ViewLegalHoldWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("views", id, "legal_hold")
-	params := core.Params{}
-	params["legal_hold_path"] = LegalHoldPath
 	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -75,10 +97,10 @@ func (v *View) ViewLegalHoldWithContext_GET(ctx context.Context, id any, LegalHo
 // url: /views/{id}/legal_hold/
 // summary: Get legal hold
 //
-// Parameters:
-//   - LegalHoldPath (query): Path to get legal hold
-func (v *View) ViewLegalHold_GET(id any, LegalHoldPath string) (core.Record, error) {
-	return v.ViewLegalHoldWithContext_GET(v.Rest.GetCtx(), id, LegalHoldPath)
+// Params:
+//   - legal_hold_path: Path to get legal hold
+func (v *View) ViewLegalHold_GET(id any, params core.Params) (core.Record, error) {
+	return v.ViewLegalHoldWithContext_GET(v.Rest.GetCtx(), id, params)
 }
 
 // ViewLegalHoldWithContext_PATCH
@@ -86,14 +108,11 @@ func (v *View) ViewLegalHold_GET(id any, LegalHoldPath string) (core.Record, err
 // url: /views/{id}/legal_hold/
 // summary: Change legal hold
 //
-// Parameters:
-//   - legalHoldPath (body): Path to set/unset
-//   - value (body): True to set, False to unset
-func (v *View) ViewLegalHoldWithContext_PATCH(ctx context.Context, id any, legalHoldPath string, value bool) (core.Record, error) {
+// Body:
+//   - legal_hold_path: Path to set/unset
+//   - value: True to set, False to unset
+func (v *View) ViewLegalHoldWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("views", id, "legal_hold")
-	body := core.Params{}
-	body["legal_hold_path"] = legalHoldPath
-	body["value"] = value
 	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -106,11 +125,11 @@ func (v *View) ViewLegalHoldWithContext_PATCH(ctx context.Context, id any, legal
 // url: /views/{id}/legal_hold/
 // summary: Change legal hold
 //
-// Parameters:
-//   - legalHoldPath (body): Path to set/unset
-//   - value (body): True to set, False to unset
-func (v *View) ViewLegalHold_PATCH(id any, legalHoldPath string, value bool) (core.Record, error) {
-	return v.ViewLegalHoldWithContext_PATCH(v.Rest.GetCtx(), id, legalHoldPath, value)
+// Body:
+//   - legal_hold_path: Path to set/unset
+//   - value: True to set, False to unset
+func (v *View) ViewLegalHold_PATCH(id any, body core.Params) (core.Record, error) {
+	return v.ViewLegalHoldWithContext_PATCH(v.Rest.GetCtx(), id, body)
 }
 
 // ViewListOpenSmbHandlesWithContext_GET
@@ -118,16 +137,11 @@ func (v *View) ViewLegalHold_PATCH(id any, legalHoldPath string, value bool) (co
 // url: /views/list_open_smb_handles/
 // summary: Query open SMB filehandles
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - TenantGuid (query): Tenant GUID
-func (v *View) ViewListOpenSmbHandlesWithContext_GET(ctx context.Context, FilePath string, TenantGuid string) (core.Record, error) {
+// Params:
+//   - file_path: File path
+//   - tenant_guid: Tenant GUID
+func (v *View) ViewListOpenSmbHandlesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/views/list_open_smb_handles/"
-	params := core.Params{}
-	params["file_path"] = FilePath
-	if TenantGuid != "" {
-		params["tenant_guid"] = TenantGuid
-	}
 	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -140,11 +154,11 @@ func (v *View) ViewListOpenSmbHandlesWithContext_GET(ctx context.Context, FilePa
 // url: /views/list_open_smb_handles/
 // summary: Query open SMB filehandles
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - TenantGuid (query): Tenant GUID
-func (v *View) ViewListOpenSmbHandles_GET(FilePath string, TenantGuid string) (core.Record, error) {
-	return v.ViewListOpenSmbHandlesWithContext_GET(v.Rest.GetCtx(), FilePath, TenantGuid)
+// Params:
+//   - file_path: File path
+//   - tenant_guid: Tenant GUID
+func (v *View) ViewListOpenSmbHandles_GET(params core.Params) (core.Record, error) {
+	return v.ViewListOpenSmbHandlesWithContext_GET(v.Rest.GetCtx(), params)
 }
 
 // ViewListSeamlessPeersWithContext_GET
@@ -152,14 +166,11 @@ func (v *View) ViewListOpenSmbHandles_GET(FilePath string, TenantGuid string) (c
 // url: /views/list_seamless_peers/
 // summary: Get a list of available seamless peers
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - TenantGuid (query): Tenant's globally unique identifier
-func (v *View) ViewListSeamlessPeersWithContext_GET(ctx context.Context, FilePath string, TenantGuid string) (core.RecordSet, error) {
+// Params:
+//   - file_path: File path
+//   - tenant_guid: Tenant's globally unique identifier
+func (v *View) ViewListSeamlessPeersWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
 	resourcePath := "/views/list_seamless_peers/"
-	params := core.Params{}
-	params["file_path"] = FilePath
-	params["tenant_guid"] = TenantGuid
 	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -173,11 +184,11 @@ func (v *View) ViewListSeamlessPeersWithContext_GET(ctx context.Context, FilePat
 // url: /views/list_seamless_peers/
 // summary: Get a list of available seamless peers
 //
-// Parameters:
-//   - FilePath (query): File path
-//   - TenantGuid (query): Tenant's globally unique identifier
-func (v *View) ViewListSeamlessPeers_GET(FilePath string, TenantGuid string) (core.RecordSet, error) {
-	return v.ViewListSeamlessPeersWithContext_GET(v.Rest.GetCtx(), FilePath, TenantGuid)
+// Params:
+//   - file_path: File path
+//   - tenant_guid: Tenant's globally unique identifier
+func (v *View) ViewListSeamlessPeers_GET(params core.Params) (core.RecordSet, error) {
+	return v.ViewListSeamlessPeersWithContext_GET(v.Rest.GetCtx(), params)
 }
 
 // ViewPermissionsRepairWithContext_DELETE
@@ -206,6 +217,12 @@ func (v *View) ViewPermissionsRepair_DELETE(id any) (core.Record, error) {
 // url: /views/{id}/permissions_repair/
 // summary: Start Bulk Permission Update
 //
+// Body:
+//   - target_path: Path to the directory where the files and directories that you want to update permissions for reside.
+//   - template_dir_path: Path to the directory to retrieve permissions from and apply to the target path.
+//   - template_file_path: Path to a file under template_dir_path that you want to use as a template for file permissions. If specified, permissions of target files are overwritten with those of the template file and permissions of target directories are overwritten with those of the template directory. If not specified, permissions and ownership attributes of the target directory are overwritten with those of the template directory, and nested directories and files inherit permissions and ownership attributes from their parent. In this case, the template directory must have a default ACL.
+//   - template_view_id: The ID of a view that exposes template_dir_path. The view must be on the same tenant as the target path.
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (v *View) ViewPermissionsRepairWithContext_POST(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -223,6 +240,12 @@ func (v *View) ViewPermissionsRepairWithContext_POST(ctx context.Context, id any
 // method: POST
 // url: /views/{id}/permissions_repair/
 // summary: Start Bulk Permission Update
+//
+// Body:
+//   - target_path: Path to the directory where the files and directories that you want to update permissions for reside.
+//   - template_dir_path: Path to the directory to retrieve permissions from and apply to the target path.
+//   - template_file_path: Path to a file under template_dir_path that you want to use as a template for file permissions. If specified, permissions of target files are overwritten with those of the template file and permissions of target directories are overwritten with those of the template directory. If not specified, permissions and ownership attributes of the target directory are overwritten with those of the template directory, and nested directories and files inherit permissions and ownership attributes from their parent. In this case, the template directory must have a default ACL.
+//   - template_view_id: The ID of a view that exposes template_dir_path. The view must be on the same tenant as the target path.
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

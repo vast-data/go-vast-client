@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /eventdefinitionconfigs/{id}/test/
 // summary: Test Event Definition Configuration
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EventDefinitionConfig) EventDefinitionConfigTestWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("eventdefinitionconfigs", id, "test")
 	result, err := core.Request[core.Record](ctx, e, http.MethodPatch, resourcePath, nil, body)
@@ -26,6 +30,10 @@ func (e *EventDefinitionConfig) EventDefinitionConfigTestWithContext_PATCH(ctx c
 // method: PATCH
 // url: /eventdefinitionconfigs/{id}/test/
 // summary: Test Event Definition Configuration
+//
+// Body:
+//
+//	< not declared in schema >
 func (e *EventDefinitionConfig) EventDefinitionConfigTest_PATCH(id any, body core.Params) (core.Record, error) {
 	return e.EventDefinitionConfigTestWithContext_PATCH(e.Rest.GetCtx(), id, body)
 }

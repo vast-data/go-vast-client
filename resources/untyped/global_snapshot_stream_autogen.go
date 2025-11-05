@@ -15,14 +15,10 @@ import (
 // url: /globalsnapstreams/{id}/pause/
 // summary: Pause a Global Snapshot Stream
 //
-// Parameters:
-//   - enabled (body): Enabled
-func (g *GlobalSnapshotStream) GlobalSnapshotStreamPauseWithContext_PATCH(ctx context.Context, id any, enabled bool) (core.Record, error) {
+// Body:
+//   - enabled: Enabled
+func (g *GlobalSnapshotStream) GlobalSnapshotStreamPauseWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("globalsnapstreams", id, "pause")
-	body := core.Params{}
-	if enabled != false {
-		body["enabled"] = enabled
-	}
 	result, err := core.Request[core.Record](ctx, g, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -35,10 +31,10 @@ func (g *GlobalSnapshotStream) GlobalSnapshotStreamPauseWithContext_PATCH(ctx co
 // url: /globalsnapstreams/{id}/pause/
 // summary: Pause a Global Snapshot Stream
 //
-// Parameters:
-//   - enabled (body): Enabled
-func (g *GlobalSnapshotStream) GlobalSnapshotStreamPause_PATCH(id any, enabled bool) (core.Record, error) {
-	return g.GlobalSnapshotStreamPauseWithContext_PATCH(g.Rest.GetCtx(), id, enabled)
+// Body:
+//   - enabled: Enabled
+func (g *GlobalSnapshotStream) GlobalSnapshotStreamPause_PATCH(id any, body core.Params) (core.Record, error) {
+	return g.GlobalSnapshotStreamPauseWithContext_PATCH(g.Rest.GetCtx(), id, body)
 }
 
 // GlobalSnapshotStreamResumeWithContext_PATCH
@@ -46,14 +42,10 @@ func (g *GlobalSnapshotStream) GlobalSnapshotStreamPause_PATCH(id any, enabled b
 // url: /globalsnapstreams/{id}/resume/
 // summary: Resume a Global Snapshot Stream
 //
-// Parameters:
-//   - enabled (body): Enabled
-func (g *GlobalSnapshotStream) GlobalSnapshotStreamResumeWithContext_PATCH(ctx context.Context, id any, enabled bool) (core.Record, error) {
+// Body:
+//   - enabled: Enabled
+func (g *GlobalSnapshotStream) GlobalSnapshotStreamResumeWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("globalsnapstreams", id, "resume")
-	body := core.Params{}
-	if enabled != false {
-		body["enabled"] = enabled
-	}
 	result, err := core.Request[core.Record](ctx, g, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -66,16 +58,20 @@ func (g *GlobalSnapshotStream) GlobalSnapshotStreamResumeWithContext_PATCH(ctx c
 // url: /globalsnapstreams/{id}/resume/
 // summary: Resume a Global Snapshot Stream
 //
-// Parameters:
-//   - enabled (body): Enabled
-func (g *GlobalSnapshotStream) GlobalSnapshotStreamResume_PATCH(id any, enabled bool) (core.Record, error) {
-	return g.GlobalSnapshotStreamResumeWithContext_PATCH(g.Rest.GetCtx(), id, enabled)
+// Body:
+//   - enabled: Enabled
+func (g *GlobalSnapshotStream) GlobalSnapshotStreamResume_PATCH(id any, body core.Params) (core.Record, error) {
+	return g.GlobalSnapshotStreamResumeWithContext_PATCH(g.Rest.GetCtx(), id, body)
 }
 
 // GlobalSnapshotStreamStopWithContext_PATCH
 // method: PATCH
 // url: /globalsnapstreams/{id}/stop/
 // summary: Stop a Global Snapshot Stream
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -94,6 +90,10 @@ func (g *GlobalSnapshotStream) GlobalSnapshotStreamStopWithContext_PATCH(ctx con
 // method: PATCH
 // url: /globalsnapstreams/{id}/stop/
 // summary: Stop a Global Snapshot Stream
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

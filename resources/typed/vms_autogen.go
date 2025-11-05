@@ -546,10 +546,15 @@ func (r *Vms) VmsPwdSettings_PATCH(id any, body *VmsPwdSettings_PATCH_Body) (*Vm
 // method: DELETE
 // url: /vms/{id}/saml_config/
 // summary: Delete SAML configuration for a specific IdP
-func (r *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any) (string, error) {
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (r *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any, IdpName string) (string, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	reqParams["idp_name"] = IdpName
+
 	var reqBody core.Params
 
 	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
@@ -571,8 +576,11 @@ func (r *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any) (stri
 // method: DELETE
 // url: /vms/{id}/saml_config/
 // summary: Delete SAML configuration for a specific IdP
-func (r *Vms) VmsSamlConfig_DELETE(id any) (string, error) {
-	return r.VmsSamlConfigWithContext_DELETE(r.Untyped.GetCtx(), id)
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (r *Vms) VmsSamlConfig_DELETE(id any, IdpName string) (string, error) {
+	return r.VmsSamlConfigWithContext_DELETE(r.Untyped.GetCtx(), id, IdpName)
 }
 
 // VmsSamlConfigWithContext_PATCH

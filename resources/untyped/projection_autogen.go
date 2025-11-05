@@ -13,9 +13,16 @@ import (
 // method: DELETE
 // url: /projections/delete/
 // summary: Delete a Database Table Semi-Sorted Projection
-func (p *Projection) ProjectionDeleteWithContext_DELETE(ctx context.Context) error {
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - schema_name: Name of the Schema
+//   - table_name: Name of the Table
+//   - tenant_id: Tenant ID
+func (p *Projection) ProjectionDeleteWithContext_DELETE(ctx context.Context, body core.Params) error {
 	resourcePath := "/projections/delete/"
-	_, err := core.Request[core.Record](ctx, p, http.MethodDelete, resourcePath, nil, nil)
+	_, err := core.Request[core.Record](ctx, p, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -24,14 +31,29 @@ func (p *Projection) ProjectionDeleteWithContext_DELETE(ctx context.Context) err
 // method: DELETE
 // url: /projections/delete/
 // summary: Delete a Database Table Semi-Sorted Projection
-func (p *Projection) ProjectionDelete_DELETE() error {
-	return p.ProjectionDeleteWithContext_DELETE(p.Rest.GetCtx())
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - schema_name: Name of the Schema
+//   - table_name: Name of the Table
+//   - tenant_id: Tenant ID
+func (p *Projection) ProjectionDelete_DELETE(body core.Params) error {
+	return p.ProjectionDeleteWithContext_DELETE(p.Rest.GetCtx(), body)
 }
 
 // ProjectionRenameWithContext_PATCH
 // method: PATCH
 // url: /projections/rename/
 // summary: Rename a Database Table Semi-Sorted Projection
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - new_name: New name of the Projection
+//   - schema_name: Name of the Schema
+//   - table_name: Name of the Table
+//   - tenant_id: Tenant ID
 func (p *Projection) ProjectionRenameWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/projections/rename/"
 	_, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
@@ -43,6 +65,14 @@ func (p *Projection) ProjectionRenameWithContext_PATCH(ctx context.Context, body
 // method: PATCH
 // url: /projections/rename/
 // summary: Rename a Database Table Semi-Sorted Projection
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - new_name: New name of the Projection
+//   - schema_name: Name of the Schema
+//   - table_name: Name of the Table
+//   - tenant_id: Tenant ID
 func (p *Projection) ProjectionRename_PATCH(body core.Params) error {
 	return p.ProjectionRenameWithContext_PATCH(p.Rest.GetCtx(), body)
 }
@@ -51,6 +81,13 @@ func (p *Projection) ProjectionRename_PATCH(body core.Params) error {
 // method: GET
 // url: /projections/show/
 // summary: Return a Database Table Semi-Sorted Projection
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - table_name: Getting list of objects by table_name
+//   - name: Getting object by exact match
 func (p *Projection) ProjectionShowWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/projections/show/"
 	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
@@ -64,6 +101,13 @@ func (p *Projection) ProjectionShowWithContext_GET(ctx context.Context, params c
 // method: GET
 // url: /projections/show/
 // summary: Return a Database Table Semi-Sorted Projection
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - table_name: Getting list of objects by table_name
+//   - name: Getting object by exact match
 func (p *Projection) ProjectionShow_GET(params core.Params) (core.Record, error) {
 	return p.ProjectionShowWithContext_GET(p.Rest.GetCtx(), params)
 }

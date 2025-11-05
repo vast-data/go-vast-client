@@ -14,14 +14,10 @@ import (
 // url: /kafkabrokers/{id}/list_topics/
 // summary: Retrieve Kafka Topics for a Kafka Broker
 //
-// Parameters:
-//   - TopicNameFilter (query)
-func (k *KafkaBroker) KafkaBrokerListTopicsWithContext_GET(ctx context.Context, id any, TopicNameFilter string) (core.RecordSet, error) {
+// Params:
+//   - topic_name_filter
+func (k *KafkaBroker) KafkaBrokerListTopicsWithContext_GET(ctx context.Context, id any, params core.Params) (core.RecordSet, error) {
 	resourcePath := core.BuildResourcePathWithID("kafkabrokers", id, "list_topics")
-	params := core.Params{}
-	if TopicNameFilter != "" {
-		params["topic_name_filter"] = TopicNameFilter
-	}
 	result, err := core.Request[core.RecordSet](ctx, k, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -35,8 +31,8 @@ func (k *KafkaBroker) KafkaBrokerListTopicsWithContext_GET(ctx context.Context, 
 // url: /kafkabrokers/{id}/list_topics/
 // summary: Retrieve Kafka Topics for a Kafka Broker
 //
-// Parameters:
-//   - TopicNameFilter (query)
-func (k *KafkaBroker) KafkaBrokerListTopics_GET(id any, TopicNameFilter string) (core.RecordSet, error) {
-	return k.KafkaBrokerListTopicsWithContext_GET(k.Rest.GetCtx(), id, TopicNameFilter)
+// Params:
+//   - topic_name_filter
+func (k *KafkaBroker) KafkaBrokerListTopics_GET(id any, params core.Params) (core.RecordSet, error) {
+	return k.KafkaBrokerListTopicsWithContext_GET(k.Rest.GetCtx(), id, params)
 }

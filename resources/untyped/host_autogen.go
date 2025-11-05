@@ -44,14 +44,10 @@ func (h *Host) HostDiscover_GET(waitTimeout time.Duration) (*AsyncResult, error)
 // url: /hosts/discovered_hosts/
 // summary: Return new discovered hosts
 //
-// Parameters:
-//   - HostType (query)
-func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, HostType string) (core.RecordSet, error) {
+// Params:
+//   - host_type
+func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
 	resourcePath := "/hosts/discovered_hosts/"
-	params := core.Params{}
-	if HostType != "" {
-		params["host_type"] = HostType
-	}
 	result, err := core.Request[core.RecordSet](ctx, h, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -65,8 +61,8 @@ func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, HostType 
 // url: /hosts/discovered_hosts/
 // summary: Return new discovered hosts
 //
-// Parameters:
-//   - HostType (query)
-func (h *Host) HostDiscoveredHosts_GET(HostType string) (core.RecordSet, error) {
-	return h.HostDiscoveredHostsWithContext_GET(h.Rest.GetCtx(), HostType)
+// Params:
+//   - host_type
+func (h *Host) HostDiscoveredHosts_GET(params core.Params) (core.RecordSet, error) {
+	return h.HostDiscoveredHostsWithContext_GET(h.Rest.GetCtx(), params)
 }

@@ -14,18 +14,12 @@ import (
 // url: /schemas/delete/
 // summary: Delete Schema
 //
-// Parameters:
-//   - databaseName (body): Name of the Database
-//   - name (body): Name of the object
-//   - tenantId (body): Tenant ID
-func (s *Schema) SchemaDeleteWithContext_DELETE(ctx context.Context, databaseName string, name string, tenantId int64) error {
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - tenant_id: Tenant ID
+func (s *Schema) SchemaDeleteWithContext_DELETE(ctx context.Context, body core.Params) error {
 	resourcePath := "/schemas/delete/"
-	body := core.Params{}
-	body["database_name"] = databaseName
-	body["name"] = name
-	if tenantId != 0 {
-		body["tenant_id"] = tenantId
-	}
 	_, err := core.Request[core.Record](ctx, s, http.MethodDelete, resourcePath, nil, body)
 	return err
 
@@ -36,18 +30,25 @@ func (s *Schema) SchemaDeleteWithContext_DELETE(ctx context.Context, databaseNam
 // url: /schemas/delete/
 // summary: Delete Schema
 //
-// Parameters:
-//   - databaseName (body): Name of the Database
-//   - name (body): Name of the object
-//   - tenantId (body): Tenant ID
-func (s *Schema) SchemaDelete_DELETE(databaseName string, name string, tenantId int64) error {
-	return s.SchemaDeleteWithContext_DELETE(s.Rest.GetCtx(), databaseName, name, tenantId)
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - tenant_id: Tenant ID
+func (s *Schema) SchemaDelete_DELETE(body core.Params) error {
+	return s.SchemaDeleteWithContext_DELETE(s.Rest.GetCtx(), body)
 }
 
 // SchemaRenameWithContext_PATCH
 // method: PATCH
 // url: /schemas/rename/
 // summary: Rename a database schema
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - new_name: New name of the Schema
+//   - new_schema_name: New name of the Schema (deprecated since 5.0)
+//   - tenant_id: Tenant ID
 func (s *Schema) SchemaRenameWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/schemas/rename/"
 	_, err := core.Request[core.Record](ctx, s, http.MethodPatch, resourcePath, nil, body)
@@ -59,6 +60,13 @@ func (s *Schema) SchemaRenameWithContext_PATCH(ctx context.Context, body core.Pa
 // method: PATCH
 // url: /schemas/rename/
 // summary: Rename a database schema
+//
+// Body:
+//   - database_name: Name of the Database
+//   - name: Name of the object
+//   - new_name: New name of the Schema
+//   - new_schema_name: New name of the Schema (deprecated since 5.0)
+//   - tenant_id: Tenant ID
 func (s *Schema) SchemaRename_PATCH(body core.Params) error {
 	return s.SchemaRenameWithContext_PATCH(s.Rest.GetCtx(), body)
 }
@@ -68,18 +76,12 @@ func (s *Schema) SchemaRename_PATCH(body core.Params) error {
 // url: /schemas/show/
 // summary: Show a Database Schema
 //
-// Parameters:
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-//   - DatabaseName (query): Getting list of objects by database_name
-//   - Name (query): Getting object by exact match
-func (s *Schema) SchemaShowWithContext_GET(ctx context.Context, TenantId int64, DatabaseName string, Name string) (core.Record, error) {
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - name: Getting object by exact match
+func (s *Schema) SchemaShowWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/schemas/show/"
-	params := core.Params{}
-	if TenantId != 0 {
-		params["tenant_id"] = TenantId
-	}
-	params["database_name"] = DatabaseName
-	params["name"] = Name
 	result, err := core.Request[core.Record](ctx, s, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -92,10 +94,10 @@ func (s *Schema) SchemaShowWithContext_GET(ctx context.Context, TenantId int64, 
 // url: /schemas/show/
 // summary: Show a Database Schema
 //
-// Parameters:
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-//   - DatabaseName (query): Getting list of objects by database_name
-//   - Name (query): Getting object by exact match
-func (s *Schema) SchemaShow_GET(TenantId int64, DatabaseName string, Name string) (core.Record, error) {
-	return s.SchemaShowWithContext_GET(s.Rest.GetCtx(), TenantId, DatabaseName, Name)
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - name: Getting object by exact match
+func (s *Schema) SchemaShow_GET(params core.Params) (core.Record, error) {
+	return s.SchemaShowWithContext_GET(s.Rest.GetCtx(), params)
 }

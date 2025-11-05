@@ -15,15 +15,13 @@ import (
 // url: /nvrams/{id}/control_led/
 // summary: Turn SCM SLED identification LED on and off
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (n *Nvram) NvramControlLedWithContext_PATCH(ctx context.Context, id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
+func (n *Nvram) NvramControlLedWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("nvrams", id, "control_led")
-	body := core.Params{}
-	if control != "" {
-		body["control"] = control
-	}
 	result, err := core.Request[core.Record](ctx, n, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -38,17 +36,23 @@ func (n *Nvram) NvramControlLedWithContext_PATCH(ctx context.Context, id any, co
 // url: /nvrams/{id}/control_led/
 // summary: Turn SCM SLED identification LED on and off
 //
+// Body:
+//   - control: LED state
+//
 // Parameters:
-//   - control (body): LED state
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (n *Nvram) NvramControlLed_PATCH(id any, control string, waitTimeout time.Duration) (*AsyncResult, error) {
-	return n.NvramControlLedWithContext_PATCH(n.Rest.GetCtx(), id, control, waitTimeout)
+func (n *Nvram) NvramControlLed_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return n.NvramControlLedWithContext_PATCH(n.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // NvramFormatWithContext_PATCH
 // method: PATCH
 // url: /nvrams/{id}/format/
 // summary: Format NVRAM
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -67,6 +71,10 @@ func (n *Nvram) NvramFormatWithContext_PATCH(ctx context.Context, id any, body c
 // method: PATCH
 // url: /nvrams/{id}/format/
 // summary: Format NVRAM
+//
+// Body:
+//
+//	< not declared in schema >
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.

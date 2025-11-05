@@ -13,6 +13,14 @@ import (
 // method: GET
 // url: /monitors/{id}/query/
 // summary: Query Analytics using Defined Analytics Report (aka Monitor)
+//
+// Params:
+//   - from_time: Start time for the report. e.g. 2021-01-15T13:41:52Z
+//   - to_time: End time for the report. e.g. 2021-01-15T13:41:52Z
+//   - time_frame: Time frame to report. Specify as an integer followed by 'm' (minutes) 'h' (hours), 'D' (days) ,'W' (weeks) or 'M' (months) 'Y' (years). e.g. 10m
+//   - granularity: Data granularity: seconds (raw), minutes (five minute aggregated samples), hours (hourly aggregated samples), or days (daily aggregated samples)
+//   - aggregation: If granularity is minutes, hours or days, the data is aggregated. This parameter selects which aggregation function to use.
+//   - format_data
 func (m *Monitor) MonitorQueryWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("monitors", id, "query")
 	result, err := core.Request[core.Record](ctx, m, http.MethodGet, resourcePath, params, nil)
@@ -26,6 +34,14 @@ func (m *Monitor) MonitorQueryWithContext_GET(ctx context.Context, id any, param
 // method: GET
 // url: /monitors/{id}/query/
 // summary: Query Analytics using Defined Analytics Report (aka Monitor)
+//
+// Params:
+//   - from_time: Start time for the report. e.g. 2021-01-15T13:41:52Z
+//   - to_time: End time for the report. e.g. 2021-01-15T13:41:52Z
+//   - time_frame: Time frame to report. Specify as an integer followed by 'm' (minutes) 'h' (hours), 'D' (days) ,'W' (weeks) or 'M' (months) 'Y' (years). e.g. 10m
+//   - granularity: Data granularity: seconds (raw), minutes (five minute aggregated samples), hours (hourly aggregated samples), or days (daily aggregated samples)
+//   - aggregation: If granularity is minutes, hours or days, the data is aggregated. This parameter selects which aggregation function to use.
+//   - format_data
 func (m *Monitor) MonitorQuery_GET(id any, params core.Params) (core.Record, error) {
 	return m.MonitorQueryWithContext_GET(m.Rest.GetCtx(), id, params)
 }
@@ -34,6 +50,12 @@ func (m *Monitor) MonitorQuery_GET(id any, params core.Params) (core.Record, err
 // method: GET
 // url: /monitors/topn/
 // summary: Query Top Performer Data
+//
+// Params:
+//   - key: Filters results by category of performers. Supported for users, clients and views only.
+//   - type: Filters results by a specified performance metric
+//   - count: The maximum number of top performers in each category to return in the response
+//   - timestamp: The timestamp for which to display data. For example, 2023-12-06T13:10:03Z. If not passed, the most recent sampling is returned.
 func (m *Monitor) MonitorTopnWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/monitors/topn/"
 	result, err := core.Request[core.Record](ctx, m, http.MethodGet, resourcePath, params, nil)
@@ -47,6 +69,12 @@ func (m *Monitor) MonitorTopnWithContext_GET(ctx context.Context, params core.Pa
 // method: GET
 // url: /monitors/topn/
 // summary: Query Top Performer Data
+//
+// Params:
+//   - key: Filters results by category of performers. Supported for users, clients and views only.
+//   - type: Filters results by a specified performance metric
+//   - count: The maximum number of top performers in each category to return in the response
+//   - timestamp: The timestamp for which to display data. For example, 2023-12-06T13:10:03Z. If not passed, the most recent sampling is returned.
 func (m *Monitor) MonitorTopn_GET(params core.Params) (core.Record, error) {
 	return m.MonitorTopnWithContext_GET(m.Rest.GetCtx(), params)
 }

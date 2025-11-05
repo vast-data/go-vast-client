@@ -15,12 +15,10 @@ import (
 // url: /users/{id}/access_keys/
 // summary: Remove S3 Access Key Pair (Local User)
 //
-// Parameters:
-//   - accessKey (body): The access key to remove
-func (u *User) UserAccessKeysWithContext_DELETE(ctx context.Context, id any, accessKey string) error {
+// Body:
+//   - access_key: The access key to remove
+func (u *User) UserAccessKeysWithContext_DELETE(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("users", id, "access_keys")
-	body := core.Params{}
-	body["access_key"] = accessKey
 	_, err := core.Request[core.Record](ctx, u, http.MethodDelete, resourcePath, nil, body)
 	return err
 
@@ -31,10 +29,10 @@ func (u *User) UserAccessKeysWithContext_DELETE(ctx context.Context, id any, acc
 // url: /users/{id}/access_keys/
 // summary: Remove S3 Access Key Pair (Local User)
 //
-// Parameters:
-//   - accessKey (body): The access key to remove
-func (u *User) UserAccessKeys_DELETE(id any, accessKey string) error {
-	return u.UserAccessKeysWithContext_DELETE(u.Rest.GetCtx(), id, accessKey)
+// Body:
+//   - access_key: The access key to remove
+func (u *User) UserAccessKeys_DELETE(id any, body core.Params) error {
+	return u.UserAccessKeysWithContext_DELETE(u.Rest.GetCtx(), id, body)
 }
 
 // UserAccessKeysWithContext_PATCH
@@ -42,14 +40,11 @@ func (u *User) UserAccessKeys_DELETE(id any, accessKey string) error {
 // url: /users/{id}/access_keys/
 // summary: Enable/Disable S3 Access Key Pair (Local User)
 //
-// Parameters:
-//   - accessKey (body): The access key to enable
-//   - enabled (body): Set to true to enable access key pair. Set to false to disable access key pair
-func (u *User) UserAccessKeysWithContext_PATCH(ctx context.Context, id any, accessKey string, enabled bool) error {
+// Body:
+//   - access_key: The access key to enable
+//   - enabled: Set to true to enable access key pair. Set to false to disable access key pair
+func (u *User) UserAccessKeysWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("users", id, "access_keys")
-	body := core.Params{}
-	body["access_key"] = accessKey
-	body["enabled"] = enabled
 	_, err := core.Request[core.Record](ctx, u, http.MethodPatch, resourcePath, nil, body)
 	return err
 
@@ -60,11 +55,11 @@ func (u *User) UserAccessKeysWithContext_PATCH(ctx context.Context, id any, acce
 // url: /users/{id}/access_keys/
 // summary: Enable/Disable S3 Access Key Pair (Local User)
 //
-// Parameters:
-//   - accessKey (body): The access key to enable
-//   - enabled (body): Set to true to enable access key pair. Set to false to disable access key pair
-func (u *User) UserAccessKeys_PATCH(id any, accessKey string, enabled bool) error {
-	return u.UserAccessKeysWithContext_PATCH(u.Rest.GetCtx(), id, accessKey, enabled)
+// Body:
+//   - access_key: The access key to enable
+//   - enabled: Set to true to enable access key pair. Set to false to disable access key pair
+func (u *User) UserAccessKeys_PATCH(id any, body core.Params) error {
+	return u.UserAccessKeysWithContext_PATCH(u.Rest.GetCtx(), id, body)
 }
 
 // UserAccessKeysWithContext_POST
@@ -72,14 +67,10 @@ func (u *User) UserAccessKeys_PATCH(id any, accessKey string, enabled bool) erro
 // url: /users/{id}/access_keys/
 // summary: Generate S3 Access Key Pair (Local User)
 //
-// Parameters:
-//   - tenantId (body): Tenant ID
-func (u *User) UserAccessKeysWithContext_POST(ctx context.Context, id any, tenantId int64) (core.Record, error) {
+// Body:
+//   - tenant_id: Tenant ID
+func (u *User) UserAccessKeysWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("users", id, "access_keys")
-	body := core.Params{}
-	if tenantId != 0 {
-		body["tenant_id"] = tenantId
-	}
 	result, err := core.Request[core.Record](ctx, u, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -92,16 +83,21 @@ func (u *User) UserAccessKeysWithContext_POST(ctx context.Context, id any, tenan
 // url: /users/{id}/access_keys/
 // summary: Generate S3 Access Key Pair (Local User)
 //
-// Parameters:
-//   - tenantId (body): Tenant ID
-func (u *User) UserAccessKeys_POST(id any, tenantId int64) (core.Record, error) {
-	return u.UserAccessKeysWithContext_POST(u.Rest.GetCtx(), id, tenantId)
+// Body:
+//   - tenant_id: Tenant ID
+func (u *User) UserAccessKeys_POST(id any, body core.Params) (core.Record, error) {
+	return u.UserAccessKeysWithContext_POST(u.Rest.GetCtx(), id, body)
 }
 
 // UserCopyWithContext_POST
 // method: POST
 // url: /users/copy/
 // summary: Copy Users with S3 Keys from one Local Provider to Another
+//
+// Body:
+//   - destination_provider_id: ID of the local provider to which to copy users
+//   - tenant_id: ID of the tenant to which the users belong. Required if user_ids are not provided.
+//   - user_ids: IDs of the users to copy. Required if tenant_id is not provided.
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
@@ -121,6 +117,11 @@ func (u *User) UserCopyWithContext_POST(ctx context.Context, body core.Params, w
 // url: /users/copy/
 // summary: Copy Users with S3 Keys from one Local Provider to Another
 //
+// Body:
+//   - destination_provider_id: ID of the local provider to which to copy users
+//   - tenant_id: ID of the tenant to which the users belong. Required if user_ids are not provided.
+//   - user_ids: IDs of the users to copy. Required if tenant_id is not provided.
+//
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (u *User) UserCopy_POST(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
@@ -132,22 +133,12 @@ func (u *User) UserCopy_POST(body core.Params, waitTimeout time.Duration) (*Asyn
 // url: /users/names/
 // summary: Find User by prefix and domain details
 //
-// Parameters:
-//   - Prefix (query): Prefix to find the user
-//   - Domain (query): Domain details to find the user (ALL by default). Format: BASE_DN|FQDN|SID
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-func (u *User) UserNamesWithContext_GET(ctx context.Context, Prefix string, Domain string, TenantId int64) (core.Record, error) {
+// Params:
+//   - prefix: Prefix to find the user
+//   - domain: Domain details to find the user (ALL by default). Format: BASE_DN|FQDN|SID
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+func (u *User) UserNamesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/users/names/"
-	params := core.Params{}
-	if Prefix != "" {
-		params["prefix"] = Prefix
-	}
-	if Domain != "" {
-		params["domain"] = Domain
-	}
-	if TenantId != 0 {
-		params["tenant_id"] = TenantId
-	}
 	result, err := core.Request[core.Record](ctx, u, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -160,21 +151,27 @@ func (u *User) UserNamesWithContext_GET(ctx context.Context, Prefix string, Doma
 // url: /users/names/
 // summary: Find User by prefix and domain details
 //
-// Parameters:
-//   - Prefix (query): Prefix to find the user
-//   - Domain (query): Domain details to find the user (ALL by default). Format: BASE_DN|FQDN|SID
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-func (u *User) UserNames_GET(Prefix string, Domain string, TenantId int64) (core.Record, error) {
-	return u.UserNamesWithContext_GET(u.Rest.GetCtx(), Prefix, Domain, TenantId)
+// Params:
+//   - prefix: Prefix to find the user
+//   - domain: Domain details to find the user (ALL by default). Format: BASE_DN|FQDN|SID
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+func (u *User) UserNames_GET(params core.Params) (core.Record, error) {
+	return u.UserNamesWithContext_GET(u.Rest.GetCtx(), params)
 }
 
 // UserNonLocalKeysWithContext_DELETE
 // method: DELETE
 // url: /users/non_local_keys/
 // summary: Remove S3 Access Key Pair (Non-Local User)
-func (u *User) UserNonLocalKeysWithContext_DELETE(ctx context.Context) error {
+//
+// Body:
+//   - access_key: The access key
+//   - sid: User SID
+//   - tenant_id: Tenant ID
+//   - uid: User UID
+func (u *User) UserNonLocalKeysWithContext_DELETE(ctx context.Context, body core.Params) error {
 	resourcePath := "/users/non_local_keys/"
-	_, err := core.Request[core.Record](ctx, u, http.MethodDelete, resourcePath, nil, nil)
+	_, err := core.Request[core.Record](ctx, u, http.MethodDelete, resourcePath, nil, body)
 	return err
 
 }
@@ -183,14 +180,27 @@ func (u *User) UserNonLocalKeysWithContext_DELETE(ctx context.Context) error {
 // method: DELETE
 // url: /users/non_local_keys/
 // summary: Remove S3 Access Key Pair (Non-Local User)
-func (u *User) UserNonLocalKeys_DELETE() error {
-	return u.UserNonLocalKeysWithContext_DELETE(u.Rest.GetCtx())
+//
+// Body:
+//   - access_key: The access key
+//   - sid: User SID
+//   - tenant_id: Tenant ID
+//   - uid: User UID
+func (u *User) UserNonLocalKeys_DELETE(body core.Params) error {
+	return u.UserNonLocalKeysWithContext_DELETE(u.Rest.GetCtx(), body)
 }
 
 // UserNonLocalKeysWithContext_PATCH
 // method: PATCH
 // url: /users/non_local_keys/
 // summary: Enable or Disable S3 Access Key Pair (Non-Local User)
+//
+// Body:
+//   - access_key: The access key
+//   - enabled: Set to true to enable the S3 access key pair. Set to false to disable the S3 access key pair.
+//   - sid: User SID
+//   - tenant_id: Tenant ID
+//   - uid: User UID
 func (u *User) UserNonLocalKeysWithContext_PATCH(ctx context.Context, body core.Params) error {
 	resourcePath := "/users/non_local_keys/"
 	_, err := core.Request[core.Record](ctx, u, http.MethodPatch, resourcePath, nil, body)
@@ -202,6 +212,13 @@ func (u *User) UserNonLocalKeysWithContext_PATCH(ctx context.Context, body core.
 // method: PATCH
 // url: /users/non_local_keys/
 // summary: Enable or Disable S3 Access Key Pair (Non-Local User)
+//
+// Body:
+//   - access_key: The access key
+//   - enabled: Set to true to enable the S3 access key pair. Set to false to disable the S3 access key pair.
+//   - sid: User SID
+//   - tenant_id: Tenant ID
+//   - uid: User UID
 func (u *User) UserNonLocalKeys_PATCH(body core.Params) error {
 	return u.UserNonLocalKeysWithContext_PATCH(u.Rest.GetCtx(), body)
 }
@@ -210,6 +227,13 @@ func (u *User) UserNonLocalKeys_PATCH(body core.Params) error {
 // method: POST
 // url: /users/non_local_keys/
 // summary: Generate S3 Access Key Pair (Non-Local User)
+//
+// Body:
+//   - login_name: User login name
+//   - sid: User SID. Required if UID is not provided
+//   - tenant_id: Tenant ID
+//   - uid: NFS UID. Required if SID is not provided
+//   - username: Username
 func (u *User) UserNonLocalKeysWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/users/non_local_keys/"
 	result, err := core.Request[core.Record](ctx, u, http.MethodPost, resourcePath, nil, body)
@@ -223,6 +247,13 @@ func (u *User) UserNonLocalKeysWithContext_POST(ctx context.Context, body core.P
 // method: POST
 // url: /users/non_local_keys/
 // summary: Generate S3 Access Key Pair (Non-Local User)
+//
+// Body:
+//   - login_name: User login name
+//   - sid: User SID. Required if UID is not provided
+//   - tenant_id: Tenant ID
+//   - uid: NFS UID. Required if SID is not provided
+//   - username: Username
 func (u *User) UserNonLocalKeys_POST(body core.Params) (core.Record, error) {
 	return u.UserNonLocalKeysWithContext_POST(u.Rest.GetCtx(), body)
 }
@@ -231,6 +262,15 @@ func (u *User) UserNonLocalKeys_POST(body core.Params) (core.Record, error) {
 // method: GET
 // url: /users/query/
 // summary: Query User
+//
+// Params:
+//   - uid: NFS UID
+//   - username: User legal name
+//   - sid: User SID
+//   - vid: Vast user ID
+//   - context: Specify the context for the user query. 'local' restricts the search to the local provider. 'udb' searches the cluster's user database for the user. The output in this case includes the VID (VAST ID) for the user, which can be used when specifying a grantee in S3 ACLs. 'aggregated' (default) searches all providers and returns a merged user entry. In case of conflicts between providers, attributes are resolved according to the following rules: * In case of conflict between local and non local providers, the local provider's attributes override those of the other providers. * In case of conflicting POSIX attributes on external providers, the POSIX primary provider overrules the other external provider. * Users are merged if their match user attributes match. The match user attribute is configurable in that you can set which attribute on the POSIX primary provider is used to match the users. * All groups found for the user on all providers with distinct group names are treated as distinct groups to which the user belongs. Groups are merged if they match according to a non-configurable group name attribute. 'ad', 'nis' or 'ldap' searches the specific provider only. Each of these options appears only if a provider of that type is connected to the cluster.
+//   - login_name: User login name
+//   - tenant_id: Filter by tenant. Specify tenant ID.
 func (u *User) UserQueryWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/users/query/"
 	result, err := core.Request[core.Record](ctx, u, http.MethodGet, resourcePath, params, nil)
@@ -244,6 +284,15 @@ func (u *User) UserQueryWithContext_GET(ctx context.Context, params core.Params)
 // method: GET
 // url: /users/query/
 // summary: Query User
+//
+// Params:
+//   - uid: NFS UID
+//   - username: User legal name
+//   - sid: User SID
+//   - vid: Vast user ID
+//   - context: Specify the context for the user query. 'local' restricts the search to the local provider. 'udb' searches the cluster's user database for the user. The output in this case includes the VID (VAST ID) for the user, which can be used when specifying a grantee in S3 ACLs. 'aggregated' (default) searches all providers and returns a merged user entry. In case of conflicts between providers, attributes are resolved according to the following rules: * In case of conflict between local and non local providers, the local provider's attributes override those of the other providers. * In case of conflicting POSIX attributes on external providers, the POSIX primary provider overrules the other external provider. * Users are merged if their match user attributes match. The match user attribute is configurable in that you can set which attribute on the POSIX primary provider is used to match the users. * All groups found for the user on all providers with distinct group names are treated as distinct groups to which the user belongs. Groups are merged if they match according to a non-configurable group name attribute. 'ad', 'nis' or 'ldap' searches the specific provider only. Each of these options appears only if a provider of that type is connected to the cluster.
+//   - login_name: User login name
+//   - tenant_id: Filter by tenant. Specify tenant ID.
 func (u *User) UserQuery_GET(params core.Params) (core.Record, error) {
 	return u.UserQueryWithContext_GET(u.Rest.GetCtx(), params)
 }
@@ -252,6 +301,17 @@ func (u *User) UserQuery_GET(params core.Params) (core.Record, error) {
 // method: PATCH
 // url: /users/query/
 // summary: Modify non-Local User
+//
+// Body:
+//   - allow_create_bucket: Set to true to give the user permission to create S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - allow_delete_bucket: Set to true to give the user permission to delete S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - login_name: Login name
+//   - s3_policies_ids: Specify S3 policies to attach to the user.
+//   - s3_superuser: Set to true for S3 superuser. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - sid: User SID
+//   - tenant_id: Tenant ID
+//   - uid: User UID
+//   - username: User legal name
 func (u *User) UserQueryWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/users/query/"
 	result, err := core.Request[core.Record](ctx, u, http.MethodPatch, resourcePath, nil, body)
@@ -265,6 +325,17 @@ func (u *User) UserQueryWithContext_PATCH(ctx context.Context, body core.Params)
 // method: PATCH
 // url: /users/query/
 // summary: Modify non-Local User
+//
+// Body:
+//   - allow_create_bucket: Set to true to give the user permission to create S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - allow_delete_bucket: Set to true to give the user permission to delete S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - login_name: Login name
+//   - s3_policies_ids: Specify S3 policies to attach to the user.
+//   - s3_superuser: Set to true for S3 superuser. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - sid: User SID
+//   - tenant_id: Tenant ID
+//   - uid: User UID
+//   - username: User legal name
 func (u *User) UserQuery_PATCH(body core.Params) (core.Record, error) {
 	return u.UserQueryWithContext_PATCH(u.Rest.GetCtx(), body)
 }
@@ -273,6 +344,13 @@ func (u *User) UserQuery_PATCH(body core.Params) (core.Record, error) {
 // method: PATCH
 // url: /users/refresh/
 // summary: Refresh User
+//
+// Body:
+//   - login_name
+//   - sid: SMB user SID
+//   - tenant_id: Tenant ID
+//   - uid: NFS UID
+//   - username
 func (u *User) UserRefreshWithContext_PATCH(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/users/refresh/"
 	result, err := core.Request[core.Record](ctx, u, http.MethodPatch, resourcePath, nil, body)
@@ -286,6 +364,13 @@ func (u *User) UserRefreshWithContext_PATCH(ctx context.Context, body core.Param
 // method: PATCH
 // url: /users/refresh/
 // summary: Refresh User
+//
+// Body:
+//   - login_name
+//   - sid: SMB user SID
+//   - tenant_id: Tenant ID
+//   - uid: NFS UID
+//   - username
 func (u *User) UserRefresh_PATCH(body core.Params) (core.Record, error) {
 	return u.UserRefreshWithContext_PATCH(u.Rest.GetCtx(), body)
 }
@@ -295,14 +380,10 @@ func (u *User) UserRefresh_PATCH(body core.Params) (core.Record, error) {
 // url: /users/{id}/tenant_data/
 // summary: Get tenant data for a User
 //
-// Parameters:
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-func (u *User) UserTenantDataWithContext_GET(ctx context.Context, id any, TenantId int64) (core.Record, error) {
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+func (u *User) UserTenantDataWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("users", id, "tenant_data")
-	params := core.Params{}
-	if TenantId != 0 {
-		params["tenant_id"] = TenantId
-	}
 	result, err := core.Request[core.Record](ctx, u, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -315,16 +396,23 @@ func (u *User) UserTenantDataWithContext_GET(ctx context.Context, id any, Tenant
 // url: /users/{id}/tenant_data/
 // summary: Get tenant data for a User
 //
-// Parameters:
-//   - TenantId (query): Filter by tenant. Specify tenant ID.
-func (u *User) UserTenantData_GET(id any, TenantId int64) (core.Record, error) {
-	return u.UserTenantDataWithContext_GET(u.Rest.GetCtx(), id, TenantId)
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+func (u *User) UserTenantData_GET(id any, params core.Params) (core.Record, error) {
+	return u.UserTenantDataWithContext_GET(u.Rest.GetCtx(), id, params)
 }
 
 // UserTenantDataWithContext_PATCH
 // method: PATCH
 // url: /users/{id}/tenant_data/
 // summary: Update Tenant Data for a User
+//
+// Body:
+//   - allow_create_bucket: Grants the user permission to create S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - allow_delete_bucket: Grants the user permission to delete S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - s3_policies_ids: IDs of S3 policies to attach to the user
+//   - s3_superuser: Grants the user S3 super user permission, which enables the user to override S3 ACLs. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - tenant_id: Tenant ID
 func (u *User) UserTenantDataWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("users", id, "tenant_data")
 	result, err := core.Request[core.Record](ctx, u, http.MethodPatch, resourcePath, nil, body)
@@ -338,6 +426,13 @@ func (u *User) UserTenantDataWithContext_PATCH(ctx context.Context, id any, body
 // method: PATCH
 // url: /users/{id}/tenant_data/
 // summary: Update Tenant Data for a User
+//
+// Body:
+//   - allow_create_bucket: Grants the user permission to create S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - allow_delete_bucket: Grants the user permission to delete S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - s3_policies_ids: IDs of S3 policies to attach to the user
+//   - s3_superuser: Grants the user S3 super user permission, which enables the user to override S3 ACLs. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden.
+//   - tenant_id: Tenant ID
 func (u *User) UserTenantData_PATCH(id any, body core.Params) (core.Record, error) {
 	return u.UserTenantDataWithContext_PATCH(u.Rest.GetCtx(), id, body)
 }

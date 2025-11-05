@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /oidcs/{id}/refresh_keys/
 // summary: Refresh the keys from OIDC provider
+//
+// Body:
+//
+//	< not declared in schema >
 func (o *Oidc) OidcRefreshKeysWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("oidcs", id, "refresh_keys")
 	result, err := core.Request[core.Record](ctx, o, http.MethodPatch, resourcePath, nil, body)
@@ -26,6 +30,10 @@ func (o *Oidc) OidcRefreshKeysWithContext_PATCH(ctx context.Context, id any, bod
 // method: PATCH
 // url: /oidcs/{id}/refresh_keys/
 // summary: Refresh the keys from OIDC provider
+//
+// Body:
+//
+//	< not declared in schema >
 func (o *Oidc) OidcRefreshKeys_PATCH(id any, body core.Params) (core.Record, error) {
 	return o.OidcRefreshKeysWithContext_PATCH(o.Rest.GetCtx(), id, body)
 }

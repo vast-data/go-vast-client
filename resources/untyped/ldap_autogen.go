@@ -13,6 +13,10 @@ import (
 // method: PATCH
 // url: /ldaps/{id}/set_posix_primary/
 // summary: Set LDAP as POSIX Primary Provider
+//
+// Body:
+//
+//	< not declared in schema >
 func (l *Ldap) LdapSetPosixPrimaryWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
 	resourcePath := core.BuildResourcePathWithID("ldaps", id, "set_posix_primary")
 	_, err := core.Request[core.Record](ctx, l, http.MethodPatch, resourcePath, nil, body)
@@ -24,6 +28,10 @@ func (l *Ldap) LdapSetPosixPrimaryWithContext_PATCH(ctx context.Context, id any,
 // method: PATCH
 // url: /ldaps/{id}/set_posix_primary/
 // summary: Set LDAP as POSIX Primary Provider
+//
+// Body:
+//
+//	< not declared in schema >
 func (l *Ldap) LdapSetPosixPrimary_PATCH(id any, body core.Params) error {
 	return l.LdapSetPosixPrimaryWithContext_PATCH(l.Rest.GetCtx(), id, body)
 }
