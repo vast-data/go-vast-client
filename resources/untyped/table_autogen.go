@@ -32,9 +32,9 @@ func (t *Table) TableAddColumns_PATCH(body core.Params) error {
 // method: DELETE
 // url: /tables/delete/
 // summary: Delete a Database Table
-func (t *Table) TableDeleteWithContext_DELETE(ctx context.Context, params core.Params) error {
+func (t *Table) TableDeleteWithContext_DELETE(ctx context.Context) error {
 	resourcePath := "/tables/delete/"
-	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
 	return err
 
 }
@@ -43,8 +43,8 @@ func (t *Table) TableDeleteWithContext_DELETE(ctx context.Context, params core.P
 // method: DELETE
 // url: /tables/delete/
 // summary: Delete a Database Table
-func (t *Table) TableDelete_DELETE(params core.Params) error {
-	return t.TableDeleteWithContext_DELETE(t.Rest.GetCtx(), params)
+func (t *Table) TableDelete_DELETE() error {
+	return t.TableDeleteWithContext_DELETE(t.Rest.GetCtx())
 }
 
 // TableRenameWithContext_PATCH

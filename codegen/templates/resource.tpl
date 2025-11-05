@@ -634,19 +634,34 @@ type {{.ResponseTypeName}} struct {
 // {{.Name}}WithContext_{{.HTTPMethod}}
 // method: {{.HTTPMethod}}
 // url: {{.Path}}{{if .Summary}}
-// summary: {{.Summary}}{{end}}{{if or .SimplifiedBody .IsAsyncTask}}
+// summary: {{.Summary}}{{end}}{{if or .SimplifiedBody .IsAsyncTask .HasQueryParams}}
 //
-// Parameters:{{range .SimplifiedParams}}
+// Parameters:{{range .QueryParamFields}}
+//   - {{.Name}} (query){{if .Description}}: {{.Description}}{{end}}{{end}}{{range .SimplifiedParams}}
 //   - {{.Name}} (body): {{if .Description}}{{.Description}}{{else}}Request parameter{{end}}{{end}}{{if .IsAsyncTask}}
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}{{end}}
-func (r *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{if .HasID}}, id any{{end}}{{if and .HasParams .BodyFields}}, params *{{.BodyTypeName}}{{end}}{{if .SimplifiedBody}}{{range $i, $p := .SimplifiedParams}}, {{$p.Name}} {{$p.Type}}{{end}}{{else}}{{if .HasBody}}{{if .BodyFields}}, body *{{.BodyTypeName}}{{else}}, body core.Params{{end}}{{end}}{{end}}{{if .IsAsyncTask}}, waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*untyped.AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsPrimitive}}{{.PrimitiveType}}, error{{else}}{{if .ReturnsTextPlain}}string, error{{else}}{{if .ReturnsArray}}[]{{.ArrayItemType}}, error{{else}}{{if .ResponseFields}}*{{.ResponseTypeName}}, error{{else}}core.Record, error{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}) {
+func (r *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{if .HasID}}, id any{{end}}{{if .HasQueryParams}}{{range $i, $p := .QueryParamFields}}, {{$p.Name}} {{$p.Type}}{{end}}{{else}}{{if and .HasParams .BodyFields}}, params *{{.BodyTypeName}}{{end}}{{end}}{{if .SimplifiedBody}}{{range $i, $p := .SimplifiedParams}}, {{$p.Name}} {{$p.Type}}{{end}}{{else}}{{if .HasBody}}{{if .BodyFields}}, body *{{.BodyTypeName}}{{else}}, body core.Params{{end}}{{end}}{{end}}{{if .IsAsyncTask}}, waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*untyped.AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsPrimitive}}{{.PrimitiveType}}, error{{else}}{{if .ReturnsTextPlain}}string, error{{else}}{{if .ReturnsArray}}[]{{.ArrayItemType}}, error{{else}}{{if .ResponseFields}}*{{.ResponseTypeName}}, error{{else}}core.Record, error{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}) {
 	{{if .HasID}}resourcePath := core.BuildResourcePathWithID("{{.ResourcePath}}", id{{if .SubPath}}, "{{.SubPath}}"{{end}})
 	{{else}}resourcePath := "{{.Path}}"
 	{{end}}
-	{{if and .HasParams .BodyFields}}reqParams, err := core.NewParamsFromStruct(params)
+	{{if .HasQueryParams}}reqParams := core.Params{}
+	{{range .QueryParamFields}}{{if .Required}}reqParams["{{.BodyField}}"] = {{.Name}}
+	{{else}}{{if eq .Type "string"}}if {{.Name}} != "" {
+		reqParams["{{.BodyField}}"] = {{.Name}}
+	}
+	{{else if eq .Type "bool"}}if {{.Name}} {
+		reqParams["{{.BodyField}}"] = {{.Name}}
+	}
+	{{else if or (eq .Type "int") (eq .Type "int32") (eq .Type "int64") (eq .Type "uint") (eq .Type "uint32") (eq .Type "uint64") (eq .Type "float32") (eq .Type "float64")}}if {{.Name}} != 0 {
+		reqParams["{{.BodyField}}"] = {{.Name}}
+	}
+	{{else}}if {{.Name}} != nil {
+		reqParams["{{.BodyField}}"] = {{.Name}}
+	}
+	{{end}}{{end}}{{end}}{{else}}{{if and .HasParams .BodyFields}}reqParams, err := core.NewParamsFromStruct(params)
 	if err != nil {
 		return {{if .IsAsyncTask}}nil, err{{else if .ReturnsNoContent}}err{{else if .ReturnsPrimitive}}{{if eq .PrimitiveType "string"}}"", err{{else if or (eq .PrimitiveType "int64") (eq .PrimitiveType "int32") (eq .PrimitiveType "int")}}0, err{{else if or (eq .PrimitiveType "float64") (eq .PrimitiveType "float32")}}0.0, err{{else if eq .PrimitiveType "bool"}}false, err{{else}}nil, err{{end}}{{else if .ReturnsTextPlain}}"", err{{else}}nil, err{{end}}
-	}{{else}}var reqParams core.Params{{end}}
+	}{{else}}var reqParams core.Params{{end}}{{end}}
 	{{if .SimplifiedBody}}reqBody := core.Params{}
 	{{range .SimplifiedParams}}{{if .Required}}reqBody["{{.BodyField}}"] = {{.Name}}
 	{{else}}{{if eq .Type "string"}}if {{.Name}} != "" {
@@ -747,13 +762,14 @@ func (r *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{i
 // {{.Name}}_{{.HTTPMethod}}
 // method: {{.HTTPMethod}}
 // url: {{.Path}}{{if .Summary}}
-// summary: {{.Summary}}{{end}}{{if or .SimplifiedBody .IsAsyncTask}}
+// summary: {{.Summary}}{{end}}{{if or .SimplifiedBody .IsAsyncTask .HasQueryParams}}
 //
-// Parameters:{{range .SimplifiedParams}}
+// Parameters:{{range .QueryParamFields}}
+//   - {{.Name}} (query){{if .Description}}: {{.Description}}{{end}}{{end}}{{range .SimplifiedParams}}
 //   - {{.Name}} (body): {{if .Description}}{{.Description}}{{else}}Request parameter{{end}}{{end}}{{if .IsAsyncTask}}
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}{{end}}
-func (r *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{if .HasID}}id any, {{end}}{{if and .HasParams .BodyFields}}params *{{.BodyTypeName}}, {{end}}{{if .SimplifiedBody}}{{range $i, $p := .SimplifiedParams}}{{if gt $i 0}}, {{end}}{{$p.Name}} {{$p.Type}}{{end}}{{if .IsAsyncTask}}, {{end}}{{else}}{{if .HasBody}}{{if .BodyFields}}body *{{.BodyTypeName}}{{if .IsAsyncTask}}, {{end}}{{else}}body core.Params{{if .IsAsyncTask}}, {{end}}{{end}}{{else}}{{if .IsAsyncTask}}{{end}}{{end}}{{end}}{{if .IsAsyncTask}}waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*untyped.AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsPrimitive}}{{.PrimitiveType}}, error{{else}}{{if .ReturnsTextPlain}}string, error{{else}}{{if .ReturnsArray}}[]{{.ArrayItemType}}, error{{else}}{{if .ResponseFields}}*{{.ResponseTypeName}}, error{{else}}core.Record, error{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}) {
-	return r.{{.Name}}WithContext_{{.HTTPMethod}}(r.Untyped.GetCtx(){{if .HasID}}, id{{end}}{{if and .HasParams .BodyFields}}, params{{end}}{{if .SimplifiedBody}}{{range .SimplifiedParams}}, {{.Name}}{{end}}{{else}}{{if .HasBody}}, body{{end}}{{end}}{{if .IsAsyncTask}}, waitTimeout{{end}})
+func (r *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{if .HasID}}id any, {{end}}{{if .HasQueryParams}}{{range $i, $p := .QueryParamFields}}{{if gt $i 0}}, {{end}}{{$p.Name}} {{$p.Type}}{{end}}, {{else}}{{if and .HasParams .BodyFields}}params *{{.BodyTypeName}}, {{end}}{{end}}{{if .SimplifiedBody}}{{range $i, $p := .SimplifiedParams}}{{if gt $i 0}}, {{end}}{{$p.Name}} {{$p.Type}}{{end}}{{if .IsAsyncTask}}, {{end}}{{else}}{{if .HasBody}}{{if .BodyFields}}body *{{.BodyTypeName}}{{if .IsAsyncTask}}, {{end}}{{else}}body core.Params{{if .IsAsyncTask}}, {{end}}{{end}}{{else}}{{if .IsAsyncTask}}{{end}}{{end}}{{end}}{{if .IsAsyncTask}}waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*untyped.AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsPrimitive}}{{.PrimitiveType}}, error{{else}}{{if .ReturnsTextPlain}}string, error{{else}}{{if .ReturnsArray}}[]{{.ArrayItemType}}, error{{else}}{{if .ResponseFields}}*{{.ResponseTypeName}}, error{{else}}core.Record, error{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}) {
+	return r.{{.Name}}WithContext_{{.HTTPMethod}}(r.Untyped.GetCtx(){{if .HasID}}, id{{end}}{{if .HasQueryParams}}{{range .QueryParamFields}}, {{.Name}}{{end}}{{else}}{{if and .HasParams .BodyFields}}, params{{end}}{{end}}{{if .SimplifiedBody}}{{range .SimplifiedParams}}, {{.Name}}{{end}}{{else}}{{if .HasBody}}, body{{end}}{{end}}{{if .IsAsyncTask}}, waitTimeout{{end}})
 }
 
 {{end}}

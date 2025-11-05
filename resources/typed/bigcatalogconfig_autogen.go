@@ -322,10 +322,25 @@ type BigCatalogConfigQueryData_POST_Model struct {
 // method: POST
 // url: /bigcatalogconfig/query_data/
 // summary: Query VAST Catalog
-func (r *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context.Context, body *BigCatalogConfigQueryData_POST_Body) (*BigCatalogConfigQueryData_POST_Model, error) {
+//
+// Parameters:
+//   - Page (query)
+//   - Limit (query)
+//   - Ordering (query)
+func (r *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context.Context, Page int64, Limit int64, Ordering string, body *BigCatalogConfigQueryData_POST_Body) (*BigCatalogConfigQueryData_POST_Model, error) {
 	resourcePath := "/bigcatalogconfig/query_data/"
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	if Page != 0 {
+		reqParams["page"] = Page
+	}
+	if Limit != 0 {
+		reqParams["limit"] = Limit
+	}
+	if Ordering != "" {
+		reqParams["ordering"] = Ordering
+	}
+
 	reqBody, err := core.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -348,8 +363,13 @@ func (r *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context
 // method: POST
 // url: /bigcatalogconfig/query_data/
 // summary: Query VAST Catalog
-func (r *BigCatalogConfig) BigCatalogConfigQueryData_POST(body *BigCatalogConfigQueryData_POST_Body) (*BigCatalogConfigQueryData_POST_Model, error) {
-	return r.BigCatalogConfigQueryDataWithContext_POST(r.Untyped.GetCtx(), body)
+//
+// Parameters:
+//   - Page (query)
+//   - Limit (query)
+//   - Ordering (query)
+func (r *BigCatalogConfig) BigCatalogConfigQueryData_POST(Page int64, Limit int64, Ordering string, body *BigCatalogConfigQueryData_POST_Body) (*BigCatalogConfigQueryData_POST_Model, error) {
+	return r.BigCatalogConfigQueryDataWithContext_POST(r.Untyped.GetCtx(), Page, Limit, Ordering, body)
 }
 
 // BigCatalogConfigStats_GET_Model represents the response model for BigCatalogConfigStats

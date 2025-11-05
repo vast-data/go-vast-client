@@ -13,8 +13,23 @@ import (
 // method: GET
 // url: /groups/names/
 // summary: Find Group by prefix and domain details
-func (g *Group) GroupNamesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Prefix (query): Prefix to find the group
+//   - Domain (query): Domain details to find the group (ALL by default). Format: BASE_DN|FQDN|SID
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (g *Group) GroupNamesWithContext_GET(ctx context.Context, Prefix string, Domain string, TenantId int64) (core.Record, error) {
 	resourcePath := "/groups/names/"
+	params := core.Params{}
+	if Prefix != "" {
+		params["prefix"] = Prefix
+	}
+	if Domain != "" {
+		params["domain"] = Domain
+	}
+	if TenantId != 0 {
+		params["tenant_id"] = TenantId
+	}
 	result, err := core.Request[core.Record](ctx, g, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -26,8 +41,13 @@ func (g *Group) GroupNamesWithContext_GET(ctx context.Context, params core.Param
 // method: GET
 // url: /groups/names/
 // summary: Find Group by prefix and domain details
-func (g *Group) GroupNames_GET(params core.Params) (core.Record, error) {
-	return g.GroupNamesWithContext_GET(g.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - Prefix (query): Prefix to find the group
+//   - Domain (query): Domain details to find the group (ALL by default). Format: BASE_DN|FQDN|SID
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (g *Group) GroupNames_GET(Prefix string, Domain string, TenantId int64) (core.Record, error) {
+	return g.GroupNamesWithContext_GET(g.Rest.GetCtx(), Prefix, Domain, TenantId)
 }
 
 // GroupQueryWithContext_GET

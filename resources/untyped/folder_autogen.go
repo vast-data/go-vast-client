@@ -119,8 +119,15 @@ func (f *Folder) FolderReadOnly_DELETE(path string, tenantId int64) error {
 // method: GET
 // url: /folders/read_only/
 // summary: Return Details of Read-Only Folder
-func (f *Folder) FolderReadOnlyWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Path (query): Path to get read-only folder details
+//   - TenantId (query): Tenant ID
+func (f *Folder) FolderReadOnlyWithContext_GET(ctx context.Context, Path string, TenantId int64) (core.Record, error) {
 	resourcePath := "/folders/read_only/"
+	params := core.Params{}
+	params["path"] = Path
+	params["tenant_id"] = TenantId
 	result, err := core.Request[core.Record](ctx, f, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -132,8 +139,12 @@ func (f *Folder) FolderReadOnlyWithContext_GET(ctx context.Context, params core.
 // method: GET
 // url: /folders/read_only/
 // summary: Return Details of Read-Only Folder
-func (f *Folder) FolderReadOnly_GET(params core.Params) (core.Record, error) {
-	return f.FolderReadOnlyWithContext_GET(f.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - Path (query): Path to get read-only folder details
+//   - TenantId (query): Tenant ID
+func (f *Folder) FolderReadOnly_GET(Path string, TenantId int64) (core.Record, error) {
+	return f.FolderReadOnlyWithContext_GET(f.Rest.GetCtx(), Path, TenantId)
 }
 
 // FolderReadOnlyWithContext_POST

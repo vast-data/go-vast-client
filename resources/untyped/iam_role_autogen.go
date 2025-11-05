@@ -13,8 +13,13 @@ import (
 // method: GET
 // url: /iamroles/{id}/credentials/
 // summary: Get STS credentials of specified IAM Role.
-func (i *IamRole) IamRoleCredentialsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - AccessKey (query)
+func (i *IamRole) IamRoleCredentialsWithContext_GET(ctx context.Context, id any, AccessKey string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("iamroles", id, "credentials")
+	params := core.Params{}
+	params["access_key"] = AccessKey
 	result, err := core.Request[core.Record](ctx, i, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -26,8 +31,11 @@ func (i *IamRole) IamRoleCredentialsWithContext_GET(ctx context.Context, id any,
 // method: GET
 // url: /iamroles/{id}/credentials/
 // summary: Get STS credentials of specified IAM Role.
-func (i *IamRole) IamRoleCredentials_GET(id any, params core.Params) (core.Record, error) {
-	return i.IamRoleCredentialsWithContext_GET(i.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - AccessKey (query)
+func (i *IamRole) IamRoleCredentials_GET(id any, AccessKey string) (core.Record, error) {
+	return i.IamRoleCredentialsWithContext_GET(i.Rest.GetCtx(), id, AccessKey)
 }
 
 // IamRoleRevokeAccessKeysWithContext_PATCH

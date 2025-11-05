@@ -67,8 +67,19 @@ func (s *Schema) SchemaRename_PATCH(body core.Params) error {
 // method: GET
 // url: /schemas/show/
 // summary: Show a Database Schema
-func (s *Schema) SchemaShowWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+//   - DatabaseName (query): Getting list of objects by database_name
+//   - Name (query): Getting object by exact match
+func (s *Schema) SchemaShowWithContext_GET(ctx context.Context, TenantId int64, DatabaseName string, Name string) (core.Record, error) {
 	resourcePath := "/schemas/show/"
+	params := core.Params{}
+	if TenantId != 0 {
+		params["tenant_id"] = TenantId
+	}
+	params["database_name"] = DatabaseName
+	params["name"] = Name
 	result, err := core.Request[core.Record](ctx, s, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -80,6 +91,11 @@ func (s *Schema) SchemaShowWithContext_GET(ctx context.Context, params core.Para
 // method: GET
 // url: /schemas/show/
 // summary: Show a Database Schema
-func (s *Schema) SchemaShow_GET(params core.Params) (core.Record, error) {
-	return s.SchemaShowWithContext_GET(s.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+//   - DatabaseName (query): Getting list of objects by database_name
+//   - Name (query): Getting object by exact match
+func (s *Schema) SchemaShow_GET(TenantId int64, DatabaseName string, Name string) (core.Record, error) {
+	return s.SchemaShowWithContext_GET(s.Rest.GetCtx(), TenantId, DatabaseName, Name)
 }

@@ -832,10 +832,15 @@ func (r *Cluster) ClusterBgpTable_GET() (*ClusterBgpTable_GET_Model, error) {
 // method: DELETE
 // url: /clusters/{id}/celery_remove_queued_task/
 // summary: Delete all tasks of a specific name from the celery queue
-func (r *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Context, id any) error {
+//
+// Parameters:
+//   - TaskName (query): Task name
+func (r *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Context, id any, TaskName string) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_remove_queued_task")
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	reqParams["task_name"] = TaskName
+
 	var reqBody core.Params
 
 	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
@@ -847,8 +852,11 @@ func (r *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Co
 // method: DELETE
 // url: /clusters/{id}/celery_remove_queued_task/
 // summary: Delete all tasks of a specific name from the celery queue
-func (r *Cluster) ClusterCeleryRemoveQueuedTask_DELETE(id any) error {
-	return r.ClusterCeleryRemoveQueuedTaskWithContext_DELETE(r.Untyped.GetCtx(), id)
+//
+// Parameters:
+//   - TaskName (query): Task name
+func (r *Cluster) ClusterCeleryRemoveQueuedTask_DELETE(id any, TaskName string) error {
+	return r.ClusterCeleryRemoveQueuedTaskWithContext_DELETE(r.Untyped.GetCtx(), id, TaskName)
 }
 
 // ClusterCloseProtocolHandle_DELETE_Model represents the response model for ClusterCloseProtocolHandle
@@ -862,10 +870,23 @@ type ClusterCloseProtocolHandle_DELETE_Model struct {
 // method: DELETE
 // url: /clusters/close_protocol_handle/
 // summary: Close open protocol filehandles
-func (r *Cluster) ClusterCloseProtocolHandleWithContext_DELETE(ctx context.Context) (*ClusterCloseProtocolHandle_DELETE_Model, error) {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - SessionId (query): Session ID
+//   - SessionHandleUniqueId (query): Handle ID
+//   - TenantGuid (query): Tenant GUID
+func (r *Cluster) ClusterCloseProtocolHandleWithContext_DELETE(ctx context.Context, FilePath string, SessionId string, SessionHandleUniqueId string, TenantGuid string) (*ClusterCloseProtocolHandle_DELETE_Model, error) {
 	resourcePath := "/clusters/close_protocol_handle/"
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	reqParams["file_path"] = FilePath
+	reqParams["session_id"] = SessionId
+	reqParams["session_handle_unique_id"] = SessionHandleUniqueId
+	if TenantGuid != "" {
+		reqParams["tenant_guid"] = TenantGuid
+	}
+
 	var reqBody core.Params
 
 	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
@@ -885,8 +906,14 @@ func (r *Cluster) ClusterCloseProtocolHandleWithContext_DELETE(ctx context.Conte
 // method: DELETE
 // url: /clusters/close_protocol_handle/
 // summary: Close open protocol filehandles
-func (r *Cluster) ClusterCloseProtocolHandle_DELETE() (*ClusterCloseProtocolHandle_DELETE_Model, error) {
-	return r.ClusterCloseProtocolHandleWithContext_DELETE(r.Untyped.GetCtx())
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - SessionId (query): Session ID
+//   - SessionHandleUniqueId (query): Handle ID
+//   - TenantGuid (query): Tenant GUID
+func (r *Cluster) ClusterCloseProtocolHandle_DELETE(FilePath string, SessionId string, SessionHandleUniqueId string, TenantGuid string) (*ClusterCloseProtocolHandle_DELETE_Model, error) {
+	return r.ClusterCloseProtocolHandleWithContext_DELETE(r.Untyped.GetCtx(), FilePath, SessionId, SessionHandleUniqueId, TenantGuid)
 }
 
 // ClusterDboxMigrationUpdateSourceTarget_GET_Model represents the response model for ClusterDboxMigrationUpdateSourceTarget

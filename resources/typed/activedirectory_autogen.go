@@ -401,10 +401,17 @@ type ActiveDirectoryIsOperationHealthy_POST_Model struct {
 // method: POST
 // url: /activedirectory/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
-func (r *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx context.Context, id any, body *ActiveDirectoryIsOperationHealthy_POST_Body) (*ActiveDirectoryIsOperationHealthy_POST_Model, error) {
+//
+// Parameters:
+//   - Operation (query)
+func (r *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx context.Context, id any, Operation string, body *ActiveDirectoryIsOperationHealthy_POST_Body) (*ActiveDirectoryIsOperationHealthy_POST_Model, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "is_operation_healthy")
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	if Operation != "" {
+		reqParams["operation"] = Operation
+	}
+
 	reqBody, err := core.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -427,8 +434,11 @@ func (r *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx 
 // method: POST
 // url: /activedirectory/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
-func (r *ActiveDirectory) ActiveDirectoryIsOperationHealthy_POST(id any, body *ActiveDirectoryIsOperationHealthy_POST_Body) (*ActiveDirectoryIsOperationHealthy_POST_Model, error) {
-	return r.ActiveDirectoryIsOperationHealthyWithContext_POST(r.Untyped.GetCtx(), id, body)
+//
+// Parameters:
+//   - Operation (query)
+func (r *ActiveDirectory) ActiveDirectoryIsOperationHealthy_POST(id any, Operation string, body *ActiveDirectoryIsOperationHealthy_POST_Body) (*ActiveDirectoryIsOperationHealthy_POST_Model, error) {
+	return r.ActiveDirectoryIsOperationHealthyWithContext_POST(r.Untyped.GetCtx(), id, Operation, body)
 }
 
 // ActiveDirectoryRefreshWithContext_PATCH

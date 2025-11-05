@@ -14,9 +14,9 @@ import (
 // method: GET
 // url: /vms/{id}/configured_idps/
 // summary: Return Configured SAML Identify Providers (IdPs)
-func (v *Vms) VmsConfiguredIdpsWithContext_GET(ctx context.Context, id any, params core.Params) (core.RecordSet, error) {
+func (v *Vms) VmsConfiguredIdpsWithContext_GET(ctx context.Context, id any) (core.RecordSet, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "configured_idps")
-	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -28,17 +28,17 @@ func (v *Vms) VmsConfiguredIdpsWithContext_GET(ctx context.Context, id any, para
 // method: GET
 // url: /vms/{id}/configured_idps/
 // summary: Return Configured SAML Identify Providers (IdPs)
-func (v *Vms) VmsConfiguredIdps_GET(id any, params core.Params) (core.RecordSet, error) {
-	return v.VmsConfiguredIdpsWithContext_GET(v.Rest.GetCtx(), id, params)
+func (v *Vms) VmsConfiguredIdps_GET(id any) (core.RecordSet, error) {
+	return v.VmsConfiguredIdpsWithContext_GET(v.Rest.GetCtx(), id)
 }
 
 // VmsLoginBannerWithContext_GET
 // method: GET
 // url: /vms/{id}/login_banner/
 // summary: Return VMS login banner (Authentication Not Required)
-func (v *Vms) VmsLoginBannerWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (v *Vms) VmsLoginBannerWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "login_banner")
-	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +49,8 @@ func (v *Vms) VmsLoginBannerWithContext_GET(ctx context.Context, id any, params 
 // method: GET
 // url: /vms/{id}/login_banner/
 // summary: Return VMS login banner (Authentication Not Required)
-func (v *Vms) VmsLoginBanner_GET(id any, params core.Params) (core.Record, error) {
-	return v.VmsLoginBannerWithContext_GET(v.Rest.GetCtx(), id, params)
+func (v *Vms) VmsLoginBanner_GET(id any) (core.Record, error) {
+	return v.VmsLoginBannerWithContext_GET(v.Rest.GetCtx(), id)
 }
 
 // VmsNetworkSettingsSummaryWithContext_POST
@@ -78,9 +78,9 @@ func (v *Vms) VmsNetworkSettingsSummary_POST(id any, body core.Params) (core.Rec
 // method: GET
 // url: /vms/{id}/network_settings/
 // summary: Return the network settings of VMS
-func (v *Vms) VmsNetworkSettingsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (v *Vms) VmsNetworkSettingsWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "network_settings")
-	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ func (v *Vms) VmsNetworkSettingsWithContext_GET(ctx context.Context, id any, par
 // method: GET
 // url: /vms/{id}/network_settings/
 // summary: Return the network settings of VMS
-func (v *Vms) VmsNetworkSettings_GET(id any, params core.Params) (core.Record, error) {
-	return v.VmsNetworkSettingsWithContext_GET(v.Rest.GetCtx(), id, params)
+func (v *Vms) VmsNetworkSettings_GET(id any) (core.Record, error) {
+	return v.VmsNetworkSettingsWithContext_GET(v.Rest.GetCtx(), id)
 }
 
 // VmsNetworkSettingsWithContext_PATCH
@@ -128,9 +128,9 @@ func (v *Vms) VmsNetworkSettings_PATCH(id any, body core.Params, waitTimeout tim
 // method: GET
 // url: /vms/{id}/pwd_settings/
 // summary: Return password settings of VMS
-func (v *Vms) VmsPwdSettingsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (v *Vms) VmsPwdSettingsWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "pwd_settings")
-	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +141,8 @@ func (v *Vms) VmsPwdSettingsWithContext_GET(ctx context.Context, id any, params 
 // method: GET
 // url: /vms/{id}/pwd_settings/
 // summary: Return password settings of VMS
-func (v *Vms) VmsPwdSettings_GET(id any, params core.Params) (core.Record, error) {
-	return v.VmsPwdSettingsWithContext_GET(v.Rest.GetCtx(), id, params)
+func (v *Vms) VmsPwdSettings_GET(id any) (core.Record, error) {
+	return v.VmsPwdSettingsWithContext_GET(v.Rest.GetCtx(), id)
 }
 
 // VmsPwdSettingsWithContext_PATCH
@@ -233,9 +233,9 @@ func (v *Vms) VmsResetSslCiphers_PATCH(id any, body core.Params) (core.Record, e
 // method: DELETE
 // url: /vms/{id}/saml_config/
 // summary: Delete SAML configuration for a specific IdP
-func (v *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (v *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
-	result, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -246,16 +246,21 @@ func (v *Vms) VmsSamlConfigWithContext_DELETE(ctx context.Context, id any, param
 // method: DELETE
 // url: /vms/{id}/saml_config/
 // summary: Delete SAML configuration for a specific IdP
-func (v *Vms) VmsSamlConfig_DELETE(id any, params core.Params) (core.Record, error) {
-	return v.VmsSamlConfigWithContext_DELETE(v.Rest.GetCtx(), id, params)
+func (v *Vms) VmsSamlConfig_DELETE(id any) (core.Record, error) {
+	return v.VmsSamlConfigWithContext_DELETE(v.Rest.GetCtx(), id)
 }
 
 // VmsSamlConfigWithContext_GET
 // method: GET
 // url: /vms/{id}/saml_config/
 // summary: Returns a SAML configuration for a specified IdP.
-func (v *Vms) VmsSamlConfigWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (v *Vms) VmsSamlConfigWithContext_GET(ctx context.Context, id any, IdpName string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
+	params := core.Params{}
+	params["idp_name"] = IdpName
 	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -267,17 +272,25 @@ func (v *Vms) VmsSamlConfigWithContext_GET(ctx context.Context, id any, params c
 // method: GET
 // url: /vms/{id}/saml_config/
 // summary: Returns a SAML configuration for a specified IdP.
-func (v *Vms) VmsSamlConfig_GET(id any, params core.Params) (core.Record, error) {
-	return v.VmsSamlConfigWithContext_GET(v.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (v *Vms) VmsSamlConfig_GET(id any, IdpName string) (core.Record, error) {
+	return v.VmsSamlConfigWithContext_GET(v.Rest.GetCtx(), id, IdpName)
 }
 
 // VmsSamlConfigWithContext_PATCH
 // method: PATCH
 // url: /vms/{id}/saml_config/
 // summary: Remove SP sign response or assertions request from an IdP
-func (v *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (v *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any, IdpName string, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
-	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, nil, body)
+	params := core.Params{}
+	params["idp_name"] = IdpName
+	result, err := core.Request[core.Record](ctx, v, http.MethodPatch, resourcePath, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -288,17 +301,25 @@ func (v *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any, body c
 // method: PATCH
 // url: /vms/{id}/saml_config/
 // summary: Remove SP sign response or assertions request from an IdP
-func (v *Vms) VmsSamlConfig_PATCH(id any, body core.Params) (core.Record, error) {
-	return v.VmsSamlConfigWithContext_PATCH(v.Rest.GetCtx(), id, body)
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (v *Vms) VmsSamlConfig_PATCH(id any, IdpName string, body core.Params) (core.Record, error) {
+	return v.VmsSamlConfigWithContext_PATCH(v.Rest.GetCtx(), id, IdpName, body)
 }
 
 // VmsSamlConfigWithContext_POST
 // method: POST
 // url: /vms/{id}/saml_config/
 // summary: Modify or Create a SAML configuration for a specific IdP.
-func (v *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (v *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, IdpName string, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
-	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, nil, body)
+	params := core.Params{}
+	params["idp_name"] = IdpName
+	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +330,11 @@ func (v *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, body co
 // method: POST
 // url: /vms/{id}/saml_config/
 // summary: Modify or Create a SAML configuration for a specific IdP.
-func (v *Vms) VmsSamlConfig_POST(id any, body core.Params) (core.Record, error) {
-	return v.VmsSamlConfigWithContext_POST(v.Rest.GetCtx(), id, body)
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (v *Vms) VmsSamlConfig_POST(id any, IdpName string, body core.Params) (core.Record, error) {
+	return v.VmsSamlConfigWithContext_POST(v.Rest.GetCtx(), id, IdpName, body)
 }
 
 // VmsSetCertificateWithContext_PATCH

@@ -13,9 +13,9 @@ import (
 // method: GET
 // url: /delta/config/
 // summary: Returns Delta Storage config.
-func (d *Delta) DeltaConfigWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (d *Delta) DeltaConfigWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/delta/config/"
-	result, err := core.Request[core.Record](ctx, d, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, d, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -26,8 +26,8 @@ func (d *Delta) DeltaConfigWithContext_GET(ctx context.Context, params core.Para
 // method: GET
 // url: /delta/config/
 // summary: Returns Delta Storage config.
-func (d *Delta) DeltaConfig_GET(params core.Params) (core.Record, error) {
-	return d.DeltaConfigWithContext_GET(d.Rest.GetCtx(), params)
+func (d *Delta) DeltaConfig_GET() (core.Record, error) {
+	return d.DeltaConfigWithContext_GET(d.Rest.GetCtx())
 }
 
 // DeltaConfigWithContext_PATCH

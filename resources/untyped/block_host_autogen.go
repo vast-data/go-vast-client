@@ -14,8 +14,15 @@ import (
 // method: DELETE
 // url: /blockhosts/bulk/
 // summary: Delete a Bulk Of Hosts
-func (b *BlockHost) BlockHostBulkWithContext_DELETE(ctx context.Context, params core.Params) error {
+//
+// Parameters:
+//   - Force (query): Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
+func (b *BlockHost) BlockHostBulkWithContext_DELETE(ctx context.Context, Force bool) error {
 	resourcePath := "/blockhosts/bulk/"
+	params := core.Params{}
+	if Force != false {
+		params["force"] = Force
+	}
 	_, err := core.Request[core.Record](ctx, b, http.MethodDelete, resourcePath, params, nil)
 	return err
 
@@ -25,8 +32,11 @@ func (b *BlockHost) BlockHostBulkWithContext_DELETE(ctx context.Context, params 
 // method: DELETE
 // url: /blockhosts/bulk/
 // summary: Delete a Bulk Of Hosts
-func (b *BlockHost) BlockHostBulk_DELETE(params core.Params) error {
-	return b.BlockHostBulkWithContext_DELETE(b.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - Force (query): Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
+func (b *BlockHost) BlockHostBulk_DELETE(Force bool) error {
+	return b.BlockHostBulkWithContext_DELETE(b.Rest.GetCtx(), Force)
 }
 
 // BlockHostSetVolumesWithContext_PATCH

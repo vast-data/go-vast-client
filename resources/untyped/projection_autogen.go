@@ -13,9 +13,9 @@ import (
 // method: DELETE
 // url: /projections/delete/
 // summary: Delete a Database Table Semi-Sorted Projection
-func (p *Projection) ProjectionDeleteWithContext_DELETE(ctx context.Context, params core.Params) error {
+func (p *Projection) ProjectionDeleteWithContext_DELETE(ctx context.Context) error {
 	resourcePath := "/projections/delete/"
-	_, err := core.Request[core.Record](ctx, p, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, p, http.MethodDelete, resourcePath, nil, nil)
 	return err
 
 }
@@ -24,8 +24,8 @@ func (p *Projection) ProjectionDeleteWithContext_DELETE(ctx context.Context, par
 // method: DELETE
 // url: /projections/delete/
 // summary: Delete a Database Table Semi-Sorted Projection
-func (p *Projection) ProjectionDelete_DELETE(params core.Params) error {
-	return p.ProjectionDeleteWithContext_DELETE(p.Rest.GetCtx(), params)
+func (p *Projection) ProjectionDelete_DELETE() error {
+	return p.ProjectionDeleteWithContext_DELETE(p.Rest.GetCtx())
 }
 
 // ProjectionRenameWithContext_PATCH

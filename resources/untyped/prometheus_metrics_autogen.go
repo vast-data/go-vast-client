@@ -13,9 +13,9 @@ import (
 // method: GET
 // url: /prometheusmetrics/all/
 // summary: all prometheus metrics
-func (p *PrometheusMetrics) PrometheusMetricsAllWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (p *PrometheusMetrics) PrometheusMetricsAllWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/prometheusmetrics/all/"
-	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -26,17 +26,17 @@ func (p *PrometheusMetrics) PrometheusMetricsAllWithContext_GET(ctx context.Cont
 // method: GET
 // url: /prometheusmetrics/all/
 // summary: all prometheus metrics
-func (p *PrometheusMetrics) PrometheusMetricsAll_GET(params core.Params) (core.Record, error) {
-	return p.PrometheusMetricsAllWithContext_GET(p.Rest.GetCtx(), params)
+func (p *PrometheusMetrics) PrometheusMetricsAll_GET() (core.Record, error) {
+	return p.PrometheusMetricsAllWithContext_GET(p.Rest.GetCtx())
 }
 
 // PrometheusMetricsDefragWithContext_GET
 // method: GET
 // url: /prometheusmetrics/defrag/
 // summary: prometheus defrag metrics
-func (p *PrometheusMetrics) PrometheusMetricsDefragWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (p *PrometheusMetrics) PrometheusMetricsDefragWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/prometheusmetrics/defrag/"
-	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -47,17 +47,17 @@ func (p *PrometheusMetrics) PrometheusMetricsDefragWithContext_GET(ctx context.C
 // method: GET
 // url: /prometheusmetrics/defrag/
 // summary: prometheus defrag metrics
-func (p *PrometheusMetrics) PrometheusMetricsDefrag_GET(params core.Params) (core.Record, error) {
-	return p.PrometheusMetricsDefragWithContext_GET(p.Rest.GetCtx(), params)
+func (p *PrometheusMetrics) PrometheusMetricsDefrag_GET() (core.Record, error) {
+	return p.PrometheusMetricsDefragWithContext_GET(p.Rest.GetCtx())
 }
 
 // PrometheusMetricsDevicesWithContext_GET
 // method: GET
 // url: /prometheusmetrics/devices/
 // summary: prometheus devices metrics
-func (p *PrometheusMetrics) PrometheusMetricsDevicesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (p *PrometheusMetrics) PrometheusMetricsDevicesWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/prometheusmetrics/devices/"
-	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -68,17 +68,17 @@ func (p *PrometheusMetrics) PrometheusMetricsDevicesWithContext_GET(ctx context.
 // method: GET
 // url: /prometheusmetrics/devices/
 // summary: prometheus devices metrics
-func (p *PrometheusMetrics) PrometheusMetricsDevices_GET(params core.Params) (core.Record, error) {
-	return p.PrometheusMetricsDevicesWithContext_GET(p.Rest.GetCtx(), params)
+func (p *PrometheusMetrics) PrometheusMetricsDevices_GET() (core.Record, error) {
+	return p.PrometheusMetricsDevicesWithContext_GET(p.Rest.GetCtx())
 }
 
 // PrometheusMetricsQuotasWithContext_GET
 // method: GET
 // url: /prometheusmetrics/quotas/
 // summary: prometheus quotas metrics
-func (p *PrometheusMetrics) PrometheusMetricsQuotasWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (p *PrometheusMetrics) PrometheusMetricsQuotasWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/prometheusmetrics/quotas/"
-	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -89,17 +89,17 @@ func (p *PrometheusMetrics) PrometheusMetricsQuotasWithContext_GET(ctx context.C
 // method: GET
 // url: /prometheusmetrics/quotas/
 // summary: prometheus quotas metrics
-func (p *PrometheusMetrics) PrometheusMetricsQuotas_GET(params core.Params) (core.Record, error) {
-	return p.PrometheusMetricsQuotasWithContext_GET(p.Rest.GetCtx(), params)
+func (p *PrometheusMetrics) PrometheusMetricsQuotas_GET() (core.Record, error) {
+	return p.PrometheusMetricsQuotasWithContext_GET(p.Rest.GetCtx())
 }
 
 // PrometheusMetricsSwitchesWithContext_GET
 // method: GET
 // url: /prometheusmetrics/switches/
 // summary: prometheus switches metrics
-func (p *PrometheusMetrics) PrometheusMetricsSwitchesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (p *PrometheusMetrics) PrometheusMetricsSwitchesWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/prometheusmetrics/switches/"
-	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -110,17 +110,17 @@ func (p *PrometheusMetrics) PrometheusMetricsSwitchesWithContext_GET(ctx context
 // method: GET
 // url: /prometheusmetrics/switches/
 // summary: prometheus switches metrics
-func (p *PrometheusMetrics) PrometheusMetricsSwitches_GET(params core.Params) (core.Record, error) {
-	return p.PrometheusMetricsSwitchesWithContext_GET(p.Rest.GetCtx(), params)
+func (p *PrometheusMetrics) PrometheusMetricsSwitches_GET() (core.Record, error) {
+	return p.PrometheusMetricsSwitchesWithContext_GET(p.Rest.GetCtx())
 }
 
 // PrometheusMetricsUsersWithContext_GET
 // method: GET
 // url: /prometheusmetrics/users/
 // summary: prometheus users metrics
-func (p *PrometheusMetrics) PrometheusMetricsUsersWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (p *PrometheusMetrics) PrometheusMetricsUsersWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/prometheusmetrics/users/"
-	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -131,17 +131,17 @@ func (p *PrometheusMetrics) PrometheusMetricsUsersWithContext_GET(ctx context.Co
 // method: GET
 // url: /prometheusmetrics/users/
 // summary: prometheus users metrics
-func (p *PrometheusMetrics) PrometheusMetricsUsers_GET(params core.Params) (core.Record, error) {
-	return p.PrometheusMetricsUsersWithContext_GET(p.Rest.GetCtx(), params)
+func (p *PrometheusMetrics) PrometheusMetricsUsers_GET() (core.Record, error) {
+	return p.PrometheusMetricsUsersWithContext_GET(p.Rest.GetCtx())
 }
 
 // PrometheusMetricsViewsWithContext_GET
 // method: GET
 // url: /prometheusmetrics/views/
 // summary: prometheus views metrics
-func (p *PrometheusMetrics) PrometheusMetricsViewsWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (p *PrometheusMetrics) PrometheusMetricsViewsWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/prometheusmetrics/views/"
-	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +152,6 @@ func (p *PrometheusMetrics) PrometheusMetricsViewsWithContext_GET(ctx context.Co
 // method: GET
 // url: /prometheusmetrics/views/
 // summary: prometheus views metrics
-func (p *PrometheusMetrics) PrometheusMetricsViews_GET(params core.Params) (core.Record, error) {
-	return p.PrometheusMetricsViewsWithContext_GET(p.Rest.GetCtx(), params)
+func (p *PrometheusMetrics) PrometheusMetricsViews_GET() (core.Record, error) {
+	return p.PrometheusMetricsViewsWithContext_GET(p.Rest.GetCtx())
 }

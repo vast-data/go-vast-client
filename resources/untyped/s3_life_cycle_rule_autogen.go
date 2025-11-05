@@ -13,8 +13,15 @@ import (
 // method: GET
 // url: /s3lifecyclerules/get_object_expiration/
 // summary: Get Object Expiration Information
-func (s *S3LifeCycleRule) S3LifeCycleRuleGetObjectExpirationWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - ObjectName (query): Object name
+//   - BucketName (query): Bucket name
+func (s *S3LifeCycleRule) S3LifeCycleRuleGetObjectExpirationWithContext_GET(ctx context.Context, ObjectName string, BucketName string) (core.Record, error) {
 	resourcePath := "/s3lifecyclerules/get_object_expiration/"
+	params := core.Params{}
+	params["object_name"] = ObjectName
+	params["bucket_name"] = BucketName
 	result, err := core.Request[core.Record](ctx, s, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -26,6 +33,10 @@ func (s *S3LifeCycleRule) S3LifeCycleRuleGetObjectExpirationWithContext_GET(ctx 
 // method: GET
 // url: /s3lifecyclerules/get_object_expiration/
 // summary: Get Object Expiration Information
-func (s *S3LifeCycleRule) S3LifeCycleRuleGetObjectExpiration_GET(params core.Params) (core.Record, error) {
-	return s.S3LifeCycleRuleGetObjectExpirationWithContext_GET(s.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - ObjectName (query): Object name
+//   - BucketName (query): Bucket name
+func (s *S3LifeCycleRule) S3LifeCycleRuleGetObjectExpiration_GET(ObjectName string, BucketName string) (core.Record, error) {
+	return s.S3LifeCycleRuleGetObjectExpirationWithContext_GET(s.Rest.GetCtx(), ObjectName, BucketName)
 }

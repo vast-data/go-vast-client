@@ -131,8 +131,23 @@ func (u *User) UserCopy_POST(body core.Params, waitTimeout time.Duration) (*Asyn
 // method: GET
 // url: /users/names/
 // summary: Find User by prefix and domain details
-func (u *User) UserNamesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Prefix (query): Prefix to find the user
+//   - Domain (query): Domain details to find the user (ALL by default). Format: BASE_DN|FQDN|SID
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (u *User) UserNamesWithContext_GET(ctx context.Context, Prefix string, Domain string, TenantId int64) (core.Record, error) {
 	resourcePath := "/users/names/"
+	params := core.Params{}
+	if Prefix != "" {
+		params["prefix"] = Prefix
+	}
+	if Domain != "" {
+		params["domain"] = Domain
+	}
+	if TenantId != 0 {
+		params["tenant_id"] = TenantId
+	}
 	result, err := core.Request[core.Record](ctx, u, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -144,17 +159,22 @@ func (u *User) UserNamesWithContext_GET(ctx context.Context, params core.Params)
 // method: GET
 // url: /users/names/
 // summary: Find User by prefix and domain details
-func (u *User) UserNames_GET(params core.Params) (core.Record, error) {
-	return u.UserNamesWithContext_GET(u.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - Prefix (query): Prefix to find the user
+//   - Domain (query): Domain details to find the user (ALL by default). Format: BASE_DN|FQDN|SID
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (u *User) UserNames_GET(Prefix string, Domain string, TenantId int64) (core.Record, error) {
+	return u.UserNamesWithContext_GET(u.Rest.GetCtx(), Prefix, Domain, TenantId)
 }
 
 // UserNonLocalKeysWithContext_DELETE
 // method: DELETE
 // url: /users/non_local_keys/
 // summary: Remove S3 Access Key Pair (Non-Local User)
-func (u *User) UserNonLocalKeysWithContext_DELETE(ctx context.Context, params core.Params) error {
+func (u *User) UserNonLocalKeysWithContext_DELETE(ctx context.Context) error {
 	resourcePath := "/users/non_local_keys/"
-	_, err := core.Request[core.Record](ctx, u, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, u, http.MethodDelete, resourcePath, nil, nil)
 	return err
 
 }
@@ -163,8 +183,8 @@ func (u *User) UserNonLocalKeysWithContext_DELETE(ctx context.Context, params co
 // method: DELETE
 // url: /users/non_local_keys/
 // summary: Remove S3 Access Key Pair (Non-Local User)
-func (u *User) UserNonLocalKeys_DELETE(params core.Params) error {
-	return u.UserNonLocalKeysWithContext_DELETE(u.Rest.GetCtx(), params)
+func (u *User) UserNonLocalKeys_DELETE() error {
+	return u.UserNonLocalKeysWithContext_DELETE(u.Rest.GetCtx())
 }
 
 // UserNonLocalKeysWithContext_PATCH
@@ -274,8 +294,15 @@ func (u *User) UserRefresh_PATCH(body core.Params) (core.Record, error) {
 // method: GET
 // url: /users/{id}/tenant_data/
 // summary: Get tenant data for a User
-func (u *User) UserTenantDataWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (u *User) UserTenantDataWithContext_GET(ctx context.Context, id any, TenantId int64) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("users", id, "tenant_data")
+	params := core.Params{}
+	if TenantId != 0 {
+		params["tenant_id"] = TenantId
+	}
 	result, err := core.Request[core.Record](ctx, u, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -287,8 +314,11 @@ func (u *User) UserTenantDataWithContext_GET(ctx context.Context, id any, params
 // method: GET
 // url: /users/{id}/tenant_data/
 // summary: Get tenant data for a User
-func (u *User) UserTenantData_GET(id any, params core.Params) (core.Record, error) {
-	return u.UserTenantDataWithContext_GET(u.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (u *User) UserTenantData_GET(id any, TenantId int64) (core.Record, error) {
+	return u.UserTenantDataWithContext_GET(u.Rest.GetCtx(), id, TenantId)
 }
 
 // UserTenantDataWithContext_PATCH

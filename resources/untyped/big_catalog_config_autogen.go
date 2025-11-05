@@ -13,9 +13,9 @@ import (
 // method: GET
 // url: /bigcatalogconfig/columns/
 // summary: Return VAST Catalog columns
-func (b *BigCatalogConfig) BigCatalogConfigColumnsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+func (b *BigCatalogConfig) BigCatalogConfigColumnsWithContext_GET(ctx context.Context) (core.RecordSet, error) {
 	resourcePath := "/bigcatalogconfig/columns/"
-	result, err := core.Request[core.RecordSet](ctx, b, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.RecordSet](ctx, b, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -27,8 +27,8 @@ func (b *BigCatalogConfig) BigCatalogConfigColumnsWithContext_GET(ctx context.Co
 // method: GET
 // url: /bigcatalogconfig/columns/
 // summary: Return VAST Catalog columns
-func (b *BigCatalogConfig) BigCatalogConfigColumns_GET(params core.Params) (core.RecordSet, error) {
-	return b.BigCatalogConfigColumnsWithContext_GET(b.Rest.GetCtx(), params)
+func (b *BigCatalogConfig) BigCatalogConfigColumns_GET() (core.RecordSet, error) {
+	return b.BigCatalogConfigColumnsWithContext_GET(b.Rest.GetCtx())
 }
 
 // BigCatalogConfigQueryDataWithContext_GET
@@ -56,9 +56,24 @@ func (b *BigCatalogConfig) BigCatalogConfigQueryData_GET(params core.Params) (co
 // method: POST
 // url: /bigcatalogconfig/query_data/
 // summary: Query VAST Catalog
-func (b *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Page (query)
+//   - Limit (query)
+//   - Ordering (query)
+func (b *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context.Context, Page int64, Limit int64, Ordering string, body core.Params) (core.Record, error) {
 	resourcePath := "/bigcatalogconfig/query_data/"
-	result, err := core.Request[core.Record](ctx, b, http.MethodPost, resourcePath, nil, body)
+	params := core.Params{}
+	if Page != 0 {
+		params["page"] = Page
+	}
+	if Limit != 0 {
+		params["limit"] = Limit
+	}
+	if Ordering != "" {
+		params["ordering"] = Ordering
+	}
+	result, err := core.Request[core.Record](ctx, b, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -69,17 +84,22 @@ func (b *BigCatalogConfig) BigCatalogConfigQueryDataWithContext_POST(ctx context
 // method: POST
 // url: /bigcatalogconfig/query_data/
 // summary: Query VAST Catalog
-func (b *BigCatalogConfig) BigCatalogConfigQueryData_POST(body core.Params) (core.Record, error) {
-	return b.BigCatalogConfigQueryDataWithContext_POST(b.Rest.GetCtx(), body)
+//
+// Parameters:
+//   - Page (query)
+//   - Limit (query)
+//   - Ordering (query)
+func (b *BigCatalogConfig) BigCatalogConfigQueryData_POST(Page int64, Limit int64, Ordering string, body core.Params) (core.Record, error) {
+	return b.BigCatalogConfigQueryDataWithContext_POST(b.Rest.GetCtx(), Page, Limit, Ordering, body)
 }
 
 // BigCatalogConfigStatsWithContext_GET
 // method: GET
 // url: /bigcatalogconfig/stats/
 // summary: Return VAST Catalog Stats
-func (b *BigCatalogConfig) BigCatalogConfigStatsWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (b *BigCatalogConfig) BigCatalogConfigStatsWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/bigcatalogconfig/stats/"
-	result, err := core.Request[core.Record](ctx, b, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, b, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +110,6 @@ func (b *BigCatalogConfig) BigCatalogConfigStatsWithContext_GET(ctx context.Cont
 // method: GET
 // url: /bigcatalogconfig/stats/
 // summary: Return VAST Catalog Stats
-func (b *BigCatalogConfig) BigCatalogConfigStats_GET(params core.Params) (core.Record, error) {
-	return b.BigCatalogConfigStatsWithContext_GET(b.Rest.GetCtx(), params)
+func (b *BigCatalogConfig) BigCatalogConfigStats_GET() (core.Record, error) {
+	return b.BigCatalogConfigStatsWithContext_GET(b.Rest.GetCtx())
 }

@@ -13,8 +13,15 @@ import (
 // method: GET
 // url: /vastdb/vips/
 // summary: Get a list of DB access VIPs
-func (v *VastDb) VastDbVipsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+//
+// Parameters:
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (v *VastDb) VastDbVipsWithContext_GET(ctx context.Context, TenantId int64) (core.RecordSet, error) {
 	resourcePath := "/vastdb/vips/"
+	params := core.Params{}
+	if TenantId != 0 {
+		params["tenant_id"] = TenantId
+	}
 	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -27,6 +34,9 @@ func (v *VastDb) VastDbVipsWithContext_GET(ctx context.Context, params core.Para
 // method: GET
 // url: /vastdb/vips/
 // summary: Get a list of DB access VIPs
-func (v *VastDb) VastDbVips_GET(params core.Params) (core.RecordSet, error) {
-	return v.VastDbVipsWithContext_GET(v.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (v *VastDb) VastDbVips_GET(TenantId int64) (core.RecordSet, error) {
+	return v.VastDbVipsWithContext_GET(v.Rest.GetCtx(), TenantId)
 }

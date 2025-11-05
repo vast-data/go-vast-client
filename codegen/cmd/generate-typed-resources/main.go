@@ -190,7 +190,8 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 
 	// Don't assume HasBody - will be determined by checking OpenAPI spec for actual request body
 	methodInfo.HasBody = false
-	methodInfo.HasParams = extraMethod.Method == "GET"
+	// HasParams will be determined by checking OpenAPI spec for query parameters
+	methodInfo.HasParams = false
 
 	var allNestedTypes []*NestedType
 
@@ -267,20 +268,29 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 		}
 	}
 
-	// Generate query parameter fields for GET extra methods
-	if methodInfo.HasParams && extraMethod.Method == "GET" {
-		paramsRegistry := NewTypeRegistry()
-		// Get query parameters from OpenAPI
-		params, err := api.QueryParametersGET(extraMethod.Path)
-		if err != nil {
-			fmt.Printf("  ℹ️  No query parameters found for GET %s\n", extraMethod.Path)
-		} else if len(params) > 0 {
+	// Generate query parameter fields for ALL extra methods
+	// First, check if there are any query parameters in the OpenAPI spec
+	paramsRegistry := NewTypeRegistry()
+	var params []*openapi3.Parameter
+	var paramsErr error
+
+	params, paramsErr = api.GetQueryParameters(extraMethod.Method, extraMethod.Path)
+
+	if paramsErr != nil {
+		// No query parameters found
+		fmt.Printf("  ℹ️  No query parameters found for %s %s\n", extraMethod.Method, extraMethod.Path)
+	} else if len(params) > 0 {
+		// Found query parameters - set HasParams flag
+		methodInfo.HasParams = true
+
+		if extraMethod.Method == "GET" {
+			// GET: use traditional BodyFields for query params
 			bodyFields, err := generateSearchParamsFromParameters(params, extraMethod.Path, paramsRegistry)
 			if err != nil {
 				fmt.Printf("  ℹ️  Failed to generate query params for GET %s: %v\n", extraMethod.Path, err)
 			} else {
-				methodInfo.BodyFields = bodyFields // Reuse BodyFields for query params
-				fmt.Printf("  ℹ️  Generated %d query parameters\n", len(bodyFields))
+				methodInfo.BodyFields = bodyFields
+				fmt.Printf("  ℹ️  Generated %d query parameters for GET\n", len(bodyFields))
 
 				// Tag nested types
 				paramsNestedTypes := paramsRegistry.GetTypes()
@@ -295,6 +305,46 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 				methodInfo.NestedTypes = append(methodInfo.NestedTypes, paramsNestedTypes...)
 				allNestedTypes = append(allNestedTypes, paramsNestedTypes...)
 			}
+		} else {
+			// POST/PATCH/PUT/DELETE: convert query params to simplified inline params
+			methodInfo.HasQueryParams = true
+			methodInfo.QueryParamFields = make([]SimplifiedParam, 0, len(params))
+
+			for _, param := range params {
+				if param == nil {
+					continue
+				}
+
+				goName := toCamelCase(param.Name)
+				goType := "string" // Default to string
+
+				// Determine Go type from OpenAPI schema
+				if param.Schema != nil && param.Schema.Value != nil {
+					if param.Schema.Value.Type != nil {
+						schemaType := (*param.Schema.Value.Type)[0]
+						switch schemaType {
+						case "integer":
+							goType = "int64"
+						case "number":
+							goType = "float64"
+						case "boolean":
+							goType = "bool"
+						case "string":
+							goType = "string"
+						}
+					}
+				}
+
+				methodInfo.QueryParamFields = append(methodInfo.QueryParamFields, SimplifiedParam{
+					Name:        goName,
+					Type:        goType,
+					BodyField:   param.Name,
+					Required:    param.Required,
+					Description: param.Description,
+				})
+			}
+
+			fmt.Printf("  ℹ️  Generated %d query parameters for %s as inline params\n", len(methodInfo.QueryParamFields), extraMethod.Method)
 		}
 	}
 
@@ -710,6 +760,9 @@ type ExtraMethodInfo struct {
 	// For primitive responses (e.g., string, int64, bool)
 	ReturnsPrimitive bool
 	PrimitiveType    string // Go type (e.g., "string", "int64", "bool", "float64")
+	// For query parameters on non-GET methods (POST/PATCH/PUT/DELETE)
+	HasQueryParams   bool
+	QueryParamFields []SimplifiedParam // Query params as simplified inline parameters
 }
 
 // SimplifiedParam represents a simplified inline parameter for typed extra methods
@@ -2314,7 +2367,7 @@ func generateSearchParamsFields(resourcePath, method string, registry *TypeRegis
 	switch method {
 	case http.MethodGet:
 		// For GET requests, get individual query parameters
-		params, err := api.QueryParametersGET(resourcePath)
+		params, err := api.GetQueryParameters("GET", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get GET query params for resource %q: %w", resourcePath, err)
 		}

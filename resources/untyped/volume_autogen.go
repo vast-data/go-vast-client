@@ -14,8 +14,15 @@ import (
 // method: DELETE
 // url: /volumes/bulk/
 // summary: Delete a Bulk Of Block Storage Volumes
-func (v *Volume) VolumeBulkWithContext_DELETE(ctx context.Context, params core.Params) error {
+//
+// Parameters:
+//   - Force (query): Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
+func (v *Volume) VolumeBulkWithContext_DELETE(ctx context.Context, Force bool) error {
 	resourcePath := "/volumes/bulk/"
+	params := core.Params{}
+	if Force != false {
+		params["force"] = Force
+	}
 	_, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, params, nil)
 	return err
 
@@ -25,17 +32,20 @@ func (v *Volume) VolumeBulkWithContext_DELETE(ctx context.Context, params core.P
 // method: DELETE
 // url: /volumes/bulk/
 // summary: Delete a Bulk Of Block Storage Volumes
-func (v *Volume) VolumeBulk_DELETE(params core.Params) error {
-	return v.VolumeBulkWithContext_DELETE(v.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - Force (query): Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
+func (v *Volume) VolumeBulk_DELETE(Force bool) error {
+	return v.VolumeBulkWithContext_DELETE(v.Rest.GetCtx(), Force)
 }
 
 // VolumeFetchCapacityWithContext_GET
 // method: GET
 // url: /volumes/{id}/fetch_capacity/
 // summary: Fetches Capacity Usage of Block Storage Volume
-func (v *Volume) VolumeFetchCapacityWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (v *Volume) VolumeFetchCapacityWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("volumes", id, "fetch_capacity")
-	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -46,17 +56,17 @@ func (v *Volume) VolumeFetchCapacityWithContext_GET(ctx context.Context, id any,
 // method: GET
 // url: /volumes/{id}/fetch_capacity/
 // summary: Fetches Capacity Usage of Block Storage Volume
-func (v *Volume) VolumeFetchCapacity_GET(id any, params core.Params) (core.Record, error) {
-	return v.VolumeFetchCapacityWithContext_GET(v.Rest.GetCtx(), id, params)
+func (v *Volume) VolumeFetchCapacity_GET(id any) (core.Record, error) {
+	return v.VolumeFetchCapacityWithContext_GET(v.Rest.GetCtx(), id)
 }
 
 // VolumeGetSnapshotsWithContext_GET
 // method: GET
 // url: /volumes/{id}/get_snapshots/
 // summary: Return Snapshots (IDs) of a Volume.
-func (v *Volume) VolumeGetSnapshotsWithContext_GET(ctx context.Context, id any, params core.Params) (core.RecordSet, error) {
+func (v *Volume) VolumeGetSnapshotsWithContext_GET(ctx context.Context, id any) (core.RecordSet, error) {
 	resourcePath := core.BuildResourcePathWithID("volumes", id, "get_snapshots")
-	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +78,8 @@ func (v *Volume) VolumeGetSnapshotsWithContext_GET(ctx context.Context, id any, 
 // method: GET
 // url: /volumes/{id}/get_snapshots/
 // summary: Return Snapshots (IDs) of a Volume.
-func (v *Volume) VolumeGetSnapshots_GET(id any, params core.Params) (core.RecordSet, error) {
-	return v.VolumeGetSnapshotsWithContext_GET(v.Rest.GetCtx(), id, params)
+func (v *Volume) VolumeGetSnapshots_GET(id any) (core.RecordSet, error) {
+	return v.VolumeGetSnapshotsWithContext_GET(v.Rest.GetCtx(), id)
 }
 
 // VolumeSetHostsWithContext_PATCH

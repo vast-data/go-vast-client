@@ -339,10 +339,17 @@ func (r *Quota) QuotaRecalcStop_PATCH() error {
 // method: PATCH
 // url: /quotas/recalc/
 // summary: Start recalculation flow all quotas
-func (r *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context) error {
+//
+// Parameters:
+//   - Id (query): Quota ID - if not given, will be applied to all quotas
+func (r *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context, Id string) error {
 	resourcePath := "/quotas/recalc/"
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	if Id != "" {
+		reqParams["id"] = Id
+	}
+
 	var reqBody core.Params
 
 	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
@@ -354,8 +361,11 @@ func (r *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context) error {
 // method: PATCH
 // url: /quotas/recalc/
 // summary: Start recalculation flow all quotas
-func (r *Quota) QuotaRecalc_PATCH() error {
-	return r.QuotaRecalcWithContext_PATCH(r.Untyped.GetCtx())
+//
+// Parameters:
+//   - Id (query): Quota ID - if not given, will be applied to all quotas
+func (r *Quota) QuotaRecalc_PATCH(Id string) error {
+	return r.QuotaRecalcWithContext_PATCH(r.Untyped.GetCtx(), Id)
 }
 
 // QuotaRefreshUserQuotasWithContext_PATCH

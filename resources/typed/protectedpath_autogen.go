@@ -400,12 +400,17 @@ type ProtectedPathPrefetchPath_POST_Model struct {
 // summary: Prefetch a Path to Global Access Cache
 //
 // Parameters:
+//   - Force (query): Force prefetch even if it is already running
 //   - path (body): The path on the destination peer for which to prefetch data from the equivalent source path to the global access cache. The path can be the entire protected path or a subdirectory.
 //   - prefetchType (body): Whether to prefetch full data or only metadata.
-func (r *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Context, id any, path string, prefetchType string) (*ProtectedPathPrefetchPath_POST_Model, error) {
+func (r *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Context, id any, Force bool, path string, prefetchType string) (*ProtectedPathPrefetchPath_POST_Model, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "prefetch_path")
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	if Force {
+		reqParams["force"] = Force
+	}
+
 	reqBody := core.Params{}
 	reqBody["path"] = path
 	reqBody["prefetch_type"] = prefetchType
@@ -429,10 +434,11 @@ func (r *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Co
 // summary: Prefetch a Path to Global Access Cache
 //
 // Parameters:
+//   - Force (query): Force prefetch even if it is already running
 //   - path (body): The path on the destination peer for which to prefetch data from the equivalent source path to the global access cache. The path can be the entire protected path or a subdirectory.
 //   - prefetchType (body): Whether to prefetch full data or only metadata.
-func (r *ProtectedPath) ProtectedPathPrefetchPath_POST(id any, path string, prefetchType string) (*ProtectedPathPrefetchPath_POST_Model, error) {
-	return r.ProtectedPathPrefetchPathWithContext_POST(r.Untyped.GetCtx(), id, path, prefetchType)
+func (r *ProtectedPath) ProtectedPathPrefetchPath_POST(id any, Force bool, path string, prefetchType string) (*ProtectedPathPrefetchPath_POST_Model, error) {
+	return r.ProtectedPathPrefetchPathWithContext_POST(r.Untyped.GetCtx(), id, Force, path, prefetchType)
 }
 
 // ProtectedPathRemoveStreamWithContext_PATCH

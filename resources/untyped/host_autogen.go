@@ -17,9 +17,9 @@ import (
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (h *Host) HostDiscoverWithContext_GET(ctx context.Context, params core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+func (h *Host) HostDiscoverWithContext_GET(ctx context.Context, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := "/hosts/discover/"
-	result, err := core.Request[core.Record](ctx, h, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, h, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -35,16 +35,23 @@ func (h *Host) HostDiscoverWithContext_GET(ctx context.Context, params core.Para
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (h *Host) HostDiscover_GET(params core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
-	return h.HostDiscoverWithContext_GET(h.Rest.GetCtx(), params, waitTimeout)
+func (h *Host) HostDiscover_GET(waitTimeout time.Duration) (*AsyncResult, error) {
+	return h.HostDiscoverWithContext_GET(h.Rest.GetCtx(), waitTimeout)
 }
 
 // HostDiscoveredHostsWithContext_GET
 // method: GET
 // url: /hosts/discovered_hosts/
 // summary: Return new discovered hosts
-func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+//
+// Parameters:
+//   - HostType (query)
+func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, HostType string) (core.RecordSet, error) {
 	resourcePath := "/hosts/discovered_hosts/"
+	params := core.Params{}
+	if HostType != "" {
+		params["host_type"] = HostType
+	}
 	result, err := core.Request[core.RecordSet](ctx, h, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -57,6 +64,9 @@ func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, params co
 // method: GET
 // url: /hosts/discovered_hosts/
 // summary: Return new discovered hosts
-func (h *Host) HostDiscoveredHosts_GET(params core.Params) (core.RecordSet, error) {
-	return h.HostDiscoveredHostsWithContext_GET(h.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - HostType (query)
+func (h *Host) HostDiscoveredHosts_GET(HostType string) (core.RecordSet, error) {
+	return h.HostDiscoveredHostsWithContext_GET(h.Rest.GetCtx(), HostType)
 }

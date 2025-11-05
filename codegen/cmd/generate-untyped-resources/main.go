@@ -38,6 +38,9 @@ type MethodInfo struct {
 	// For simplified bodies (up to 3 fields become inline parameters)
 	SimplifiedBody   bool              // True if body has 1-3 fields
 	SimplifiedParams []SimplifiedParam // The inline parameters
+	// For simplified query params (up to 3 params become inline parameters)
+	SimplifiedQueryParams     bool              // True if query params has 1-3 fields
+	SimplifiedQueryParamsList []SimplifiedParam // The inline query parameters
 	// For async task methods (returns AsyncTaskInResponse)
 	IsAsyncTask bool
 }
@@ -279,8 +282,57 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	// Store base name without HTTP method suffix
 	methodInfo.Name = resourceName + action
 
-	// Determine if method has params and body based on HTTP method
-	methodInfo.HasParams = extraMethod.Method == "GET" || extraMethod.Method == "DELETE"
+	// Check if method has query parameters in OpenAPI spec
+	var queryParams []*openapi3.Parameter
+	var queryParamsErr error
+
+	queryParams, queryParamsErr = api.GetQueryParameters(extraMethod.Method, extraMethod.Path)
+
+	// Set HasParams if query parameters found
+	methodInfo.HasParams = queryParamsErr == nil && len(queryParams) > 0
+
+	// If query params found and ≤3, convert to simplified inline parameters
+	if methodInfo.HasParams && len(queryParams) > 0 && len(queryParams) <= 3 {
+		methodInfo.SimplifiedQueryParams = true
+		methodInfo.SimplifiedQueryParamsList = make([]SimplifiedParam, 0, len(queryParams))
+
+		for _, param := range queryParams {
+			if param == nil {
+				continue
+			}
+
+			paramName := toCamelCase(param.Name)
+			paramType := "string" // Default to string
+
+			// Determine Go type from OpenAPI schema
+			if param.Schema != nil && param.Schema.Value != nil {
+				if param.Schema.Value.Type != nil && len(*param.Schema.Value.Type) > 0 {
+					schemaType := (*param.Schema.Value.Type)[0]
+					switch schemaType {
+					case "integer":
+						paramType = "int64"
+					case "number":
+						paramType = "float64"
+					case "boolean":
+						paramType = "bool"
+					case "string":
+						paramType = "string"
+					}
+				}
+			}
+
+			methodInfo.SimplifiedQueryParamsList = append(methodInfo.SimplifiedQueryParamsList, SimplifiedParam{
+				Name:        paramName,
+				Type:        paramType,
+				BodyField:   param.Name,
+				Required:    param.Required,
+				Description: param.Description,
+			})
+		}
+		fmt.Printf("  ℹ️  Simplified query params: %d inline parameters\n", len(methodInfo.SimplifiedQueryParamsList))
+	}
+
+	// Determine if method has body based on HTTP method
 	methodInfo.HasBody = extraMethod.Method == "POST" || extraMethod.Method == "PUT" || extraMethod.Method == "PATCH"
 
 	// Check if method body can be simplified (1-3 fields become inline parameters)
@@ -463,33 +515,39 @@ import (
 // {{.Name}}WithContext_{{.HTTPMethod}}
 // method: {{.HTTPMethod}}
 // url: {{.Path}}{{if .Summary}}
-// summary: {{.Summary}}{{end}}{{if or .SimplifiedBody .IsAsyncTask}}
+// summary: {{.Summary}}{{end}}{{if or .SimplifiedBody .SimplifiedQueryParams .IsAsyncTask}}
 //
-// Parameters:{{range .SimplifiedParams}}
+// Parameters:{{range .SimplifiedQueryParamsList}}
+//   - {{.Name}} (query){{if .Description}}: {{.Description}}{{end}}{{end}}{{range .SimplifiedParams}}
 //   - {{.Name}} (body): {{if .Description}}{{.Description}}{{else}}Request parameter{{end}}{{end}}{{if .IsAsyncTask}}
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}{{end}}
-func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{if .HasID}}, id any{{end}}{{if .HasParams}}, params core.Params{{end}}{{if .SimplifiedBody}}{{range $i, $p := .SimplifiedParams}}, {{$p.Name}} {{$p.Type}}{{end}}{{else}}{{if .HasBody}}, body core.Params{{end}}{{end}}{{if .IsAsyncTask}}, waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
+func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{if .HasID}}, id any{{end}}{{if .SimplifiedQueryParams}}{{range $i, $p := .SimplifiedQueryParamsList}}, {{$p.Name}} {{$p.Type}}{{end}}{{else}}{{if .HasParams}}, params core.Params{{end}}{{end}}{{if .SimplifiedBody}}{{range $i, $p := .SimplifiedParams}}, {{$p.Name}} {{$p.Type}}{{end}}{{else}}{{if .HasBody}}, body core.Params{{end}}{{end}}{{if .IsAsyncTask}}, waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
 	{{if .HasID}}resourcePath := core.BuildResourcePathWithID("{{.ResourcePath}}", id{{if .SubPath}}, "{{.SubPath}}"{{end}})
 	{{else}}resourcePath := "{{.Path}}"
-	{{end}}{{if .SimplifiedBody}}body := core.Params{}
+	{{end}}{{if .SimplifiedQueryParams}}params := core.Params{}
+	{{range .SimplifiedQueryParamsList}}{{if .Required}}params["{{.BodyField}}"] = {{.Name}}
+	{{else}}if {{.Name}} != {{if eq .Type "string"}}""{{else if eq .Type "bool"}}false{{else}}0{{end}} {
+		params["{{.BodyField}}"] = {{.Name}}
+	}
+	{{end}}{{end}}{{end}}{{if .SimplifiedBody}}body := core.Params{}
 	{{range .SimplifiedParams}}{{if .Required}}body["{{.BodyField}}"] = {{.Name}}
 	{{else}}if {{.Name}} != {{if eq .Type "string"}}""{{else if eq .Type "bool"}}false{{else}}0{{end}} {
 		body["{{.BodyField}}"] = {{.Name}}
 	}
-	{{end}}{{end}}{{end}}{{if .IsAsyncTask}}result, err := core.Request[core.Record](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if .HasParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
+	{{end}}{{end}}{{end}}{{if .IsAsyncTask}}result, err := core.Request[core.Record](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if or .HasParams .SimplifiedQueryParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
 	if err != nil {
 		return nil, err
 	}
 
 	return MaybeWaitAsyncResultWithContext(ctx, result, {{$.ReceiverName}}.Rest, waitTimeout)
-	{{else}}{{if .ReturnsNoContent}}_, err := core.Request[core.Record](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if .HasParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
+	{{else}}{{if .ReturnsNoContent}}_, err := core.Request[core.Record](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if or .HasParams .SimplifiedQueryParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
 	return err
-	{{else}}{{if .ReturnsArray}}result, err := core.Request[core.RecordSet](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if .HasParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
+	{{else}}{{if .ReturnsArray}}result, err := core.Request[core.RecordSet](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if or .HasParams .SimplifiedQueryParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
-	{{else}}result, err := core.Request[core.Record](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if .HasParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
+	{{else}}result, err := core.Request[core.Record](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if or .HasParams .SimplifiedQueryParams}}params{{else}}nil{{end}}, {{if or .HasBody .SimplifiedBody}}body{{else}}nil{{end}})
 	if err != nil {
 		return nil, err
 	}
@@ -499,13 +557,14 @@ func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx c
 // {{.Name}}_{{.HTTPMethod}}
 // method: {{.HTTPMethod}}
 // url: {{.Path}}{{if .Summary}}
-// summary: {{.Summary}}{{end}}{{if or .SimplifiedBody .IsAsyncTask}}
+// summary: {{.Summary}}{{end}}{{if or .SimplifiedBody .SimplifiedQueryParams .IsAsyncTask}}
 //
-// Parameters:{{range .SimplifiedParams}}
+// Parameters:{{range .SimplifiedQueryParamsList}}
+//   - {{.Name}} (query){{if .Description}}: {{.Description}}{{end}}{{end}}{{range .SimplifiedParams}}
 //   - {{.Name}} (body): {{if .Description}}{{.Description}}{{else}}Request parameter{{end}}{{end}}{{if .IsAsyncTask}}
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}{{end}}
-func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{if .HasID}}id any, {{end}}{{if .HasParams}}params core.Params, {{end}}{{if .SimplifiedBody}}{{range $i, $p := .SimplifiedParams}}{{if gt $i 0}}, {{end}}{{$p.Name}} {{$p.Type}}{{end}}{{if .IsAsyncTask}}, {{end}}{{else}}{{if .HasBody}}body core.Params{{if .IsAsyncTask}}, {{end}}{{else}}{{if .IsAsyncTask}}{{end}}{{end}}{{end}}{{if .IsAsyncTask}}waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
-	return {{$.ReceiverName}}.{{.Name}}WithContext_{{.HTTPMethod}}({{$.ReceiverName}}.Rest.GetCtx(){{if .HasID}}, id{{end}}{{if .HasParams}}, params{{end}}{{if .SimplifiedBody}}{{range .SimplifiedParams}}, {{.Name}}{{end}}{{else}}{{if .HasBody}}, body{{end}}{{end}}{{if .IsAsyncTask}}, waitTimeout{{end}})
+func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{if .HasID}}id any, {{end}}{{if .SimplifiedQueryParams}}{{range $i, $p := .SimplifiedQueryParamsList}}{{if gt $i 0}}, {{end}}{{$p.Name}} {{$p.Type}}{{end}}, {{else}}{{if .HasParams}}params core.Params, {{end}}{{end}}{{if .SimplifiedBody}}{{range $i, $p := .SimplifiedParams}}{{if gt $i 0}}, {{end}}{{$p.Name}} {{$p.Type}}{{end}}{{if .IsAsyncTask}}, {{end}}{{else}}{{if .HasBody}}body core.Params{{if .IsAsyncTask}}, {{end}}{{else}}{{if .IsAsyncTask}}{{end}}{{end}}{{end}}{{if .IsAsyncTask}}waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
+	return {{$.ReceiverName}}.{{.Name}}WithContext_{{.HTTPMethod}}({{$.ReceiverName}}.Rest.GetCtx(){{if .HasID}}, id{{end}}{{if .SimplifiedQueryParams}}{{range .SimplifiedQueryParamsList}}, {{.Name}}{{end}}{{else}}{{if .HasParams}}, params{{end}}{{end}}{{if .SimplifiedBody}}{{range .SimplifiedParams}}, {{.Name}}{{end}}{{else}}{{if .HasBody}}, body{{end}}{{end}}{{if .IsAsyncTask}}, waitTimeout{{end}})
 }
 
 {{end}}`

@@ -13,9 +13,9 @@ import (
 // method: GET
 // url: /nativereplicationremotetargets/get_remote_mapping/
 // summary: Get the mapping between replication peers and remote view policies
-func (r *ReplicationPeers) ReplicationPeersGetRemoteMappingWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (r *ReplicationPeers) ReplicationPeersGetRemoteMappingWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/nativereplicationremotetargets/get_remote_mapping/"
-	result, err := core.Request[core.Record](ctx, r, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, r, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -26,6 +26,6 @@ func (r *ReplicationPeers) ReplicationPeersGetRemoteMappingWithContext_GET(ctx c
 // method: GET
 // url: /nativereplicationremotetargets/get_remote_mapping/
 // summary: Get the mapping between replication peers and remote view policies
-func (r *ReplicationPeers) ReplicationPeersGetRemoteMapping_GET(params core.Params) (core.Record, error) {
-	return r.ReplicationPeersGetRemoteMappingWithContext_GET(r.Rest.GetCtx(), params)
+func (r *ReplicationPeers) ReplicationPeersGetRemoteMapping_GET() (core.Record, error) {
+	return r.ReplicationPeersGetRemoteMappingWithContext_GET(r.Rest.GetCtx())
 }

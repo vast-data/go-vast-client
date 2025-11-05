@@ -13,9 +13,9 @@ import (
 // method: DELETE
 // url: /columns/delete/
 // summary: Delete a Database Table Column
-func (c *Column) ColumnDeleteWithContext_DELETE(ctx context.Context, params core.Params) error {
+func (c *Column) ColumnDeleteWithContext_DELETE(ctx context.Context) error {
 	resourcePath := "/columns/delete/"
-	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, nil)
 	return err
 
 }
@@ -24,8 +24,8 @@ func (c *Column) ColumnDeleteWithContext_DELETE(ctx context.Context, params core
 // method: DELETE
 // url: /columns/delete/
 // summary: Delete a Database Table Column
-func (c *Column) ColumnDelete_DELETE(params core.Params) error {
-	return c.ColumnDeleteWithContext_DELETE(c.Rest.GetCtx(), params)
+func (c *Column) ColumnDelete_DELETE() error {
+	return c.ColumnDeleteWithContext_DELETE(c.Rest.GetCtx())
 }
 
 // ColumnRenameWithContext_PATCH

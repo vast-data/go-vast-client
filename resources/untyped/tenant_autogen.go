@@ -34,9 +34,9 @@ func (t *Tenant) TenantClientIpRanges_PATCH(id any, body core.Params) (core.Reco
 // method: GET
 // url: /tenants/{id}/client_metrics/
 // summary: get tenant client metrics settings
-func (t *Tenant) TenantClientMetricsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (t *Tenant) TenantClientMetricsWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "client_metrics")
-	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +47,8 @@ func (t *Tenant) TenantClientMetricsWithContext_GET(ctx context.Context, id any,
 // method: GET
 // url: /tenants/{id}/client_metrics/
 // summary: get tenant client metrics settings
-func (t *Tenant) TenantClientMetrics_GET(id any, params core.Params) (core.Record, error) {
-	return t.TenantClientMetricsWithContext_GET(t.Rest.GetCtx(), id, params)
+func (t *Tenant) TenantClientMetrics_GET(id any) (core.Record, error) {
+	return t.TenantClientMetricsWithContext_GET(t.Rest.GetCtx(), id)
 }
 
 // TenantClientMetricsWithContext_PATCH
@@ -76,8 +76,13 @@ func (t *Tenant) TenantClientMetrics_PATCH(id any, body core.Params) (core.Recor
 // method: GET
 // url: /tenants/configured_idp/
 // summary: Return Configured Identity Provider for Tenant
-func (t *Tenant) TenantConfiguredIdpWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Name (query): Tenant name
+func (t *Tenant) TenantConfiguredIdpWithContext_GET(ctx context.Context, Name string) (core.Record, error) {
 	resourcePath := "/tenants/configured_idp/"
+	params := core.Params{}
+	params["name"] = Name
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -89,8 +94,11 @@ func (t *Tenant) TenantConfiguredIdpWithContext_GET(ctx context.Context, params 
 // method: GET
 // url: /tenants/configured_idp/
 // summary: Return Configured Identity Provider for Tenant
-func (t *Tenant) TenantConfiguredIdp_GET(params core.Params) (core.Record, error) {
-	return t.TenantConfiguredIdpWithContext_GET(t.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - Name (query): Tenant name
+func (t *Tenant) TenantConfiguredIdp_GET(Name string) (core.Record, error) {
+	return t.TenantConfiguredIdpWithContext_GET(t.Rest.GetCtx(), Name)
 }
 
 // TenantDeactivateEncryptionGroupWithContext_POST
@@ -116,9 +124,16 @@ func (t *Tenant) TenantDeactivateEncryptionGroup_POST(id any, body core.Params) 
 // method: POST
 // url: /tenants/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
-func (t *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Operation (query)
+func (t *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, id any, Operation string, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "is_operation_healthy")
-	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
+	params := core.Params{}
+	if Operation != "" {
+		params["operation"] = Operation
+	}
+	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -129,16 +144,28 @@ func (t *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, i
 // method: POST
 // url: /tenants/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
-func (t *Tenant) TenantIsOperationHealthy_POST(id any, body core.Params) (core.Record, error) {
-	return t.TenantIsOperationHealthyWithContext_POST(t.Rest.GetCtx(), id, body)
+//
+// Parameters:
+//   - Operation (query)
+func (t *Tenant) TenantIsOperationHealthy_POST(id any, Operation string, body core.Params) (core.Record, error) {
+	return t.TenantIsOperationHealthyWithContext_POST(t.Rest.GetCtx(), id, Operation, body)
 }
 
 // TenantNfs4DelegWithContext_DELETE
 // method: DELETE
 // url: /tenants/{id}/nfs4_deleg/
 // summary: Remove NFSv4 delegation
-func (t *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any, params core.Params) error {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - ClientId (query): Client ID
+//   - DelegationStateid (query): Delegation state ID
+func (t *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any, FilePath string, ClientId int64, DelegationStateid int64) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "nfs4_deleg")
+	params := core.Params{}
+	params["file_path"] = FilePath
+	params["client_id"] = ClientId
+	params["delegation_stateid"] = DelegationStateid
 	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, params, nil)
 	return err
 
@@ -148,16 +175,30 @@ func (t *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any, 
 // method: DELETE
 // url: /tenants/{id}/nfs4_deleg/
 // summary: Remove NFSv4 delegation
-func (t *Tenant) TenantNfs4Deleg_DELETE(id any, params core.Params) error {
-	return t.TenantNfs4DelegWithContext_DELETE(t.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - ClientId (query): Client ID
+//   - DelegationStateid (query): Delegation state ID
+func (t *Tenant) TenantNfs4Deleg_DELETE(id any, FilePath string, ClientId int64, DelegationStateid int64) error {
+	return t.TenantNfs4DelegWithContext_DELETE(t.Rest.GetCtx(), id, FilePath, ClientId, DelegationStateid)
 }
 
 // TenantNfs4DelegsWithContext_GET
 // method: GET
 // url: /tenants/{id}/nfs4_delegs/
 // summary: Query list of NFSv4 delegations
-func (t *Tenant) TenantNfs4DelegsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - XeystorePaginationNextClientId (query): Xeystore pagination
+func (t *Tenant) TenantNfs4DelegsWithContext_GET(ctx context.Context, id any, FilePath string, XeystorePaginationNextClientId int64) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "nfs4_delegs")
+	params := core.Params{}
+	params["file_path"] = FilePath
+	if XeystorePaginationNextClientId != 0 {
+		params["xeystore_pagination_next_client_id"] = XeystorePaginationNextClientId
+	}
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -169,8 +210,12 @@ func (t *Tenant) TenantNfs4DelegsWithContext_GET(ctx context.Context, id any, pa
 // method: GET
 // url: /tenants/{id}/nfs4_delegs/
 // summary: Query list of NFSv4 delegations
-func (t *Tenant) TenantNfs4Delegs_GET(id any, params core.Params) (core.Record, error) {
-	return t.TenantNfs4DelegsWithContext_GET(t.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - XeystorePaginationNextClientId (query): Xeystore pagination
+func (t *Tenant) TenantNfs4Delegs_GET(id any, FilePath string, XeystorePaginationNextClientId int64) (core.Record, error) {
+	return t.TenantNfs4DelegsWithContext_GET(t.Rest.GetCtx(), id, FilePath, XeystorePaginationNextClientId)
 }
 
 // TenantReinstateEncryptionGroupWithContext_POST
@@ -196,8 +241,19 @@ func (t *Tenant) TenantReinstateEncryptionGroup_POST(id any, body core.Params) e
 // method: GET
 // url: /tenants/remote_objects/
 // summary: Return Details of Remote Tenants
-func (t *Tenant) TenantRemoteObjectsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+//
+// Parameters:
+//   - Name (query): Filter remote tenants by name
+//   - TargetId (query): Filter remote tenants by target
+func (t *Tenant) TenantRemoteObjectsWithContext_GET(ctx context.Context, Name string, TargetId string) (core.RecordSet, error) {
 	resourcePath := "/tenants/remote_objects/"
+	params := core.Params{}
+	if Name != "" {
+		params["name"] = Name
+	}
+	if TargetId != "" {
+		params["target_id"] = TargetId
+	}
 	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -210,8 +266,12 @@ func (t *Tenant) TenantRemoteObjectsWithContext_GET(ctx context.Context, params 
 // method: GET
 // url: /tenants/remote_objects/
 // summary: Return Details of Remote Tenants
-func (t *Tenant) TenantRemoteObjects_GET(params core.Params) (core.RecordSet, error) {
-	return t.TenantRemoteObjectsWithContext_GET(t.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - Name (query): Filter remote tenants by name
+//   - TargetId (query): Filter remote tenants by target
+func (t *Tenant) TenantRemoteObjects_GET(Name string, TargetId string) (core.RecordSet, error) {
+	return t.TenantRemoteObjectsWithContext_GET(t.Rest.GetCtx(), Name, TargetId)
 }
 
 // TenantRevokeEncryptionGroupWithContext_POST
@@ -256,9 +316,9 @@ func (t *Tenant) TenantRotateEncryptionGroupKey_POST(id any, body core.Params) e
 // method: GET
 // url: /tenants/{id}/same_encryption_group_tenants/
 // summary: Get tenants with the same encryption group
-func (t *Tenant) TenantSameEncryptionGroupTenantsWithContext_GET(ctx context.Context, id any, params core.Params) (core.RecordSet, error) {
+func (t *Tenant) TenantSameEncryptionGroupTenantsWithContext_GET(ctx context.Context, id any) (core.RecordSet, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "same_encryption_group_tenants")
-	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -270,17 +330,17 @@ func (t *Tenant) TenantSameEncryptionGroupTenantsWithContext_GET(ctx context.Con
 // method: GET
 // url: /tenants/{id}/same_encryption_group_tenants/
 // summary: Get tenants with the same encryption group
-func (t *Tenant) TenantSameEncryptionGroupTenants_GET(id any, params core.Params) (core.RecordSet, error) {
-	return t.TenantSameEncryptionGroupTenantsWithContext_GET(t.Rest.GetCtx(), id, params)
+func (t *Tenant) TenantSameEncryptionGroupTenants_GET(id any) (core.RecordSet, error) {
+	return t.TenantSameEncryptionGroupTenantsWithContext_GET(t.Rest.GetCtx(), id)
 }
 
 // TenantVippoolIpRangesWithContext_GET
 // method: GET
 // url: /tenants/{id}/vippool_ip_ranges/
 // summary: Get tenant VIP pools IP ranges
-func (t *Tenant) TenantVippoolIpRangesWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (t *Tenant) TenantVippoolIpRangesWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "vippool_ip_ranges")
-	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -291,6 +351,6 @@ func (t *Tenant) TenantVippoolIpRangesWithContext_GET(ctx context.Context, id an
 // method: GET
 // url: /tenants/{id}/vippool_ip_ranges/
 // summary: Get tenant VIP pools IP ranges
-func (t *Tenant) TenantVippoolIpRanges_GET(id any, params core.Params) (core.Record, error) {
-	return t.TenantVippoolIpRangesWithContext_GET(t.Rest.GetCtx(), id, params)
+func (t *Tenant) TenantVippoolIpRanges_GET(id any) (core.Record, error) {
+	return t.TenantVippoolIpRangesWithContext_GET(t.Rest.GetCtx(), id)
 }

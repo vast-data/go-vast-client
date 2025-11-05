@@ -32,9 +32,16 @@ func (q *Quota) QuotaRecalcStop_PATCH(body core.Params) error {
 // method: PATCH
 // url: /quotas/recalc/
 // summary: Start recalculation flow all quotas
-func (q *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context, body core.Params) error {
+//
+// Parameters:
+//   - Id (query): Quota ID - if not given, will be applied to all quotas
+func (q *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context, Id string, body core.Params) error {
 	resourcePath := "/quotas/recalc/"
-	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, nil, body)
+	params := core.Params{}
+	if Id != "" {
+		params["id"] = Id
+	}
+	_, err := core.Request[core.Record](ctx, q, http.MethodPatch, resourcePath, params, body)
 	return err
 
 }
@@ -43,8 +50,11 @@ func (q *Quota) QuotaRecalcWithContext_PATCH(ctx context.Context, body core.Para
 // method: PATCH
 // url: /quotas/recalc/
 // summary: Start recalculation flow all quotas
-func (q *Quota) QuotaRecalc_PATCH(body core.Params) error {
-	return q.QuotaRecalcWithContext_PATCH(q.Rest.GetCtx(), body)
+//
+// Parameters:
+//   - Id (query): Quota ID - if not given, will be applied to all quotas
+func (q *Quota) QuotaRecalc_PATCH(Id string, body core.Params) error {
+	return q.QuotaRecalcWithContext_PATCH(q.Rest.GetCtx(), Id, body)
 }
 
 // QuotaRefreshUserQuotasWithContext_PATCH

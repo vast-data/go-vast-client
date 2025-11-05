@@ -570,10 +570,23 @@ type ViewCloseSmbHandle_DELETE_Model struct {
 // method: DELETE
 // url: /views/close_smb_handle/
 // summary: Close open SMB filehandles
-func (r *View) ViewCloseSmbHandleWithContext_DELETE(ctx context.Context) (*ViewCloseSmbHandle_DELETE_Model, error) {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - SessionId (query): Session ID
+//   - SessionHandleUniqueId (query): Handle ID
+//   - TenantGuid (query): Tenant GUID
+func (r *View) ViewCloseSmbHandleWithContext_DELETE(ctx context.Context, FilePath string, SessionId string, SessionHandleUniqueId string, TenantGuid string) (*ViewCloseSmbHandle_DELETE_Model, error) {
 	resourcePath := "/views/close_smb_handle/"
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	reqParams["file_path"] = FilePath
+	reqParams["session_id"] = SessionId
+	reqParams["session_handle_unique_id"] = SessionHandleUniqueId
+	if TenantGuid != "" {
+		reqParams["tenant_guid"] = TenantGuid
+	}
+
 	var reqBody core.Params
 
 	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
@@ -593,8 +606,14 @@ func (r *View) ViewCloseSmbHandleWithContext_DELETE(ctx context.Context) (*ViewC
 // method: DELETE
 // url: /views/close_smb_handle/
 // summary: Close open SMB filehandles
-func (r *View) ViewCloseSmbHandle_DELETE() (*ViewCloseSmbHandle_DELETE_Model, error) {
-	return r.ViewCloseSmbHandleWithContext_DELETE(r.Untyped.GetCtx())
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - SessionId (query): Session ID
+//   - SessionHandleUniqueId (query): Handle ID
+//   - TenantGuid (query): Tenant GUID
+func (r *View) ViewCloseSmbHandle_DELETE(FilePath string, SessionId string, SessionHandleUniqueId string, TenantGuid string) (*ViewCloseSmbHandle_DELETE_Model, error) {
+	return r.ViewCloseSmbHandleWithContext_DELETE(r.Untyped.GetCtx(), FilePath, SessionId, SessionHandleUniqueId, TenantGuid)
 }
 
 // ViewLegalHold_GET_Body represents the request body for ViewLegalHold

@@ -56,8 +56,13 @@ func (v *View) ViewCloseSmbHandle_DELETE(params core.Params) (core.Record, error
 // method: GET
 // url: /views/{id}/legal_hold/
 // summary: Get legal hold
-func (v *View) ViewLegalHoldWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - LegalHoldPath (query): Path to get legal hold
+func (v *View) ViewLegalHoldWithContext_GET(ctx context.Context, id any, LegalHoldPath string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("views", id, "legal_hold")
+	params := core.Params{}
+	params["legal_hold_path"] = LegalHoldPath
 	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -69,8 +74,11 @@ func (v *View) ViewLegalHoldWithContext_GET(ctx context.Context, id any, params 
 // method: GET
 // url: /views/{id}/legal_hold/
 // summary: Get legal hold
-func (v *View) ViewLegalHold_GET(id any, params core.Params) (core.Record, error) {
-	return v.ViewLegalHoldWithContext_GET(v.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - LegalHoldPath (query): Path to get legal hold
+func (v *View) ViewLegalHold_GET(id any, LegalHoldPath string) (core.Record, error) {
+	return v.ViewLegalHoldWithContext_GET(v.Rest.GetCtx(), id, LegalHoldPath)
 }
 
 // ViewLegalHoldWithContext_PATCH
@@ -109,8 +117,17 @@ func (v *View) ViewLegalHold_PATCH(id any, legalHoldPath string, value bool) (co
 // method: GET
 // url: /views/list_open_smb_handles/
 // summary: Query open SMB filehandles
-func (v *View) ViewListOpenSmbHandlesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - TenantGuid (query): Tenant GUID
+func (v *View) ViewListOpenSmbHandlesWithContext_GET(ctx context.Context, FilePath string, TenantGuid string) (core.Record, error) {
 	resourcePath := "/views/list_open_smb_handles/"
+	params := core.Params{}
+	params["file_path"] = FilePath
+	if TenantGuid != "" {
+		params["tenant_guid"] = TenantGuid
+	}
 	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -122,16 +139,27 @@ func (v *View) ViewListOpenSmbHandlesWithContext_GET(ctx context.Context, params
 // method: GET
 // url: /views/list_open_smb_handles/
 // summary: Query open SMB filehandles
-func (v *View) ViewListOpenSmbHandles_GET(params core.Params) (core.Record, error) {
-	return v.ViewListOpenSmbHandlesWithContext_GET(v.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - TenantGuid (query): Tenant GUID
+func (v *View) ViewListOpenSmbHandles_GET(FilePath string, TenantGuid string) (core.Record, error) {
+	return v.ViewListOpenSmbHandlesWithContext_GET(v.Rest.GetCtx(), FilePath, TenantGuid)
 }
 
 // ViewListSeamlessPeersWithContext_GET
 // method: GET
 // url: /views/list_seamless_peers/
 // summary: Get a list of available seamless peers
-func (v *View) ViewListSeamlessPeersWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - TenantGuid (query): Tenant's globally unique identifier
+func (v *View) ViewListSeamlessPeersWithContext_GET(ctx context.Context, FilePath string, TenantGuid string) (core.RecordSet, error) {
 	resourcePath := "/views/list_seamless_peers/"
+	params := core.Params{}
+	params["file_path"] = FilePath
+	params["tenant_guid"] = TenantGuid
 	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -144,17 +172,21 @@ func (v *View) ViewListSeamlessPeersWithContext_GET(ctx context.Context, params 
 // method: GET
 // url: /views/list_seamless_peers/
 // summary: Get a list of available seamless peers
-func (v *View) ViewListSeamlessPeers_GET(params core.Params) (core.RecordSet, error) {
-	return v.ViewListSeamlessPeersWithContext_GET(v.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - TenantGuid (query): Tenant's globally unique identifier
+func (v *View) ViewListSeamlessPeers_GET(FilePath string, TenantGuid string) (core.RecordSet, error) {
+	return v.ViewListSeamlessPeersWithContext_GET(v.Rest.GetCtx(), FilePath, TenantGuid)
 }
 
 // ViewPermissionsRepairWithContext_DELETE
 // method: DELETE
 // url: /views/{id}/permissions_repair/
 // summary: Stop Bulk Permission Update
-func (v *View) ViewPermissionsRepairWithContext_DELETE(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (v *View) ViewPermissionsRepairWithContext_DELETE(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("views", id, "permissions_repair")
-	result, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +197,8 @@ func (v *View) ViewPermissionsRepairWithContext_DELETE(ctx context.Context, id a
 // method: DELETE
 // url: /views/{id}/permissions_repair/
 // summary: Stop Bulk Permission Update
-func (v *View) ViewPermissionsRepair_DELETE(id any, params core.Params) (core.Record, error) {
-	return v.ViewPermissionsRepairWithContext_DELETE(v.Rest.GetCtx(), id, params)
+func (v *View) ViewPermissionsRepair_DELETE(id any) (core.Record, error) {
+	return v.ViewPermissionsRepairWithContext_DELETE(v.Rest.GetCtx(), id)
 }
 
 // ViewPermissionsRepairWithContext_POST

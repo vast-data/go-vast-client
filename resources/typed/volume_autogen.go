@@ -358,10 +358,17 @@ type VolumeGetSnapshotsItem struct {
 // method: DELETE
 // url: /volumes/bulk/
 // summary: Delete a Bulk Of Block Storage Volumes
-func (r *Volume) VolumeBulkWithContext_DELETE(ctx context.Context) error {
+//
+// Parameters:
+//   - Force (query): Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
+func (r *Volume) VolumeBulkWithContext_DELETE(ctx context.Context, Force bool) error {
 	resourcePath := "/volumes/bulk/"
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	if Force {
+		reqParams["force"] = Force
+	}
+
 	var reqBody core.Params
 
 	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
@@ -373,8 +380,11 @@ func (r *Volume) VolumeBulkWithContext_DELETE(ctx context.Context) error {
 // method: DELETE
 // url: /volumes/bulk/
 // summary: Delete a Bulk Of Block Storage Volumes
-func (r *Volume) VolumeBulk_DELETE() error {
-	return r.VolumeBulkWithContext_DELETE(r.Untyped.GetCtx())
+//
+// Parameters:
+//   - Force (query): Forcefully removes mappings between hosts and volumes. A host can be deleted only if it is not mapped to any volume, and a volume can be deleted only if it is not mapped to any host.
+func (r *Volume) VolumeBulk_DELETE(Force bool) error {
+	return r.VolumeBulkWithContext_DELETE(r.Untyped.GetCtx(), Force)
 }
 
 // VolumeFetchCapacity_GET_Model represents the response model for VolumeFetchCapacity

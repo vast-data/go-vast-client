@@ -53,8 +53,8 @@ type GroupSearchParams struct {
 // GroupRequestBody represents the request body for Group operations
 type GroupRequestBody struct {
 	Gid             int64    `json:"gid,omitempty" yaml:"gid,omitempty" required:"true" doc:"group GID"`
+	LocalProviderId int64    `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"true" doc:"Local provider ID"`
 	Name            string   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"group name"`
-	LocalProviderId int64    `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"Local provider ID"`
 	S3PoliciesIds   *[]int64 `json:"s3_policies_ids,omitempty" yaml:"s3_policies_ids,omitempty" required:"false" doc:"list of s3 policy ids"`
 	Sid             string   `json:"sid,omitempty" yaml:"sid,omitempty" required:"false" doc:"group SID"`
 }

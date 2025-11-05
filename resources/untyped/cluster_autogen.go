@@ -62,9 +62,9 @@ func (c *Cluster) ClusterAddEkm_POST(id any, body core.Params) error {
 // method: GET
 // url: /clusters/{id}/advanced/
 // summary: Aggregated information about the cluster
-func (c *Cluster) ClusterAdvancedWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterAdvancedWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "advanced")
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -75,17 +75,17 @@ func (c *Cluster) ClusterAdvancedWithContext_GET(ctx context.Context, id any, pa
 // method: GET
 // url: /clusters/{id}/advanced/
 // summary: Aggregated information about the cluster
-func (c *Cluster) ClusterAdvanced_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterAdvancedWithContext_GET(c.Rest.GetCtx(), id, params)
+func (c *Cluster) ClusterAdvanced_GET(id any) (core.Record, error) {
+	return c.ClusterAdvancedWithContext_GET(c.Rest.GetCtx(), id)
 }
 
 // ClusterAuditingWithContext_GET
 // method: GET
 // url: /clusters/{id}/auditing/
 // summary: Show Cluster Audit Settings
-func (c *Cluster) ClusterAuditingWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterAuditingWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "auditing")
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (c *Cluster) ClusterAuditingWithContext_GET(ctx context.Context, id any, pa
 // method: GET
 // url: /clusters/{id}/auditing/
 // summary: Show Cluster Audit Settings
-func (c *Cluster) ClusterAuditing_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterAuditingWithContext_GET(c.Rest.GetCtx(), id, params)
+func (c *Cluster) ClusterAuditing_GET(id any) (core.Record, error) {
+	return c.ClusterAuditingWithContext_GET(c.Rest.GetCtx(), id)
 }
 
 // ClusterAuditingWithContext_PATCH
@@ -125,9 +125,9 @@ func (c *Cluster) ClusterAuditing_PATCH(id any, body core.Params) (core.Record, 
 // method: GET
 // url: /clusters/bgp_table/
 // summary: Return BGP Connections Table
-func (c *Cluster) ClusterBgpTableWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterBgpTableWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/clusters/bgp_table/"
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +138,8 @@ func (c *Cluster) ClusterBgpTableWithContext_GET(ctx context.Context, params cor
 // method: GET
 // url: /clusters/bgp_table/
 // summary: Return BGP Connections Table
-func (c *Cluster) ClusterBgpTable_GET(params core.Params) (core.Record, error) {
-	return c.ClusterBgpTableWithContext_GET(c.Rest.GetCtx(), params)
+func (c *Cluster) ClusterBgpTable_GET() (core.Record, error) {
+	return c.ClusterBgpTableWithContext_GET(c.Rest.GetCtx())
 }
 
 // ClusterBlockProvidersWithContext_PATCH
@@ -177,8 +177,15 @@ func (c *Cluster) ClusterBlockProviders_PATCH(blocked bool) (core.Record, error)
 // method: GET
 // url: /clusters/{id}/celery_queue/
 // summary: List celery queue
-func (c *Cluster) ClusterCeleryQueueWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - TaskName (query): Task name
+func (c *Cluster) ClusterCeleryQueueWithContext_GET(ctx context.Context, id any, TaskName string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_queue")
+	params := core.Params{}
+	if TaskName != "" {
+		params["task_name"] = TaskName
+	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -190,16 +197,24 @@ func (c *Cluster) ClusterCeleryQueueWithContext_GET(ctx context.Context, id any,
 // method: GET
 // url: /clusters/{id}/celery_queue/
 // summary: List celery queue
-func (c *Cluster) ClusterCeleryQueue_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterCeleryQueueWithContext_GET(c.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - TaskName (query): Task name
+func (c *Cluster) ClusterCeleryQueue_GET(id any, TaskName string) (core.Record, error) {
+	return c.ClusterCeleryQueueWithContext_GET(c.Rest.GetCtx(), id, TaskName)
 }
 
 // ClusterCeleryRemoveQueuedTaskWithContext_DELETE
 // method: DELETE
 // url: /clusters/{id}/celery_remove_queued_task/
 // summary: Delete all tasks of a specific name from the celery queue
-func (c *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Context, id any, params core.Params) error {
+//
+// Parameters:
+//   - TaskName (query): Task name
+func (c *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Context, id any, TaskName string) error {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_remove_queued_task")
+	params := core.Params{}
+	params["task_name"] = TaskName
 	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, params, nil)
 	return err
 
@@ -209,17 +224,20 @@ func (c *Cluster) ClusterCeleryRemoveQueuedTaskWithContext_DELETE(ctx context.Co
 // method: DELETE
 // url: /clusters/{id}/celery_remove_queued_task/
 // summary: Delete all tasks of a specific name from the celery queue
-func (c *Cluster) ClusterCeleryRemoveQueuedTask_DELETE(id any, params core.Params) error {
-	return c.ClusterCeleryRemoveQueuedTaskWithContext_DELETE(c.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - TaskName (query): Task name
+func (c *Cluster) ClusterCeleryRemoveQueuedTask_DELETE(id any, TaskName string) error {
+	return c.ClusterCeleryRemoveQueuedTaskWithContext_DELETE(c.Rest.GetCtx(), id, TaskName)
 }
 
 // ClusterCeleryReservedWithContext_GET
 // method: GET
 // url: /clusters/{id}/celery_reserved/
 // summary: List celery reserved queue
-func (c *Cluster) ClusterCeleryReservedWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterCeleryReservedWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_reserved")
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -230,17 +248,17 @@ func (c *Cluster) ClusterCeleryReservedWithContext_GET(ctx context.Context, id a
 // method: GET
 // url: /clusters/{id}/celery_reserved/
 // summary: List celery reserved queue
-func (c *Cluster) ClusterCeleryReserved_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterCeleryReservedWithContext_GET(c.Rest.GetCtx(), id, params)
+func (c *Cluster) ClusterCeleryReserved_GET(id any) (core.Record, error) {
+	return c.ClusterCeleryReservedWithContext_GET(c.Rest.GetCtx(), id)
 }
 
 // ClusterCeleryScheduledWithContext_GET
 // method: GET
 // url: /clusters/{id}/celery_scheduled/
 // summary: List celery scheduled queue
-func (c *Cluster) ClusterCeleryScheduledWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterCeleryScheduledWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_scheduled")
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -251,17 +269,17 @@ func (c *Cluster) ClusterCeleryScheduledWithContext_GET(ctx context.Context, id 
 // method: GET
 // url: /clusters/{id}/celery_scheduled/
 // summary: List celery scheduled queue
-func (c *Cluster) ClusterCeleryScheduled_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterCeleryScheduledWithContext_GET(c.Rest.GetCtx(), id, params)
+func (c *Cluster) ClusterCeleryScheduled_GET(id any) (core.Record, error) {
+	return c.ClusterCeleryScheduledWithContext_GET(c.Rest.GetCtx(), id)
 }
 
 // ClusterCeleryStatusWithContext_GET
 // method: GET
 // url: /clusters/{id}/celery_status/
 // summary: Show the full celery stats
-func (c *Cluster) ClusterCeleryStatusWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterCeleryStatusWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "celery_status")
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -272,8 +290,8 @@ func (c *Cluster) ClusterCeleryStatusWithContext_GET(ctx context.Context, id any
 // method: GET
 // url: /clusters/{id}/celery_status/
 // summary: Show the full celery stats
-func (c *Cluster) ClusterCeleryStatus_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterCeleryStatusWithContext_GET(c.Rest.GetCtx(), id, params)
+func (c *Cluster) ClusterCeleryStatus_GET(id any) (core.Record, error) {
+	return c.ClusterCeleryStatusWithContext_GET(c.Rest.GetCtx(), id)
 }
 
 // ClusterCloseProtocolHandleWithContext_DELETE
@@ -301,8 +319,15 @@ func (c *Cluster) ClusterCloseProtocolHandle_DELETE(params core.Params) (core.Re
 // method: GET
 // url: /clusters/dbox_migration_status/
 // summary: DBox migration status
-func (c *Cluster) ClusterDboxMigrationStatusWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - WithCapacity (query): The flag to show the migration status with capacity
+func (c *Cluster) ClusterDboxMigrationStatusWithContext_GET(ctx context.Context, WithCapacity bool) (core.Record, error) {
 	resourcePath := "/clusters/dbox_migration_status/"
+	params := core.Params{}
+	if WithCapacity != false {
+		params["with_capacity"] = WithCapacity
+	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -314,17 +339,20 @@ func (c *Cluster) ClusterDboxMigrationStatusWithContext_GET(ctx context.Context,
 // method: GET
 // url: /clusters/dbox_migration_status/
 // summary: DBox migration status
-func (c *Cluster) ClusterDboxMigrationStatus_GET(params core.Params) (core.Record, error) {
-	return c.ClusterDboxMigrationStatusWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - WithCapacity (query): The flag to show the migration status with capacity
+func (c *Cluster) ClusterDboxMigrationStatus_GET(WithCapacity bool) (core.Record, error) {
+	return c.ClusterDboxMigrationStatusWithContext_GET(c.Rest.GetCtx(), WithCapacity)
 }
 
 // ClusterDboxMigrationUpdateSourceTargetWithContext_GET
 // method: GET
 // url: /clusters/dbox_migration_update_source_target/
 // summary: Dbox migration update source target info
-func (c *Cluster) ClusterDboxMigrationUpdateSourceTargetWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterDboxMigrationUpdateSourceTargetWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/clusters/dbox_migration_update_source_target/"
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -335,8 +363,8 @@ func (c *Cluster) ClusterDboxMigrationUpdateSourceTargetWithContext_GET(ctx cont
 // method: GET
 // url: /clusters/dbox_migration_update_source_target/
 // summary: Dbox migration update source target info
-func (c *Cluster) ClusterDboxMigrationUpdateSourceTarget_GET(params core.Params) (core.Record, error) {
-	return c.ClusterDboxMigrationUpdateSourceTargetWithContext_GET(c.Rest.GetCtx(), params)
+func (c *Cluster) ClusterDboxMigrationUpdateSourceTarget_GET() (core.Record, error) {
+	return c.ClusterDboxMigrationUpdateSourceTargetWithContext_GET(c.Rest.GetCtx())
 }
 
 // ClusterDboxMigrationUpdateSourceTargetWithContext_PATCH
@@ -364,9 +392,9 @@ func (c *Cluster) ClusterDboxMigrationUpdateSourceTarget_PATCH(body core.Params)
 // method: GET
 // url: /clusters/dbox_migration_validate_state/
 // summary: DBox migration validate state
-func (c *Cluster) ClusterDboxMigrationValidateStateWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterDboxMigrationValidateStateWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/clusters/dbox_migration_validate_state/"
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -377,17 +405,17 @@ func (c *Cluster) ClusterDboxMigrationValidateStateWithContext_GET(ctx context.C
 // method: GET
 // url: /clusters/dbox_migration_validate_state/
 // summary: DBox migration validate state
-func (c *Cluster) ClusterDboxMigrationValidateState_GET(params core.Params) (core.Record, error) {
-	return c.ClusterDboxMigrationValidateStateWithContext_GET(c.Rest.GetCtx(), params)
+func (c *Cluster) ClusterDboxMigrationValidateState_GET() (core.Record, error) {
+	return c.ClusterDboxMigrationValidateStateWithContext_GET(c.Rest.GetCtx())
 }
 
 // ClusterDboxMigrationValidateWithContext_GET
 // method: GET
 // url: /clusters/dbox_migration_validate/
 // summary: DBox migration validate
-func (c *Cluster) ClusterDboxMigrationValidateWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterDboxMigrationValidateWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/clusters/dbox_migration_validate/"
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -398,8 +426,8 @@ func (c *Cluster) ClusterDboxMigrationValidateWithContext_GET(ctx context.Contex
 // method: GET
 // url: /clusters/dbox_migration_validate/
 // summary: DBox migration validate
-func (c *Cluster) ClusterDboxMigrationValidate_GET(params core.Params) (core.Record, error) {
-	return c.ClusterDboxMigrationValidateWithContext_GET(c.Rest.GetCtx(), params)
+func (c *Cluster) ClusterDboxMigrationValidate_GET() (core.Record, error) {
+	return c.ClusterDboxMigrationValidateWithContext_GET(c.Rest.GetCtx())
 }
 
 // ClusterDboxMigrationWithContext_POST
@@ -427,8 +455,13 @@ func (c *Cluster) ClusterDboxMigration_POST(body core.Params) (core.Record, erro
 // method: GET
 // url: /clusters/dboxes_total_capacity/
 // summary: DBoxes total capacity
-func (c *Cluster) ClusterDboxesTotalCapacityWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Ids (query): DBox ids separated by comma
+func (c *Cluster) ClusterDboxesTotalCapacityWithContext_GET(ctx context.Context, Ids string) (core.Record, error) {
 	resourcePath := "/clusters/dboxes_total_capacity/"
+	params := core.Params{}
+	params["ids"] = Ids
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -440,8 +473,11 @@ func (c *Cluster) ClusterDboxesTotalCapacityWithContext_GET(ctx context.Context,
 // method: GET
 // url: /clusters/dboxes_total_capacity/
 // summary: DBoxes total capacity
-func (c *Cluster) ClusterDboxesTotalCapacity_GET(params core.Params) (core.Record, error) {
-	return c.ClusterDboxesTotalCapacityWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - Ids (query): DBox ids separated by comma
+func (c *Cluster) ClusterDboxesTotalCapacity_GET(Ids string) (core.Record, error) {
+	return c.ClusterDboxesTotalCapacityWithContext_GET(c.Rest.GetCtx(), Ids)
 }
 
 // ClusterDeleteFolderWithContext_DELETE
@@ -554,9 +590,9 @@ func (c *Cluster) ClusterGenerateUnfreezeToken_POST(id any, password string) (co
 // method: GET
 // url: /clusters/get_shard_expansion_status/
 // summary: System shard expansion status
-func (c *Cluster) ClusterGetShardExpansionStatusWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterGetShardExpansionStatusWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/clusters/get_shard_expansion_status/"
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -567,16 +603,23 @@ func (c *Cluster) ClusterGetShardExpansionStatusWithContext_GET(ctx context.Cont
 // method: GET
 // url: /clusters/get_shard_expansion_status/
 // summary: System shard expansion status
-func (c *Cluster) ClusterGetShardExpansionStatus_GET(params core.Params) (core.Record, error) {
-	return c.ClusterGetShardExpansionStatusWithContext_GET(c.Rest.GetCtx(), params)
+func (c *Cluster) ClusterGetShardExpansionStatus_GET() (core.Record, error) {
+	return c.ClusterGetShardExpansionStatusWithContext_GET(c.Rest.GetCtx())
 }
 
 // ClusterGetSnapshotedPathsWithContext_GET
 // method: GET
 // url: /clusters/get_snapshoted_paths/
 // summary: Return Paths that have Snapshots
-func (c *Cluster) ClusterGetSnapshotedPathsWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - TenantId (query): Tenant ID
+func (c *Cluster) ClusterGetSnapshotedPathsWithContext_GET(ctx context.Context, TenantId string) (core.Record, error) {
 	resourcePath := "/clusters/get_snapshoted_paths/"
+	params := core.Params{}
+	if TenantId != "" {
+		params["tenant_id"] = TenantId
+	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -588,16 +631,30 @@ func (c *Cluster) ClusterGetSnapshotedPathsWithContext_GET(ctx context.Context, 
 // method: GET
 // url: /clusters/get_snapshoted_paths/
 // summary: Return Paths that have Snapshots
-func (c *Cluster) ClusterGetSnapshotedPaths_GET(params core.Params) (core.Record, error) {
-	return c.ClusterGetSnapshotedPathsWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - TenantId (query): Tenant ID
+func (c *Cluster) ClusterGetSnapshotedPaths_GET(TenantId string) (core.Record, error) {
+	return c.ClusterGetSnapshotedPathsWithContext_GET(c.Rest.GetCtx(), TenantId)
 }
 
 // ClusterListCloneSnapshotedPathsRemoteWithContext_GET
 // method: GET
 // url: /clusters/list_clone_snapshoted_paths_remote/
 // summary: List snapshots on a remote replication peer
-func (c *Cluster) ClusterListCloneSnapshotedPathsRemoteWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - RemoteTargetGuid (query): remote target GUID
+//   - Handle (query): Provide the handle from a GET /cluster/list_snapshoted_paths_remote/ response
+//   - StartSnapshotId (query): Start snapshot ID
+func (c *Cluster) ClusterListCloneSnapshotedPathsRemoteWithContext_GET(ctx context.Context, RemoteTargetGuid string, Handle string, StartSnapshotId string) (core.Record, error) {
 	resourcePath := "/clusters/list_clone_snapshoted_paths_remote/"
+	params := core.Params{}
+	params["remote_target_guid"] = RemoteTargetGuid
+	params["handle"] = Handle
+	if StartSnapshotId != "" {
+		params["start_snapshot_id"] = StartSnapshotId
+	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -609,16 +666,30 @@ func (c *Cluster) ClusterListCloneSnapshotedPathsRemoteWithContext_GET(ctx conte
 // method: GET
 // url: /clusters/list_clone_snapshoted_paths_remote/
 // summary: List snapshots on a remote replication peer
-func (c *Cluster) ClusterListCloneSnapshotedPathsRemote_GET(params core.Params) (core.Record, error) {
-	return c.ClusterListCloneSnapshotedPathsRemoteWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - RemoteTargetGuid (query): remote target GUID
+//   - Handle (query): Provide the handle from a GET /cluster/list_snapshoted_paths_remote/ response
+//   - StartSnapshotId (query): Start snapshot ID
+func (c *Cluster) ClusterListCloneSnapshotedPathsRemote_GET(RemoteTargetGuid string, Handle string, StartSnapshotId string) (core.Record, error) {
+	return c.ClusterListCloneSnapshotedPathsRemoteWithContext_GET(c.Rest.GetCtx(), RemoteTargetGuid, Handle, StartSnapshotId)
 }
 
 // ClusterListOpenProtocolHandlesWithContext_GET
 // method: GET
 // url: /clusters/list_open_protocol_handles/
 // summary: Query open protocol filehandles
-func (c *Cluster) ClusterListOpenProtocolHandlesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - TenantGuid (query): Tenant GUID
+func (c *Cluster) ClusterListOpenProtocolHandlesWithContext_GET(ctx context.Context, FilePath string, TenantGuid string) (core.Record, error) {
 	resourcePath := "/clusters/list_open_protocol_handles/"
+	params := core.Params{}
+	params["file_path"] = FilePath
+	if TenantGuid != "" {
+		params["tenant_guid"] = TenantGuid
+	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -630,17 +701,21 @@ func (c *Cluster) ClusterListOpenProtocolHandlesWithContext_GET(ctx context.Cont
 // method: GET
 // url: /clusters/list_open_protocol_handles/
 // summary: Query open protocol filehandles
-func (c *Cluster) ClusterListOpenProtocolHandles_GET(params core.Params) (core.Record, error) {
-	return c.ClusterListOpenProtocolHandlesWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - TenantGuid (query): Tenant GUID
+func (c *Cluster) ClusterListOpenProtocolHandles_GET(FilePath string, TenantGuid string) (core.Record, error) {
+	return c.ClusterListOpenProtocolHandlesWithContext_GET(c.Rest.GetCtx(), FilePath, TenantGuid)
 }
 
 // ClusterListPrefetchPathsInfoWithContext_GET
 // method: GET
 // url: /clusters/list_prefetch_paths_info/
 // summary: List Prefetch Path Information
-func (c *Cluster) ClusterListPrefetchPathsInfoWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterListPrefetchPathsInfoWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/clusters/list_prefetch_paths_info/"
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -651,16 +726,25 @@ func (c *Cluster) ClusterListPrefetchPathsInfoWithContext_GET(ctx context.Contex
 // method: GET
 // url: /clusters/list_prefetch_paths_info/
 // summary: List Prefetch Path Information
-func (c *Cluster) ClusterListPrefetchPathsInfo_GET(params core.Params) (core.Record, error) {
-	return c.ClusterListPrefetchPathsInfoWithContext_GET(c.Rest.GetCtx(), params)
+func (c *Cluster) ClusterListPrefetchPathsInfo_GET() (core.Record, error) {
+	return c.ClusterListPrefetchPathsInfoWithContext_GET(c.Rest.GetCtx())
 }
 
 // ClusterListSmbClientConnectionsWithContext_GET
 // method: GET
 // url: /clusters/list_smb_client_connections/
 // summary: Query SMB client connections
-func (c *Cluster) ClusterListSmbClientConnectionsWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - ClientIp (query): Client IP
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (c *Cluster) ClusterListSmbClientConnectionsWithContext_GET(ctx context.Context, ClientIp string, TenantId int64) (core.Record, error) {
 	resourcePath := "/clusters/list_smb_client_connections/"
+	params := core.Params{}
+	params["client_ip"] = ClientIp
+	if TenantId != 0 {
+		params["tenant_id"] = TenantId
+	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -672,16 +756,29 @@ func (c *Cluster) ClusterListSmbClientConnectionsWithContext_GET(ctx context.Con
 // method: GET
 // url: /clusters/list_smb_client_connections/
 // summary: Query SMB client connections
-func (c *Cluster) ClusterListSmbClientConnections_GET(params core.Params) (core.Record, error) {
-	return c.ClusterListSmbClientConnectionsWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - ClientIp (query): Client IP
+//   - TenantId (query): Filter by tenant. Specify tenant ID.
+func (c *Cluster) ClusterListSmbClientConnections_GET(ClientIp string, TenantId int64) (core.Record, error) {
+	return c.ClusterListSmbClientConnectionsWithContext_GET(c.Rest.GetCtx(), ClientIp, TenantId)
 }
 
 // ClusterListSmbOpenFilesWithContext_GET
 // method: GET
 // url: /clusters/list_smb_open_files/
 // summary: Query SMB open files
-func (c *Cluster) ClusterListSmbOpenFilesWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - TenantGuid (query): Tenant GUID
+func (c *Cluster) ClusterListSmbOpenFilesWithContext_GET(ctx context.Context, FilePath string, TenantGuid string) (core.Record, error) {
 	resourcePath := "/clusters/list_smb_open_files/"
+	params := core.Params{}
+	params["file_path"] = FilePath
+	if TenantGuid != "" {
+		params["tenant_guid"] = TenantGuid
+	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -693,16 +790,27 @@ func (c *Cluster) ClusterListSmbOpenFilesWithContext_GET(ctx context.Context, pa
 // method: GET
 // url: /clusters/list_smb_open_files/
 // summary: Query SMB open files
-func (c *Cluster) ClusterListSmbOpenFiles_GET(params core.Params) (core.Record, error) {
-	return c.ClusterListSmbOpenFilesWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - TenantGuid (query): Tenant GUID
+func (c *Cluster) ClusterListSmbOpenFiles_GET(FilePath string, TenantGuid string) (core.Record, error) {
+	return c.ClusterListSmbOpenFilesWithContext_GET(c.Rest.GetCtx(), FilePath, TenantGuid)
 }
 
 // ClusterListSnapshotedPathsRemoteWithContext_GET
 // method: GET
 // url: /clusters/list_snapshoted_paths_remote/
 // summary: List snapshoted paths on remote target
-func (c *Cluster) ClusterListSnapshotedPathsRemoteWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - RemoteTargetGuid (query): The GUID of the remote target, which you can obtain from a GET /replicationtargets/ request
+//   - RemoteTenantGuid (query): The GUID of the remote tenant
+func (c *Cluster) ClusterListSnapshotedPathsRemoteWithContext_GET(ctx context.Context, RemoteTargetGuid string, RemoteTenantGuid string) (core.Record, error) {
 	resourcePath := "/clusters/list_snapshoted_paths_remote/"
+	params := core.Params{}
+	params["remote_target_guid"] = RemoteTargetGuid
+	params["remote_tenant_guid"] = RemoteTenantGuid
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -714,16 +822,25 @@ func (c *Cluster) ClusterListSnapshotedPathsRemoteWithContext_GET(ctx context.Co
 // method: GET
 // url: /clusters/list_snapshoted_paths_remote/
 // summary: List snapshoted paths on remote target
-func (c *Cluster) ClusterListSnapshotedPathsRemote_GET(params core.Params) (core.Record, error) {
-	return c.ClusterListSnapshotedPathsRemoteWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - RemoteTargetGuid (query): The GUID of the remote target, which you can obtain from a GET /replicationtargets/ request
+//   - RemoteTenantGuid (query): The GUID of the remote tenant
+func (c *Cluster) ClusterListSnapshotedPathsRemote_GET(RemoteTargetGuid string, RemoteTenantGuid string) (core.Record, error) {
+	return c.ClusterListSnapshotedPathsRemoteWithContext_GET(c.Rest.GetCtx(), RemoteTargetGuid, RemoteTenantGuid)
 }
 
 // ClusterListTenantsRemoteWithContext_GET
 // method: GET
 // url: /clusters/list_tenants_remote/
 // summary: List tenants on remote target
-func (c *Cluster) ClusterListTenantsRemoteWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - RemoteTargetGuid (query): remote target GUID
+func (c *Cluster) ClusterListTenantsRemoteWithContext_GET(ctx context.Context, RemoteTargetGuid string) (core.Record, error) {
 	resourcePath := "/clusters/list_tenants_remote/"
+	params := core.Params{}
+	params["remote_target_guid"] = RemoteTargetGuid
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -735,8 +852,11 @@ func (c *Cluster) ClusterListTenantsRemoteWithContext_GET(ctx context.Context, p
 // method: GET
 // url: /clusters/list_tenants_remote/
 // summary: List tenants on remote target
-func (c *Cluster) ClusterListTenantsRemote_GET(params core.Params) (core.Record, error) {
-	return c.ClusterListTenantsRemoteWithContext_GET(c.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - RemoteTargetGuid (query): remote target GUID
+func (c *Cluster) ClusterListTenantsRemote_GET(RemoteTargetGuid string) (core.Record, error) {
+	return c.ClusterListTenantsRemoteWithContext_GET(c.Rest.GetCtx(), RemoteTargetGuid)
 }
 
 // ClusterLocksWithContext_POST
@@ -786,9 +906,9 @@ func (c *Cluster) ClusterNotifyNewVersion_POST(id any, body core.Params) (core.R
 // method: GET
 // url: /clusters/{id}/pre_upgrade_validation_exceptions/
 // summary: Run Pre-Upgrade Validation
-func (c *Cluster) ClusterPreUpgradeValidationExceptionsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterPreUpgradeValidationExceptionsWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "pre_upgrade_validation_exceptions")
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -799,8 +919,8 @@ func (c *Cluster) ClusterPreUpgradeValidationExceptionsWithContext_GET(ctx conte
 // method: GET
 // url: /clusters/{id}/pre_upgrade_validation_exceptions/
 // summary: Run Pre-Upgrade Validation
-func (c *Cluster) ClusterPreUpgradeValidationExceptions_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterPreUpgradeValidationExceptionsWithContext_GET(c.Rest.GetCtx(), id, params)
+func (c *Cluster) ClusterPreUpgradeValidationExceptions_GET(id any) (core.Record, error) {
+	return c.ClusterPreUpgradeValidationExceptionsWithContext_GET(c.Rest.GetCtx(), id)
 }
 
 // ClusterReleaseRecursiveLocksWithContext_DELETE
@@ -810,9 +930,9 @@ func (c *Cluster) ClusterPreUpgradeValidationExceptions_GET(id any, params core.
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Context, id any, params core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Context, id any, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "release_recursive_locks")
-	result, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -828,8 +948,8 @@ func (c *Cluster) ClusterReleaseRecursiveLocksWithContext_DELETE(ctx context.Con
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (c *Cluster) ClusterReleaseRecursiveLocks_DELETE(id any, params core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
-	return c.ClusterReleaseRecursiveLocksWithContext_DELETE(c.Rest.GetCtx(), id, params, waitTimeout)
+func (c *Cluster) ClusterReleaseRecursiveLocks_DELETE(id any, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.ClusterReleaseRecursiveLocksWithContext_DELETE(c.Rest.GetCtx(), id, waitTimeout)
 }
 
 // ClusterResumeDeployWithContext_PATCH
@@ -1289,9 +1409,9 @@ func (c *Cluster) ClusterUploadFromS3_POST(id any, body core.Params, waitTimeout
 // method: GET
 // url: /clusters/{id}/vast_db/
 // summary: Show Cluster Vast DB Settings
-func (c *Cluster) ClusterVastDbWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (c *Cluster) ClusterVastDbWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "vast_db")
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1302,8 +1422,8 @@ func (c *Cluster) ClusterVastDbWithContext_GET(ctx context.Context, id any, para
 // method: GET
 // url: /clusters/{id}/vast_db/
 // summary: Show Cluster Vast DB Settings
-func (c *Cluster) ClusterVastDb_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterVastDbWithContext_GET(c.Rest.GetCtx(), id, params)
+func (c *Cluster) ClusterVastDb_GET(id any) (core.Record, error) {
+	return c.ClusterVastDbWithContext_GET(c.Rest.GetCtx(), id)
 }
 
 // ClusterVastDbWithContext_PATCH
@@ -1373,8 +1493,15 @@ func (c *Cluster) ClusterVsettings_DELETE(id any, key string) error {
 // method: GET
 // url: /clusters/{id}/vsettings/
 // summary: Show or list cluster vsettings
-func (c *Cluster) ClusterVsettingsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Key (query): VSetting key
+func (c *Cluster) ClusterVsettingsWithContext_GET(ctx context.Context, id any, Key string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "vsettings")
+	params := core.Params{}
+	if Key != "" {
+		params["key"] = Key
+	}
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -1386,8 +1513,11 @@ func (c *Cluster) ClusterVsettingsWithContext_GET(ctx context.Context, id any, p
 // method: GET
 // url: /clusters/{id}/vsettings/
 // summary: Show or list cluster vsettings
-func (c *Cluster) ClusterVsettings_GET(id any, params core.Params) (core.Record, error) {
-	return c.ClusterVsettingsWithContext_GET(c.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - Key (query): VSetting key
+func (c *Cluster) ClusterVsettings_GET(id any, Key string) (core.Record, error) {
+	return c.ClusterVsettingsWithContext_GET(c.Rest.GetCtx(), id, Key)
 }
 
 // ClusterVsettingsWithContext_PATCH

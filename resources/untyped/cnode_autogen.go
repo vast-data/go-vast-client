@@ -43,9 +43,9 @@ func (c *Cnode) CnodeAddCnodes_POST(body core.Params, waitTimeout time.Duration)
 // method: GET
 // url: /cnodes/{id}/bgpconfig
 // summary: Get BGP Configuration
-func (c *Cnode) CnodeBgpconfigWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (c *Cnode) CnodeBgpconfigWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("cnodes", id, "bgpconfig")
-	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +56,8 @@ func (c *Cnode) CnodeBgpconfigWithContext_GET(ctx context.Context, id any, param
 // method: GET
 // url: /cnodes/{id}/bgpconfig
 // summary: Get BGP Configuration
-func (c *Cnode) CnodeBgpconfig_GET(id any, params core.Params) (core.Record, error) {
-	return c.CnodeBgpconfigWithContext_GET(c.Rest.GetCtx(), id, params)
+func (c *Cnode) CnodeBgpconfig_GET(id any) (core.Record, error) {
+	return c.CnodeBgpconfigWithContext_GET(c.Rest.GetCtx(), id)
 }
 
 // CnodeBgpconfigWithContext_PATCH

@@ -34,9 +34,9 @@ func (a *ActiveDirectory) ActiveDirectoryChangeMachineAccountPassword_POST(id an
 // method: GET
 // url: /activedirectory/{id}/current_gc/
 // summary: Get current Active Directory GC
-func (a *ActiveDirectory) ActiveDirectoryCurrentGcWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (a *ActiveDirectory) ActiveDirectoryCurrentGcWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "current_gc")
-	result, err := core.Request[core.Record](ctx, a, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, a, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +47,8 @@ func (a *ActiveDirectory) ActiveDirectoryCurrentGcWithContext_GET(ctx context.Co
 // method: GET
 // url: /activedirectory/{id}/current_gc/
 // summary: Get current Active Directory GC
-func (a *ActiveDirectory) ActiveDirectoryCurrentGc_GET(id any, params core.Params) (core.Record, error) {
-	return a.ActiveDirectoryCurrentGcWithContext_GET(a.Rest.GetCtx(), id, params)
+func (a *ActiveDirectory) ActiveDirectoryCurrentGc_GET(id any) (core.Record, error) {
+	return a.ActiveDirectoryCurrentGcWithContext_GET(a.Rest.GetCtx(), id)
 }
 
 // ActiveDirectoryDcsWithContext_GET
@@ -76,8 +76,23 @@ func (a *ActiveDirectory) ActiveDirectoryDcs_GET(id any, params core.Params) (co
 // method: GET
 // url: /activedirectory/{id}/domains/
 // summary: Get Active Directory domains
-func (a *ActiveDirectory) ActiveDirectoryDomainsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - BaseDn (query)
+//   - Fqdn (query)
+//   - Sid (query)
+func (a *ActiveDirectory) ActiveDirectoryDomainsWithContext_GET(ctx context.Context, id any, BaseDn string, Fqdn string, Sid string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "domains")
+	params := core.Params{}
+	if BaseDn != "" {
+		params["base_dn"] = BaseDn
+	}
+	if Fqdn != "" {
+		params["fqdn"] = Fqdn
+	}
+	if Sid != "" {
+		params["sid"] = Sid
+	}
 	result, err := core.Request[core.Record](ctx, a, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -89,8 +104,13 @@ func (a *ActiveDirectory) ActiveDirectoryDomainsWithContext_GET(ctx context.Cont
 // method: GET
 // url: /activedirectory/{id}/domains/
 // summary: Get Active Directory domains
-func (a *ActiveDirectory) ActiveDirectoryDomains_GET(id any, params core.Params) (core.Record, error) {
-	return a.ActiveDirectoryDomainsWithContext_GET(a.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - BaseDn (query)
+//   - Fqdn (query)
+//   - Sid (query)
+func (a *ActiveDirectory) ActiveDirectoryDomains_GET(id any, BaseDn string, Fqdn string, Sid string) (core.Record, error) {
+	return a.ActiveDirectoryDomainsWithContext_GET(a.Rest.GetCtx(), id, BaseDn, Fqdn, Sid)
 }
 
 // ActiveDirectoryGcsWithContext_GET
@@ -118,9 +138,16 @@ func (a *ActiveDirectory) ActiveDirectoryGcs_GET(id any, params core.Params) (co
 // method: POST
 // url: /activedirectory/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
-func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Operation (query)
+func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx context.Context, id any, Operation string, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("activedirectory", id, "is_operation_healthy")
-	result, err := core.Request[core.Record](ctx, a, http.MethodPost, resourcePath, nil, body)
+	params := core.Params{}
+	if Operation != "" {
+		params["operation"] = Operation
+	}
+	result, err := core.Request[core.Record](ctx, a, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +158,11 @@ func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthyWithContext_POST(ctx 
 // method: POST
 // url: /activedirectory/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
-func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthy_POST(id any, body core.Params) (core.Record, error) {
-	return a.ActiveDirectoryIsOperationHealthyWithContext_POST(a.Rest.GetCtx(), id, body)
+//
+// Parameters:
+//   - Operation (query)
+func (a *ActiveDirectory) ActiveDirectoryIsOperationHealthy_POST(id any, Operation string, body core.Params) (core.Record, error) {
+	return a.ActiveDirectoryIsOperationHealthyWithContext_POST(a.Rest.GetCtx(), id, Operation, body)
 }
 
 // ActiveDirectoryRefreshWithContext_PATCH

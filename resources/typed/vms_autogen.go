@@ -579,10 +579,15 @@ func (r *Vms) VmsSamlConfig_DELETE(id any) (string, error) {
 // method: PATCH
 // url: /vms/{id}/saml_config/
 // summary: Remove SP sign response or assertions request from an IdP
-func (r *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any) (string, error) {
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (r *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any, IdpName string) (string, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	reqParams["idp_name"] = IdpName
+
 	var reqBody core.Params
 
 	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
@@ -604,8 +609,11 @@ func (r *Vms) VmsSamlConfigWithContext_PATCH(ctx context.Context, id any) (strin
 // method: PATCH
 // url: /vms/{id}/saml_config/
 // summary: Remove SP sign response or assertions request from an IdP
-func (r *Vms) VmsSamlConfig_PATCH(id any) (string, error) {
-	return r.VmsSamlConfigWithContext_PATCH(r.Untyped.GetCtx(), id)
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (r *Vms) VmsSamlConfig_PATCH(id any, IdpName string) (string, error) {
+	return r.VmsSamlConfigWithContext_PATCH(r.Untyped.GetCtx(), id, IdpName)
 }
 
 // VmsSamlConfig_POST_Body represents the request body for VmsSamlConfig
@@ -617,10 +625,15 @@ type VmsSamlConfig_POST_Body struct {
 // method: POST
 // url: /vms/{id}/saml_config/
 // summary: Modify or Create a SAML configuration for a specific IdP.
-func (r *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, body *VmsSamlConfig_POST_Body) (string, error) {
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (r *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, IdpName string, body *VmsSamlConfig_POST_Body) (string, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "saml_config")
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	reqParams["idp_name"] = IdpName
+
 	reqBody, err := core.NewParamsFromStruct(body)
 	if err != nil {
 		return "", err
@@ -645,8 +658,11 @@ func (r *Vms) VmsSamlConfigWithContext_POST(ctx context.Context, id any, body *V
 // method: POST
 // url: /vms/{id}/saml_config/
 // summary: Modify or Create a SAML configuration for a specific IdP.
-func (r *Vms) VmsSamlConfig_POST(id any, body *VmsSamlConfig_POST_Body) (string, error) {
-	return r.VmsSamlConfigWithContext_POST(r.Untyped.GetCtx(), id, body)
+//
+// Parameters:
+//   - IdpName (query): SAML IDP name
+func (r *Vms) VmsSamlConfig_POST(id any, IdpName string, body *VmsSamlConfig_POST_Body) (string, error) {
+	return r.VmsSamlConfigWithContext_POST(r.Untyped.GetCtx(), id, IdpName, body)
 }
 
 // VmsToggleMaintenanceModeWithContext_PATCH

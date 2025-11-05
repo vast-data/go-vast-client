@@ -13,9 +13,9 @@ import (
 // method: GET
 // url: /vastauditlog/columns/
 // summary: Returns VAST Audit Log columns
-func (v *VastAuditLog) VastAuditLogColumnsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+func (v *VastAuditLog) VastAuditLogColumnsWithContext_GET(ctx context.Context) (core.RecordSet, error) {
 	resourcePath := "/vastauditlog/columns/"
-	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -27,8 +27,8 @@ func (v *VastAuditLog) VastAuditLogColumnsWithContext_GET(ctx context.Context, p
 // method: GET
 // url: /vastauditlog/columns/
 // summary: Returns VAST Audit Log columns
-func (v *VastAuditLog) VastAuditLogColumns_GET(params core.Params) (core.RecordSet, error) {
-	return v.VastAuditLogColumnsWithContext_GET(v.Rest.GetCtx(), params)
+func (v *VastAuditLog) VastAuditLogColumns_GET() (core.RecordSet, error) {
+	return v.VastAuditLogColumnsWithContext_GET(v.Rest.GetCtx())
 }
 
 // VastAuditLogQueryDataWithContext_GET
@@ -56,9 +56,9 @@ func (v *VastAuditLog) VastAuditLogQueryData_GET(params core.Params) (core.Recor
 // method: GET
 // url: /vastauditlog/stats/
 // summary: Returns information about VAST Audit Log stats
-func (v *VastAuditLog) VastAuditLogStatsWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+func (v *VastAuditLog) VastAuditLogStatsWithContext_GET(ctx context.Context) (core.Record, error) {
 	resourcePath := "/vastauditlog/stats/"
-	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +69,6 @@ func (v *VastAuditLog) VastAuditLogStatsWithContext_GET(ctx context.Context, par
 // method: GET
 // url: /vastauditlog/stats/
 // summary: Returns information about VAST Audit Log stats
-func (v *VastAuditLog) VastAuditLogStats_GET(params core.Params) (core.Record, error) {
-	return v.VastAuditLogStatsWithContext_GET(v.Rest.GetCtx(), params)
+func (v *VastAuditLog) VastAuditLogStats_GET() (core.Record, error) {
+	return v.VastAuditLogStatsWithContext_GET(v.Rest.GetCtx())
 }

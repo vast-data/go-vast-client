@@ -241,29 +241,54 @@ func IsDirectComponentReference(schemaRef *openapi3.SchemaRef) string {
 	return ""
 }
 
-// QueryParametersGET extracts all query parameters from the GET operation of a given OpenAPI path item.
+// GetQueryParameters extracts all query parameters from the specified HTTP method operation of a given OpenAPI path item.
 // It returns a slice of openapi3.Parameter objects whose "in" field is "query".
 // These typically represent optional or required query string inputs accepted by the endpoint.
 //
 // Parameters:
-//   - resource: an *openapi3.PathItem representing a specific OpenAPI path (e.g., "/users/").
+//   - httpMethod: HTTP method (GET, POST, PATCH, PUT, DELETE, etc.)
+//   - resourcePath: an OpenAPI path (e.g., "/users/")
 //
 // Returns:
 //   - []*openapi3.Parameter: a slice of query parameter definitions.
-//   - error: if the GET operation is not defined.
-func QueryParametersGET(resourcePath string) ([]*openapi3.Parameter, error) {
+//   - error: if the resource cannot be retrieved.
+func GetQueryParameters(httpMethod, resourcePath string) ([]*openapi3.Parameter, error) {
 	resource, err := GetOpenApiResource(resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OpenAPI resource %q: %w", resourcePath, err)
 	}
 
-	if resource == nil || resource.Get == nil {
-		// No GET operation — treat as no query parameters
+	if resource == nil {
+		return []*openapi3.Parameter{}, nil
+	}
+
+	var operation *openapi3.Operation
+	switch strings.ToUpper(httpMethod) {
+	case "GET":
+		operation = resource.Get
+	case "POST":
+		operation = resource.Post
+	case "PATCH":
+		operation = resource.Patch
+	case "PUT":
+		operation = resource.Put
+	case "DELETE":
+		operation = resource.Delete
+	case "HEAD":
+		operation = resource.Head
+	case "OPTIONS":
+		operation = resource.Options
+	default:
+		return nil, fmt.Errorf("unsupported HTTP method: %s", httpMethod)
+	}
+
+	if operation == nil {
+		// No operation for this method — treat as no query parameters
 		return []*openapi3.Parameter{}, nil
 	}
 
 	queryParams := make([]*openapi3.Parameter, 0)
-	for _, paramRef := range resource.Get.Parameters {
+	for _, paramRef := range operation.Parameters {
 		if paramRef == nil || paramRef.Value == nil {
 			continue
 		}
@@ -286,7 +311,7 @@ func QueryParametersGET(resourcePath string) ([]*openapi3.Parameter, error) {
 //   - *openapi3.SchemaRef: a schema representing all query parameters as an object.
 //   - error: if the resource cannot be found or parameters cannot be processed.
 func GetSchema_GET_QueryParams(resourcePath string) (*openapi3.SchemaRef, error) {
-	queryParams, err := QueryParametersGET(resourcePath)
+	queryParams, err := GetQueryParameters("GET", resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get query parameters for %q: %w", resourcePath, err)
 	}
@@ -342,7 +367,7 @@ func extractSchemaFromResponse(resp *openapi3.ResponseRef) *openapi3.SchemaRef {
 // SearchableQueryParams returns only query parameters that are primitive types
 // (string, integer) from the GET operation of the given resource path.
 func SearchableQueryParams(resourcePath string) ([]string, error) {
-	params, err := QueryParametersGET(resourcePath)
+	params, err := GetQueryParameters("GET", resourcePath)
 	if err != nil {
 		return nil, err
 	}

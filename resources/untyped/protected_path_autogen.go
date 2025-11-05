@@ -174,8 +174,13 @@ func (p *ProtectedPath) ProtectedPathPrefetchPath_DELETE(id any, stopRunningPref
 // method: GET
 // url: /protectedpaths/{id}/prefetch_path/
 // summary: Return Status for Prefetch Path
-func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - TaskId (query): ID of task for which to get the prefetch status
+func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_GET(ctx context.Context, id any, TaskId int64) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "prefetch_path")
+	params := core.Params{}
+	params["task_id"] = TaskId
 	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -187,8 +192,11 @@ func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_GET(ctx context.Con
 // method: GET
 // url: /protectedpaths/{id}/prefetch_path/
 // summary: Return Status for Prefetch Path
-func (p *ProtectedPath) ProtectedPathPrefetchPath_GET(id any, params core.Params) (core.Record, error) {
-	return p.ProtectedPathPrefetchPathWithContext_GET(p.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - TaskId (query): ID of task for which to get the prefetch status
+func (p *ProtectedPath) ProtectedPathPrefetchPath_GET(id any, TaskId int64) (core.Record, error) {
+	return p.ProtectedPathPrefetchPathWithContext_GET(p.Rest.GetCtx(), id, TaskId)
 }
 
 // ProtectedPathPrefetchPathWithContext_POST
@@ -197,14 +205,19 @@ func (p *ProtectedPath) ProtectedPathPrefetchPath_GET(id any, params core.Params
 // summary: Prefetch a Path to Global Access Cache
 //
 // Parameters:
+//   - Force (query): Force prefetch even if it is already running
 //   - path (body): The path on the destination peer for which to prefetch data from the equivalent source path to the global access cache. The path can be the entire protected path or a subdirectory.
 //   - prefetchType (body): Whether to prefetch full data or only metadata.
-func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Context, id any, path string, prefetchType string) (core.Record, error) {
+func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Context, id any, Force bool, path string, prefetchType string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "prefetch_path")
+	params := core.Params{}
+	if Force != false {
+		params["force"] = Force
+	}
 	body := core.Params{}
 	body["path"] = path
 	body["prefetch_type"] = prefetchType
-	result, err := core.Request[core.Record](ctx, p, http.MethodPost, resourcePath, nil, body)
+	result, err := core.Request[core.Record](ctx, p, http.MethodPost, resourcePath, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -217,10 +230,11 @@ func (p *ProtectedPath) ProtectedPathPrefetchPathWithContext_POST(ctx context.Co
 // summary: Prefetch a Path to Global Access Cache
 //
 // Parameters:
+//   - Force (query): Force prefetch even if it is already running
 //   - path (body): The path on the destination peer for which to prefetch data from the equivalent source path to the global access cache. The path can be the entire protected path or a subdirectory.
 //   - prefetchType (body): Whether to prefetch full data or only metadata.
-func (p *ProtectedPath) ProtectedPathPrefetchPath_POST(id any, path string, prefetchType string) (core.Record, error) {
-	return p.ProtectedPathPrefetchPathWithContext_POST(p.Rest.GetCtx(), id, path, prefetchType)
+func (p *ProtectedPath) ProtectedPathPrefetchPath_POST(id any, Force bool, path string, prefetchType string) (core.Record, error) {
+	return p.ProtectedPathPrefetchPathWithContext_POST(p.Rest.GetCtx(), id, Force, path, prefetchType)
 }
 
 // ProtectedPathReattachStreamWithContext_PATCH
@@ -407,9 +421,9 @@ func (p *ProtectedPath) ProtectedPathStop_PATCH(id any, body core.Params) (core.
 // method: GET
 // url: /protectedpaths/{id}/validate/
 // summary: Returns validations results for Protected Path.
-func (p *ProtectedPath) ProtectedPathValidateWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+func (p *ProtectedPath) ProtectedPathValidateWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "validate")
-	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, p, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -420,6 +434,6 @@ func (p *ProtectedPath) ProtectedPathValidateWithContext_GET(ctx context.Context
 // method: GET
 // url: /protectedpaths/{id}/validate/
 // summary: Returns validations results for Protected Path.
-func (p *ProtectedPath) ProtectedPathValidate_GET(id any, params core.Params) (core.Record, error) {
-	return p.ProtectedPathValidateWithContext_GET(p.Rest.GetCtx(), id, params)
+func (p *ProtectedPath) ProtectedPathValidate_GET(id any) (core.Record, error) {
+	return p.ProtectedPathValidateWithContext_GET(p.Rest.GetCtx(), id)
 }

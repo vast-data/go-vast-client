@@ -172,9 +172,9 @@ func TestQueryParametersGET_And_GetSchema_GET_QueryParams(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET operation available; skipped")
 	}
-	params, err := QueryParametersGET(path)
+	params, err := GetQueryParameters("GET", path)
 	if err != nil {
-		t.Fatalf("QueryParametersGET error: %v", err)
+		t.Fatalf("GetQueryParameters error: %v", err)
 	}
 	// Always should return slice (possibly empty)
 	if params == nil {

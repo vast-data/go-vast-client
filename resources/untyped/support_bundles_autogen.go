@@ -14,8 +14,13 @@ import (
 // method: GET
 // url: /supportbundles/{id}/download/
 // summary: Download a Support Bundle
-func (s *SupportBundles) SupportBundlesDownloadWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - Secret (query): Bundle secret key
+func (s *SupportBundles) SupportBundlesDownloadWithContext_GET(ctx context.Context, id any, Secret string) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("supportbundles", id, "download")
+	params := core.Params{}
+	params["secret"] = Secret
 	result, err := core.Request[core.Record](ctx, s, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -27,8 +32,11 @@ func (s *SupportBundles) SupportBundlesDownloadWithContext_GET(ctx context.Conte
 // method: GET
 // url: /supportbundles/{id}/download/
 // summary: Download a Support Bundle
-func (s *SupportBundles) SupportBundlesDownload_GET(id any, params core.Params) (core.Record, error) {
-	return s.SupportBundlesDownloadWithContext_GET(s.Rest.GetCtx(), id, params)
+//
+// Parameters:
+//   - Secret (query): Bundle secret key
+func (s *SupportBundles) SupportBundlesDownload_GET(id any, Secret string) (core.Record, error) {
+	return s.SupportBundlesDownloadWithContext_GET(s.Rest.GetCtx(), id, Secret)
 }
 
 // SupportBundlesUploadWithContext_PATCH

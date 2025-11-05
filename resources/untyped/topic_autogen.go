@@ -13,9 +13,9 @@ import (
 // method: DELETE
 // url: /topics/delete/
 // summary: Delete a Kafka Topic
-func (t *Topic) TopicDeleteWithContext_DELETE(ctx context.Context, params core.Params) error {
+func (t *Topic) TopicDeleteWithContext_DELETE(ctx context.Context) error {
 	resourcePath := "/topics/delete/"
-	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, params, nil)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
 	return err
 
 }
@@ -24,16 +24,23 @@ func (t *Topic) TopicDeleteWithContext_DELETE(ctx context.Context, params core.P
 // method: DELETE
 // url: /topics/delete/
 // summary: Delete a Kafka Topic
-func (t *Topic) TopicDelete_DELETE(params core.Params) error {
-	return t.TopicDeleteWithContext_DELETE(t.Rest.GetCtx(), params)
+func (t *Topic) TopicDelete_DELETE() error {
+	return t.TopicDeleteWithContext_DELETE(t.Rest.GetCtx())
 }
 
 // TopicShowWithContext_GET
 // method: GET
 // url: /topics/show/
 // summary: Show a Kafka Topic
-func (t *Topic) TopicShowWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - DatabaseName (query): Getting list of objects by database_name
+//   - Name (query): Getting object by exact match
+func (t *Topic) TopicShowWithContext_GET(ctx context.Context, DatabaseName string, Name string) (core.Record, error) {
 	resourcePath := "/topics/show/"
+	params := core.Params{}
+	params["database_name"] = DatabaseName
+	params["name"] = Name
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -45,8 +52,12 @@ func (t *Topic) TopicShowWithContext_GET(ctx context.Context, params core.Params
 // method: GET
 // url: /topics/show/
 // summary: Show a Kafka Topic
-func (t *Topic) TopicShow_GET(params core.Params) (core.Record, error) {
-	return t.TopicShowWithContext_GET(t.Rest.GetCtx(), params)
+//
+// Parameters:
+//   - DatabaseName (query): Getting list of objects by database_name
+//   - Name (query): Getting object by exact match
+func (t *Topic) TopicShow_GET(DatabaseName string, Name string) (core.Record, error) {
+	return t.TopicShowWithContext_GET(t.Rest.GetCtx(), DatabaseName, Name)
 }
 
 // TopicTopicsWithContext_GET

@@ -668,10 +668,17 @@ type TenantIsOperationHealthy_POST_Model struct {
 // method: POST
 // url: /tenants/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
-func (r *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, id any, body *TenantIsOperationHealthy_POST_Body) (*TenantIsOperationHealthy_POST_Model, error) {
+//
+// Parameters:
+//   - Operation (query)
+func (r *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, id any, Operation string, body *TenantIsOperationHealthy_POST_Body) (*TenantIsOperationHealthy_POST_Model, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "is_operation_healthy")
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	if Operation != "" {
+		reqParams["operation"] = Operation
+	}
+
 	reqBody, err := core.NewParamsFromStruct(body)
 	if err != nil {
 		return nil, err
@@ -694,18 +701,30 @@ func (r *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, i
 // method: POST
 // url: /tenants/{id}/is_operation_healthy/
 // summary: Check whether an operation may be successfully performed
-func (r *Tenant) TenantIsOperationHealthy_POST(id any, body *TenantIsOperationHealthy_POST_Body) (*TenantIsOperationHealthy_POST_Model, error) {
-	return r.TenantIsOperationHealthyWithContext_POST(r.Untyped.GetCtx(), id, body)
+//
+// Parameters:
+//   - Operation (query)
+func (r *Tenant) TenantIsOperationHealthy_POST(id any, Operation string, body *TenantIsOperationHealthy_POST_Body) (*TenantIsOperationHealthy_POST_Model, error) {
+	return r.TenantIsOperationHealthyWithContext_POST(r.Untyped.GetCtx(), id, Operation, body)
 }
 
 // TenantNfs4DelegWithContext_DELETE
 // method: DELETE
 // url: /tenants/{id}/nfs4_deleg/
 // summary: Remove NFSv4 delegation
-func (r *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any) error {
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - ClientId (query): Client ID
+//   - DelegationStateid (query): Delegation state ID
+func (r *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any, FilePath string, ClientId int64, DelegationStateid int64) error {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "nfs4_deleg")
 
-	var reqParams core.Params
+	reqParams := core.Params{}
+	reqParams["file_path"] = FilePath
+	reqParams["client_id"] = ClientId
+	reqParams["delegation_stateid"] = DelegationStateid
+
 	var reqBody core.Params
 
 	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
@@ -717,8 +736,13 @@ func (r *Tenant) TenantNfs4DelegWithContext_DELETE(ctx context.Context, id any) 
 // method: DELETE
 // url: /tenants/{id}/nfs4_deleg/
 // summary: Remove NFSv4 delegation
-func (r *Tenant) TenantNfs4Deleg_DELETE(id any) error {
-	return r.TenantNfs4DelegWithContext_DELETE(r.Untyped.GetCtx(), id)
+//
+// Parameters:
+//   - FilePath (query): File path
+//   - ClientId (query): Client ID
+//   - DelegationStateid (query): Delegation state ID
+func (r *Tenant) TenantNfs4Deleg_DELETE(id any, FilePath string, ClientId int64, DelegationStateid int64) error {
+	return r.TenantNfs4DelegWithContext_DELETE(r.Untyped.GetCtx(), id, FilePath, ClientId, DelegationStateid)
 }
 
 // TenantNfs4Delegs_GET_Body represents the request body for TenantNfs4Delegs
