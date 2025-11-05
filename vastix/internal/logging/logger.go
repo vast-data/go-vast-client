@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -20,8 +21,10 @@ type Service struct {
 }
 
 var (
-	logInstance *Service
-	auxLogger   *log.Logger
+	logInstance    *Service
+	auxLogger      *log.Logger
+	auxLogFile     io.WriteCloser
+	auxExtraWriter io.Writer // Extra writer for working zone
 )
 
 // GetVastixDir returns the .vastix directory path, creating it if it doesn't exist
@@ -68,13 +71,15 @@ func New() (*Service, func(), error) {
 		return nil, nil, fmt.Errorf("failed to remove existing aux log file: %v", err)
 	}
 
-	auxLogFile, err := tea.LogToFile(auxLogPath, "aux")
+	logFile, err := tea.LogToFile(auxLogPath, "aux")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create aux log file: %v", err)
 	}
+	auxLogFile = logFile
 
 	// Initialize auxiliary logger singleton if not already created
 	if auxLogger == nil {
+		// Initially write only to file, extra writer can be added later
 		auxLogger = log.New(auxLogFile, "", log.LstdFlags)
 	}
 
@@ -197,6 +202,28 @@ func GetAuxLogger() *log.Logger {
 	return auxLogger
 }
 
+// SetAuxLogWriter sets an additional writer for the auxiliary logger
+// This is typically used to send aux logs to the working zone during spinner mode
+func SetAuxLogWriter(writer io.Writer) {
+	auxExtraWriter = writer
+
+	if auxLogger != nil && auxLogFile != nil {
+		if writer != nil {
+			// Create a multi-writer that writes to both file and extra writer
+			multiWriter := io.MultiWriter(auxLogFile, writer)
+			auxLogger.SetOutput(multiWriter)
+		} else {
+			// Reset to file-only output
+			auxLogger.SetOutput(auxLogFile)
+		}
+	}
+}
+
+// ClearAuxLogWriter removes the extra writer from aux logger
+func ClearAuxLogWriter() {
+	SetAuxLogWriter(nil)
+}
+
 // AuxLog logs a message using the auxiliary logger
 func AuxLog(msg string) {
 	if auxLogger != nil {
@@ -242,7 +269,7 @@ func LogPanic() {
 				f.Close()
 
 				// Print to stderr where the panic log was saved
-				fmt.Fprintf(os.Stderr, "\n⚠️  Panic details saved to: %s\n\n", panicLogPath)
+				fmt.Fprintf(os.Stderr, "\nPanic details saved to: %s\n\n", panicLogPath)
 			}
 		}
 

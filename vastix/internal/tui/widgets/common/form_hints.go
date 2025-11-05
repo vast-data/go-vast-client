@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"vastix/internal/logging"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/vast-data/go-vast-client/openapi_schema"
@@ -30,6 +29,11 @@ type FormHints struct {
 	// the inputs generated from the OpenAPI schema. These inputs will be added
 	// after all schema-derived inputs.
 	CustomInputs []InputDefinition
+
+	// ExcludedFields defines field names that should be excluded from form generation.
+	// This is useful for fields that are problematic (e.g., required arrays of objects)
+	// or should not be exposed in the TUI form.
+	ExcludedFields []string
 }
 
 // OpenAPIEndpointRef defines a reference to a specific HTTP method + path
@@ -142,12 +146,20 @@ func (sr *SchemaReference) getSchemaFromCreateRef() (*openapi3.SchemaRef, error)
 			return nil, fmt.Errorf("failed to get POST schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodGet:
-		if schemaRef, err = openapi_schema.GetResponseModelSchema(http.MethodGet, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodGet, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get GET schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPatch:
 		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodPatch, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get PATCH schema for resource %q: %w", resourcePath, err)
+		}
+	case http.MethodPut:
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodPut, resourcePath); err != nil {
+			return nil, fmt.Errorf("failed to get PUT schema for resource %q: %w", resourcePath, err)
+		}
+	case http.MethodDelete:
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodDelete, resourcePath); err != nil {
+			return nil, fmt.Errorf("failed to get DELETE schema for resource %q: %w", resourcePath, err)
 		}
 	default:
 		return nil, fmt.Errorf(
@@ -159,17 +171,55 @@ func (sr *SchemaReference) getSchemaFromCreateRef() (*openapi3.SchemaRef, error)
 
 func (sr *SchemaReference) getSchemaFromQueryParamsRef() (*openapi3.SchemaRef, error) {
 	resourcePath := sr.GetReadPath()
-	var schemaRef *openapi3.SchemaRef
-	var err error
+	method := sr.Read.Method
 
 	if resourcePath == "" {
 		return nil, fmt.Errorf("resource path is empty for query params schema")
 	}
 
-	if schemaRef, err = openapi_schema.GetSchema_GET_QueryParams(resourcePath); err != nil {
-		return nil, fmt.Errorf("failed to get query params schema for %q: %w", resourcePath, err)
+	if method == "" {
+		// Default to GET if no method specified (backwards compatibility)
+		method = "GET"
 	}
-	return schemaRef, nil
+
+	// Create a schema from query parameters for the specified HTTP method
+	queryParams, err := openapi_schema.GetQueryParameters(method, resourcePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get query parameters for %s %q: %w", method, resourcePath, err)
+	}
+
+	// Convert query parameters to a schema
+	schema := &openapi3.Schema{
+		Type:       &openapi3.Types{openapi3.TypeObject},
+		Properties: make(map[string]*openapi3.SchemaRef),
+		Required:   []string{},
+	}
+
+	for _, param := range queryParams {
+		if param == nil || param.Schema == nil || param.Schema.Value == nil {
+			continue
+		}
+
+		propSchema := param.Schema.Value
+		schema.Properties[param.Name] = &openapi3.SchemaRef{
+			Value: &openapi3.Schema{
+				Type:        propSchema.Type,
+				Description: param.Description,
+				Default:     propSchema.Default,
+				Enum:        propSchema.Enum,
+				Format:      propSchema.Format,
+				Min:         propSchema.Min,
+				Max:         propSchema.Max,
+				ReadOnly:    propSchema.ReadOnly,
+			},
+		}
+
+		if param.Required {
+			schema.Required = append(schema.Required, param.Name)
+		}
+	}
+
+	return &openapi3.SchemaRef{Value: schema}, nil
 }
 
 // getInputDefinitionsFromSchema extracts input definitions from an OpenAPI schema for form generation
@@ -259,6 +309,22 @@ func (fh *FormHints) GetInputsFromCreateSchemaWithCustom(onlyPrimitives bool) (I
 		if err != nil {
 			return nil, fmt.Errorf("failed to get schema input definitions: %w", err)
 		}
+	}
+
+	// Filter out excluded fields
+	if len(fh.ExcludedFields) > 0 {
+		excludedMap := make(map[string]bool)
+		for _, field := range fh.ExcludedFields {
+			excludedMap[field] = true
+		}
+
+		filteredDefs := make([]InputDefinition, 0, len(schemaInputDefs))
+		for _, def := range schemaInputDefs {
+			if !excludedMap[def.Name] {
+				filteredDefs = append(filteredDefs, def)
+			}
+		}
+		schemaInputDefs = filteredDefs
 	}
 
 	// Append custom inputs
@@ -406,14 +472,12 @@ func convertSchemaToInputDefinition(name string, schema *openapi3.Schema, requir
 
 func inputDefsToInputs(defs []InputDefinition, onlyPrimitives bool) (Inputs, error) {
 	var inputs Inputs
-	auxlog := logging.GetAuxLogger()
 
 	for _, def := range defs {
 		input, err := createInputFromDefinition(def, onlyPrimitives)
 		if err != nil {
 			var skipErr SkipDefinition
 			if errors.As(err, &skipErr) {
-				auxlog.Printf("<<skipping definition>> '%s': %s", def.Name, skipErr.reason)
 				continue // Skip this definition
 			}
 

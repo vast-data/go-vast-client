@@ -1,75 +1,58 @@
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+// This file re-exports colors from the centralized colors package
+// for backwards compatibility with existing TUI code.
+// New code should import "vastix/internal/colors" directly.
 
+import "vastix/internal/colors"
+
+// Re-export all colors for backwards compatibility
 const (
-	Black           = lipgloss.Color("#000000")
-	DarkRed         = lipgloss.Color("#FF0000")
-	Red             = lipgloss.Color("#FF5353")
-	Purple          = lipgloss.Color("135")
-	Orange          = lipgloss.Color("214")
-	BurntOrange     = lipgloss.Color("214")
-	Yellow          = lipgloss.Color("#DBBD70")
-	Green           = lipgloss.Color("34")
-	Turquoise       = lipgloss.Color("86")
-	DarkGreen       = lipgloss.Color("#325451")
-	LightGreen      = lipgloss.Color("47")
-	GreenBlue       = lipgloss.Color("#00A095")
-	DeepBlue        = lipgloss.Color("39")
-	LightBlue       = lipgloss.Color("81")
-	LightishBlue    = lipgloss.Color("75")
-	Blue            = lipgloss.Color("63")
-	DarkBlue        = lipgloss.Color("25") // Darker blue for spinner active state
-	Violet          = lipgloss.Color("13")
-	Grey            = lipgloss.Color("#737373")
-	LightGrey       = lipgloss.Color("245")
-	LighterGrey     = lipgloss.Color("250")
-	EvenLighterGrey = lipgloss.Color("253")
-	DarkGrey        = lipgloss.Color("#606362")
-	White           = lipgloss.Color("#ffffff")
-	OffWhite        = lipgloss.Color("#a8a7a5")
-	HotPink         = lipgloss.Color("200")
+	Black           = colors.Black
+	DarkRed         = colors.BrightRed
+	Red             = colors.Red
+	Purple          = colors.Purple
+	Orange          = colors.Orange
+	BurntOrange     = colors.BurntOrange
+	Yellow          = colors.Yellow
+	Green           = colors.Green
+	Turquoise       = colors.Turquoise
+	DarkGreen       = colors.DarkGreen
+	LightGreen      = colors.LightGreen
+	GreenBlue       = colors.GreenBlue
+	DeepBlue        = colors.DeepBlue
+	LightBlue       = colors.LightBlue
+	LightishBlue    = colors.LightishBlue
+	Blue            = colors.Blue
+	DarkBlue        = colors.VeryDarkBlue
+	Violet          = colors.Violet
+	Grey            = colors.Grey
+	LightGrey       = colors.LightGrey
+	LighterGrey     = colors.LighterGrey
+	EvenLighterGrey = colors.EvenLighterGrey
+	DarkGrey        = colors.DarkGrey
+	White           = colors.White
+	OffWhite        = colors.OffWhite
+	HotPink         = colors.HotPink
 )
 
 var (
-	DebugLogLevel = Blue
-	InfoLogLevel  = lipgloss.AdaptiveColor{Dark: string(Turquoise), Light: string(Green)}
-	ErrorLogLevel = Red
-	WarnLogLevel  = Yellow
-
-	LogRecordAttributeKey = lipgloss.AdaptiveColor{Dark: string(LightGrey), Light: string(LightGrey)}
-
-	HelpKey = lipgloss.AdaptiveColor{
-		Dark:  "ff",
-		Light: "",
-	}
-	HelpDesc = lipgloss.AdaptiveColor{
-		Dark:  "248",
-		Light: "246",
-	}
-
-	InactivePreviewBorder = lipgloss.AdaptiveColor{
-		Dark:  "244",
-		Light: "250",
-	}
-
-	CurrentBackground            = Grey
-	CurrentForeground            = White
-	SelectedBackground           = lipgloss.Color("110")
-	SelectedForeground           = Black
-	CurrentAndSelectedBackground = lipgloss.Color("117")
-	CurrentAndSelectedForeground = Black
-
-	TitleColor = lipgloss.AdaptiveColor{
-		Dark:  "",
-		Light: "",
-	}
-
-	GroupReportBackgroundColor = EvenLighterGrey
-	TaskSummaryBackgroundColor = EvenLighterGrey
-
-	ScrollPercentageBackground = lipgloss.AdaptiveColor{
-		Dark:  string(DarkGrey),
-		Light: string(EvenLighterGrey),
-	}
+	DebugLogLevel                = colors.DebugLogLevel
+	InfoLogLevel                 = colors.InfoLogLevel
+	ErrorLogLevel                = colors.ErrorLogLevel
+	WarnLogLevel                 = colors.WarnLogLevel
+	LogRecordAttributeKey        = colors.LogRecordAttributeKey
+	HelpKey                      = colors.HelpKey
+	HelpDesc                     = colors.HelpDesc
+	InactivePreviewBorder        = colors.InactivePreviewBorder
+	CurrentBackground            = colors.CurrentBackground
+	CurrentForeground            = colors.CurrentForeground
+	SelectedBackground           = colors.SelectedBackground
+	SelectedForeground           = colors.SelectedForeground
+	CurrentAndSelectedBackground = colors.CurrentAndSelectedBackground
+	CurrentAndSelectedForeground = colors.CurrentAndSelectedForeground
+	TitleColor                   = colors.TitleColor
+	GroupReportBackgroundColor   = colors.GroupReportBackgroundColor
+	TaskSummaryBackgroundColor   = colors.TaskSummaryBackgroundColor
+	ScrollPercentageBackground   = colors.ScrollPercentageBackground
 )

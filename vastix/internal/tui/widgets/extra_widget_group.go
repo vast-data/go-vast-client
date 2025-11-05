@@ -1,9 +1,11 @@
 package widgets
 
 import (
+	"context"
 	"log"
 	"maps"
 	"slices"
+	"sort"
 	"strings"
 	"vastix/internal/database"
 	"vastix/internal/logging"
@@ -40,6 +42,7 @@ type ExtraWidgetGroup struct {
 
 	// Selected row data
 	selectedRowData common.RowData // Currently selected row data of parent widget
+	mainWidget      common.Widget  // Reference to parent widget for validation
 }
 
 // NewExtraWidgetGroup creates a new extra widget group.
@@ -97,6 +100,9 @@ func NewExtraWidgetGroup(db *database.Service, parentNavigator *common.WidgetNav
 // SetMainWidgetParent updates the parent reference of all individual extra widgets
 // to point to the main widget that contains this ExtraWidgetGroup
 func (eg *ExtraWidgetGroup) SetMainWidgetParent(mainWidget common.Widget) {
+	// Store reference to main widget for validation
+	eg.mainWidget = mainWidget
+
 	for _, widget := range eg.entries {
 		if baseWidget, ok := widget.(interface{ SetParentForBaseWidget(common.Widget, bool) }); ok {
 			baseWidget.SetParentForBaseWidget(mainWidget, true)
@@ -146,16 +152,33 @@ func (eg *ExtraWidgetGroup) Init() tea.Msg {
 }
 
 func (eg *ExtraWidgetGroup) CanUseExtra() bool {
-	// Can be displayed if there is at least one extra widget defined
-	numEntries := len(eg.entries)
-	eg.auxlog.Printf("[ExtraWidgetGroup] CanUseExtra: entries=%d", numEntries)
-	if numEntries > 0 {
-		eg.auxlog.Printf("[ExtraWidgetGroup] Extra widgets available:")
-		for name := range eg.entries {
-			eg.auxlog.Printf("  - %s", name)
+	if len(eg.entries) == 0 {
+		return false
+	}
+
+	// Check if ALL extra widgets are not resourceless (all require resources)
+	allNeedResources := true
+	for _, widget := range eg.entries {
+		// Check if widget has IsResourceless method (works for both BaseWidget and ExtraMethodWidget)
+		if resourcelessChecker, ok := widget.(interface{ IsResourceless() bool }); ok {
+			if resourcelessChecker.IsResourceless() {
+				allNeedResources = false
+				break
+			}
 		}
 	}
-	return numEntries > 0
+
+	// If all widgets need resources, check if parent widget has data
+	if allNeedResources && eg.mainWidget != nil {
+		if listAdapterWidget, ok := any(eg.mainWidget).(interface{ GetFilteredDataCount() int }); ok {
+			filteredCount := listAdapterWidget.GetFilteredDataCount()
+			if filteredCount == 0 {
+				return false // No data, can't use extra actions
+			}
+		}
+	}
+
+	return true
 }
 
 // GetAllExtraWidgets returns all extra widgets in the group
@@ -169,9 +192,28 @@ func (eg *ExtraWidgetGroup) ShortCut() *common.KeyBinding {
 }
 
 // ShortCuts returns a map of shortcut keys to their corresponding extra widgets
+// Filters out shortcuts for widgets that require resources when no data is available
 func (eg *ExtraWidgetGroup) ShortCuts() map[string]common.ExtraWidget {
 	shortcuts := make(map[string]common.ExtraWidget)
+
+	// Check if parent widget has data
+	hasData := true
+	if eg.mainWidget != nil {
+		if listAdapterWidget, ok := any(eg.mainWidget).(interface{ GetFilteredDataCount() int }); ok {
+			filteredCount := listAdapterWidget.GetFilteredDataCount()
+			hasData = filteredCount > 0
+		}
+	}
+
 	for _, widget := range eg.entries {
+		// Skip widgets that need resources when no data is available
+		// Check if widget has IsResourceless method (works for both BaseWidget and ExtraMethodWidget)
+		if resourcelessChecker, ok := widget.(interface{ IsResourceless() bool }); ok {
+			if !resourcelessChecker.IsResourceless() && !hasData {
+				continue
+			}
+		}
+
 		if shortcut := widget.ShortCut(); shortcut != nil {
 			// Remove angle brackets from key for lookup
 			key := strings.Trim(shortcut.Key, "<>")
@@ -179,7 +221,11 @@ func (eg *ExtraWidgetGroup) ShortCuts() map[string]common.ExtraWidget {
 		}
 	}
 	return shortcuts
+}
 
+// GetEntries returns the entries map for accessing extra widgets
+func (eg *ExtraWidgetGroup) GetEntries() map[string]common.ExtraWidget {
+	return eg.entries
 }
 
 func (eg *ExtraWidgetGroup) ViewExtra() string {
@@ -188,19 +234,23 @@ func (eg *ExtraWidgetGroup) ViewExtra() string {
 		return eg.ViewList()
 	}
 
-	currentWidget := eg.currentExtraWidget()
 	mode := eg.GetExtraMode()
 
 	switch mode {
 	case common.ExtraNavigatorModeList:
-		return currentWidget.ViewList()
+		// Show the ExtraWidgetGroup's own list (list of extra actions)
+		return eg.ViewList()
 	case common.ExtraNavigatorModeCreate:
+		currentWidget := eg.currentExtraWidget()
 		return currentWidget.ViewCreateForm()
 	case common.ExtraNavigatorModeDetails:
+		currentWidget := eg.currentExtraWidget()
 		return currentWidget.ViewDetails()
 	case common.ExtraNavigatorModeDelete:
+		currentWidget := eg.currentExtraWidget()
 		return currentWidget.ViewPrompt()
 	case common.ExtraNavigatorModePrompt:
+		currentWidget := eg.currentExtraWidget()
 		return currentWidget.ViewPrompt()
 	default:
 		panic("unknown ExtraNavigatorMode: " + mode.String())
@@ -272,20 +322,92 @@ func (eg *ExtraWidgetGroup) SetSize(width, height int) {
 // ListWidget methods
 // ----------------------------
 
+// SetListDataWithContext overrides BaseWidget to pass context to active extra widget if present
+func (eg *ExtraWidgetGroup) SetListDataWithContext(ctx context.Context) tea.Msg {
+	if eg.activeExtraWidget == "" {
+		// If no active extra widget, use the ListAdapter to set data (no API call needed)
+		return eg.SetListData()
+	}
+
+	// If there's an active extra widget, try to call SetListDataWithContext on it
+	type contextAwareWidget interface {
+		SetListDataWithContext(context.Context) tea.Msg
+	}
+	if ctxWidget, ok := eg.currentExtraWidget().(contextAwareWidget); ok {
+		return ctxWidget.SetListDataWithContext(ctx)
+	}
+	return eg.currentExtraWidget().SetListData()
+}
+
 func (eg *ExtraWidgetGroup) SetListData() tea.Msg {
 	if eg.activeExtraWidget == "" {
 		// If no active extra widget, use the ListAdapter to set data
 		// Convert to data format
 		data := make([][]string, 0, len(eg.entries))
-		for action, widget := range eg.entries {
-			// Try to get HTTP method and summary from ExtraMethodWidget
-			method := "N/A"
+
+		// Sort the keys with custom order: GET, POST, PATCH, PUT, DELETE
+		// Within each method group, sort by path
+		keys := make([]string, 0, len(eg.entries))
+		for key := range eg.entries {
+			keys = append(keys, key)
+		}
+
+		// Custom sort: by method priority, then by path
+		sort.Slice(keys, func(i, j int) bool {
+			// Extract method and path from keys (format: "METHOD:/path/")
+			methodI, pathI := "", ""
+			methodJ, pathJ := "", ""
+
+			if idx := strings.Index(keys[i], ":"); idx >= 0 {
+				methodI = keys[i][:idx]
+				pathI = keys[i][idx+1:]
+			}
+			if idx := strings.Index(keys[j], ":"); idx >= 0 {
+				methodJ = keys[j][:idx]
+				pathJ = keys[j][idx+1:]
+			}
+
+			// Define method priority: GET=1, POST=2, PATCH=3, PUT=4, DELETE=5
+			methodPriority := map[string]int{
+				"GET":    1,
+				"POST":   2,
+				"PATCH":  3,
+				"PUT":    4,
+				"DELETE": 5,
+			}
+
+			priorityI := methodPriority[methodI]
+			priorityJ := methodPriority[methodJ]
+
+			// If priorities are different, sort by priority
+			if priorityI != priorityJ {
+				return priorityI < priorityJ
+			}
+
+			// If same priority, sort by path
+			return pathI < pathJ
+		})
+
+		// Iterate in sorted order
+		for _, key := range keys {
+			widget := eg.entries[key]
+			// Try to get HTTP method, path, and summary from ExtraMethodWidget
+			method := "-"
+			path := ""
 			summary := ""
 			if extraMethodWidget, ok := widget.(*ExtraMethodWidget); ok {
 				method = extraMethodWidget.GetHTTPMethod()
+				path = extraMethodWidget.GetPath()
 				summary = extraMethodWidget.GetSummary()
+			} else {
+				// For custom widgets, use the resource type (which is the key) as the action
+				path = widget.GetExtraResourceType()
+				// Try to get summary from custom widget if it has a GetSummary method
+				if summaryWidget, ok := widget.(interface{ GetSummary() string }); ok {
+					summary = summaryWidget.GetSummary()
+				}
 			}
-			data = append(data, []string{method, action, summary})
+			data = append(data, []string{method, path, summary})
 		}
 		eg.ListAdapter.SetListData(data, eg.GetFuzzyListSearchString())
 		return msg_types.SetDataMsg{}
@@ -295,13 +417,15 @@ func (eg *ExtraWidgetGroup) SetListData() tea.Msg {
 }
 
 func (eg *ExtraWidgetGroup) ViewList() string {
-	if eg.activeExtraWidget == "" {
-		return eg.ListAdapter.ViewList(eg)
-	}
-	return eg.currentExtraWidget().ViewList()
+	// Always show the ExtraWidgetGroup's own list of extra actions
+	// Individual extra widgets (like VipPoolForwarding) don't have a list view
+	return eg.ListAdapter.ViewList(eg)
 }
 
 func (eg *ExtraWidgetGroup) ClearListData() {
+	if eg.activeExtraWidget == "" {
+		return
+	}
 	eg.currentExtraWidget().ClearListData()
 }
 
@@ -533,19 +657,41 @@ func (eg *ExtraWidgetGroup) Details(selectedRowData common.RowData) (tea.Cmd, er
 }
 
 func (eg *ExtraWidgetGroup) Select(selectedRowData common.RowData) (tea.Cmd, error) {
-	// Get the action path from the second column (not the HTTP method from first column)
-	selectedAction := selectedRowData.GetString("action")
-	if _, ok := eg.entries[selectedAction]; !ok {
+	httpMethod := selectedRowData.GetString("method")
+	actionPath := selectedRowData.GetString("action")
+
+	// Try to find the widget by matching the action
+	var uniqueKey string
+	var found bool
+
+	// First, try direct lookup (for custom widgets, the action name IS the key)
+	if _, ok := eg.entries[actionPath]; ok {
+		uniqueKey = actionPath
+		found = true
+		eg.auxlog.Printf("Found widget by direct action lookup: %s", uniqueKey)
+	} else {
+		// For auto-generated widgets, try METHOD:PATH format
+		if httpMethod != "-" && httpMethod != "" {
+			testKey := httpMethod + ":" + actionPath
+			if _, ok := eg.entries[testKey]; ok {
+				uniqueKey = testKey
+				found = true
+				eg.auxlog.Printf("Found widget by METHOD:PATH lookup: %s", uniqueKey)
+			}
+		}
+	}
+
+	if !found {
 		availableActions := slices.Collect(maps.Keys(eg.entries))
 		panic(
 			"ExtraWidgetGroup.Select: selected action '" +
-				selectedAction +
+				actionPath +
 				"' not found in entries. Available actions: " +
 				strings.Join(availableActions, ", "),
 		)
 	}
 
-	eg.SetActiveWidget(selectedAction)
+	eg.SetActiveWidget(uniqueKey)
 	// Initialize the selected widget to its initial mode
 	currentWidget := eg.currentExtraWidget()
 	initialMode := currentWidget.InitialExtraMode()
@@ -564,14 +710,8 @@ func (eg *ExtraWidgetGroup) Select(selectedRowData common.RowData) (tea.Cmd, err
 					eg.auxlog.Printf("Failed to get inputs after select: %v", err)
 				} else {
 					createWidget.SetInputs(inputs)
-
-					// Reset the form to clear any previous values
-					if resetWidget, ok := currentWidget.(interface{ ResetCreate() }); ok {
-						resetWidget.ResetCreate()
-						eg.auxlog.Printf("Post-select: Extra create form reset for fresh state")
-					}
-
-					eg.auxlog.Printf("Post-select: Extra create inputs initialized and reset")
+					// Note: Don't reset the form here as it would clear pre-populated values from parent row data
+					eg.auxlog.Printf("Post-select: Extra create inputs initialized with pre-populated values")
 				}
 			}
 		}
@@ -652,6 +792,38 @@ func (eg *ExtraWidgetGroup) Reset() {
 	eg.CreateAdapter.ResetCreateForm()
 }
 
+// Clean performs cleanup when the widget group is being closed
+// Delegates to LeaveWidget if the active extra widget implements it
+func (eg *ExtraWidgetGroup) Clean() {
+	// Call LeaveWidget which already handles the delegation logic
+	if err := eg.LeaveWidget(); err != nil {
+		eg.auxlog.Printf("Error during ExtraWidgetGroup cleanup: %v", err)
+	}
+	// Reset all widgets
+	eg.Reset()
+}
+
+// LeaveWidget implements the LeaveWidget interface
+// Delegates to the active extra widget if it implements LeaveWidget
+func (eg *ExtraWidgetGroup) LeaveWidget() error {
+	if eg.activeExtraWidget == "" {
+		eg.auxlog.Println("ExtraWidgetGroup.LeaveWidget: no active widget")
+		return nil
+	}
+
+	currentWidget := eg.currentExtraWidget()
+	eg.auxlog.Printf("ExtraWidgetGroup.LeaveWidget: delegating to %s", eg.activeExtraWidget)
+
+	// Check if the active widget implements LeaveWidget
+	if leaveWidget, ok := currentWidget.(common.LeaveWidget); ok {
+		eg.auxlog.Printf("Active widget %s implements LeaveWidget, calling it", eg.activeExtraWidget)
+		return leaveWidget.LeaveWidget()
+	}
+
+	eg.auxlog.Printf("Active widget %s does NOT implement LeaveWidget", eg.activeExtraWidget)
+	return nil
+}
+
 func (eg *ExtraWidgetGroup) ViewDetails() string {
 	return eg.currentExtraWidget().ViewDetails()
 }
@@ -694,17 +866,45 @@ func (eg *ExtraWidgetGroup) ViewPrompt() string {
 
 func (eg *ExtraWidgetGroup) GetKeyBindings() []common.KeyBinding {
 	var keyBindings []common.KeyBinding
+
+	// Check if there's an active widget set first (before calling currentExtraWidget which panics)
+	hasActiveWidget := eg.activeExtraWidget != ""
+	var activeWidget common.ExtraWidget
+	if hasActiveWidget {
+		activeWidget = eg.currentExtraWidget()
+	}
+
 	switch eg.GetExtraMode() {
 	case common.ExtraNavigatorModeList:
-		keyBindings = eg.GetListKeyBindings()
+		if hasActiveWidget && activeWidget != nil {
+			keyBindings = activeWidget.GetListKeyBindings()
+		} else {
+			keyBindings = eg.GetListKeyBindings()
+		}
 	case common.ExtraNavigatorModeCreate:
-		keyBindings = eg.GetCreateKeyBindings()
+		if hasActiveWidget && activeWidget != nil {
+			keyBindings = activeWidget.GetCreateKeyBindings()
+		} else {
+			keyBindings = eg.GetCreateKeyBindings()
+		}
 	case common.ExtraNavigatorModeDelete:
-		keyBindings = eg.GetDeleteKeyBindings()
+		if hasActiveWidget && activeWidget != nil {
+			keyBindings = activeWidget.GetDeleteKeyBindings()
+		} else {
+			keyBindings = eg.GetDeleteKeyBindings()
+		}
 	case common.ExtraNavigatorModeDetails:
-		keyBindings = eg.GetDetailsKeyBindings()
+		// Delegate to active widget for customized details key bindings
+		// This allows widgets like VipPoolForwarding to exclude <ctrl+e>
+		if hasActiveWidget && activeWidget != nil {
+			keyBindings = activeWidget.GetDetailsKeyBindings()
+		} else {
+			keyBindings = eg.GetDetailsKeyBindings()
+		}
 	case common.ExtraNavigatorModePrompt:
-		keyBindings = eg.GetDeleteKeyBindings() // Use same bindings as delete mode (y/n)
+		// Prompt mode doesn't have a method in KeyBindingGetter interface
+		// Always use the group's method
+		keyBindings = eg.GetPromptKeyBindings()
 	}
 
 	return keyBindings
@@ -752,6 +952,15 @@ func (eg *ExtraWidgetGroup) GetDeleteKeyBindings() []common.KeyBinding {
 	}
 	return bindings
 }
+
+func (eg *ExtraWidgetGroup) GetPromptKeyBindings() []common.KeyBinding {
+	return []common.KeyBinding{
+		{Key: "<←/→/tab>", Desc: "navigate"},
+		{Key: "<y/n>", Desc: "quick select"},
+		{Key: "<enter>", Desc: "confirm"},
+		{Key: "<esc>", Desc: "cancel"},
+	}
+}
 func (eg *ExtraWidgetGroup) GetDetailsKeyBindings() []common.KeyBinding {
 	availableBindings := []common.KeyBinding{
 		{Key: "</>", Desc: "search", Generic: true},
@@ -772,6 +981,41 @@ func (eg *ExtraWidgetGroup) GetDetailsKeyBindings() []common.KeyBinding {
 		}
 	}
 	return bindings
+}
+
+// ------------------------------
+// Prompt adapter methods - delegate to current extra widget
+// ------------------------------
+
+// TogglePromptSelection delegates to the active extra widget's prompt adapter
+func (eg *ExtraWidgetGroup) TogglePromptSelection() {
+	if eg.activeExtraWidget == "" {
+		return
+	}
+	if widget, ok := eg.entries[eg.activeExtraWidget].(common.PromptToggleAdapter); ok {
+		widget.TogglePromptSelection()
+	}
+}
+
+// IsPromptNoSelected delegates to the active extra widget's prompt adapter
+func (eg *ExtraWidgetGroup) IsPromptNoSelected() bool {
+	if eg.activeExtraWidget == "" {
+		return false
+	}
+	if widget, ok := eg.entries[eg.activeExtraWidget].(common.PromptSelectionAdapter); ok {
+		return widget.IsPromptNoSelected()
+	}
+	return false
+}
+
+// SetPromptSelection delegates to the active extra widget's prompt adapter
+func (eg *ExtraWidgetGroup) SetPromptSelection(selectNo bool) {
+	if eg.activeExtraWidget == "" {
+		return
+	}
+	if widget, ok := eg.entries[eg.activeExtraWidget].(common.PromptSelectionSetAdapter); ok {
+		widget.SetPromptSelection(selectNo)
+	}
 }
 
 func (eg *ExtraWidgetGroup) GetAllowedExtraNavigatorModes() []common.ExtraNavigatorMode {

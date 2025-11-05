@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"vastix/internal/colors"
 	"strings"
 	"testing"
 	"vastix/internal/database"

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"vastix/internal/client"
+	"vastix/internal/colors"
 	"vastix/internal/database"
 	log "vastix/internal/logging"
 	"vastix/internal/msg_types"
@@ -24,7 +25,7 @@ type Profile struct {
 }
 
 // NewProfile creates a new profile widget
-func NewProfile(db *database.Service) common.Widget {
+func NewProfile(db *database.Service, msgChan chan tea.Msg) common.Widget {
 	resourceType := "profiles"
 	listHeaders := []string{"id", "endpoint", "alias", "vast", "status", "username", "password", "token", "tenant", "api_version"}
 
@@ -34,6 +35,11 @@ func NewProfile(db *database.Service) common.Widget {
 
 	widget.SetParentForBaseWidget(widget, false)
 	return widget
+}
+
+// SetListDataWithContext overrides BaseWidget - context not needed for local DB access
+func (p *Profile) SetListDataWithContext(_ context.Context) tea.Msg {
+	return p.SetListData()
 }
 
 func (p *Profile) SetListData() tea.Msg {
@@ -306,6 +312,17 @@ func (p *Profile) GetKeyBindings() []common.KeyBinding {
 			{Key: "<n>", Desc: "new"},
 			{Key: "<ctrl+d>", Desc: "delete"},
 		}
+
+		// Add extra widget hints if available (includes <x> and numbered shortcuts 1-7)
+		if p.CanUseExtra() {
+			keyBindings = append(keyBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
+			// Add numbered shortcuts for extra actions
+			for _, widget := range p.ShortCuts() {
+				if shortcut := widget.ShortCut(); shortcut != nil {
+					keyBindings = append(keyBindings, *shortcut)
+				}
+			}
+		}
 	case common.NavigatorModeCreate:
 		keyBindings = []common.KeyBinding{
 			{Key: "<tab>", Desc: "next input"},
@@ -313,6 +330,7 @@ func (p *Profile) GetKeyBindings() []common.KeyBinding {
 			{Key: "<ctrl+s>", Desc: "submit"},
 			{Key: "<esc>", Desc: "back"},
 			{Key: "<space>", Desc: "toggle boolean"},
+			{Key: "<ctrl+t>", Desc: "toggle form/json"},
 		}
 	case common.NavigatorModeDelete:
 		keyBindings = []common.KeyBinding{
@@ -344,7 +362,7 @@ func (p *Profile) RenderRow(rowData common.RowData, isSelected bool, colWidth in
 	for i, cell := range styledRow {
 		if strings.Contains(cell, "[active]") && !isSelected {
 			activeNormalStyle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("2")) // Green
+				Foreground(colors.GreenTerm) // Green
 			styledRow[i] = activeNormalStyle.Render(cell)
 		}
 	}

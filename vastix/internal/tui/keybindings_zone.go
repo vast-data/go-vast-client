@@ -2,6 +2,7 @@ package tui
 
 import (
 	"strings"
+	"vastix/internal/colors"
 	"vastix/internal/tui/widgets/common"
 
 	"go.uber.org/zap"
@@ -70,21 +71,27 @@ func (k *KeybindingsZone) View() string {
 
 	// Styles for generic keybindings (different color)
 	genericKeyStyle := lipgloss.NewStyle().
-		Foreground(LightBlue).
+		Foreground(colors.LightBlue).
 		Bold(true)
 
 	// Styles for widget-specific keybindings (current colors)
 	widgetKeyStyle := lipgloss.NewStyle().
-		Foreground(Yellow).
+		Foreground(colors.Yellow).
+		Bold(true)
+
+	// Styles for extra action numbered shortcuts (distinctive color)
+	extraActionKeyStyle := lipgloss.NewStyle().
+		Foreground(colors.HelpKeyExtra).
 		Bold(true)
 
 	widgetDescStyle := lipgloss.NewStyle().
-		Foreground(LightGrey)
+		Foreground(colors.LightGrey)
 
 	// Get current keybindings dynamically using getter function if available
 	currentKeyBindings := k.keyBindings
 	if k.getKeyBindings != nil {
 		currentKeyBindings = k.getKeyBindings()
+	} else {
 	}
 
 	// Separate keybindings into generic and widget-specific
@@ -106,8 +113,8 @@ func (k *KeybindingsZone) View() string {
 		return ""
 	}
 
-	// Build columns with max 5 items per column
-	const itemsPerColumn = 5
+	// Build columns with max 7 items per column (to show all create mode bindings)
+	const itemsPerColumn = 7
 	var columns []string
 
 	for i := 0; i < len(allBindings); i += itemsPerColumn {
@@ -134,14 +141,22 @@ func (k *KeybindingsZone) View() string {
 				Align(lipgloss.Left).
 				Render(kb.Key)
 
-			// Use different styles based on whether it's generic or widget-specific
+			// Use different styles based on the type of keybinding
 			var item string
-			if kb.Generic {
+			if kb.IsExtraAction {
+				// Extra action shortcuts (numbered 1-6) get distinctive color
+				item = lipgloss.JoinHorizontal(lipgloss.Left,
+					extraActionKeyStyle.Render(keyText),
+					widgetDescStyle.Render(" "+kb.Desc),
+				)
+			} else if kb.Generic {
+				// Generic keybindings
 				item = lipgloss.JoinHorizontal(lipgloss.Left,
 					genericKeyStyle.Render(keyText),
 					widgetDescStyle.Render(" "+kb.Desc),
 				)
 			} else {
+				// Widget-specific keybindings
 				item = lipgloss.JoinHorizontal(lipgloss.Left,
 					widgetKeyStyle.Render(keyText),
 					widgetDescStyle.Render(" "+kb.Desc),

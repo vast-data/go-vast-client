@@ -414,7 +414,7 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	// Fill in each resource, pointing back to the same rest
 	rest.ActiveDirectories = newUntypedResource[untyped.ActiveDirectory](rest, "activedirectory", C, L, R, U, D)
 	rest.Alarms = newUntypedResource[untyped.Alarm](rest, "alarms", L, R, U, D)
-	rest.Analytics = newUntypedResource[untyped.Analytics](rest, "analytics", L)
+	rest.Analytics = newUntypedResource[untyped.Analytics](rest, "analytics", L, R)
 	rest.ApiTokens = newUntypedResource[untyped.ApiToken](rest, "apitokens", C, L, R, U)
 	rest.BasicSettings = newUntypedResource[untyped.BasicSettings](rest, "basicsettings", L)
 	rest.BGPConfigs = newUntypedResource[untyped.BGPConfig](rest, "bgpconfigs", C, L, R, U, D)
@@ -495,7 +495,7 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	rest.Schemas = newUntypedResource[untyped.Schema](rest, "schemas", C, L)
 	rest.SettingDiffs = newUntypedResource[untyped.SettingDiff](rest, "settingdiff", R)
 	rest.Snapshots = newUntypedResource[untyped.Snapshot](rest, "snapshots", C, L, R, U, D)
-	rest.SnapshotPolicies = newUntypedResource[untyped.SnapshotPolicy](rest, "snapshots", C, L, R, U, D)
+	rest.SnapshotPolicies = newUntypedResource[untyped.SnapshotPolicy](rest, "snapshotpolicies", C, L, R, U, D)
 	rest.Ssds = newUntypedResource[untyped.Ssd](rest, "ssds", L, R, U, D)
 	rest.SubnetManagers = newUntypedResource[untyped.SubnetManager](rest, "subnetmanagers", C, L, R, U, D)
 	rest.SupportBundles = newUntypedResource[untyped.SupportBundles](rest, "supportbundles", C, L, R, U, D)

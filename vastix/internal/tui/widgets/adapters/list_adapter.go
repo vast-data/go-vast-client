@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"vastix/internal/colors"
 	"fmt"
 	"sort"
 	"strings"
@@ -21,12 +22,12 @@ import (
 
 // Colors - use the same colors as the main TUI package
 var (
-	Blue      = lipgloss.Color("63")      // Main TUI Blue for active state
-	White     = lipgloss.Color("#ffffff") // Same as main TUI White
-	Black     = lipgloss.Color("#000000") // Same as main TUI Black
-	LightGrey = lipgloss.Color("245")     // Same as main TUI LightGrey
-	DarkGrey  = lipgloss.Color("#606362") // Same as main TUI DarkGrey
-	Yellow    = lipgloss.Color("#DBBD70") // Same as main TUI Yellow
+	Blue      = colors.Blue      // Main TUI Blue for active state
+	White     = colors.White // Same as main TUI White
+	Black     = colors.Black // Same as main TUI Black
+	LightGrey = colors.LightGrey     // Same as main TUI LightGrey
+	DarkGrey  = colors.DarkGrey // Same as main TUI DarkGrey
+	Yellow    = colors.Yellow // Same as main TUI Yellow
 )
 
 type ListAdapter struct {
@@ -324,7 +325,7 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 	// Check if there's no data to display
 	if len(lr.filteredData) == 0 {
 		// Show "No content" message with same styling as details adapter
-		grayStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("245")) // Light gray color
+		grayStyle := lipgloss.NewStyle().Foreground(colors.LightGrey) // Light gray color
 		paddingStyle := lipgloss.NewStyle().
 			Padding(0, 0, 0, 2) // top: 0, right: 0, bottom: 0, left: 2
 
@@ -400,8 +401,8 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 
 	// Create resource type label with styling - use same orange as original
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("214")). // Orange background (same as original)
-		Foreground(lipgloss.Color("0"))    // Black text
+		Background(colors.Orange). // Orange background (same as original)
+		Foreground(colors.BlackTerm)    // Black text
 
 	// Use predefined title if available, otherwise use resourceType
 	var titleText string
@@ -432,8 +433,8 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 			}
 
 			labelStyle := lipgloss.NewStyle().
-				Background(lipgloss.Color("22")). // Muted green background
-				Foreground(lipgloss.Color("0"))   // Black text
+				Background(colors.DarkGreenBlue). // Muted green background
+				Foreground(colors.BlackTerm)   // Black text
 
 			label := labelStyle.Render(fmt.Sprintf(" fuzzy-search=%s ", fuzzySearch))
 			resourceTypeLabel = fmt.Sprintf("%s %s", resourceTypeLabel, label)
@@ -463,8 +464,8 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 
 			// Create server labels for each parameter
 			serverLabelStyle := lipgloss.NewStyle().
-				Background(lipgloss.Color("214")). // Yellow background
-				Foreground(lipgloss.Color("0"))    // Black text
+				Background(colors.Orange). // Yellow background
+				Foreground(colors.BlackTerm)    // Black text
 
 			for _, paramStr := range paramStrings {
 				serverLabel := serverLabelStyle.Render(fmt.Sprintf(" %s ", paramStr))

@@ -78,7 +78,6 @@ func (wn *ExtraWidgetNavigator) GetExtraWidget() ExtraWidget {
 
 func (wn *ExtraWidgetNavigator) SetExtraMode(mode ExtraNavigatorMode) {
 	if wn.mode == mode {
-		wn.auxlog.Printf("EXTRA WIDGET NAVIGATOR mode already set to %s", mode.String())
 		return
 	}
 	wn.mode = mode
@@ -98,14 +97,7 @@ func (wn *ExtraWidgetNavigator) SetExtraMode(mode ExtraNavigatorMode) {
 						return
 					}
 					createWidget.SetInputs(inputs)
-
-					// Reset the form to clear any previous values
-					if resetWidget, ok := wn.widget.(interface{ ResetCreate() }); ok {
-						resetWidget.ResetCreate()
-						wn.auxlog.Printf("Extra create form reset for fresh state")
-					}
-
-					wn.auxlog.Printf("Extra create inputs initialized and reset for navigation")
+					wn.auxlog.Printf("Extra create inputs initialized with pre-populated values for navigation")
 				}
 			}
 		} else {
@@ -153,6 +145,20 @@ func (wn *ExtraWidgetNavigator) setModeIfSupported(m ExtraNavigatorMode) {
 // handleEscKey provides common ESC handling for all extra modes
 func (wn *ExtraWidgetNavigator) handleEscKey() (tea.Cmd, bool) {
 	wn.auxlog.Println("ESC pressed in extra widget, letting it bubble up to WidgetNavigator")
+
+	// Debug: log the actual type of the widget
+	wn.auxlog.Printf("Widget type: %T, Widget name: %s", wn.widget, wn.widget.GetName())
+
+	// Check if widget implements LeaveWidget interface for cleanup
+	if leaveWidget, ok := wn.widget.(LeaveWidget); ok {
+		wn.auxlog.Println("Widget implements LeaveWidget, calling LeaveWidget()")
+		if err := leaveWidget.LeaveWidget(); err != nil {
+			wn.auxlog.Printf("Error leaving widget: %v", err)
+		}
+	} else {
+		wn.auxlog.Println("Widget does NOT implement LeaveWidget interface")
+	}
+
 	wn.widget.Reset()
 	return nil, false // Don't handle it here, let it bubble up
 }
@@ -251,6 +257,8 @@ func (wn *ExtraWidgetNavigator) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 			if adapter, ok := any(wn.widget).(interface{ IsEditingJSON() bool }); ok && adapter.IsEditingJSON() {
 				// In JSON editing mode, handle special keys
 				switch msg.String() {
+				case "esc":
+					return wn.handleEscKey()
 				case "ctrl+t":
 					// Toggle back to form mode
 					wn.auxlog.Println("Toggle back to form mode from JSON")
@@ -461,23 +469,52 @@ func (wn *ExtraWidgetNavigator) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch msg.String() {
-			case "y", "Y", "enter":
-				// Confirm prompt action - call custom action handler
-				wn.auxlog.Println("Prompt confirmed")
-				if adapter, ok := any(wn.widget).(CreateFromInputsAdapter); ok {
-					// Use CreateFromInputsAdapter to handle the confirmed action
-					cmd := adapter.CreateFromInputsDo(wn.widget)
-
-					wn.setModeIfSupported(ExtraNavigatorModeDetails)
-					return cmd, true
-				} else {
-					panic("ExtraWidgetNavigator: widget does not implement CreateFromInputsAdapter interface")
+			case "left", "right", "tab":
+				// Toggle between Yes/No buttons using PromptAdapter
+				if promptToggle, ok := any(wn.widget).(PromptToggleAdapter); ok {
+					promptToggle.TogglePromptSelection()
+					return nil, true
 				}
-			case "n", "N":
-				// Cancel prompt and return to list mode
-				wn.auxlog.Println("Prompt canceled, returning to list mode")
-				wn.setModeIfSupported(ExtraNavigatorModeList)
+				return nil, false
+			case "y", "Y":
+				// Select "Yes" explicitly
+				if promptSelection, ok := any(wn.widget).(PromptSelectionSetAdapter); ok {
+					promptSelection.SetPromptSelection(false) // false = Yes
+				}
 				return nil, true
+			case "n", "N":
+				// Select "No" explicitly
+				if promptSelection, ok := any(wn.widget).(PromptSelectionSetAdapter); ok {
+					promptSelection.SetPromptSelection(true) // true = No
+				}
+				return nil, true
+			case "enter":
+				// Confirm based on current selection
+				var shouldProceed bool
+				if promptSelection, ok := any(wn.widget).(PromptSelectionAdapter); ok {
+					shouldProceed = !promptSelection.IsPromptNoSelected()
+				} else {
+					shouldProceed = true // Default to Yes if adapter not available
+				}
+
+				if shouldProceed {
+					// Confirm prompt action - call custom action handler
+					wn.auxlog.Println("Prompt confirmed")
+					if adapter, ok := any(wn.widget).(CreateFromInputsAdapter); ok {
+						// Use CreateFromInputsAdapter to handle the confirmed action
+						cmd := adapter.CreateFromInputsDo(wn.widget)
+
+						wn.setModeIfSupported(ExtraNavigatorModeDetails)
+						return cmd, true
+					} else {
+						panic("ExtraWidgetNavigator: widget does not implement CreateFromInputsAdapter interface")
+					}
+				} else {
+					// User selected "No", cancel and return to list
+					wn.auxlog.Println("Prompt canceled (No selected), returning to list mode")
+					wn.setModeIfSupported(ExtraNavigatorModeList)
+					return nil, true
+				}
 			case "esc":
 				return wn.handleEscKey()
 			}

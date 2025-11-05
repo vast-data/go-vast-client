@@ -18,6 +18,7 @@ type Widget interface {
 	GetName() string                              // Returns the name of the widget, typically used for display purposes
 	Init() tea.Msg                                // Initializes the widget, typically called once at startup
 	Reset()                                       // Resets the widget to its initial state
+	Clean()                                       // Cleans up widget resources (calls LeaveWidget if in extra mode)
 	GetAllowedNavigatorModes() []NavigatorMode    // Returns a list of allowed navigator modes for this widget
 	GetNotAllowedNavigatorModes() []NavigatorMode // Returns a list of not allowed navigator modes for this widget
 	GetResourceType() string                      // Returns the type of resource this widget represents
@@ -209,6 +210,11 @@ type PromptSelectionAdapter interface {
 	IsPromptNoSelected() bool // Returns true if "No" button is currently selected
 }
 
+// PromptSelectionSetAdapter interface for setting button selection in prompts
+type PromptSelectionSetAdapter interface {
+	SetPromptSelection(selectNo bool) // Sets button selection (true for No, false for Yes)
+}
+
 type SearchableWidget interface {
 	IsServerSearchable() bool             // Returns true if the widget can currently search its data on the server
 	IsFuzzySearchable() bool              // Returns true if the widget can currently apply fuzzy search to its local data
@@ -223,6 +229,14 @@ type SearchableWidget interface {
 	ClearFuzzyDetailsSearch()             // Clears the local fuzzy search query for details filtering
 	ClearServerSearchParams()             // Clears the server-side search parameters string
 	GetServerParams() *vast_client.Params // Returns the current server-side search parameters as vast_client.Params
+}
+
+// ------------------------
+// LeaveWidget interface for widgets that need cleanup when user leaves them
+// -------------------------
+
+type LeaveWidget interface {
+	LeaveWidget() error // Called when the user leaves the widget (e.g., by pressing escape)
 }
 
 // InputField Common interface for all input types
@@ -246,9 +260,10 @@ type CreateFromInputs interface {
 }
 
 type KeyBinding struct {
-	Key     string // Key combination (e.g., "ctrl+c")
-	Desc    string // Description of the key binding
-	Generic bool   // Whether this is a generic key binding (IOW move to another resource or adjusting search settings)
+	Key           string // Key combination (e.g., "ctrl+c")
+	Desc          string // Description of the key binding
+	Generic       bool   // Whether this is a generic key binding (IOW move to another resource or adjusting search settings)
+	IsExtraAction bool   // Whether this is a numbered extra action shortcut (for special coloring)
 }
 
 // ------------------------
@@ -344,33 +359,23 @@ func NewSearchOnlyKeyRestrictions() KeyRestrictions {
 // -------------------------
 
 type VastAPIGetter interface {
-	API(rest *vast_client.VMSRest) vast_client.VastResourceAPI
+	API(rest *vast_client.VMSRest) vast_client.VastResourceAPIWithContext
 }
 
-type VastResourceGetter interface {
-	Get(*vast_client.VMSRest) (vast_client.Record, error)
-}
+// ------------------------
+// VAST Resource Callbacks
+// -------------------------
 
-type VastResourceDetailsGetter interface {
-	GetDetails(*vast_client.VMSRest, RowData) (vast_client.Record, error)
-}
+// Callback functions for VAST resource operations
 
-type VastResourceListGetter interface {
-	List(*vast_client.VMSRest) (vast_client.RecordSet, error)
-}
+type ListFunc func(*vast_client.VMSRest) (vast_client.RecordSet, error)
 
-type VastResourceCreator interface {
-	Create(*vast_client.VMSRest) (tea.Msg, error)
-}
+type GetDetailsFunc func(*vast_client.VMSRest, RowData) (vast_client.Record, error)
 
-type BeforeVastResourceCreator interface {
-	BeforeCreate(params vast_client.Params) error
-}
+type CreateFunc func(*vast_client.VMSRest) (tea.Msg, error)
 
-type AfterVastResourceCreator interface {
-	AfterCreate(record vast_client.Record) (tea.Msg, error)
-}
+type BeforeCreateFunc func(params vast_client.Params) error
 
-type VastResourceDeleter interface {
-	Delete(*vast_client.VMSRest, RowData) (tea.Msg, error)
-}
+type AfterCreateFunc func(record vast_client.Record, parentRowData RowData) (tea.Msg, error)
+
+type DeleteFunc func(*vast_client.VMSRest, RowData) (tea.Msg, error)

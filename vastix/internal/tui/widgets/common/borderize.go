@@ -1,6 +1,7 @@
 package common
 
 import (
+	"vastix/internal/colors"
 	"fmt"
 	"strings"
 
@@ -19,13 +20,10 @@ const (
 	BottomRightBorder
 )
 
-// Colors - copied from main TUI package
+// Use centralized colors from colors package
 var (
-	Blue                  = lipgloss.Color("63")
-	InactivePreviewBorder = lipgloss.AdaptiveColor{
-		Dark:  "244",
-		Light: "250",
-	}
+	Blue                  = colors.Blue
+	InactivePreviewBorder = colors.InactivePreviewBorder
 )
 
 // GlobalSpinnerState interface for accessing spinner state

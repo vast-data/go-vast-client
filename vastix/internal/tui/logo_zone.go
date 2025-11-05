@@ -50,7 +50,6 @@ func (l *LogoZone) View() string {
 		return ""
 	}
 
-	// VAST text in k9s geometric ASCII art style
 	bigText := []string{
 		"____   ____  ___   _____ _____ ",
 		"\\   \\ /   / /   \\ /  ___/_   _|",

@@ -87,8 +87,7 @@ func (tc *TickerControl) Disable() {
 	}
 }
 
-func SetupSubscriptions(ctx context.Context, cancel context.CancelFunc) (chan tea.Msg, *SpinnerControl, *TickerControl, func()) {
-	ch := make(chan tea.Msg)
+func SetupSubscriptions(ctx context.Context, cancel context.CancelFunc, ch chan tea.Msg) (*SpinnerControl, *TickerControl, func()) {
 	wg := sync.WaitGroup{}
 	auxlog := logging.GetAuxLogger()
 
@@ -113,9 +112,6 @@ func SetupSubscriptions(ctx context.Context, cancel context.CancelFunc) (chan te
 						suspended = suspend
 						if !suspend {
 							spinner.Reset() // Reset spinner state when resuming
-							auxlog.Println("🟢 Spinner resumed")
-						} else {
-							auxlog.Println("🟡 Spinner suspended")
 						}
 					case <-spinnerCtrl.ctx.Done():
 						auxlog.Println("Spinner goroutine received context cancellation")
@@ -140,9 +136,6 @@ func SetupSubscriptions(ctx context.Context, cancel context.CancelFunc) (chan te
 						suspended = suspend
 						if suspend {
 							spinner.Reset() // Reset spinner state when suspending
-							auxlog.Println("🟡 Spinner suspended")
-						} else {
-							auxlog.Println("🟢 Spinner resumed")
 						}
 					case <-spinnerCtrl.ctx.Done():
 						auxlog.Println("Spinner goroutine received context cancellation")
@@ -176,7 +169,6 @@ func SetupSubscriptions(ctx context.Context, cancel context.CancelFunc) (chan te
 					select {
 					case <-dataTicker.C:
 						// Send TickerSetDataMsg every 30 seconds
-						auxlog.Println("Data ticker fired - sending TickerSetDataMsg")
 						select {
 						case ch <- msg_types.TickerSetDataMsg{}:
 						case <-ctx.Done():
@@ -185,20 +177,13 @@ func SetupSubscriptions(ctx context.Context, cancel context.CancelFunc) (chan te
 						}
 					case <-profileTicker.C:
 						// Send TickerUpdateProfileMsg every 5 minutes
-						auxlog.Println("Profile ticker fired - sending TickerUpdateProfileMsg")
 						select {
 						case ch <- msg_types.TickerUpdateProfileMsg{}:
 						case <-ctx.Done():
-							auxlog.Println("Ticker goroutine received context cancellation while sending TickerUpdateProfileMsg")
 							return
 						}
 					case enable := <-tickerCtrl.enabled:
 						enabled = enable
-						if enable {
-							auxlog.Println("Tickers enabled")
-						} else {
-							auxlog.Println("Tickers disabled")
-						}
 					case <-ctx.Done():
 						auxlog.Println("Ticker goroutine received context cancellation")
 						return
@@ -208,11 +193,6 @@ func SetupSubscriptions(ctx context.Context, cancel context.CancelFunc) (chan te
 					select {
 					case enable := <-tickerCtrl.enabled:
 						enabled = enable
-						if enable {
-							auxlog.Println("Tickers enabled")
-						} else {
-							auxlog.Println("Tickers disabled")
-						}
 					case <-ctx.Done():
 						auxlog.Println("Ticker goroutine received context cancellation")
 						return
@@ -222,7 +202,7 @@ func SetupSubscriptions(ctx context.Context, cancel context.CancelFunc) (chan te
 		}()
 	}
 
-	return ch, spinnerCtrl, tickerCtrl, func() {
+	return spinnerCtrl, tickerCtrl, func() {
 		auxlog.Println("Starting cleanup of background goroutines (spinner + ticker)")
 		// Cancel context first to signal goroutines to stop
 		cancel()

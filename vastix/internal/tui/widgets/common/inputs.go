@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"vastix/internal/colors"
 	log "vastix/internal/logging"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -219,12 +220,12 @@ func (b *BoolInput) View() string {
 	if b.value {
 		// ON state: Green pill with white circle on the right
 		pillStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("42")). // Bright green
-			Foreground(lipgloss.Color("42")). // Hidden text
+			Background(colors.BrightGreen). // Bright green
+			Foreground(colors.BrightGreen). // Hidden text
 			Bold(true)
 		switchStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("15")). // White circle
-			Foreground(lipgloss.Color("15")). // White text
+			Background(colors.WhiteTerm). // White circle
+			Foreground(colors.WhiteTerm). // White text
 			Bold(true)
 
 		// Create rounded pill shape: ●●●○
@@ -235,12 +236,12 @@ func (b *BoolInput) View() string {
 	} else {
 		// OFF state: Light gray pill with white circle on the left
 		switchStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("15")). // White circle
-			Foreground(lipgloss.Color("15")). // White text
+			Background(colors.WhiteTerm). // White circle
+			Foreground(colors.WhiteTerm). // White text
 			Bold(true)
 		pillStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("250")). // Light gray
-			Foreground(lipgloss.Color("250")). // Hidden text
+			Background(colors.LighterGrey). // Light gray
+			Foreground(colors.LighterGrey). // Hidden text
 			Bold(true)
 
 		// Create rounded pill shape: ○●●●
@@ -259,7 +260,7 @@ func (b *BoolInput) View() string {
 			description = description[:61] + "..."
 		}
 
-		dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+		dimStyle := lipgloss.NewStyle().Foreground(colors.Grey240)
 		dimmedDescription := dimStyle.Render(description)
 		return toggleSwitch + "  " + dimmedDescription
 	}
@@ -654,10 +655,10 @@ func (a *PrimitivesArrayInput) getAllValues() []string {
 func (a *PrimitivesArrayInput) View() string {
 	// Style for completed chips (green background like enabled checkbox) with black text
 	chipStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("42")). // Bright green
-		Foreground(lipgloss.Color("0")).  // Black text
-		Padding(0, 1).                    // Small padding around text
-		MarginRight(1)                    // Space between chips
+		Background(colors.BrightGreen). // Bright green
+		Foreground(colors.BlackTerm).   // Black text
+		Padding(0, 1).                  // Small padding around text
+		MarginRight(1)                  // Space between chips
 
 	var result strings.Builder
 
@@ -1094,7 +1095,7 @@ func (l *ComplexArrayInput) View() string {
 	if !l.IsExpanded {
 		// Show collapsed view with hint
 		hint := " (collapsed array)"
-		dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+		dimStyle := lipgloss.NewStyle().Foreground(colors.Grey240)
 		dimmedHint := dimStyle.Render(hint)
 
 		// Convert interface{} values to strings for display
@@ -1116,16 +1117,16 @@ func (l *ComplexArrayInput) View() string {
 	// Tab styles similar to bubbletea example
 	inactiveTabStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), true, true, false, true).
-		BorderForeground(lipgloss.Color("240")).
+		BorderForeground(colors.Grey240).
 		Padding(0, 1).
-		Foreground(lipgloss.Color("250"))
+		Foreground(colors.LighterGrey)
 
 	activeTabStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), true, true, false, true).
-		BorderForeground(lipgloss.Color("39")). // Blue
+		BorderForeground(colors.DeepBlue). // Blue
 		Padding(0, 1).
-		Foreground(lipgloss.Color("15")). // White
-		Background(lipgloss.Color("18"))  // Dark blue
+		Foreground(colors.WhiteTerm). // White
+		Background(colors.DarkBlue)   // Dark blue
 
 	// Render each tab
 	tabCount := len(l.ItemInputs)
@@ -1150,7 +1151,7 @@ func (l *ComplexArrayInput) View() string {
 	tabRow := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 
 	// Add controls hint with array type information
-	controlsStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	controlsStyle := lipgloss.NewStyle().Foreground(colors.Grey240)
 
 	// Get array type information
 	var itemType string = "unknown"
@@ -1176,7 +1177,7 @@ func (l *ComplexArrayInput) View() string {
 		itemType = "string"
 	}
 
-	arrayTypeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	arrayTypeStyle := lipgloss.NewStyle().Foreground(colors.Grey240)
 	arrayTypeText := arrayTypeStyle.Render("[array[" + itemType + "]]")
 
 	controls := controlsStyle.Render("  [+] add  [-] remove  [</>] navigate") + "  " + arrayTypeText
@@ -1217,20 +1218,20 @@ func (l *ComplexArrayInput) View() string {
 			}
 
 			// Style the type text in gray
-			typeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+			typeStyle := lipgloss.NewStyle().Foreground(colors.Grey240)
 			styledType := typeStyle.Render(typeText)
 
 			var label string
 			if wrapper.Required {
-				redStar := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5353")).Render("*")
-				yellowColon := lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render(":")
+				redStar := lipgloss.NewStyle().Foreground(colors.Red).Render("*")
+				yellowColon := lipgloss.NewStyle().Foreground(colors.Orange).Render(":")
 				label = labelText + redStar + styledType + yellowColon
 			} else {
 				label = labelText + styledType + ":"
 			}
 
 			// Create label row
-			labelRow := lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render(label)
+			labelRow := lipgloss.NewStyle().Foreground(colors.Orange).Render(label)
 			formRows = append(formRows, labelRow)
 
 			// Create input row
@@ -1243,7 +1244,7 @@ func (l *ComplexArrayInput) View() string {
 	// Content box style
 	contentStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, true, true, true).
-		BorderForeground(lipgloss.Color("39")).
+		BorderForeground(colors.DeepBlue).
 		Padding(0, 1).
 		Width(40) // Fixed width for consistency
 
@@ -2324,7 +2325,9 @@ func createInputFromDefinition(def InputDefinition, onlyPrimitives bool) (InputW
 			// Skip arrays of objects or nested arrays entirely
 
 			if def.Required {
-				panic(fmt.Sprintf("cannot skip required array field '%s'", def.Name))
+				log.Warn("Skipping required array field (not supported yet)",
+					zap.String("field_name", def.Name),
+					zap.String("reason", "Arrays of objects or nested arrays are not supported"))
 			}
 
 			return InputWrapper{}, SkipDefinition{
@@ -2369,7 +2372,9 @@ func createInputFromDefinition(def InputDefinition, onlyPrimitives bool) (InputW
 			} else if def.Description != "" {
 				placeholder = def.Description
 			} else {
-				placeholder = fmt.Sprintf("Enter %s values separated by commas", strings.TrimPrefix(arrayType, "array["))
+				typ := strings.TrimPrefix(arrayType, "array[")
+				typ = strings.TrimSuffix(typ, "]")
+				placeholder = fmt.Sprintf("Enter %s values separated by commas", typ)
 			}
 
 			// Create PrimitivesArrayInput with type information and placeholder

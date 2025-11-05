@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"log"
+	"strings"
 	logging "vastix/internal/logging"
 	"vastix/internal/msg_types"
 
@@ -75,10 +76,8 @@ func (wn *WidgetNavigator) GetWidget() Widget {
 
 func (wn *WidgetNavigator) SetMode(mode NavigatorMode) {
 	if wn.mode == mode {
-		wn.auxlog.Printf("🟦 WIDGET_NAVIGATOR: mode already set to %s", mode.String())
 		return
 	}
-	wn.auxlog.Printf("🟦 WIDGET_NAVIGATOR: setting mode to %s for widget %T", mode.String(), wn.widget)
 	wn.mode = mode
 }
 
@@ -151,16 +150,11 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 	currentMode := wn.GetMode()
 	logging.Debug("Navigate called", zap.String("mode", currentMode.String()), zap.Any("msg_type", msg))
 
-	// Add trace logging for full navigation chain
-	wn.auxlog.Printf("WIDGET_NAVIGATOR: widget=%T mode=%s msg=%T", wn.widget, currentMode.String(), msg)
-
 	switch currentMode {
 	case NavigatorModeList:
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
-			wn.auxlog.Printf("WIDGET_NAVIGATOR List mode: key='%s'", msg.String())
 			if _, ok := wn.NotAllowedListKeys[msg.String()]; ok {
-				wn.auxlog.Printf("WIDGET_NAVIGATOR: Ignoring blocked key in list mode: '%s'", msg.String())
 				logging.Debug("Ignoring key in list mode", zap.String("key", msg.String()))
 				return nil // Ignore keys that are not allowed in list mode
 			}
@@ -225,6 +219,15 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 					}
 				}
 				if adapter, ok := any(wn.widget).(DetailsAdapter); ok && adapter.DetailsOnSelect() {
+					// Check if the widget supports READ operations before navigating to details
+					supportsRead := true
+					if checkReadSupport, ok := any(wn.widget).(interface{ SupportsReadOperation() bool }); ok {
+						supportsRead = checkReadSupport.SupportsReadOperation()
+					}
+					if !supportsRead {
+						logging.Debug("Ignoring details navigation: widget does not support READ operations")
+						return nil
+					}
 					wn.SetModeMust(NavigatorModeDetails)
 					return adapter.DetailsDo(wn.widget)
 				}
@@ -239,6 +242,17 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 			case "x":
 				if extraWidget, ok := wn.widget.(ExtraWidget); ok {
 					if extraWidget.CanUseExtra() {
+						// Capture the parent widget's selected row data before switching to extra mode
+						if getter, ok := wn.widget.(interface{ GetSelectedRowData() RowData }); ok {
+							selectedRowData := getter.GetSelectedRowData()
+							// Set on the parent widget
+							extraWidget.SetSelectedRowData(selectedRowData)
+							// Also set on the ExtraWidgetGroup if accessible
+							if extraGroup, ok := extraWidget.GetExtraWidget().(interface{ SetSelectedRowData(RowData) }); ok {
+								extraGroup.SetSelectedRowData(selectedRowData)
+							}
+						}
+
 						wn.SetModeMust(NavigatorModeExtra)
 						return msg_types.ProcessWithSpinner(extraWidget.Init)
 
@@ -511,28 +525,47 @@ func (wn *WidgetNavigator) handleExtraWidgetShortcuts(key string) tea.Cmd {
 	shortcuts := wn.widget.ShortCuts()
 
 	if widget, found := shortcuts[key]; found {
-		logging.Debug("Extra widget shortcut matched",
-			zap.String("key", key),
-			zap.String("widget", widget.GetExtraResourceType()))
+		// Capture the parent widget's selected row data before switching to extra mode
+		if getter, ok := wn.widget.(interface{ GetSelectedRowData() RowData }); ok {
+			selectedRowData := getter.GetSelectedRowData()
+			if extraWidget, ok := wn.widget.(ExtraWidget); ok {
+				// Set on the parent widget
+				extraWidget.SetSelectedRowData(selectedRowData)
+				// Also set on the ExtraWidgetGroup if accessible
+				if extraGroup, ok := extraWidget.GetExtraWidget().(interface{ SetSelectedRowData(RowData) }); ok {
+					extraGroup.SetSelectedRowData(selectedRowData)
+				}
+			}
+		}
 
 		// Switch to extra mode
 		wn.SetModeMust(NavigatorModeExtra)
 
 		extraResourceType := widget.GetExtraResourceType()
-		// Use NewRowData instead of direct struct initialization for proper key handling
-		rowData := NewRowData([]string{"action"}, []string{extraResourceType})
 
-		// Call Select on the main widget (which implements DetailsWidget), not on the extra widget
+		// extraResourceType is in format "METHOD:PATH" (e.g., "GET:/users/query/")
+		// Split it into method and path for the RowData
+		var method, path string
+		if idx := strings.Index(extraResourceType, ":"); idx >= 0 {
+			method = extraResourceType[:idx]
+			path = extraResourceType[idx+1:]
+		} else {
+			// Fallback if no colon found (shouldn't happen)
+			path = extraResourceType
+		}
+
+		// Create RowData with both method and action columns
+		rowData := NewRowData([]string{"method", "action"}, []string{method, path})
+
+		// IMPORTANT: Call Select synchronously to activate the widget BEFORE rendering
+		// This ensures the View() will show the activated widget, not the list
 		if detailsWidget, ok := any(wn.widget).(DetailsWidget); ok {
-			if cmd, err := detailsWidget.Select(rowData); err != nil {
-				logging.Debug("Failed to select extra widget",
-					zap.String("resourceType", extraResourceType),
-					zap.Error(err))
+			if _, err := detailsWidget.Select(rowData); err != nil {
 				return nil
-			} else {
-				// Return the command from Select and also initialize the specific extra widget
-				return tea.Batch(cmd, msg_types.ProcessWithSpinner(widget.Init))
 			}
+			// Select has already activated the widget synchronously
+			// Just return the widget Init command
+			return msg_types.ProcessWithSpinner(widget.Init)
 		}
 
 		// Fallback: just initialize the widget if Select is not available

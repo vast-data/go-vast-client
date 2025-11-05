@@ -155,6 +155,9 @@ type ApiToken struct {
 type SshConnection struct {
 	gorm.Model
 
+	// ProfileID links this SSH connection to a specific profile
+	ProfileID uint `json:"profile_id" gorm:"not null;index"`
+
 	// Name is the arbitrary connection name (required, not empty)
 	Name string `json:"name" gorm:"not null;size:255"`
 
@@ -172,4 +175,15 @@ type SshConnection struct {
 
 	// SshPort is the SSH port (optional, defaults to 22)
 	SshPort int `json:"ssh_port" gorm:"default:22"`
+
+	// Profile is the associated profile (for GORM relationships)
+	Profile Profile `json:"-" gorm:"foreignKey:ProfileID"`
+}
+
+// SudoPassword represents the stored sudo password for the current local user
+type SudoPassword struct {
+	gorm.Model
+
+	// Password is the sudo password for the current user
+	Password string `json:"password" gorm:"not null"`
 }

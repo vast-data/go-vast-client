@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"vastix/internal/colors"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -31,6 +32,9 @@ type DetailsAdapter struct {
 	content       string // Content to display in the viewport
 	ready         bool
 	width, height int
+
+	// Popup input support
+	popupInput *PopupInput
 }
 
 // NewDetailsAdapter creates a new details adapter
@@ -38,6 +42,7 @@ func NewDetailsAdapter(db *database.Service, resourceType string) *DetailsAdapte
 	adapter := &DetailsAdapter{
 		db:           db,
 		resourceType: resourceType,
+		popupInput:   NewPopupInput(),
 	}
 	return adapter
 }
@@ -48,6 +53,7 @@ func NewDetailsAdapterWithPredefinedTitle(db *database.Service, resourceType, ti
 		db:              db,
 		resourceType:    resourceType,
 		predefinedTitle: title,
+		popupInput:      NewPopupInput(),
 	}
 	return adapter
 }
@@ -93,8 +99,90 @@ func (da *DetailsAdapter) SetContent(rawContent any) {
 	}
 }
 
+// Write implements io.Writer interface for streaming logs to the viewport
+// Applies left padding and gray color styling to log lines
+func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
+	text := string(p)
+
+	// Apply styling: left padding and gray color
+	leftPadding := "  "                                                // 2 spaces left padding
+	grayStyle := lipgloss.NewStyle().Foreground(colors.Grey240) // Gray color
+
+	lines := strings.Split(text, "\n")
+	var styledLines []string
+
+	for _, line := range lines {
+		if line == "" {
+			// Keep empty lines as-is
+			styledLines = append(styledLines, line)
+		} else {
+			// Apply padding and gray color
+			styledLine := leftPadding + grayStyle.Render(line)
+			styledLines = append(styledLines, styledLine)
+		}
+	}
+
+	styledText := strings.Join(styledLines, "\n")
+	da.content += styledText
+
+	if da.ready {
+		da.viewport.SetContent(da.content)
+		// Auto-scroll to bottom when new content is written
+		da.viewport.GotoBottom()
+	}
+
+	return len(p), nil
+}
+
+// AppendContent appends a string to the current content
+// Applies left padding and gray color styling to log lines
+func (da *DetailsAdapter) AppendContent(text string) {
+	// Apply styling: left padding and gray color
+	leftPadding := "  "                                                // 2 spaces left padding
+	grayStyle := lipgloss.NewStyle().Foreground(colors.Grey240) // Gray color
+
+	lines := strings.Split(text, "\n")
+	var styledLines []string
+
+	for _, line := range lines {
+		if line == "" {
+			// Keep empty lines as-is
+			styledLines = append(styledLines, line)
+		} else {
+			// Apply padding and gray color
+			styledLine := leftPadding + grayStyle.Render(line)
+			styledLines = append(styledLines, styledLine)
+		}
+	}
+
+	styledText := strings.Join(styledLines, "\n")
+	da.content += styledText
+
+	if da.ready {
+		da.viewport.SetContent(da.content)
+		da.viewport.GotoBottom()
+	}
+}
+
+// ClearContent clears all content
+func (da *DetailsAdapter) ClearContent() {
+	da.content = ""
+	da.rawContent = nil
+
+	if da.ready {
+		da.viewport.SetContent("")
+		da.viewport.GotoTop()
+	}
+}
+
 // UpdateViewPort handles messages for the details adapter
+// Also handles popup input updates if popup is visible
 func (da *DetailsAdapter) UpdateViewPort(msg tea.Msg) tea.Cmd {
+	// If popup is visible, route updates to it
+	if !da.popupInput.IsHidden() {
+		return da.popupInput.Update(msg)
+	}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		da.initializeViewport(msg.Width, msg.Height)
@@ -162,8 +250,8 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 	}
 
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("214")). // Orange background
-		Foreground(lipgloss.Color("0")) // Black text
+		Background(colors.Orange). // Orange background
+		Foreground(colors.BlackTerm)    // Black text
 
 	// Apply fuzzy search to the FULL content first (not just visible content)
 	var filteredContent string
@@ -207,7 +295,7 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 	// Create a style for opaque background to cover any content behind
 	opaqueStyle := lipgloss.NewStyle().
 		Width(innerWidth).
-		Background(lipgloss.Color("0")) // Black background to ensure opacity
+		Background(colors.BlackTerm) // Black background to ensure opacity
 
 	// Ensure we have enough lines with opaque background
 	for len(lines) < innerHeight {
@@ -244,8 +332,8 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 	// Add fuzzy search label if active
 	if fuzzyDetailsLocalSearch != "" {
 		labelStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("22")). // Muted green background
-			Foreground(lipgloss.Color("0")) // Black text
+			Background(colors.DarkGreenBlue). // Muted green background
+			Foreground(colors.BlackTerm)   // Black text
 
 		label := labelStyle.Render(fmt.Sprintf(" fuzzy-search: %s ", fuzzyDetailsLocalSearch))
 		resourceTypeLabel = fmt.Sprintf("%s %s", resourceTypeLabel, label)
@@ -263,7 +351,39 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 			Render(fmt.Sprintf("%.0f%%", scrollPercent))
 	}
 
-	return common.BorderizeWithSpinnerCheck(content, true, embeddedText)
+	rendered := common.BorderizeWithSpinnerCheck(content, true, embeddedText)
+
+	// If popup is visible, just show the popup (no base content overlay)
+	if !da.popupInput.IsHidden() {
+		return da.popupInput.View(width, height)
+	}
+
+	return rendered
+}
+
+// ShowPopup shows the popup input with the given title and placeholder
+func (da *DetailsAdapter) ShowPopup(title, placeholder string, isSecret bool) {
+	da.popupInput.Show(title, placeholder, isSecret)
+}
+
+// HidePopup hides the popup input
+func (da *DetailsAdapter) HidePopup() {
+	da.popupInput.Hide()
+}
+
+// IsPopupHidden returns whether the popup is hidden
+func (da *DetailsAdapter) IsPopupHidden() bool {
+	return da.popupInput.IsHidden()
+}
+
+// GetPopupContent returns the popup input content
+func (da *DetailsAdapter) GetPopupContent() string {
+	return da.popupInput.GetContent()
+}
+
+// ClearPopupContent clears the popup content
+func (da *DetailsAdapter) ClearPopupContent() {
+	da.popupInput.ClearContent()
 }
 
 // CopyToClipboard copies the raw content to clipboard
@@ -313,7 +433,7 @@ func (da *DetailsAdapter) Reset() {
 func (da *DetailsAdapter) contentToString() string {
 	// Handle nil rawContent by showing gray "No content" with padding
 	if da.rawContent == nil {
-		grayStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("245")) // Light gray color
+		grayStyle := lipgloss.NewStyle().Foreground(colors.LightGrey) // Light gray color
 		paddingStyle := lipgloss.NewStyle().
 			Padding(0, 0, 0, 2) // top: 0, right: 0, bottom: 0, left: 2
 
@@ -476,12 +596,12 @@ func parseGoMapString(mapStr string) (map[string]interface{}, error) {
 // formatObjectRecursive formats a JSON object string with proper indentation and colors recursively
 func formatObjectRecursive(objStr string, nestLevel int) string {
 	// Define colors for syntax highlighting (balanced brightness)
-	keyColor := lipgloss.NewStyle().Foreground(lipgloss.Color("51"))      // Medium cyan for keys
-	stringColor := lipgloss.NewStyle().Foreground(lipgloss.Color("77"))   // Medium green for strings
-	numberColor := lipgloss.NewStyle().Foreground(lipgloss.Color("179"))  // Muted orange for numbers
-	boolColor := lipgloss.NewStyle().Foreground(lipgloss.Color("105"))    // Medium purple for booleans
-	nullColor := lipgloss.NewStyle().Foreground(lipgloss.Color("243"))    // Gray for null values
-	bracketColor := lipgloss.NewStyle().Foreground(lipgloss.Color("252")) // Light white for brackets/punctuation
+	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)      // Medium cyan for keys
+	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)   // Medium green for strings
+	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)  // Muted orange for numbers
+	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)    // Medium purple for booleans
+	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)    // Gray for null values
+	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
 
 	var obj map[string]interface{}
 	if err := json.Unmarshal([]byte(objStr), &obj); err != nil {
@@ -671,12 +791,12 @@ func formatRecordAsJSON(record map[string]any) string {
 	var details strings.Builder
 
 	// Define colors for syntax highlighting (balanced brightness)
-	keyColor := lipgloss.NewStyle().Foreground(lipgloss.Color("51"))      // Medium cyan for keys
-	stringColor := lipgloss.NewStyle().Foreground(lipgloss.Color("77"))   // Medium green for strings
-	numberColor := lipgloss.NewStyle().Foreground(lipgloss.Color("179"))  // Muted orange for numbers
-	boolColor := lipgloss.NewStyle().Foreground(lipgloss.Color("105"))    // Medium purple for booleans
-	nullColor := lipgloss.NewStyle().Foreground(lipgloss.Color("243"))    // Gray for null values
-	bracketColor := lipgloss.NewStyle().Foreground(lipgloss.Color("252")) // Light white for brackets/punctuation
+	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)      // Medium cyan for keys
+	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)   // Medium green for strings
+	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)  // Muted orange for numbers
+	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)    // Medium purple for booleans
+	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)    // Gray for null values
+	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
 
 	// Left margin (2 spaces)
 	leftMargin := "  "
@@ -1260,7 +1380,7 @@ func formatRecordSetAsJSON(recordSet vast_client.RecordSet) string {
 	var result strings.Builder
 
 	// Define colors for syntax highlighting (same as formatRecordAsJSON)
-	bracketColor := lipgloss.NewStyle().Foreground(lipgloss.Color("252")) // Light white for brackets/punctuation
+	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
 
 	// Left margin (2 spaces)
 	leftMargin := "  "

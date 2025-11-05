@@ -1,13 +1,18 @@
 # Makefile for Vastix TUI Application
 
-.PHONY: build build-all run run-debug clean help test test-verbose test-coverage test-bench test-inputs install uninstall package release
+.PHONY: build build-all build-release run run-debug clean help test test-verbose test-coverage test-bench test-inputs install uninstall package release build-vpn-binaries clean-vpn-binaries clean-dist
 
-# Build the vastix TUI application
-build: bin
+# Build VPN server binaries for embedding
+build-vpn-binaries:
+	@echo "Building VPN server binaries for all platforms..."
+	@./scripts/build-vpn-binaries.sh
+
+# Build the vastix TUI application (includes VPN binaries)
+build: bin build-vpn-binaries
 	@echo "Building vastix..."
 	@go build -o bin/vastix cmd/main.go
 
-# Build binaries for all platforms
+# Build binaries for all platforms (basic - no VPN binaries embedded)
 build-all: bin
 	@echo "Building vastix for all platforms..."
 	@echo "Building for Linux amd64..."
@@ -23,6 +28,11 @@ build-all: bin
 	@echo "Building for macOS arm64..."
 	@GOOS=darwin GOARCH=arm64 go build -o bin/vastix-darwin-arm64 cmd/main.go
 	@echo "Cross-platform build complete. Binaries available in bin/ directory."
+
+# Build release binaries for all platforms (with VPN binaries embedded and proper naming)
+build-release: dist
+	@echo "Building release binaries for all platforms..."
+	@./scripts/build-multi-platform.sh
 
 # Package all platform binaries into a zip archive
 package: build-all
@@ -93,30 +103,48 @@ test-inputs:
 	@echo "Testing inputs ToParams functionality..."
 	@go test ./internal/tui/widgets/common -v -run TestInputs_ToParams
 
+# Clean VPN binaries
+clean-vpn-binaries:
+	@echo "Cleaning VPN server binaries..."
+	@rm -rf internal/vpn_connect/client/binaries/
+
+# Clean release binaries
+clean-dist:
+	@echo "Cleaning release binaries..."
+	@rm -rf dist/
+
 # Clean build artifacts
-clean:
+clean: clean-vpn-binaries clean-dist
 	@echo "Cleaning up..."
 	@rm -rf bin/ coverage.out coverage.html
 
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  build         - Build the vastix application"
-	@echo "  build-all     - Build binaries for all platforms (Linux, Windows, macOS)"
-	@echo "  run           - Build and run the vastix application"
-	@echo "  run-debug     - Build and run with debug logging enabled"
-	@echo "  install       - Install vastix as 'vx' to /usr/local/bin/ (requires sudo)"
-	@echo "  uninstall     - Remove 'vx' from /usr/local/bin/ (requires sudo)"
-	@echo "  package       - Build all platforms and create timestamped zip archive"
-	@echo "  release       - Create versioned release zip (use: make release VERSION=v1.0.0)"
-	@echo "  test          - Run all tests"
-	@echo "  test-verbose  - Run tests with verbose output"
-	@echo "  test-coverage - Run tests with coverage report"
-	@echo "  test-bench    - Run benchmark tests"
-	@echo "  test-inputs   - Test inputs ToParams functionality specifically"
-	@echo "  clean         - Remove build artifacts and test outputs"
-	@echo "  help          - Show this help message"
+	@echo "  build              - Build the vastix application (includes VPN binaries)"
+	@echo "  build-vpn-binaries - Build VPN server binaries for all platforms"
+	@echo "  build-all          - Build binaries for all platforms (Linux, Windows, macOS)"
+	@echo "  build-release      - Build release binaries with VPN binaries embedded (for GitHub releases)"
+	@echo "  run                - Build and run the vastix application"
+	@echo "  run-debug          - Build and run with debug logging enabled"
+	@echo "  install            - Install vastix as 'vx' to /usr/local/bin/ (requires sudo)"
+	@echo "  uninstall          - Remove 'vx' from /usr/local/bin/ (requires sudo)"
+	@echo "  package            - Build all platforms and create timestamped zip archive"
+	@echo "  release            - Create versioned release zip (use: make release VERSION=v1.0.0)"
+	@echo "  test               - Run all tests"
+	@echo "  test-verbose       - Run tests with verbose output"
+	@echo "  test-coverage      - Run tests with coverage report"
+	@echo "  test-bench         - Run benchmark tests"
+	@echo "  test-inputs        - Test inputs ToParams functionality specifically"
+	@echo "  clean              - Remove all build artifacts and test outputs"
+	@echo "  clean-vpn-binaries - Remove VPN server binaries"
+	@echo "  clean-dist         - Remove release binaries from dist/"
+	@echo "  help               - Show this help message"
 
 # Create bin directory if it doesn't exist
 bin:
 	@mkdir -p bin
+
+# Create dist directory if it doesn't exist
+dist:
+	@mkdir -p dist

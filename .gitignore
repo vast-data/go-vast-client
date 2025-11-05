@@ -43,3 +43,4 @@ examples/bin/
 
 # Autogen build artifacts
 /codegen/bin/
+/.cursor/

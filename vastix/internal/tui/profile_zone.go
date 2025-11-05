@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -28,15 +29,17 @@ type ProfileZone struct {
 	tenant         string
 	token          string
 	db             *database.Service
+	ctx            context.Context // Base context for API calls
 }
 
 // NewProfileZone creates a new profile zone with logging support
-func NewProfileZone(db *database.Service) *ProfileZone {
+func NewProfileZone(db *database.Service, ctx context.Context) *ProfileZone {
 	profile := &ProfileZone{
 		availableSpace: "n/a",
 		usedSpace:      "n/a",
 		freeSpace:      "n/a",
 		db:             db,
+		ctx:            ctx,
 		ready:          true,
 	}
 
@@ -56,8 +59,13 @@ func NewProfileZone(db *database.Service) *ProfileZone {
 func (p *ProfileZone) Init() {}
 
 func (p *ProfileZone) SetData() tea.Msg {
+	return p.SetDataWithContext(p.ctx)
+}
+
+// SetDataWithContext fetches profile data with the provided context.
+// This allows callers to pass context with special flags (e.g., to skip interceptor logging for ticker updates).
+func (p *ProfileZone) SetDataWithContext(ctx context.Context) tea.Msg {
 	auxlog := logging.GetAuxLogger()
-	auxlog.Println("ProfileZone.SetData: triggered")
 
 	// Try to get the active profile
 	activeProfile, err := p.db.GetActiveProfile()
@@ -72,10 +80,9 @@ func (p *ProfileZone) SetData() tea.Msg {
 		p.tenant = activeProfile.Tenant
 		p.userName = activeProfile.Username
 		p.token = activeProfile.Token
-		auxlog.Printf("ProfileZone.SetData: loaded profile: %s", activeProfile.ProfileName())
 
 		// Return async command to fetch space metrics
-		metrics, err := p.fetchSpaceMetrics(activeProfile)
+		metrics, err := p.fetchSpaceMetricsWithContext(ctx, activeProfile)
 		if err != nil {
 			log.Error("Failed to fetch space metrics", zap.Error(err))
 			auxlog.Printf("ProfileZone.SetData() metrics fetch failed: %v", err)
@@ -95,6 +102,11 @@ func (p *ProfileZone) SetData() tea.Msg {
 }
 
 func (p *ProfileZone) fetchSpaceMetrics(activeProfile *database.Profile) (*msg_types.ProfileDataMsg, error) {
+	return p.fetchSpaceMetricsWithContext(p.ctx, activeProfile)
+}
+
+// fetchSpaceMetricsWithContext fetches space metrics with the provided context
+func (p *ProfileZone) fetchSpaceMetricsWithContext(ctx context.Context, activeProfile *database.Profile) (*msg_types.ProfileDataMsg, error) {
 	rest, err := activeProfile.RestClientFromProfile()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get REST client from profile: %w", err)
@@ -115,8 +127,8 @@ func (p *ProfileZone) fetchSpaceMetrics(activeProfile *database.Profile) (*msg_t
 		"prop_list":   metrics,
 	}
 
-	// Use the Monitors resource's MonitorAdHocQuery_GET extra method
-	res, err := rest.Monitors.MonitorAdHocQuery_GET(params)
+	// Use the Monitors resource's MonitorAdHocQueryWithContext_GET extra method to pass context
+	res, err := rest.Monitors.MonitorAdHocQueryWithContext_GET(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ad_hoc_query data: %w", err)
 	}

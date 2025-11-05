@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"vastix/internal/colors"
 	"strings"
 
 	"vastix/internal/database"
@@ -10,13 +11,13 @@ import (
 
 // Define colors locally to avoid import cycle
 var (
-	colorOrange    = lipgloss.Color("214")
-	colorBlack     = lipgloss.Color("#000000")
-	colorLightGrey = lipgloss.Color("245")
-	colorWhite     = lipgloss.Color("#ffffff")
-	colorYellow    = lipgloss.Color("#DBBD70") // Match key binding color
-	colorBlue      = lipgloss.Color("63")
-	colorDarkGrey  = lipgloss.Color("#606362")
+	colorOrange    = colors.Orange
+	colorBlack     = colors.Black
+	colorLightGrey = colors.LightGrey
+	colorWhite     = colors.White
+	colorYellow    = colors.Yellow // Match key binding color
+	colorBlue      = colors.Blue
+	colorDarkGrey  = colors.DarkGrey
 )
 
 type PromptAdapter struct {

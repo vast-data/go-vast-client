@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"vastix/internal/colors"
 	"vastix/internal/database"
 	log "vastix/internal/logging"
 	"vastix/internal/msg_types"
@@ -261,7 +262,7 @@ func (f *FiltersZone) View() string {
 		searchStyle := lipgloss.NewStyle().
 			Width(f.width-2).
 			Border(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("2")). // Green border
+			BorderForeground(colors.GreenTerm). // Green border
 			Padding(0, 1)
 
 		return searchStyle.Render(prefix + f.searchInput.View())
@@ -272,7 +273,7 @@ func (f *FiltersZone) View() string {
 		serverSearchStyle := lipgloss.NewStyle().
 			Width(f.width-2).
 			Border(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("214")). // Yellow border (same as resource name)
+			BorderForeground(colors.Orange). // Yellow border (same as resource name)
 			Padding(0, 1)
 
 		return serverSearchStyle.Render(prefix + f.serverSearchInput.View())

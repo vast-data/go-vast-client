@@ -35,4 +35,5 @@ main
 /coverage.html
 /.history/
 /bin/
-/bin/
+/dist/
+internal/vpn_connect/client/binaries/

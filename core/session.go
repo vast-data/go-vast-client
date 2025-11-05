@@ -275,8 +275,16 @@ func consolidateHeaders(s RESTSession, customHeaders []http.Header) http.Header 
 }
 
 func setupHeaders(s RESTSession, r *http.Request, headers http.Header) error {
-	// Always set authentication headers
-	s.GetAuthenticator().setAuthHeader(&r.Header)
+	// Lazy authentication: authorize on first use
+	auth := s.GetAuthenticator()
+	if !auth.isInitialized() {
+		if err := auth.authorize(); err != nil {
+			return err
+		}
+	}
+
+	// Set authentication headers
+	auth.setAuthHeader(&r.Header)
 
 	// Apply all consolidated headers in one pass
 	for key, values := range headers {
@@ -394,6 +402,10 @@ func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, 
 		if err != nil && IsApiError(err) {
 			statusCode := err.(*ApiError).StatusCode
 			if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
+				if strings.Contains(err.(*ApiError).Body, "permission_denied") {
+					// Not related to identify auth error.
+					break
+				}
 				if authErr := s.auth.authorize(); authErr != nil {
 					return nil, authErr
 				}

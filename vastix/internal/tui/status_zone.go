@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"vastix/internal/colors"
 	"regexp"
 	"strings"
 	"vastix/internal/database"
@@ -202,7 +203,7 @@ func (s *StatusZone) renderErrorMsg() string {
 	}
 
 	// Create red style for both border and message
-	redStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5353"))
+	redStyle := lipgloss.NewStyle().Foreground(colors.Red)
 
 	return s.renderMessage(s.errorMsg, redStyle)
 }
@@ -215,7 +216,7 @@ func (s *StatusZone) renderInfoMsg() string {
 	}
 
 	// Create green style for both border and message
-	greenStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00"))
+	greenStyle := lipgloss.NewStyle().Foreground(colors.NeonGreen)
 
 	return s.renderMessage(s.infoMsg, greenStyle)
 }

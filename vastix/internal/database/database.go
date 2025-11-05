@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -21,7 +22,8 @@ import (
 
 type Service struct {
 	db         *gorm.DB
-	profileMux sync.Mutex // Protects profile activation operations
+	profileMux sync.Mutex      // Protects profile activation operations
+	ctx        context.Context // Base context for API operations
 }
 
 var (
@@ -56,41 +58,28 @@ func New() *Service {
 	}
 
 	// Auto-migrate models
-	if err := db.AutoMigrate(&Profile{}, &ResourceHistory{}, &UserKey{}, &ApiToken{}, &SshConnection{}); err != nil {
+	if err := db.AutoMigrate(&Profile{}, &ResourceHistory{}, &UserKey{}, &ApiToken{}, &SshConnection{}, &SudoPassword{}); err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 
-	// Create default "local" SSH connection if it doesn't exist
-	if err := createDefaultLocalSshConnection(db); err != nil {
-		log.Fatalf("failed to create default local SSH connection: %v", err)
-	}
-
 	dbInstance = &Service{
-		db: db,
+		db:  db,
+		ctx: context.Background(), // Initialize with default context
 	}
 	return dbInstance
 }
 
-// createDefaultLocalSshConnection creates the default "local [pseudo ssh]" SSH connection if it doesn't exist
-func createDefaultLocalSshConnection(db *gorm.DB) error {
-	var count int64
-	if err := db.Model(&SshConnection{}).Where("name = ?", "local [pseudo ssh]").Count(&count).Error; err != nil {
-		return err
-	}
+// SetContext sets the base context for API operations
+func (s *Service) SetContext(ctx context.Context) {
+	s.ctx = ctx
+}
 
-	// If "local [pseudo ssh]" connection doesn't exist, create it
-	if count == 0 {
-		localConn := &SshConnection{
-			Name:        "local [pseudo ssh]",
-			SshHost:     "-",
-			SshUserName: "-",
-			SshPassword: "-",
-			SshKey:      "-",
-			SshPort:     22, // Keep default port structure
-		}
-		return db.Create(localConn).Error
+// GetContext returns the base context for API operations
+func (s *Service) GetContext() context.Context {
+	if s.ctx == nil {
+		return context.Background()
 	}
-	return nil
+	return s.ctx
 }
 
 // GetDB returns the database instance
@@ -556,8 +545,15 @@ func (s *Service) CreateSshConnection(sshConn *SshConnection) error {
 
 // GetAllSshConnections retrieves all SSH connections from the database
 func (s *Service) GetAllSshConnections() ([]SshConnection, error) {
+	// Get active profile
+	activeProfile, err := s.GetActiveProfile()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get active profile: %w", err)
+	}
+
+	// Get SSH connections for the active profile only
 	var connections []SshConnection
-	err := s.db.Find(&connections).Error
+	err = s.db.Where("profile_id = ?", activeProfile.ID).Find(&connections).Error
 	return connections, err
 }
 
@@ -579,4 +575,40 @@ func (s *Service) UpdateSshConnection(sshConn *SshConnection) error {
 // DeleteSshConnection deletes an SSH connection by ID
 func (s *Service) DeleteSshConnection(id uint) error {
 	return s.db.Delete(&SshConnection{}, id).Error
+}
+
+// SudoPassword operations
+
+// GetSudoPassword retrieves the sudo password for the current user
+func (s *Service) GetSudoPassword() (*SudoPassword, error) {
+	var sudoPassword SudoPassword
+	err := s.db.First(&sudoPassword).Error
+	if err != nil {
+		return nil, err
+	}
+	return &sudoPassword, nil
+}
+
+// SaveSudoPassword creates or updates the sudo password for the current user
+func (s *Service) SaveSudoPassword(password string) error {
+	var sudoPassword SudoPassword
+	err := s.db.First(&sudoPassword).Error
+
+	if err == gorm.ErrRecordNotFound {
+		// Create new record
+		sudoPassword = SudoPassword{
+			Password: password,
+		}
+		return s.db.Create(&sudoPassword).Error
+	} else if err != nil {
+		return err
+	}
+
+	// Update existing record
+	return s.db.Model(&sudoPassword).Update("password", password).Error
+}
+
+// DeleteSudoPassword deletes the sudo password for the current user
+func (s *Service) DeleteSudoPassword() error {
+	return s.db.Where("1 = 1").Delete(&SudoPassword{}).Error
 }

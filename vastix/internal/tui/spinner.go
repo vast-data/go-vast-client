@@ -6,8 +6,6 @@ import (
 	"math/rand"
 	"strings"
 	"time"
-	"vastix/internal/logging"
-
 	"vastix/internal/msg_types"
 
 	"github.com/charmbracelet/lipgloss"
@@ -103,7 +101,6 @@ func (s *Spinner) View() string {
 func StartSpinner(ctx context.Context) (*Spinner, <-chan msg_types.SpinnerTickMsg) {
 	spinner := NewSpinner()
 	tickChan := make(chan msg_types.SpinnerTickMsg)
-	auxlog := logging.GetAuxLogger()
 	spinnerCounter := 0
 
 	// Start goroutine that sends ticks every 80 milliseconds
@@ -121,9 +118,11 @@ func StartSpinner(ctx context.Context) (*Spinner, <-chan msg_types.SpinnerTickMs
 				// Send the updated view as the tick message
 				select {
 				case tickChan <- msg_types.SpinnerTickMsg(spinner.View()):
-					if spinnerCounter == 0 && auxlog != nil {
-						auxlog.Println("spinner is running.")
-					}
+					// Successfully sent
+				case <-ctx.Done():
+					return // Exit if context cancelled while trying to send
+				default:
+					// Channel blocked, skip this tick to avoid blocking the spinner
 				}
 			case <-ctx.Done():
 				return // Exit goroutine when context is cancelled

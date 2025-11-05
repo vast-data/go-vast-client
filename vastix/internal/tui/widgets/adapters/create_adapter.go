@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"vastix/internal/colors"
 	"vastix/internal/database"
 	log "vastix/internal/logging"
 	"vastix/internal/msg_types"
@@ -261,12 +262,12 @@ func (ca *CreateAdapter) renderFormJSONToggle() string {
 	if ca.isJSONMode {
 		// JSON mode: form is inactive (gray), json is active (green)
 		inactiveStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("250")). // Light gray background
-			Foreground(lipgloss.Color("240"))  // Dim gray text
+			Background(colors.LighterGrey). // Light gray background
+			Foreground(colors.Grey240)      // Dim gray text
 
 		activeStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("42")). // Bright green background
-			Foreground(lipgloss.Color("0"))   // Black text
+			Background(colors.BrightGreen). // Bright green background
+			Foreground(colors.BlackTerm)    // Black text
 
 		formPart := inactiveStyle.Render(" form ")
 		jsonPart := activeStyle.Render(" json ")
@@ -275,12 +276,12 @@ func (ca *CreateAdapter) renderFormJSONToggle() string {
 	} else {
 		// Form mode: form is active (green), json is inactive (gray)
 		activeStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("42")). // Bright green background
-			Foreground(lipgloss.Color("0"))   // Black text
+			Background(colors.BrightGreen). // Bright green background
+			Foreground(colors.BlackTerm)    // Black text
 
 		inactiveStyle := lipgloss.NewStyle().
-			Background(lipgloss.Color("250")). // Light gray background
-			Foreground(lipgloss.Color("240"))  // Dim gray text
+			Background(colors.LighterGrey). // Light gray background
+			Foreground(colors.Grey240)      // Dim gray text
 
 		formPart := activeStyle.Render(" form ")
 		jsonPart := inactiveStyle.Render(" json ")
@@ -418,8 +419,8 @@ func (ca *CreateAdapter) renderJSONView(width, height int) string {
 
 	// Create resource type label
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("214")). // Orange background
-		Foreground(lipgloss.Color("0"))    // Black text
+		Background(colors.Orange).   // Orange background
+		Foreground(colors.BlackTerm) // Black text
 
 	// Use predefined title if available, otherwise use default format
 	var titleText string
@@ -525,8 +526,8 @@ func (ca *CreateAdapter) RenderCreate(width, height int) string {
 
 	// Create resource type label
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("214")). // Orange background
-		Foreground(lipgloss.Color("0"))    // Black text
+		Background(colors.Orange).   // Orange background
+		Foreground(colors.BlackTerm) // Black text
 
 	// Use predefined title if available, otherwise use default format
 	var titleText string
@@ -772,7 +773,7 @@ func (ca *CreateAdapter) renderInputWrapperWithFocus(wrapper common.InputWrapper
 	var label string
 	yellowColon := lipgloss.NewStyle().Foreground(Yellow).Render(":")
 	if wrapper.IsRequired() {
-		redStar := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5353")).Render("*")
+		redStar := lipgloss.NewStyle().Foreground(colors.Red).Render("*")
 		label = labelText + redStar + styledType + yellowColon
 	} else {
 		label = labelText + styledType + yellowColon
@@ -803,7 +804,7 @@ func (ca *CreateAdapter) renderInputWrapperWithFocus(wrapper common.InputWrapper
 		if wrapper.IsRequired() {
 			parts := strings.Split(rawLabel, "*")
 			if len(parts) == 2 {
-				redStar := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5353")).Render("*")
+				redStar := lipgloss.NewStyle().Foreground(colors.Red).Render("*")
 
 				// Apply gray styling to type hints in the label parts
 				styledPart0 := ca.styleTypeHintsInLabel(parts[0], grayStyle)
@@ -839,7 +840,7 @@ func (ca *CreateAdapter) renderInputWrapperWithFocus(wrapper common.InputWrapper
 	// Render regular input
 	var labelPrefix string
 	if actualInputFocused {
-		labelPrefix = lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render("▶ ")
+		labelPrefix = lipgloss.NewStyle().Foreground(colors.Orange).Render("▶ ")
 	} else {
 		labelPrefix = "  "
 	}
@@ -943,7 +944,7 @@ func (ca *CreateAdapter) renderNestedInputWithFocus(wrapper common.InputWrapper,
 
 	// Create label with background
 	labelStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("240")).
+		Background(colors.Grey240).
 		Foreground(Yellow).
 		Padding(0, 1)
 	styledLabel := labelStyle.Render(label)
@@ -1928,7 +1929,7 @@ func (ca *CreateAdapter) renderInputWrapper(wrapper common.InputWrapper, depth i
 	var label string
 	yellowColon := lipgloss.NewStyle().Foreground(Yellow).Render(":")
 	if wrapper.IsRequired() {
-		redStar := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5353")).Render("*")
+		redStar := lipgloss.NewStyle().Foreground(colors.Red).Render("*")
 		label = labelText + redStar + styledType + yellowColon
 	} else {
 		label = labelText + styledType + yellowColon
@@ -1959,7 +1960,7 @@ func (ca *CreateAdapter) renderInputWrapper(wrapper common.InputWrapper, depth i
 		if wrapper.IsRequired() {
 			parts := strings.Split(rawLabel, "*")
 			if len(parts) == 2 {
-				redStar := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5353")).Render("*")
+				redStar := lipgloss.NewStyle().Foreground(colors.Red).Render("*")
 
 				// Apply gray styling to type hints in the label parts
 				styledPart0 := ca.styleTypeHintsInLabel(parts[0], grayStyle)
@@ -1991,7 +1992,7 @@ func (ca *CreateAdapter) renderInputWrapper(wrapper common.InputWrapper, depth i
 	// Render regular input
 	var labelPrefix string
 	if isFocused {
-		labelPrefix = lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render("▶ ")
+		labelPrefix = lipgloss.NewStyle().Foreground(colors.Orange).Render("▶ ")
 	} else {
 		labelPrefix = "  "
 	}
@@ -2095,7 +2096,7 @@ func (ca *CreateAdapter) renderNestedInput(wrapper common.InputWrapper, depth in
 
 	// Create label with background
 	labelStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("240")).
+		Background(colors.Grey240).
 		Foreground(Yellow).
 		Padding(0, 1)
 	styledLabel := labelStyle.Render(label)

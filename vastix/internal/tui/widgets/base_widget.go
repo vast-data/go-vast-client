@@ -1,9 +1,13 @@
 package widgets
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"reflect"
+	"sort"
 	"strings"
+	"time"
 	"vastix/internal/database"
 	"vastix/internal/logging"
 	"vastix/internal/msg_types"
@@ -12,29 +16,22 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	vast_client "github.com/vast-data/go-vast-client"
+	"github.com/vast-data/go-vast-client/resources/untyped"
 	"go.uber.org/zap"
 )
 
 type (
-	params          = vast_client.Params
-	VMSRest         = vast_client.VMSRest
-	VastResourceAPI = vast_client.VastResourceAPI
-	RecordSet       = vast_client.RecordSet
-	Record          = vast_client.Record
+	params                     = vast_client.Params
+	VMSRest                    = vast_client.VMSRest
+	VastResourceAPI            = vast_client.VastResourceAPI
+	VastResourceAPIWithContext = vast_client.VastResourceAPIWithContext
+	RecordSet                  = vast_client.RecordSet
+	Record                     = vast_client.Record
 )
 
 // BaseWidget common properties and methods for all widgets
 type BaseWidget struct {
 	resourceType string // Type of resource this widget represents, e.g., "views", "quotas", "users" etc.
-
-	// cache
-	cachedInputs common.Inputs // Cached inputs for create form, generated from OpenAPI schema
-
-	// Key bindings cache
-	cachedListKeyBindings    []common.KeyBinding
-	cachedCreateKeyBindings  []common.KeyBinding
-	cachedDeleteKeyBindings  []common.KeyBinding
-	cachedDetailsKeyBindings []common.KeyBinding
 
 	*common.WidgetNavigator
 	// ExtraNavigator for additional navigation capabilities
@@ -54,6 +51,11 @@ type BaseWidget struct {
 	parent  common.Widget
 	isExtra bool // Indicates if this is an extra widget
 
+	// Resourceless indicates if this extra widget can work without parent data
+	// Default is true (most extra widgets don't need parent resources)
+	// Set to false for widgets like VIP pool forwarding that require SSH connections
+	resourceless bool
+
 	// FormHints
 	formHints *common.FormHints
 
@@ -62,6 +64,15 @@ type BaseWidget struct {
 
 	// Selected row data
 	selectedRowData common.RowData // Currently selected row data of parent widget
+
+	// Callback functions for VAST resource operations
+	// If nil, standard implementation via VastAPIGetter will be used
+	listFn         common.ListFunc
+	getDetailsFn   common.GetDetailsFunc
+	createFn       common.CreateFunc
+	beforeCreateFn common.BeforeCreateFunc
+	afterCreateFn  common.AfterCreateFunc
+	deleteFn       common.DeleteFunc
 }
 
 // NewBaseWidget creates a new base widget
@@ -106,6 +117,7 @@ func NewBaseWidget(db *database.Service, listHeaders []string, formHints *common
 	extraWidgetGroup := NewExtraWidgetGroup(db, widgetNavigator, extraWidgets...)
 	baseWidget := &BaseWidget{
 		resourceType: resourceType,
+		resourceless: true, // Default: extra widgets don't need parent resources
 
 		// Navigation
 		WidgetNavigator: widgetNavigator,
@@ -155,7 +167,6 @@ func (bw *BaseWidget) TraceLog() {
 
 	if bw.isExtra {
 		// This is an extra widget
-		bw.auxlog.Printf("EXTRA WIDGET: [%s]", widgetName)
 		return
 	}
 
@@ -231,6 +242,68 @@ func (bw *BaseWidget) SetParentForBaseWidget(parent common.Widget, isExtra bool)
 }
 
 // ----------------------------
+// Callback setters for VAST resource operations
+// ----------------------------
+
+// SetListCallback sets a custom list function
+// If nil, the standard VastAPIGetter.API().List() will be used
+func (bw *BaseWidget) SetListCallback(fn common.ListFunc) {
+	bw.listFn = fn
+}
+
+// SetGetDetailsCallback sets a custom get details function
+// If nil, the standard VastAPIGetter.API().GetById() will be used
+func (bw *BaseWidget) SetGetDetailsCallback(fn common.GetDetailsFunc) {
+	bw.getDetailsFn = fn
+}
+
+// SetCreateCallback sets a custom create function
+// If nil, the standard VastAPIGetter.API().Create() with before/after hooks will be used
+func (bw *BaseWidget) SetCreateCallback(fn common.CreateFunc) {
+	bw.createFn = fn
+}
+
+// SetBeforeCreateCallback sets a hook to run before resource creation
+// Only used when createFn is nil (standard creation flow)
+func (bw *BaseWidget) SetBeforeCreateCallback(fn common.BeforeCreateFunc) {
+	bw.beforeCreateFn = fn
+}
+
+// SetAfterCreateCallback sets a hook to run after resource creation
+// Only used when createFn is nil (standard creation flow)
+func (bw *BaseWidget) SetAfterCreateCallback(fn common.AfterCreateFunc) {
+	bw.afterCreateFn = fn
+}
+
+// SetDeleteCallback sets a custom delete function
+// If nil, the standard VastAPIGetter.API().Delete() will be used
+func (bw *BaseWidget) SetDeleteCallback(fn common.DeleteFunc) {
+	bw.deleteFn = fn
+}
+
+// TogglePromptSelection toggles between Yes/No buttons in the prompt
+func (bw *BaseWidget) TogglePromptSelection() {
+	if bw.PromptAdapter != nil {
+		bw.PromptAdapter.ToggleSelection()
+	}
+}
+
+// IsPromptNoSelected returns true if "No" button is currently selected
+func (bw *BaseWidget) IsPromptNoSelected() bool {
+	if bw.PromptAdapter != nil {
+		return bw.PromptAdapter.IsNoSelected()
+	}
+	return false
+}
+
+// SetPromptSelection sets the button selection (true for No, false for Yes)
+func (bw *BaseWidget) SetPromptSelection(selectNo bool) {
+	if bw.PromptAdapter != nil {
+		bw.PromptAdapter.SetSelection(selectNo)
+	}
+}
+
+// ----------------------------
 // Navigator modes
 // ----------------------------
 
@@ -250,9 +323,6 @@ func (bw *BaseWidget) SetMode(mode common.NavigatorMode) {
 
 	// Initialize CreateAdapter inputs when switching to create mode
 	if mode == common.NavigatorModeCreate {
-		// Clear the cached inputs to ensure fresh schema generation
-		bw.cachedInputs = nil
-
 		// Always refresh inputs to ensure fresh state every time (like extra widgets)
 		inputs, err := bw.parent.GetInputs()
 		if err != nil {
@@ -303,6 +373,13 @@ func (bw *BaseWidget) SetSize(width, height int) {
 // ----------------------------
 
 func (bw *BaseWidget) SetListData() tea.Msg {
+	// Use the base context from the database service
+	return bw.SetListDataWithContext(bw.db.GetContext())
+}
+
+// SetListDataWithContext fetches list data with the provided context.
+// This allows callers to pass context with special flags (e.g., to skip interceptor logging).
+func (bw *BaseWidget) SetListDataWithContext(ctx context.Context) tea.Msg {
 	// Initialize with profile data from database
 	if bw.isExtra {
 		bw.auxlog.Println("[ERROR] SetListData called for extra widget, using GetExtraWidget")
@@ -312,7 +389,17 @@ func (bw *BaseWidget) SetListData() tea.Msg {
 		)
 	}
 
-	bw.auxlog.Printf("Setting list data for list widget: %T", bw.parent)
+	// Check if the parent widget supports LIST operations
+	if autoWidget, ok := bw.parent.(*AutoGeneratedWidget); ok {
+		if !autoWidget.SupportsListOperation() {
+			bw.log.Info("Resource does not support LIST operation, skipping list fetch",
+				zap.String("resourceType", bw.resourceType))
+			// Set empty list data and return nil (no error)
+			bw.ListAdapter.SetListData([][]string{}, bw.GetFuzzyListSearchString())
+			bw.SetSelectedRowData(common.RowData{})
+			return nil
+		}
+	}
 
 	rest, err := getActiveRest(bw.db)
 	if err != nil {
@@ -323,9 +410,10 @@ func (bw *BaseWidget) SetListData() tea.Msg {
 	}
 
 	var records RecordSet
-	if vastResourceListGetter, ok := any(bw.parent).(common.VastResourceListGetter); ok {
-		if records, err = vastResourceListGetter.List(rest); err != nil {
-			bw.log.Error("Error fetching records", zap.Error(err))
+	// Use callback if provided, otherwise use standard VastAPIGetter
+	if bw.listFn != nil {
+		if records, err = bw.listFn(rest); err != nil {
+			bw.log.Error("Error fetching records via callback", zap.Error(err))
 			return msg_types.ErrorMsg{
 				Err: err,
 			}
@@ -335,14 +423,15 @@ func (bw *BaseWidget) SetListData() tea.Msg {
 		if query := bw.GetServerParams(); query != nil {
 			params = *query
 		}
-		if records, err = vastAPIGetter.API(rest).List(params); err != nil {
+		// VastAPIGetter now returns VastResourceAPIWithContext, so we can use ListWithContext directly
+		if records, err = vastAPIGetter.API(rest).ListWithContext(ctx, params); err != nil {
 			bw.log.Error("Error fetching records from VastResourceAPI", zap.Error(err))
 			return msg_types.ErrorMsg{
 				Err: err,
 			}
 		}
 	} else {
-		panic("Neither VastResourceListGetter nor VastAPIGetter implemented on parent widget")
+		panic("Neither listFn callback nor VastAPIGetter implemented on parent widget")
 	}
 
 	headers := bw.ListAdapter.GetHeaders()
@@ -365,6 +454,10 @@ func (bw *BaseWidget) SetListData() tea.Msg {
 	}
 
 	bw.ListAdapter.SetListData(data, bw.GetFuzzyListSearchString())
+
+	// Clear any cached selected row data to ensure fresh data is used on next selection
+	bw.SetSelectedRowData(common.RowData{})
+
 	return nil
 }
 
@@ -372,6 +465,11 @@ func (bw *BaseWidget) SetListData() tea.Msg {
 // Numeric fields like UID are formatted as integers to avoid scientific notation
 func (bw *BaseWidget) formatFieldValue(key string, value interface{}) string {
 	lowerKey := strings.ToLower(key)
+
+	// Handle nil values
+	if value == nil {
+		return "<nil>"
+	}
 
 	// Handle numeric fields that should be displayed as integers
 	if isNumericField(lowerKey) {
@@ -385,6 +483,25 @@ func (bw *BaseWidget) formatFieldValue(key string, value interface{}) string {
 		if intVal, ok := value.(int); ok {
 			return fmt.Sprintf("%d", intVal)
 		}
+	}
+
+	// Handle maps - display as JSON-like syntax
+	if mapVal, ok := value.(map[string]interface{}); ok {
+		if len(mapVal) == 0 {
+			return "{}"
+		}
+		// For non-empty maps, show abbreviated representation
+		return fmt.Sprintf("{%d keys}", len(mapVal))
+	}
+
+	// Handle slices/arrays
+	if reflect.TypeOf(value).Kind() == reflect.Slice {
+		sliceVal := reflect.ValueOf(value)
+		if sliceVal.Len() == 0 {
+			return "[]"
+		}
+		// For non-empty arrays, show count
+		return fmt.Sprintf("[%d items]", sliceVal.Len())
 	}
 
 	// Default formatting for other fields
@@ -602,15 +719,12 @@ func (bw *BaseWidget) GetServerParams() *vast_client.Params {
 func (bw *BaseWidget) GetInputs() (common.Inputs, error) {
 	// Use dynamic schema-based input generation
 	// Extra widgets can now also generate inputs from their FormHints
-	if bw.cachedInputs == nil && bw.formHints != nil {
+	if bw.formHints != nil {
 		inputs, err := bw.getInputsWithError()
-		if err != nil {
-			return nil, err
-		}
-		bw.cachedInputs = inputs
+		return inputs, err
 	}
 
-	return bw.cachedInputs, nil
+	return nil, nil
 }
 
 func (bw *BaseWidget) getInputs() common.Inputs {
@@ -637,6 +751,11 @@ func (bw *BaseWidget) getInputsWithError() (common.Inputs, error) {
 	return inputs, nil
 }
 
+// GetInputsWithError is an exported version of getInputsWithError for testing input availability
+func (bw *BaseWidget) GetInputsWithError() (common.Inputs, error) {
+	return bw.getInputsWithError()
+}
+
 func (bw *BaseWidget) SetInputs(inputs common.Inputs) {
 	// For extra widgets, use their own CreateAdapter directly to avoid delegation loops
 	if bw.isExtra {
@@ -661,7 +780,26 @@ func (bw *BaseWidget) ViewCreateForm() string {
 func (bw *BaseWidget) viewCreateForm() string {
 	// Ensure inputs are set
 	if !bw.CreateAdapter.HasInputs() {
-		inputs, err := bw.parent.GetInputs()
+		// Get inputs from the widget
+		// For extra widgets (ExtraMethodWidget), parent points to self and has GetInputs override
+		var inputs common.Inputs
+		var err error
+
+		bw.auxlog.Printf("[viewCreateForm] START: isExtra=%v, resourceType=%s, parent=%T",
+			bw.isExtra, bw.resourceType, bw.parent)
+
+		// Call GetInputs on parent (which should be the widget with potential override)
+		if bw.parent != nil {
+			inputs, err = bw.parent.GetInputs()
+			bw.auxlog.Printf("[viewCreateForm] parent.GetInputs() returned: count=%d, err=%v",
+				len(inputs), err)
+		} else {
+			// Fallback to self
+			inputs, err = bw.GetInputs()
+			bw.auxlog.Printf("[viewCreateForm] bw.GetInputs() returned: count=%d, err=%v",
+				len(inputs), err)
+		}
+
 		if err != nil {
 			bw.log.Error("Failed to get inputs for create form", zap.Error(err))
 			return "Error: Failed to load create form inputs"
@@ -763,10 +901,11 @@ func (bw *BaseWidget) createFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 		return nil, fmt.Errorf("failed to get REST client: %w", err)
 	}
 
-	if vastResourceCreator, ok := any(bw.parent).(common.VastResourceCreator); ok {
+	// Use callback if provided
+	if bw.createFn != nil {
 		return func() tea.Msg {
-			if msg, err := vastResourceCreator.Create(rest); err != nil {
-				bw.log.Error("Failed to create resource", zap.Error(err))
+			if msg, err := bw.createFn(rest); err != nil {
+				bw.log.Error("Failed to create resource via callback", zap.Error(err))
 				return msg_types.ErrorMsg{
 					Err: err,
 				}
@@ -795,15 +934,15 @@ func (bw *BaseWidget) createFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 	// Return async command to create the view
 	createFn := func() tea.Msg {
 
-		if beforeVastCreator, ok := any(bw.parent).(common.BeforeVastResourceCreator); ok {
-			// Call the before creator hook if implemented
-			if err := beforeVastCreator.BeforeCreate(payload); err != nil {
-				bw.log.Error("Before create hook failed",
+		// Call before create callback if provided
+		if bw.beforeCreateFn != nil {
+			if err := bw.beforeCreateFn(payload); err != nil {
+				bw.log.Error("Before create callback failed",
 					zap.String("resourceType", bw.resourceType),
 					zap.Any("payload", payload),
 					zap.Error(err))
 				return msg_types.ErrorMsg{
-					Err: fmt.Errorf("before create hook failed: %w", err),
+					Err: fmt.Errorf("before create callback failed: %w", err),
 				}
 			}
 		}
@@ -819,25 +958,38 @@ func (bw *BaseWidget) createFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 			}
 		}
 
-		if afterVastCreator, ok := any(bw.parent).(common.AfterVastResourceCreator); ok {
-			// Call the after creator hook if implemented
-			msg, err := afterVastCreator.AfterCreate(record)
+		// Handle potentially async task (wait for completion if needed)
+		if err := bw.handleMaybeAsyncTask(rest, record); err != nil {
+			bw.log.Error("Async task failed",
+				zap.String("resourceType", bw.resourceType),
+				zap.Error(err))
+			return msg_types.ErrorMsg{
+				Err: fmt.Errorf("async task failed: %w", err),
+			}
+		}
+
+		// Call after create callback if provided (for additional work like saving to DB)
+		if bw.afterCreateFn != nil {
+			// For non-extra widgets, there's no parent row data, so pass an empty RowData
+			emptyRowData := common.NewRowData([]string{}, []string{})
+			_, err := bw.afterCreateFn(record, emptyRowData)
 			if err != nil {
-				bw.log.Error("After create hook failed",
+				bw.log.Error("After create callback failed",
 					zap.String("resourceType", bw.resourceType),
 					zap.Any("record", record),
 					zap.Error(err))
 				return msg_types.ErrorMsg{
-					Err: fmt.Errorf("after create hook failed: %w", err),
+					Err: fmt.Errorf("after create callback failed: %w", err),
 				}
 			}
-			return msg
-		} else {
-			bw.SetContent(record)
-			bw.SetModeMust(common.NavigatorModeDetails)
-			return msg_types.SetDataMsg{
-				UseSpinner: false, // No spinner needed for create, just updated data in the background for list representation
-			}
+			// Callback succeeded, continue with standard flow
+		}
+
+		// Always set content and switch to details mode after successful create
+		bw.SetContent(record)
+		bw.SetModeMust(common.NavigatorModeDetails)
+		return msg_types.SetDataMsg{
+			UseSpinner: false, // No spinner needed for create, just updated data in the background for list representation
 		}
 	}
 
@@ -870,11 +1022,12 @@ func (bw *BaseWidget) details(selectedRowData common.RowData) (tea.Cmd, error) {
 		return nil, fmt.Errorf("failed to get REST client: %w", err)
 	}
 
-	if vastResourceDetailsGetter, ok := any(bw.parent).(common.VastResourceDetailsGetter); ok {
+	// Use callback if provided
+	if bw.getDetailsFn != nil {
 		return func() tea.Msg {
-			record, err := vastResourceDetailsGetter.GetDetails(rest, selectedRowData)
+			record, err := bw.getDetailsFn(rest, selectedRowData)
 			if err != nil {
-				bw.log.Error("Failed to load details", zap.Error(err))
+				bw.log.Error("Failed to load details via callback", zap.Error(err))
 				return msg_types.DetailsContentMsg{
 					Content:      fmt.Sprintf("Failed to load details: %s", err.Error()),
 					ResourceType: bw.resourceType,
@@ -961,6 +1114,17 @@ func (bw *BaseWidget) Select(selectedData common.RowData) (tea.Cmd, error) {
 }
 
 func (bw *BaseWidget) SetDetailsData(details any) {
+	// If we're in extra mode, delegate to the ExtraWidgetGroup
+	if bw.GetMode() == common.NavigatorModeExtra {
+		// Set details on the extra widget group (which delegates to the active extra widget)
+		bw.GetExtraWidget().SetDetailsData(details)
+		// Switch to details mode to display the result
+		if extraWidgetGroup, ok := bw.GetExtraWidget().(*ExtraWidgetGroup); ok {
+			extraWidgetGroup.SetExtraModeMust(common.ExtraNavigatorModeDetails)
+		}
+		return
+	}
+	// Normal mode - set details on this widget
 	bw.DetailsAdapter.SetContent(details)
 }
 
@@ -977,6 +1141,28 @@ func (bw *BaseWidget) Reset() {
 	bw.ResetCreate()
 	bw.CreateAdapter.ResetCreateForm()
 	bw.ListAdapter.ClearListData()
+}
+
+// Clean performs cleanup when the widget is being closed (e.g., Ctrl+C)
+// If in extra mode, it checks if the active extra widget implements LeaveWidget and calls it
+func (bw *BaseWidget) Clean() {
+	// Check if we're in extra mode
+	if bw.GetMode() == common.NavigatorModeExtra {
+		extraWidget := bw.GetExtraWidget()
+		if extraWidget != nil {
+			// Check if the extra widget implements LeaveWidget
+			if leaveWidget, ok := extraWidget.(common.LeaveWidget); ok {
+				bw.auxlog.Printf("Extra widget implements LeaveWidget, calling it")
+				if err := leaveWidget.LeaveWidget(); err != nil {
+					bw.auxlog.Printf("Error leaving extra widget: %v", err)
+				}
+			} else {
+				bw.auxlog.Printf("Extra widget does NOT implement LeaveWidget")
+			}
+		}
+	}
+	// Perform any additional cleanup for the base widget
+	bw.Reset()
 }
 
 func (bw *BaseWidget) ViewDetails() string {
@@ -1017,10 +1203,11 @@ func (bw *BaseWidget) delete(selectedRowData common.RowData) (tea.Cmd, error) {
 		return nil, fmt.Errorf("failed to get REST client: %w", err)
 	}
 
-	if vastResourceDeleter, ok := any(bw.parent).(common.VastResourceDeleter); ok {
+	// Use callback if provided
+	if bw.deleteFn != nil {
 		return func() tea.Msg {
-			if msg, err := vastResourceDeleter.Delete(rest, selectedRowData); err != nil {
-				bw.log.Error("Failed to delete resource", zap.Error(err))
+			if msg, err := bw.deleteFn(rest, selectedRowData); err != nil {
+				bw.log.Error("Failed to delete resource via callback", zap.Error(err))
 				return msg_types.ErrorMsg{
 					Err: err,
 				}
@@ -1048,7 +1235,8 @@ func (bw *BaseWidget) delete(selectedRowData common.RowData) (tea.Cmd, error) {
 	}
 
 	return func() tea.Msg {
-		if _, err := api.DeleteById(idStr, nil, nil); err != nil {
+		result, err := api.DeleteById(idStr, nil, nil)
+		if err != nil {
 			bw.log.Error("Failed to delete",
 				zap.String("id", idStr),
 				zap.Error(err))
@@ -1056,6 +1244,17 @@ func (bw *BaseWidget) delete(selectedRowData common.RowData) (tea.Cmd, error) {
 				Err: err,
 			}
 		}
+
+		// Handle potentially async task (wait for completion if needed)
+		if err := bw.handleMaybeAsyncTask(rest, result); err != nil {
+			bw.log.Error("Async delete task failed",
+				zap.String("id", idStr),
+				zap.Error(err))
+			return msg_types.ErrorMsg{
+				Err: fmt.Errorf("async delete task failed: %w", err),
+			}
+		}
+
 		bw.SetListData() // Refresh the list after deletion
 		bw.SetModeMust(common.NavigatorModeList)
 		return nil
@@ -1125,21 +1324,6 @@ func (bw *BaseWidget) viewPrompt() string {
 	return bw.PromptAdapter.PromptDo(msg, title, bw.GetWidth(), bw.GetHeight())
 }
 
-// TogglePromptSelection toggles between Yes and No buttons in the prompt
-func (bw *BaseWidget) TogglePromptSelection() {
-	if bw.PromptAdapter != nil {
-		bw.PromptAdapter.ToggleSelection()
-	}
-}
-
-// IsPromptNoSelected returns true if "No" button is currently selected
-func (bw *BaseWidget) IsPromptNoSelected() bool {
-	if bw.PromptAdapter != nil {
-		return bw.PromptAdapter.IsNoSelected()
-	}
-	return false // Default to Yes (false means No is not selected)
-}
-
 // ------------------------------
 // FormNavigateAdaptor methods
 // ------------------------------
@@ -1188,8 +1372,6 @@ func (bw *BaseWidget) GetExtraMode() common.ExtraNavigatorMode {
 func (bw *BaseWidget) SetExtraMode(mode common.ExtraNavigatorMode) {
 	// Add trace logging
 	bw.TraceLog()
-	bw.auxlog.Printf("🟢 SET_EXTRA_MODE: widget=%T mode=%s", bw.parent, mode.String())
-
 	// For extra widgets, delegate to parent widget but also provide context
 	if bw.isExtra {
 		bw.ExtraWidgetNavigator.SetExtraMode(mode)
@@ -1230,11 +1412,25 @@ func (bw *BaseWidget) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 
 func (bw *BaseWidget) GetKeyBindings() []common.KeyBinding {
 	if bw.isExtra {
-		// Extra widgets should implement their own key bindings
-		return []common.KeyBinding{} // Return empty for now
+		// For extra widgets, check the extra mode and return appropriate bindings
+		if bw.ExtraWidgetNavigator != nil {
+			mode := bw.ExtraWidgetNavigator.GetExtraMode()
+			switch mode {
+			case common.ExtraNavigatorModePrompt:
+				bindings := bw.GetPromptKeyBindings()
+				return bindings
+			case common.ExtraNavigatorModeDetails:
+				return bw.GetDetailsKeyBindings()
+			// Add other extra modes as needed
+			default:
+				return []common.KeyBinding{}
+			}
+		}
+		return []common.KeyBinding{}
 	}
 	var keyBindings []common.KeyBinding
-	switch bw.WidgetNavigator.GetMode() {
+	mode := bw.WidgetNavigator.GetMode()
+	switch mode {
 	case common.NavigatorModeList:
 		keyBindings = bw.GetListKeyBindings()
 	case common.NavigatorModeCreate:
@@ -1245,139 +1441,225 @@ func (bw *BaseWidget) GetKeyBindings() []common.KeyBinding {
 		keyBindings = bw.GetDetailsKeyBindings()
 	case common.NavigatorModeExtra:
 		// Delegate to the extra widget group
-		keyBindings = bw.GetExtraWidget().GetKeyBindings()
+		extraWidget := bw.GetExtraWidget()
+		keyBindings = extraWidget.GetKeyBindings()
 	}
 
 	return keyBindings
 }
 
 func (bw *BaseWidget) GetListKeyBindings() []common.KeyBinding {
-	// Return cached bindings if available
-	if bw.cachedListKeyBindings == nil {
-		availableBindings := []common.KeyBinding{
-			{Key: "<:>", Desc: "resources", Generic: true},
-			{Key: "</>", Desc: "search", Generic: true},
-			{Key: "<?>", Desc: "query params", Generic: true},
-			{Key: "<↑/↓>", Desc: "navigate"},
-			{Key: "<enter>", Desc: "select"},
-		}
-
-		// Add delete key binding only if Delete mode is allowed
-		if bw.isModeAllowed(common.NavigatorModeDelete) {
-			availableBindings = append(availableBindings, common.KeyBinding{Key: "<ctrl+d>", Desc: "delete"})
-		}
-
-		// Add details key binding only if Details mode is allowed
-		if bw.isModeAllowed(common.NavigatorModeDetails) {
-			availableBindings = append(availableBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
-		}
-
-		if bw.CanUseExtra() {
-			availableBindings = append(availableBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
-		}
-
-		// Add create key binding only if Create mode is allowed and inputs are available
-		inputs, err := bw.parent.GetInputs()
-		if err == nil && len(inputs) > 0 && bw.isModeAllowed(common.NavigatorModeCreate) {
-			availableBindings = append(availableBindings, common.KeyBinding{Key: "<n>", Desc: "new"})
-		}
-
-		// Collect shortcuts from all extra widgets
-		if bw.CanUseExtra() {
-			for _, shortcut := range bw.ShortCuts() {
-				if keyBinding := shortcut.ShortCut(); keyBinding != nil {
-					availableBindings = append(availableBindings, *keyBinding)
-				}
-			}
-		}
-
-		bindings := make([]common.KeyBinding, 0, len(availableBindings))
-		notAllowedKeys := bw.WidgetNavigator.NotAllowedListKeys
-
-		for _, binding := range availableBindings {
-			strippedBinding := strings.Trim(binding.Key, "<>")
-			if _, ok := notAllowedKeys[strippedBinding]; !ok {
-				bindings = append(bindings, binding)
-			}
-		}
-		bw.cachedListKeyBindings = bindings
-
+	availableBindings := []common.KeyBinding{
+		{Key: "<:>", Desc: "resources", Generic: true},
+		{Key: "</>", Desc: "search", Generic: true},
+		{Key: "<?>", Desc: "query params", Generic: true},
 	}
 
-	return bw.cachedListKeyBindings
+	// Only add navigation and select keys if the widget supports list operations
+	supportsListOps := true
+	supportsReadOps := true
+	if autoWidget, ok := bw.parent.(*AutoGeneratedWidget); ok {
+		supportsListOps = autoWidget.SupportsListOperation()
+		supportsReadOps = autoWidget.SupportsReadOperation()
+	}
 
+	// Show navigation keybinding if LIST is supported
+	if supportsListOps {
+		availableBindings = append(availableBindings,
+			common.KeyBinding{Key: "<↑/↓>", Desc: "navigate"},
+		)
+	}
+
+	// Show select keybinding only if both LIST and READ are supported
+	if supportsListOps && supportsReadOps {
+		availableBindings = append(availableBindings,
+			common.KeyBinding{Key: "<enter>", Desc: "select"},
+		)
+	}
+
+	// Add delete key binding only if Delete mode is allowed and list operations are supported
+	if supportsListOps && bw.isModeAllowed(common.NavigatorModeDelete) {
+		availableBindings = append(availableBindings, common.KeyBinding{Key: "<ctrl+d>", Desc: "delete"})
+	}
+
+	// Add details key binding only if Details mode is allowed and READ operations are supported
+	if supportsReadOps && bw.isModeAllowed(common.NavigatorModeDetails) {
+		availableBindings = append(availableBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
+	}
+
+	if bw.CanUseExtra() {
+		availableBindings = append(availableBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
+	}
+
+	// Add create key binding only if Create mode is allowed and inputs are available
+	inputs, err := bw.parent.GetInputs()
+	if err == nil && len(inputs) > 0 && bw.isModeAllowed(common.NavigatorModeCreate) {
+		availableBindings = append(availableBindings, common.KeyBinding{Key: "<n>", Desc: "new"})
+	}
+
+	// Collect shortcuts from all extra widgets (sorted by key for consistent display)
+	if bw.CanUseExtra() {
+		shortcuts := bw.ShortCuts()
+		// Extract and sort keys to ensure consistent ordering (1, 2, 3, etc.)
+		keys := make([]string, 0, len(shortcuts))
+		for key := range shortcuts {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+
+		// Add shortcuts in sorted order
+		for _, key := range keys {
+			shortcut := shortcuts[key]
+			if keyBinding := shortcut.ShortCut(); keyBinding != nil {
+				availableBindings = append(availableBindings, *keyBinding)
+			}
+		}
+	}
+
+	bindings := make([]common.KeyBinding, 0, len(availableBindings))
+
+	// Get not allowed keys based on widget type (extra vs main)
+	var notAllowedKeys map[string]struct{}
+	if bw.isExtra && bw.ExtraWidgetNavigator != nil {
+		notAllowedKeys = bw.ExtraWidgetNavigator.NotAllowedListKeys
+	} else if bw.WidgetNavigator != nil {
+		notAllowedKeys = bw.WidgetNavigator.NotAllowedListKeys
+	}
+
+	for _, binding := range availableBindings {
+		strippedBinding := strings.Trim(binding.Key, "<>")
+		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+			bindings = append(bindings, binding)
+		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
+			bindings = append(bindings, binding)
+		}
+	}
+
+	return bindings
 }
 
 func (bw *BaseWidget) GetCreateKeyBindings() []common.KeyBinding {
-	if bw.cachedCreateKeyBindings == nil {
-		availableBindings := []common.KeyBinding{
-			{Key: "<tab>", Desc: "next input"},
-			{Key: "<shift+tab>", Desc: "previous input"},
-			{Key: "<ctrl+s>", Desc: "submit"},
-			{Key: "<esc>", Desc: "back"},
-			{Key: "<space>", Desc: "toggle boolean"},
-			{Key: "<,>", Desc: "array delimiter"},
-			{Key: "<ctrl+t>", Desc: "toggle form/json"},
-		}
-
-		bindings := make([]common.KeyBinding, 0, len(availableBindings))
-		notAllowedKeys := bw.WidgetNavigator.NotAllowedCreateKeys
-
-		for _, binding := range availableBindings {
-			strippedBinding := strings.Trim(binding.Key, "<>")
-			if _, ok := notAllowedKeys[strippedBinding]; !ok {
-				bindings = append(bindings, binding)
-			}
-		}
-		bw.cachedCreateKeyBindings = bindings
+	availableBindings := []common.KeyBinding{
+		{Key: "<tab>", Desc: "next input"},
+		{Key: "<shift+tab>", Desc: "previous input"},
+		{Key: "<ctrl+s>", Desc: "submit"},
+		{Key: "<esc>", Desc: "back"},
+		{Key: "<space>", Desc: "toggle boolean"},
+		{Key: "<,>", Desc: "array delimiter"},
+		{Key: "<ctrl+t>", Desc: "toggle form/json"},
 	}
-	return bw.cachedCreateKeyBindings
+
+	bindings := make([]common.KeyBinding, 0, len(availableBindings))
+
+	// For extra widgets, use ExtraWidgetNavigator; for main widgets, use WidgetNavigator
+	var notAllowedKeys map[string]struct{}
+	if bw.isExtra && bw.ExtraWidgetNavigator != nil {
+		notAllowedKeys = bw.ExtraWidgetNavigator.NotAllowedCreateKeys
+	} else if bw.WidgetNavigator != nil {
+		notAllowedKeys = bw.WidgetNavigator.NotAllowedCreateKeys
+	}
+
+	for _, binding := range availableBindings {
+		strippedBinding := strings.Trim(binding.Key, "<>")
+		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+			bindings = append(bindings, binding)
+		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
+			bindings = append(bindings, binding)
+		}
+	}
+
+	return bindings
 }
 
 func (bw *BaseWidget) GetDeleteKeyBindings() []common.KeyBinding {
-	if bw.cachedDeleteKeyBindings == nil {
-		availableBindings := []common.KeyBinding{
-			{Key: "<←/→/tab>", Desc: "toggle"},
-			{Key: "<n or esc>", Desc: "cancel"},
-			{Key: "<enter>", Desc: "confirm"},
-		}
-
-		bindings := make([]common.KeyBinding, 0, len(availableBindings))
-		notAllowedKeys := bw.WidgetNavigator.NotAllowedDeleteKeys
-
-		for _, binding := range availableBindings {
-			strippedBinding := strings.Trim(binding.Key, "<>")
-			if _, ok := notAllowedKeys[strippedBinding]; !ok {
-				bindings = append(bindings, binding)
-			}
-		}
-		bw.cachedDeleteKeyBindings = bindings
+	availableBindings := []common.KeyBinding{
+		{Key: "<←/→/tab>", Desc: "toggle"},
+		{Key: "<n or esc>", Desc: "cancel"},
+		{Key: "<enter>", Desc: "confirm"},
 	}
-	return bw.cachedDeleteKeyBindings
+
+	bindings := make([]common.KeyBinding, 0, len(availableBindings))
+
+	// For extra widgets, use ExtraWidgetNavigator; for main widgets, use WidgetNavigator
+	var notAllowedKeys map[string]struct{}
+	if bw.isExtra && bw.ExtraWidgetNavigator != nil {
+		notAllowedKeys = bw.ExtraWidgetNavigator.NotAllowedDeleteKeys
+	} else if bw.WidgetNavigator != nil {
+		notAllowedKeys = bw.WidgetNavigator.NotAllowedDeleteKeys
+	}
+
+	for _, binding := range availableBindings {
+		strippedBinding := strings.Trim(binding.Key, "<>")
+		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+			bindings = append(bindings, binding)
+		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
+			bindings = append(bindings, binding)
+		}
+	}
+
+	return bindings
+}
+
+func (bw *BaseWidget) GetPromptKeyBindings() []common.KeyBinding {
+	availableBindings := []common.KeyBinding{
+		{Key: "<←/→/tab>", Desc: "navigate"},
+		{Key: "<y/n>", Desc: "quick select"},
+		{Key: "<enter>", Desc: "confirm"},
+		{Key: "<esc>", Desc: "cancel"},
+	}
+
+	bindings := make([]common.KeyBinding, 0, len(availableBindings))
+
+	// For extra widgets, use ExtraWidgetNavigator; for main widgets, use WidgetNavigator
+	// Use delete keys restrictions for prompt mode (same keys)
+	var notAllowedKeys map[string]struct{}
+	if bw.isExtra && bw.ExtraWidgetNavigator != nil {
+		notAllowedKeys = bw.ExtraWidgetNavigator.NotAllowedDeleteKeys
+	} else if bw.WidgetNavigator != nil {
+		notAllowedKeys = bw.WidgetNavigator.NotAllowedDeleteKeys
+	}
+
+	for _, binding := range availableBindings {
+		strippedBinding := strings.Trim(binding.Key, "<>")
+		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+			bindings = append(bindings, binding)
+		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
+			bindings = append(bindings, binding)
+		}
+	}
+
+	return bindings
 }
 func (bw *BaseWidget) GetDetailsKeyBindings() []common.KeyBinding {
-	if bw.cachedDetailsKeyBindings == nil {
-		availableBindings := []common.KeyBinding{
-			{Key: "</>", Desc: "search", Generic: true},
-			{Key: "<↑/↓>", Desc: "scroll"},
-			{Key: "<pgup/pgdn>", Desc: "page"},
-			{Key: "<ctrl+s>", Desc: "copy to clipboard"},
-			{Key: "<ctrl+r>", Desc: "refresh"},
-			{Key: "<esc>", Desc: "back"},
-		}
-
-		bindings := make([]common.KeyBinding, 0, len(availableBindings))
-		notAllowedKeys := bw.WidgetNavigator.NotAllowedDetailsKeys
-
-		for _, binding := range availableBindings {
-			strippedBinding := strings.Trim(binding.Key, "<>")
-			if _, ok := notAllowedKeys[strippedBinding]; !ok {
-				bindings = append(bindings, binding)
-			}
-		}
-		bw.cachedDetailsKeyBindings = bindings
+	availableBindings := []common.KeyBinding{
+		{Key: "</>", Desc: "search", Generic: true},
+		{Key: "<↑/↓>", Desc: "scroll"},
+		{Key: "<pgup/pgdn>", Desc: "page"},
+		{Key: "<ctrl+s>", Desc: "copy to clipboard"},
+		{Key: "<ctrl+r>", Desc: "refresh"},
+		{Key: "<esc>", Desc: "back"},
 	}
-	return bw.cachedDetailsKeyBindings
+
+	bindings := make([]common.KeyBinding, 0, len(availableBindings))
+
+	// For extra widgets, use ExtraWidgetNavigator; for main widgets, use WidgetNavigator
+	var notAllowedKeys map[string]struct{}
+	if bw.isExtra && bw.ExtraWidgetNavigator != nil {
+		notAllowedKeys = bw.ExtraWidgetNavigator.NotAllowedDetailsKeys
+	} else if bw.WidgetNavigator != nil {
+		notAllowedKeys = bw.WidgetNavigator.NotAllowedDetailsKeys
+	}
+
+	for _, binding := range availableBindings {
+		strippedBinding := strings.Trim(binding.Key, "<>")
+		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+			bindings = append(bindings, binding)
+		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
+			bindings = append(bindings, binding)
+		}
+	}
+
+	return bindings
 }
 
 // GetAllowedNavigatorModes and GetNotAllowedNavigatorModes provide navigation mode restrictions
@@ -1448,7 +1730,50 @@ func (bw *BaseWidget) ShortCut() *common.KeyBinding {
 	return nil
 }
 
+// SetResourceless sets whether this extra widget requires parent resources
+func (bw *BaseWidget) SetResourceless(resourceless bool) {
+	bw.resourceless = resourceless
+}
+
+// IsResourceless returns whether this extra widget can work without parent data
+func (bw *BaseWidget) IsResourceless() bool {
+	return bw.resourceless
+}
+
 func (bw *BaseWidget) ShortCuts() map[string]common.ExtraWidget {
 	return bw.GetExtraWidget().(*ExtraWidgetGroup).ShortCuts()
+}
 
+// GetExtraWidgets returns the list of extra widgets
+func (bw *BaseWidget) GetExtraWidgets() []common.ExtraWidget {
+	if eg, ok := bw.GetExtraWidget().(*ExtraWidgetGroup); ok {
+		// Convert map values to slice
+		widgets := make([]common.ExtraWidget, 0, len(eg.GetEntries()))
+		for _, widget := range eg.GetEntries() {
+			widgets = append(widgets, widget)
+		}
+		return widgets
+	}
+	return nil
+}
+
+// handleMaybeAsyncTask checks if a record represents an async task and waits for its completion
+// This is similar to the terraform provider's handleMaybeAsyncTask function
+func (bw *BaseWidget) handleMaybeAsyncTask(rest *vast_client.VMSRest, record vast_client.Record) error {
+	if record == nil {
+		return nil
+	}
+
+	// Use 10 minutes as default timeout for async operations
+	timeout := 10 * time.Minute
+	ctx := rest.GetCtx()
+
+	asyncResult, err := untyped.MaybeWaitAsyncResultWithContext(ctx, record, rest, timeout)
+	if err != nil {
+		return err
+	}
+	if asyncResult != nil && asyncResult.Err != nil {
+		return asyncResult.Err
+	}
+	return nil
 }

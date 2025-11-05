@@ -1,10 +1,12 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
 	"time"
+	"vastix/internal/colors"
 	"vastix/internal/database"
 	log "vastix/internal/logging"
 	"vastix/internal/msg_types"
@@ -29,6 +31,10 @@ type WorkingZone struct {
 	width, height int
 	resourceType  string
 	db            *database.Service // Database service
+	ctx           context.Context   // Base context for API calls
+
+	// Message channel for sending messages to the app
+	msgChan chan tea.Msg
 
 	// Widget management
 	widgets       map[string]common.Widget
@@ -36,6 +42,10 @@ type WorkingZone struct {
 
 	// Spinner display (moved from status zone)
 	spinnerMsg string
+
+	// Log buffer for spinner mode
+	logBuffer   []string // Buffer of log lines
+	maxLogLines int      // Maximum number of log lines to keep
 
 	// Error handling
 	errorHandler func(string) // Function to display errors
@@ -54,7 +64,7 @@ type WorkingZone struct {
 	lastSetDataWidget common.Widget
 }
 
-func NewWorkingZone(db *database.Service, errorHandler func(string), clearErrors func(), enableTickers func(), disableTickers func(), restClient interface{}) *WorkingZone {
+func NewWorkingZone(db *database.Service, errorHandler func(string), clearErrors func(), enableTickers func(), disableTickers func(), restClient interface{}, msgChan chan tea.Msg, ctx context.Context) *WorkingZone {
 	log.Debug("WorkingZone initializing")
 
 	// Note: REST client may be nil at startup - widgets will be initialized later
@@ -74,7 +84,8 @@ func NewWorkingZone(db *database.Service, errorHandler func(string), clearErrors
 	}
 
 	// Initialize Resources widget first - it manages all other widgets
-	resourcesWidget := widgets.NewResources(db).(*widgets.Resources)
+	// Pass msgChan so it can be propagated to all child widgets (including VipPoolForwarding for health monitoring)
+	resourcesWidget := widgets.NewResources(db, msgChan).(*widgets.Resources)
 
 	// Get all widgets from Resources widget (includes Profile + any generated widgets)
 	registeredWidgets := resourcesWidget.GetAllWidgets()
@@ -163,12 +174,16 @@ func NewWorkingZone(db *database.Service, errorHandler func(string), clearErrors
 	workingZone := &WorkingZone{
 		resourceType:   currentResourceType,
 		db:             db,
+		ctx:            ctx,
+		msgChan:        msgChan,
 		widgets:        registeredWidgets,
 		currentWidget:  currentWidget,
 		errorHandler:   errorHandler,
 		clearErrors:    clearErrors,
 		enableTickers:  enableTickers,
 		disableTickers: disableTickers,
+		logBuffer:      []string{},
+		maxLogLines:    100, // Keep last 100 lines
 	}
 
 	workingZone.setNavigatorMode(navigatorMode)
@@ -188,12 +203,14 @@ func (w *WorkingZone) Init() {
 }
 
 // InitializeAPIWidgets initializes widgets from API after profile connection
-func (w *WorkingZone) InitializeAPIWidgets(restClient *rest.UntypedVMSRest) error {
+func (w *WorkingZone) InitializeAPIWidgets(restClient *rest.UntypedVMSRest, profile *database.Profile) error {
+	// If restClient is nil (e.g., due to network error), we cannot initialize API widgets
 	if restClient == nil {
-		return fmt.Errorf("rest client is nil")
+		log.Warn("REST client is nil, cannot initialize API widgets (will retry when profile is activated)")
+		return nil // Not an error - just means widgets aren't available yet
 	}
 
-	log.Info("Initializing API widgets after profile connection")
+	log.Info("Initializing API widgets")
 
 	factory, err := widgets.InitializeWidgets(w.db, restClient)
 	if err != nil {
@@ -209,13 +226,17 @@ func (w *WorkingZone) InitializeAPIWidgets(restClient *rest.UntypedVMSRest) erro
 		// Get all widgets (including newly generated ones)
 		allWidgets := resourcesWidget.GetAllWidgets()
 
-		// Update the widgets map with any new widgets
 		for name, widget := range allWidgets {
-			if _, exists := w.widgets[name]; !exists {
-				w.widgets[name] = widget
-				widget.SetSize(w.width, w.height)
+			// Check if this widget was already registered
+			if _, exists := w.widgets[name]; exists {
+				// Widget already exists - replace it with the new one to pick up new REST client
+				log.Debug("Replacing existing widget with new one (profile switch)", zap.String("resource", name))
+			} else {
 				log.Debug("Registered new widget", zap.String("resource", name))
 			}
+			// Always set/replace the widget
+			w.widgets[name] = widget
+			widget.SetSize(w.width, w.height)
 		}
 
 		// Refresh the Resources widget to show the new widgets
@@ -302,8 +323,6 @@ func (w *WorkingZone) setNavigatorMode(mode common.NavigatorMode) {
 		return
 	}
 
-	auxlog.Printf("setNavigatorMode: setting mode to %v for widget %T", mode, w.currentWidget)
-
 	// Set the navigator mode for the current widget
 	w.currentWidget.SetMode(mode)
 
@@ -311,9 +330,9 @@ func (w *WorkingZone) setNavigatorMode(mode common.NavigatorMode) {
 	// Tickers are enabled only in NavigatorModeList to provide real-time data updates
 	// when browsing lists. They are disabled in other modes (create, delete, details, extra)
 	// to avoid interference and unnecessary processing during focused operations.
-	if mode == common.NavigatorModeList {
-		// Enable tickers only in list mode
-		auxlog.Println("setNavigatorMode: enabling tickers (list mode)")
+	// IMPORTANT: Check the widget's ACTUAL mode after SetMode, not the input parameter,
+	// because widgets can override SetMode and change the mode (e.g., VSettings)
+	if w.currentWidget.GetMode() == common.NavigatorModeList {
 		if w.enableTickers != nil {
 			w.enableTickers()
 		}
@@ -348,8 +367,6 @@ func (w *WorkingZone) SetResourceType(resourceType string) {
 		log.Debug("Failed to get current resource from database", zap.Error(err))
 		currentFromDB = w.resourceType // Fallback to in-memory value
 	}
-
-	auxlog.Printf("Switching resource type from %s to %s", currentFromDB, resourceType)
 	// Don't update history if we're not actually changing
 	if currentFromDB == resourceType {
 		log.Debug("Resource type unchanged, skipping history update")
@@ -369,7 +386,7 @@ func (w *WorkingZone) SetResourceType(resourceType string) {
 		w.currentWidget = widget
 		w.currentWidget.SetSize(w.width, w.height)
 		// Update resource history in database: current becomes previous, new becomes current
-		auxlog.Printf("Updating database: current='%s' -> previous='%s'", resourceType, currentFromDB)
+		auxlog.Printf("Widgets history: previous='%s' -> current='%s'", currentFromDB, resourceType)
 		if err := w.db.SetResourceHistory(resourceType, currentFromDB); err != nil {
 			auxlog.Printf("Failed to update resource history: %v", err)
 			log.Debug("Failed to update resource history in database",
@@ -377,7 +394,6 @@ func (w *WorkingZone) SetResourceType(resourceType string) {
 				zap.String("new_current", resourceType),
 				zap.String("new_previous", currentFromDB))
 		} else {
-			auxlog.Printf("Resource history saved to database: current='%s', previous='%s'", resourceType, currentFromDB)
 			log.Debug("Resource history updated successfully",
 				zap.String("new_current", resourceType),
 				zap.String("new_previous", currentFromDB))
@@ -407,13 +423,29 @@ func (w *WorkingZone) Ready() bool {
 }
 
 // SetSpinner sets the spinner message to display in the working zone
+// Also enables aux logger output to working zone
 func (w *WorkingZone) SetSpinner(msg string) {
 	w.spinnerMsg = msg
+
+	// Enable aux logger to write to working zone when spinner starts
+	if msg != "" {
+		log.SetAuxLogWriter(w)
+	}
 }
 
-// ClearSpinner clears the spinner message from the working zone
+// ClearSpinner clears the spinner message and log buffer from the working zone
+// Also disables aux logger output to working zone
 func (w *WorkingZone) ClearSpinner() {
 	w.spinnerMsg = ""
+	w.ClearLogs()
+
+	// Disable aux logger output to working zone when spinner ends
+	log.ClearAuxLogWriter()
+}
+
+func (w *WorkingZone) ClearWidget() {
+	// Set the current widget to nil (cleanup is handled by caller via Clean())
+	w.currentWidget = nil
 }
 
 // HasSpinner returns true if there's a spinner message to display
@@ -421,14 +453,89 @@ func (w *WorkingZone) HasSpinner() bool {
 	return w.spinnerMsg != ""
 }
 
+// Write implements io.Writer interface for streaming logs to the working zone
+// Only accepts logs when in spinner mode
+func (w *WorkingZone) Write(p []byte) (n int, err error) {
+	// Only buffer logs if we're in spinner mode
+	if !w.HasSpinner() {
+		// Not in spinner mode - silently discard
+		return len(p), nil
+	}
+
+	lines := strings.Split(string(p), "\n")
+
+	for _, line := range lines {
+		if line == "" {
+			continue // Skip empty lines
+		}
+
+		w.logBuffer = append(w.logBuffer, line)
+
+		// Keep only the last maxLogLines
+		if len(w.logBuffer) > w.maxLogLines {
+			w.logBuffer = w.logBuffer[len(w.logBuffer)-w.maxLogLines:]
+		}
+	}
+
+	return len(p), nil
+}
+
+// AppendLog appends a log line to the buffer
+func (w *WorkingZone) AppendLog(text string) {
+	lines := strings.Split(text, "\n")
+
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		w.logBuffer = append(w.logBuffer, line)
+
+		// Keep only the last maxLogLines
+		if len(w.logBuffer) > w.maxLogLines {
+			w.logBuffer = w.logBuffer[len(w.logBuffer)-w.maxLogLines:]
+		}
+	}
+}
+
+// ClearLogs clears the log buffer
+func (w *WorkingZone) ClearLogs() {
+	w.logBuffer = []string{}
+}
+
+// GetLogWriter returns the working zone as an io.Writer for logs
+func (w *WorkingZone) GetLogWriter() *WorkingZone {
+	return w
+}
+
+// GetMsgChan returns the message channel for widgets to send messages to the app
+func (w *WorkingZone) GetMsgChan() chan tea.Msg {
+	return w.msgChan
+}
+
 func (w *WorkingZone) SetListData() tea.Msg {
+	return w.SetListDataWithContext(w.ctx)
+}
+
+// SetListDataWithContext fetches list data with the provided context.
+// This allows callers to pass context with special flags (e.g., to skip interceptor logging for ticker updates).
+func (w *WorkingZone) SetListDataWithContext(ctx context.Context) tea.Msg {
 	if w.currentWidget == nil {
 		log.Error("SetListData: currentWidget is nil")
 		return msg_types.MockMsg{}
 	}
 
-	// Call the widget's SetListData method
-	result := w.currentWidget.SetListData()
+	// Call the widget's SetListDataWithContext method if available, otherwise fall back to SetListData
+	type contextAwareWidget interface {
+		SetListDataWithContext(context.Context) tea.Msg
+	}
+
+	var result tea.Msg
+	if ctxWidget, ok := w.currentWidget.(contextAwareWidget); ok {
+		result = ctxWidget.SetListDataWithContext(ctx)
+	} else {
+		result = w.currentWidget.SetListData()
+	}
 
 	// Update throttling fields after successful execution
 	w.lastSetDataTime = time.Now()
@@ -441,6 +548,12 @@ func (w *WorkingZone) SetListData() tea.Msg {
 // - The current widget has changed since the last call, OR
 // - More than 1 minute has passed since the last call for the same widget
 func (w *WorkingZone) SetListDataThrottled() tea.Msg {
+	return w.SetListDataThrottledWithContext(w.ctx)
+}
+
+// SetListDataThrottledWithContext calls SetListDataWithContext only if throttle conditions are met.
+// This allows callers to pass context with special flags (e.g., to skip interceptor logging for ticker updates).
+func (w *WorkingZone) SetListDataThrottledWithContext(ctx context.Context) tea.Msg {
 	auxlog := log.GetAuxLogger()
 	now := time.Now()
 
@@ -459,10 +572,10 @@ func (w *WorkingZone) SetListDataThrottled() tea.Msg {
 		currentWidgetType = "<nil>"
 	}
 
-	// Call SetListData if widget changed or enough time has passed
+	// Call SetListDataWithContext if widget changed or enough time has passed
 	if widgetChanged || timePassed {
-		// Call SetListData - it will update the throttling fields after execution
-		return w.SetListData()
+		// Call SetListDataWithContext - it will update the throttling fields after execution
+		return w.SetListDataWithContext(ctx)
 	}
 
 	// Throttled - return nil (no-op)
@@ -478,17 +591,17 @@ func (w *WorkingZone) GetWidgetBindings() []common.KeyBinding {
 	if w.currentWidget == nil {
 		return []common.KeyBinding{}
 	}
-	return w.currentWidget.GetKeyBindings()
+	bindings := w.currentWidget.GetKeyBindings()
+	return bindings
 }
 
-// renderSpinnerOnly renders empty content with spinner in top-left, will get bordered
+// renderSpinnerOnly renders content split into two horizontal zones:
+// - Top zone: Latest logs that fit the width
+// - Bottom zone: Spinner
 func (w *WorkingZone) renderSpinnerOnly() string {
 	if w.spinnerMsg == "" {
 		return ""
 	}
-
-	// Create empty content area of the same size as normal content
-	// The border will be added by the widget rendering system (and will be gray due to global state)
 
 	// Calculate inner content dimensions (accounting for borders that will be added)
 	innerWidth := w.width - 2       // Account for left and right borders
@@ -501,28 +614,97 @@ func (w *WorkingZone) renderSpinnerOnly() string {
 		innerHeight = 5 // Minimum height
 	}
 
-	// Create empty lines
-	lines := make([]string, innerHeight)
-	for i := range lines {
-		lines[i] = strings.Repeat(" ", innerWidth)
+	// Reserve space for spinner at bottom (3 lines: 1 empty, 1 spinner, 1 margin)
+	spinnerHeight := 3
+	logHeight := innerHeight - spinnerHeight
+	if logHeight < 0 {
+		logHeight = 0
 	}
 
-	// Put spinner in bottom-left corner with same margins as splash screen
-	leftMargin := "    " // Same as splash screen (4 spaces)
-	if len(lines) > 2 {  // Make sure we have enough lines for bottom positioning
-		// Position spinner near the bottom (leave 1 line for bottom margin)
-		bottomLineIndex := len(lines) - 2
+	// Create all lines
+	lines := make([]string, innerHeight)
 
-		// Spinner already has brackets built-in now
+	// Top zone: Render logs with left padding and gray color
+	leftPadding := "  "                                         // 2 spaces left padding
+	grayStyle := lipgloss.NewStyle().Foreground(colors.Grey240) // Gray color
+
+	if logHeight > 0 && len(w.logBuffer) > 0 {
+		// Get the latest logs that fit in the log zone
+		startIdx := 0
+		if len(w.logBuffer) > logHeight {
+			startIdx = len(w.logBuffer) - logHeight
+		}
+
+		logLines := w.logBuffer[startIdx:]
+
+		// Render each log line with padding and gray color
+		for i := 0; i < logHeight; i++ {
+			if i < len(logLines) {
+				logLine := logLines[i]
+
+				// Remove ANSI codes for width calculation
+				cleanLine := regexp.MustCompile(`\x1b\[[0-9;]*m`).ReplaceAllString(logLine, "")
+
+				// Calculate available width after padding
+				availableWidth := innerWidth - len(leftPadding)
+				if availableWidth < 1 {
+					availableWidth = 1
+				}
+
+				// Apply gray color to the log line
+				styledLine := grayStyle.Render(cleanLine)
+
+				// Remove ANSI from styled line for width calculation
+				cleanStyled := regexp.MustCompile(`\x1b\[[0-9;]*m`).ReplaceAllString(styledLine, "")
+
+				if len(cleanLine) > availableWidth {
+					// Truncate to fit available width
+					// Find where to cut in styled line (approximate)
+					cutPoint := availableWidth
+					styledLine = grayStyle.Render(cleanLine[:cutPoint])
+				}
+
+				// Add left padding and right padding to fill width
+				logWithPadding := leftPadding + styledLine
+				cleanWithPadding := leftPadding + cleanStyled
+				rightPadding := innerWidth - len(cleanWithPadding)
+				if rightPadding > 0 {
+					lines[i] = logWithPadding + strings.Repeat(" ", rightPadding)
+				} else {
+					lines[i] = logWithPadding
+				}
+			} else {
+				// Empty line
+				lines[i] = strings.Repeat(" ", innerWidth)
+			}
+		}
+	} else {
+		// No logs - fill with empty lines
+		for i := 0; i < logHeight; i++ {
+			lines[i] = strings.Repeat(" ", innerWidth)
+		}
+	}
+
+	// Bottom zone: Render spinner
+	leftMargin := "    " // 4 spaces margin
+
+	// Add separator line (empty)
+	if logHeight < innerHeight {
+		lines[logHeight] = strings.Repeat(" ", innerWidth)
+	}
+
+	// Add spinner line
+	if logHeight+1 < innerHeight {
 		spinnerWithMargin := leftMargin + w.spinnerMsg
-
-		// Calculate padding (spinner msg already includes brackets and spaces)
-		// Note: getSpinnerDisplayWidth strips ANSI codes but doesn't account for brackets
-		// Since spinner now includes brackets, we need to estimate total visual width
 		cleanSpinnerWidth := w.getSpinnerDisplayWidth()
 		totalVisualWidth := cleanSpinnerWidth + 6 // +6 for [  ] brackets with spaces
 		paddingNeeded := common.Max(0, innerWidth-len(leftMargin)-totalVisualWidth)
-		lines[bottomLineIndex] = spinnerWithMargin + strings.Repeat(" ", paddingNeeded)
+		lines[logHeight+1] = spinnerWithMargin + strings.Repeat(" ", paddingNeeded)
+	}
+
+	// Add bottom margin line
+	if logHeight+2 < innerHeight {
+		lines[logHeight+2] = strings.Repeat(" ", innerWidth)
 	}
 
 	content := strings.Join(lines, "\n")
@@ -543,8 +725,8 @@ func (w *WorkingZone) getSpinnerDisplayWidth() int {
 // getFormTitle returns the same title that the normal form would have
 func (w *WorkingZone) getFormTitle() string {
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("214")). // Orange background
-		Foreground(lipgloss.Color("0"))    // Black text
+		Background(colors.Orange).   // Orange background
+		Foreground(colors.BlackTerm) // Black text
 
 	switch w.currentWidget.GetMode() {
 	case common.NavigatorModeCreate:

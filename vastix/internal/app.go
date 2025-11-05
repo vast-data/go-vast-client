@@ -14,7 +14,6 @@ import (
 	"vastix/internal/logging"
 	"vastix/internal/msg_types"
 	"vastix/internal/tui"
-	"vastix/internal/tui/widgets"
 	"vastix/internal/tui/widgets/common"
 
 	"go.uber.org/zap"
@@ -32,6 +31,9 @@ type App struct {
 	width, height int
 	appVersion    string
 
+	// Base context for all app operations
+	ctx context.Context
+
 	// UI zones
 	profile         *tui.ProfileZone
 	keybindings     *tui.KeybindingsZone
@@ -41,6 +43,9 @@ type App struct {
 	filtersZone     *tui.FiltersZone  // Filters zone for search and filtering
 	currentResource string            // Track current resource type (views, quotas, etc.)
 	db              *database.Service // Database service
+
+	// Message channel for sending messages to the app from widgets/goroutines
+	msgChan chan tea.Msg
 
 	// Spinner for splash screen and status zone
 	spinnerView       string
@@ -61,8 +66,13 @@ type App struct {
 	auxlog *stdlog.Logger
 }
 
+// GetMsgChan returns the message channel for sending messages to the app
+func (a *App) GetMsgChan() chan tea.Msg {
+	return a.msgChan
+}
+
 // NewApp creates a new TUI application
-func NewApp(appVersion string, spinnerCtrl *SpinnerControl, tickerCtrl *TickerControl) *App {
+func NewApp(appVersion string, spinnerCtrl *SpinnerControl, tickerCtrl *TickerControl, msgChan chan tea.Msg) *App {
 	auxlog := logging.GetAuxLogger()
 	log := logging.GetGlobalLogger()
 	log.Info(fmt.Sprintf("App version: %s", appVersion))
@@ -75,18 +85,25 @@ func NewApp(appVersion string, spinnerCtrl *SpinnerControl, tickerCtrl *TickerCo
 	}
 	auxlog.Println("Database initialized successfully")
 
+	// Create base context for the application
+	baseCtx := context.Background()
+	// Set the base context on the database service so all components can access it
+	db.SetContext(baseCtx)
+
 	// Initialize REST client service
 	restService := client.InitGlobalRestService()
 	auxlog.Println("REST client service initialized")
 
 	app := &App{
 		appVersion:        appVersion,
-		profile:           tui.NewProfileZone(db),
+		ctx:               baseCtx,
+		profile:           tui.NewProfileZone(db, baseCtx),
 		keybindings:       tui.NewKeybindingsZone(db),
 		logo:              tui.NewLogoZone(db),
 		statusZone:        tui.NewStatusZone(db),
 		currentResource:   "profiles", // Default resource type
 		db:                db,
+		msgChan:           msgChan,
 		spinnerView:       "",
 		spinnerControl:    spinnerCtrl,
 		spinnerActive:     false,
@@ -105,7 +122,7 @@ func NewApp(appVersion string, spinnerCtrl *SpinnerControl, tickerCtrl *TickerCo
 
 	// Create working zone with error handlers and ticker control that reference the app
 	// Pass nil for restClient initially - it will be set later when profile is loaded
-	app.workingZone = tui.NewWorkingZone(db, app.SetError, app.ClearError, app.EnableTickers, app.DisableTickers, nil)
+	app.workingZone = tui.NewWorkingZone(db, app.SetError, app.ClearError, app.EnableTickers, app.DisableTickers, nil, msgChan, baseCtx)
 
 	app.workingZone.BeforeSetResourceCb = func() {
 		// Reset all filters and search state before switching resource types
@@ -131,6 +148,8 @@ func (a *App) Init() tea.Cmd {
 	// Log any panics that occur during init
 	defer logging.LogPanic()
 
+	var initError string // Store error to set after spinner completes
+
 	initAppCmd := func() tea.Msg {
 		a.auxlog.Println("[app.Init] - start")
 		// OpenAPI document will be loaded automatically when first needed
@@ -141,16 +160,36 @@ func (a *App) Init() tea.Cmd {
 		a.statusZone.Init()
 		a.filtersZone.Init()
 
-		// Initialize API widgets if there's an active profile with REST client
+		// Initialize API widgets if there's an active profile
 		if profile, err := a.db.GetActiveProfile(); err == nil && profile != nil {
-			if restClient, err := profile.RestClientFromProfile(); err == nil && restClient != nil {
-				a.auxlog.Println("[app.Init] - initializing API widgets from active profile")
-				// VMSRest is already UntypedVMSRest (type alias)
-				if err := a.workingZone.InitializeAPIWidgets(restClient); err != nil {
-					a.log.Error("Failed to initialize API widgets", zap.Error(err))
+			// Try to create a real REST client
+			restClient, err := profile.RestClientFromProfile()
+			if err != nil {
+				// REST client creation failed - save error to display later
+				a.log.Warn("Failed to create REST client", zap.Error(err), zap.String("profile", profile.ProfileName()))
+				a.auxlog.Printf("[app.Init] - REST client creation failed: %v", err)
+				initError = err.Error()
+			} else {
+				// REST client created successfully - verify connectivity by getting versions
+				a.auxlog.Println("[app.Init] - verifying connectivity by getting versions")
+				if _, err := restClient.Versions.ListWithContext(a.ctx, nil); err != nil {
+					// Connectivity test failed
+					a.auxlog.Printf("[app.Init] - API connectivity test failed: %v", err)
+					initError = err.Error()
 				} else {
-					a.auxlog.Println("[app.Init] - API widgets initialized successfully")
+					a.auxlog.Println("[app.Init] - API connectivity verified successfully")
 				}
+			}
+
+			// Initialize widgets (will create mock client internally if restClient is nil)
+			a.auxlog.Println("[app.Init] - initializing API widgets")
+			if err := a.workingZone.InitializeAPIWidgets(restClient, profile); err != nil {
+				a.log.Error("Failed to initialize API widgets", zap.Error(err))
+				if initError == "" {
+					initError = fmt.Sprintf("failed to initialize API widgets: %v", err)
+				}
+			} else {
+				a.auxlog.Println("[app.Init] - API widgets initialized successfully")
 			}
 		}
 
@@ -160,6 +199,14 @@ func (a *App) Init() tea.Cmd {
 		a.auxlog.Println("[app.Init] - completed successfully")
 		return nil
 	}
+
+	// Start a goroutine to set error after delay (avoids being cleared by spinner start)
+	go func() {
+		time.Sleep(1 * time.Second)
+		if initError != "" {
+			a.msgChan <- msg_types.ErrorMsg{Err: fmt.Errorf("%s", initError)}
+		}
+	}()
 
 	cmd := tea.Sequence(
 		initAppCmd, // Init app has splash screen spinner. No need to add spinner control here
@@ -189,6 +236,24 @@ func (a *App) forceStopAllSpinners() {
 	a.workingZone.ClearSpinner()
 
 	a.auxlog.Println("All spinners force stopped and cleaned up")
+}
+
+func (a *App) clean() {
+	a.auxlog.Println("App.clean: starting cleanup")
+
+	// Stop all spinners first
+	a.forceStopAllSpinners()
+
+	// Clean up the current widget (calls LeaveWidget if in extra mode)
+	if currentWidget := a.workingZone.GetCurrentWidget(); currentWidget != nil {
+		a.auxlog.Printf("App.clean: cleaning current widget: %s", currentWidget.GetName())
+		currentWidget.Clean()
+	}
+
+	// Clear the widget from the working zone
+	a.workingZone.ClearWidget()
+
+	a.auxlog.Println("App.clean: cleanup complete")
 }
 
 // Update handles messages and updates the application state
@@ -236,7 +301,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.workingZone.SetSpinner(a.spinnerView)
 		}
 		a.updateSizes() // Recalculate sizes when spinner state changes
-		a.auxlog.Printf("Spinner started, errors cleared. Active: %t", a.spinnerActive)
 		return a, nil
 
 	case msg_types.SpinnerStopMsg:
@@ -245,7 +309,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// If spinner doesn't exist, it might have been stopped already
 		if !exists {
-			a.auxlog.Printf("Spinner stop requested but spinner not found, id: %d", spinnerId)
 			// If no spinners are active, suspend spinner control
 			if len(activeSpinners) == 0 {
 				a.spinnerControl.Suspend()
@@ -263,11 +326,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if duration < minDuration {
 			// Need to wait longer - schedule delayed stop (don't delete spinner entry yet)
 			remainingWait := minDuration - duration
-			a.auxlog.Printf(
-				"Spinner stop received too early, delaying stop. Elapsed: %s, Remaining: %s",
-				duration, remainingWait,
-			)
-
 			cmd = tea.Tick(remainingWait, func(time.Time) tea.Msg {
 				return msg_types.SpinnerStopMsg{SpinnerId: spinnerId} // Retry stop after delay
 			})
@@ -287,7 +345,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.workingZone.ClearSpinner()                 // Clear spinner from working zone
 		}
 
-		a.auxlog.Printf("Spinner stopped. Total duration: %s", duration)
 		return a, tea.Batch(cmds...)
 
 	case msg_types.ErrorMsg:
@@ -326,6 +383,26 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case msg_types.InitProfileMsg:
 		a.workingZone.SetListNavigatorMode()
+
+		// Try to initialize API widgets if we have a REST client now
+		if msg.Client != nil {
+			// Get active profile for widget initialization
+			profile, _ := a.db.GetActiveProfile()
+			a.auxlog.Println("[InitProfileMsg] - Initializing API widgets after profile activation")
+			if err := a.workingZone.InitializeAPIWidgets(msg.Client, profile); err != nil {
+				a.log.Error("Failed to initialize API widgets after profile activation", zap.Error(err))
+				a.auxlog.Printf("[InitProfileMsg] - ERROR: Failed to initialize API widgets: %v", err)
+				return a, tea.Batch(
+					a.profile.SetData,
+					a.workingZone.SetListData,
+					func() tea.Msg {
+						return msg_types.ErrorMsg{Err: fmt.Errorf("failed to initialize API widgets: %w", err)}
+					},
+				)
+			}
+			a.auxlog.Println("[InitProfileMsg] - API widgets initialized successfully")
+		}
+
 		return a, tea.Batch(a.profile.SetData, a.workingZone.SetListData)
 
 	case msg_types.SetDataMsg:
@@ -336,6 +413,19 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a, a.workingZone.SetListData
 
 	case msg_types.UpdateProfileMsg:
+		// Try to initialize/reinitialize API widgets when profile changes
+		if profile, err := a.db.GetActiveProfile(); err == nil && profile != nil {
+			if restClient, err := profile.RestClientFromProfile(); err == nil && restClient != nil {
+				a.auxlog.Println("[UpdateProfileMsg] - Reinitializing API widgets after profile change")
+				if err := a.workingZone.InitializeAPIWidgets(restClient, profile); err != nil {
+					a.log.Error("Failed to reinitialize API widgets", zap.Error(err))
+					a.auxlog.Printf("[UpdateProfileMsg] - ERROR: Failed to reinitialize API widgets: %v", err)
+				} else {
+					a.auxlog.Println("[UpdateProfileMsg] - API widgets reinitialized successfully")
+				}
+			}
+		}
+
 		cmd := tea.Sequence(a.workingZone.ResetAllWidgets, tea.Batch(a.profile.SetData, a.workingZone.SetListData))
 		return a, cmd
 
@@ -343,27 +433,29 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Log ticker activity for debugging
 		if a.workingZone.GetCurrentWidget() != nil {
 			currentMode := a.workingZone.GetCurrentWidget().GetMode()
-			a.auxlog.Printf("TickerSetDataMsg received: widget=%T, mode=%v",
-				a.workingZone.GetCurrentWidget(), currentMode)
-
 			// Only process ticker data updates in list mode
 			if currentMode == common.NavigatorModeList {
-				a.auxlog.Println("Processing ticker data update (list mode)")
+				// Derive context with ignore logging flag from app's base context for periodic ticker requests
+				ctx := client.WithIgnoreLogging(a.ctx)
 				// Combine list data update with forced UI redraw for immediate visual feedback
-				cmd := tea.Sequence(a.workingZone.SetListDataThrottled, func() tea.Msg {
+				cmd := tea.Sequence(func() tea.Msg {
+					return a.workingZone.SetListDataThrottledWithContext(ctx)
+				}, func() tea.Msg {
 					return tea.WindowSizeMsg{Width: a.width, Height: a.height}
 				})
 				return a, cmd
 			}
-
-			a.auxlog.Printf("Ignoring ticker data update (not in list mode: %v)", currentMode)
 		} else {
 			a.auxlog.Println("TickerSetDataMsg: currentWidget is nil")
 		}
 		return a, nil
 
 	case msg_types.TickerUpdateProfileMsg:
-		return a, a.profile.SetData
+		// Derive context with ignore logging flag from app's base context for periodic ticker requests
+		ctx := client.WithIgnoreLogging(a.ctx)
+		return a, func() tea.Msg {
+			return a.profile.SetDataWithContext(ctx)
+		}
 
 	case msg_types.ProfileDataMsg:
 		a.profile.UpdateData(msg)
@@ -372,31 +464,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case msg_types.DetailsContentMsg:
 		a.updateSizes()
 
-		// If we're in an extra widget, set details on the ExtraWidgetGroup, not the parent widget
-		if currentWidget := a.workingZone.GetCurrentWidget(); currentWidget != nil {
-			if currentWidget.GetMode() == common.NavigatorModeExtra {
-				// We're in extra mode - set details on the ExtraWidgetGroup
-				if extraWidgetGetter, ok := currentWidget.(interface{ GetExtraWidget() common.ExtraWidget }); ok {
-					if extraWidgetGroup, ok := extraWidgetGetter.GetExtraWidget().(*widgets.ExtraWidgetGroup); ok {
-						// Set the details data on the extra widget group (which delegates to the current extra widget)
-						extraWidgetGroup.SetDetailsData(msg.Content)
-						// Switch to details mode to display the result
-						extraWidgetGroup.SetExtraModeMust(common.ExtraNavigatorModeDetails)
-					}
-				}
-			} else {
-				// Normal mode - set details on the current widget
-				a.workingZone.SetDetailsData(msg.Content)
-			}
-		} else {
-			// Fallback - no current widget
-			a.workingZone.SetDetailsData(msg.Content)
-		}
+		// SetDetailsData now handles both normal and extra mode internally
+		// (delegates to ExtraWidgetGroup if in extra mode, switches to details mode)
+		a.workingZone.SetDetailsData(msg.Content)
 
 		return a, nil
 
 	case msg_types.SetResourceTypeMsg:
-		a.auxlog.Printf("SetResourceTypeMsg received, switching resource type to: %q", msg.ResourceType)
 		cmd := func() tea.Msg {
 			a.ClearError()
 			// Reset to list mode before switching to new resource type
@@ -419,7 +493,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			a.auxlog.Println("Ctrl+C pressed, initiating shutdown")
-			a.forceStopAllSpinners() // Clean up all spinners before quitting
+			a.clean()
 			return a, tea.Quit
 		case ":":
 			// Switch to resources widget
@@ -456,7 +530,6 @@ func (a *App) View() string {
 			a.spinnerActive = false
 			a.spinnerView = "" // Clear the spinner view too
 			a.statusZone.ClearSpinner()
-			a.auxlog.Println("Splash screen spinner stopped - initial app transition completed")
 		} else {
 			// Keep spinner active if there are other operations running
 			a.auxlog.Printf("Keeping spinner active during transition - %d operations running", len(activeSpinners))
@@ -544,7 +617,6 @@ func (a *App) ClearInfo() {
 // EnableTickers starts both data and profile tickers
 func (a *App) EnableTickers() {
 	if a.tickerControl != nil {
-		a.auxlog.Println("Enabling dataGetter Tickers.")
 		a.tickerControl.Enable()
 	}
 }
@@ -599,9 +671,9 @@ func (a *App) renderTopZones() string {
 	} else {
 
 		// Normal view with all 3 zones when width >= 90
-		zoneWidth := a.width / 3
-		profileWidth := zoneWidth
-		keybindingsWidth := zoneWidth
+		// Allocate more space to keybindings: Profile 25%, Keybindings 50%, Logo 25%
+		profileWidth := a.width / 4
+		keybindingsWidth := a.width / 2
 		logoWidth := a.width - profileWidth - keybindingsWidth // Take remaining width to ensure full coverage
 
 		// Render each zone with fixed dimensions
@@ -647,7 +719,10 @@ func (a *App) updateSizes() {
 		return
 	}
 
-	zoneWidth := a.width / 3
+	// Allocate more space to keybindings: Profile 25%, Keybindings 50%, Logo 25%
+	profileWidth := a.width / 4
+	keybindingsWidth := a.width / 2
+	logoWidth := a.width - profileWidth - keybindingsWidth
 
 	// Set the errors zone width first
 	a.statusZone.SetSize(a.width, 0) // Height will be calculated dynamically
@@ -672,9 +747,9 @@ func (a *App) updateSizes() {
 		workingHeight = 0
 	}
 
-	a.profile.SetSize(zoneWidth, HeaderHeight)
-	a.keybindings.SetSize(zoneWidth, HeaderHeight)
-	a.logo.SetSize(a.width-zoneWidth*2, HeaderHeight)
+	a.profile.SetSize(profileWidth, HeaderHeight)
+	a.keybindings.SetSize(keybindingsWidth, HeaderHeight)
+	a.logo.SetSize(logoWidth, HeaderHeight)
 	a.workingZone.SetSize(a.width, workingHeight)
 	a.filtersZone.SetSize(a.width, filtersHeight)
 }
@@ -772,10 +847,11 @@ func Run(appVersion string) error {
 		}
 	}()
 
-	ch, spinnerCtrl, tickerCtrl, unsub := SetupSubscriptions(ctx, cancel)
+	ch := make(chan tea.Msg)
+	spinnerCtrl, tickerCtrl, unsub := SetupSubscriptions(ctx, cancel, ch)
 	defer unsub()
 
-	app := NewApp(appVersion, spinnerCtrl, tickerCtrl)
+	app := NewApp(appVersion, spinnerCtrl, tickerCtrl, ch)
 
 	// Start with spinner active for splash screen
 	spinnerCtrl.Resume()

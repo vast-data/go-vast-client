@@ -10,22 +10,49 @@ import (
 	log "vastix/internal/logging"
 
 	vastclient "github.com/vast-data/go-vast-client"
-	"go.uber.org/zap"
 )
 
 const recordTypeKey = "@resourceType"
 
+// contextKey is a private type for context keys to avoid collisions
+type contextKey string
+
+const (
+	// IgnoreInterceptorLoggingKey is the context key for ignoring interceptor logging
+	IgnoreInterceptorLoggingKey contextKey = "IgnoreInterceptorLogging"
+)
+
+// WithIgnoreLogging returns a new context with the ignore logging flag set
+func WithIgnoreLogging(ctx context.Context) context.Context {
+	return context.WithValue(ctx, IgnoreInterceptorLoggingKey, true)
+}
+
+// ShouldIgnoreLogging checks if the context has the ignore logging flag set
+func ShouldIgnoreLogging(ctx context.Context) bool {
+	if val, ok := ctx.Value(IgnoreInterceptorLoggingKey).(bool); ok {
+		return val
+	}
+	return false
+}
+
 // BeforeRequestFnCallback logs the HTTP request being sent.
 // It reads and optionally compacts the body (if present) for structured logging.
 // For more details see: https://github.com/vast-data/go-vast-client
-func BeforeRequestFnCallback(_ context.Context, _ *http.Request, verb, url string, body io.Reader) error {
+func BeforeRequestFnCallback(ctx context.Context, _ *http.Request, verb, url string, body io.Reader) error {
+	// Skip logging if context has the ignore flag set (e.g., for periodic ticker requests)
+	if ShouldIgnoreLogging(ctx) {
+		return nil
+	}
+
+	auxLogger := log.GetAuxLogger()
+
 	requestInfo := fmt.Sprintf("HTTP request start: [%s] %s", verb, url)
 	var bodyMsg string
 
 	if body != nil {
 		bodyBytes, err := io.ReadAll(body)
 		if err != nil {
-			log.Error("failed to read request body", zap.Error(err))
+			auxLogger.Printf("ERROR: failed to read request body: %v", err)
 			return err
 		}
 
@@ -41,9 +68,9 @@ func BeforeRequestFnCallback(_ context.Context, _ *http.Request, verb, url strin
 	}
 
 	if bodyMsg == "" {
-		log.Info(requestInfo)
+		auxLogger.Println(requestInfo)
 	} else {
-		log.Info(requestInfo, zap.Any("body", json.RawMessage(bodyMsg)))
+		auxLogger.Printf("%s | body: %s", requestInfo, bodyMsg)
 	}
 	return nil
 }
@@ -52,7 +79,14 @@ func BeforeRequestFnCallback(_ context.Context, _ *http.Request, verb, url strin
 // For single records, it shows the @resourceType if available, otherwise just "Record received".
 // For record sets, it shows the count and @resourceType from the first record if available.
 // For more details see: https://github.com/vast-data/go-vast-client
-func AfterRequestFnCallback(_ context.Context, response vastclient.Renderable) (vastclient.Renderable, error) {
+func AfterRequestFnCallback(ctx context.Context, response vastclient.Renderable) (vastclient.Renderable, error) {
+	// Skip logging if context has the ignore flag set (e.g., for periodic ticker requests)
+	if ShouldIgnoreLogging(ctx) {
+		return response, nil
+	}
+
+	auxLogger := log.GetAuxLogger()
+
 	var responseStr string
 	switch resp := response.(type) {
 	case vastclient.Record:
@@ -81,6 +115,6 @@ func AfterRequestFnCallback(_ context.Context, response vastclient.Renderable) (
 		responseStr = "Response received"
 	}
 
-	log.Info("response", zap.String("response", responseStr))
+	auxLogger.Printf("HTTP response: %s", responseStr)
 	return response, nil
 }

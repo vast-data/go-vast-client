@@ -1,6 +1,7 @@
 package widgets
 
 import (
+	"vastix/internal/colors"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -29,12 +30,12 @@ func formatRecordAsJSON(record map[string]any) string {
 	var details strings.Builder
 
 	// Define colors for syntax highlighting (balanced brightness)
-	keyColor := lipgloss.NewStyle().Foreground(lipgloss.Color("51"))      // Medium cyan for keys
-	stringColor := lipgloss.NewStyle().Foreground(lipgloss.Color("77"))   // Medium green for strings
-	numberColor := lipgloss.NewStyle().Foreground(lipgloss.Color("179"))  // Muted orange for numbers
-	boolColor := lipgloss.NewStyle().Foreground(lipgloss.Color("105"))    // Medium purple for booleans
-	nullColor := lipgloss.NewStyle().Foreground(lipgloss.Color("243"))    // Gray for null values
-	bracketColor := lipgloss.NewStyle().Foreground(lipgloss.Color("252")) // Light white for brackets/punctuation
+	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)      // Medium cyan for keys
+	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)   // Medium green for strings
+	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)  // Muted orange for numbers
+	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)    // Medium purple for booleans
+	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)    // Gray for null values
+	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
 
 	// Left margin (2 spaces)
 	leftMargin := "  "
