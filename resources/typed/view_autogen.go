@@ -85,6 +85,22 @@ type ViewRequestBody_EventNotificationsItem struct {
 	Triggers     *[]string `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:"Event triggers"`
 }
 
+// ViewRequestBody_ShareAcl represents a nested type for request body
+type ViewRequestBody_ShareAcl struct {
+	Acl     *[]ViewRequestBody_ShareAcl_AclItem `json:"acl,omitempty" yaml:"acl,omitempty" required:"false" doc:"Share-level ACL"`
+	Enabled bool                                `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if Share ACL is enabled on the view, otherwise False"`
+}
+
+// ViewRequestBody_ShareAcl_AclItem represents a nested type for request body
+type ViewRequestBody_ShareAcl_AclItem struct {
+	Fqdn     string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"false" doc:"FQDN of the chosen grantee"`
+	Grantee  string `json:"grantee,omitempty" yaml:"grantee,omitempty" required:"false" doc:"grantee type"`
+	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"name of the chosen grantee"`
+	Perm     string `json:"perm,omitempty" yaml:"perm,omitempty" required:"false" doc:"Grantee’s permissions"`
+	SidStr   string `json:"sid_str,omitempty" yaml:"sid_str,omitempty" required:"false" doc:"grantee’s SID"`
+	UidOrGid int64  `json:"uid_or_gid,omitempty" yaml:"uid_or_gid,omitempty" required:"false" doc:"grantee’s uid (if user) or gid (if group)"`
+}
+
 // ViewRequestBody_UserImpersonation represents a nested type for request body
 type ViewRequestBody_UserImpersonation struct {
 	Enabled        bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"True if user impersonation is enabled"`
@@ -150,6 +166,7 @@ type ViewRequestBody struct {
 	S3Versioning                  bool                                      `json:"s3_versioning,omitempty" yaml:"s3_versioning,omitempty" required:"false" doc:"Enable S3 Versioning if S3 bucket. Versioning cannot be disabled after the view is created."`
 	SelectForLiveMonitoring       bool                                      `json:"select_for_live_monitoring,omitempty" yaml:"select_for_live_monitoring,omitempty" required:"false" doc:"Enables live monitoring on the view. Live monitoring can be enabled for up to ten views at one time. Analytics data for views is polled every 5 minutes by default and every 10 seconds with live monitoring."`
 	Share                         string                                    `json:"share,omitempty" yaml:"share,omitempty" required:"false" doc:"SMB share name. Must be specified if SMB is specified in protocols."`
+	ShareAcl                      ViewRequestBody_ShareAcl                  `json:"share_acl,omitempty" yaml:"share_acl,omitempty" required:"false" doc:"Share-level ACL details"`
 	SmbEncryptionState            string                                    `json:"smb_encryption_state,omitempty" yaml:"smb_encryption_state,omitempty" required:"false" doc:"Defines the encryption level for SMB"`
 	TenantId                      int64                                     `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Associates the specified tenant with the view."`
 	UserImpersonation             ViewRequestBody_UserImpersonation         `json:"user_impersonation,omitempty" yaml:"user_impersonation,omitempty" required:"false" doc:""`
