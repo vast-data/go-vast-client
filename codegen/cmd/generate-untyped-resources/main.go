@@ -37,29 +37,16 @@ type MethodInfo struct {
 	ReturnsArray     bool // True if returns an array (use core.RecordSet)
 	// For async task methods (returns AsyncTaskInResponse)
 	IsAsyncTask bool
-	// Documentation for params and body keys
-	ParamsDocs []ParamDoc // Documentation for query parameters
-	BodyDocs   []ParamDoc // Documentation for body parameters
+	// Body field documentation (for comment generation)
+	BodyFields []BodyFieldInfo
+	// Query parameters documentation (for comment generation)
+	ParamsFields []BodyFieldInfo
 }
 
-// ParamDoc represents documentation for a parameter
-type ParamDoc struct {
-	Name        string
-	Description string
-}
-
-// sanitizeDescription cleans up description text for Go comments
-func sanitizeDescription(desc string) string {
-	if desc == "" {
-		return ""
-	}
-	// Replace newlines with spaces to keep comments on one line
-	desc = strings.ReplaceAll(desc, "\n", " ")
-	desc = strings.ReplaceAll(desc, "\r", " ")
-	// Replace multiple spaces with single space
-	desc = regexp.MustCompile(`\s+`).ReplaceAllString(desc, " ")
-	// Trim whitespace
-	return strings.TrimSpace(desc)
+// BodyFieldInfo represents a body or params field with its documentation
+type BodyFieldInfo struct {
+	Name        string // Field name in JSON (e.g., "column_type")
+	Description string // Field description from OpenAPI
 }
 
 // UntypedResourceData represents data for untyped resource template generation
@@ -155,6 +142,13 @@ func main() {
 			log.Fatalf("Failed to generate %s: %v", autogenFile, err)
 		}
 		generatedFiles = append(generatedFiles, filepath.Base(autogenFile))
+
+		// Generate the metadata file (always regenerate)
+		metadataFile := filepath.Join(outputDir, strings.ToLower(toSnakeCase(resource.Name))+"_metadata.go")
+		if err := generateMetadataFile(metadataFile, resourceData, configs[resource.Name]); err != nil {
+			log.Fatalf("Failed to generate %s: %v", metadataFile, err)
+		}
+		generatedFiles = append(generatedFiles, filepath.Base(metadataFile))
 	}
 
 	fmt.Printf("\nGenerated untyped extra methods for %d resources in %s/\n", len(allResources), outputDir)
@@ -290,28 +284,13 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	// Store base name without HTTP method suffix
 	methodInfo.Name = resourceName + action
 
-	// Check if method has query parameters in OpenAPI spec
-	queryParams, queryParamsErr := api.GetQueryParameters(extraMethod.Method, extraMethod.Path)
-
-	// Set HasParams if query parameters found
-	methodInfo.HasParams = queryParamsErr == nil && len(queryParams) > 0
-
-	// Extract parameter documentation
-	if methodInfo.HasParams {
-		methodInfo.ParamsDocs = make([]ParamDoc, 0, len(queryParams))
-		for _, param := range queryParams {
-			if param == nil {
-				continue
-			}
-			methodInfo.ParamsDocs = append(methodInfo.ParamsDocs, ParamDoc{
-				Name:        param.Name,
-				Description: sanitizeDescription(param.Description),
-			})
-		}
-	}
-
-	// Determine if method has body based on HTTP method
+	// Determine if method has body based on HTTP method (match main branch logic)
 	methodInfo.HasBody = extraMethod.Method == "POST" || extraMethod.Method == "PUT" || extraMethod.Method == "PATCH"
+
+	// Extract query parameters from OpenAPI schema for ALL HTTP methods
+	// Only set HasParams=true if there are actual query parameters defined
+	methodInfo.ParamsFields = extractQueryParams(extraMethod.Method, extraMethod.Path)
+	methodInfo.HasParams = len(methodInfo.ParamsFields) > 0
 
 	// Check if DELETE has a request body with properties in OpenAPI spec
 	if extraMethod.Method == "DELETE" {
@@ -326,28 +305,95 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 		}
 	}
 
-	// Extract body documentation if body exists
+	// Extract body field documentation from OpenAPI schema if method has body
 	if methodInfo.HasBody {
-		schema, err := api.GetRequestBodySchema(extraMethod.Method, extraMethod.Path)
-		if err == nil && schema != nil && schema.Value != nil && schema.Value.Properties != nil {
-			methodInfo.BodyDocs = make([]ParamDoc, 0, len(schema.Value.Properties))
-			for fieldName, propRef := range schema.Value.Properties {
-				if propRef == nil || propRef.Value == nil {
-					continue
-				}
-				methodInfo.BodyDocs = append(methodInfo.BodyDocs, ParamDoc{
-					Name:        fieldName,
-					Description: sanitizeDescription(propRef.Value.Description),
-				})
-			}
-			// Sort by name for consistent output
-			sort.Slice(methodInfo.BodyDocs, func(i, j int) bool {
-				return methodInfo.BodyDocs[i].Name < methodInfo.BodyDocs[j].Name
-			})
-		}
+		methodInfo.BodyFields = extractBodyFields(extraMethod.Method, extraMethod.Path)
 	}
 
 	return methodInfo
+}
+
+// extractBodyFields extracts body field names and descriptions from OpenAPI schema
+func extractBodyFields(httpMethod, path string) []BodyFieldInfo {
+	var bodyFields []BodyFieldInfo
+
+	// Get the request body schema from OpenAPI
+	schema, err := api.GetRequestBodySchema(httpMethod, path)
+	if err != nil || schema == nil || schema.Value == nil {
+		return bodyFields
+	}
+
+	// Check if it's an object with properties
+	if schema.Value.Type == nil || !(*schema.Value.Type).Is("object") {
+		return bodyFields
+	}
+
+	properties := schema.Value.Properties
+	if properties == nil || len(properties) == 0 {
+		return bodyFields
+	}
+
+	// Extract field names and descriptions
+	for fieldName, propRef := range properties {
+		if propRef == nil || propRef.Value == nil {
+			continue
+		}
+
+		prop := propRef.Value
+		description := ""
+		if prop.Description != "" {
+			// Replace newlines with spaces to prevent multi-line descriptions from breaking comment syntax
+			description = strings.ReplaceAll(prop.Description, "\n", " ")
+			// Collapse multiple spaces into one
+			description = strings.Join(strings.Fields(description), " ")
+		}
+
+		bodyFields = append(bodyFields, BodyFieldInfo{
+			Name:        fieldName,
+			Description: description,
+		})
+	}
+
+	// Sort by field name for consistent output
+	sort.Slice(bodyFields, func(i, j int) bool {
+		return bodyFields[i].Name < bodyFields[j].Name
+	})
+
+	return bodyFields
+}
+
+// extractQueryParams extracts query parameter names and descriptions from OpenAPI schema
+func extractQueryParams(httpMethod, path string) []BodyFieldInfo {
+	var paramsFields []BodyFieldInfo
+
+	// Get the query parameters from OpenAPI
+	params, err := api.GetQueryParameters(httpMethod, path)
+	if err != nil || len(params) == 0 {
+		return paramsFields
+	}
+
+	// Extract parameter names and descriptions
+	// Preserve the original order from OpenAPI schema (do NOT sort)
+	for _, param := range params {
+		if param == nil {
+			continue
+		}
+
+		description := ""
+		if param.Description != "" {
+			// Replace newlines with spaces to prevent multi-line descriptions from breaking comment syntax
+			description = strings.ReplaceAll(param.Description, "\n", " ")
+			// Collapse multiple spaces into one
+			description = strings.Join(strings.Fields(description), " ")
+		}
+
+		paramsFields = append(paramsFields, BodyFieldInfo{
+			Name:        param.Name,
+			Description: description,
+		})
+	}
+
+	return paramsFields
 }
 
 // httpMethodToGoConstant converts HTTP method string to Go http.Method constant
@@ -418,21 +464,21 @@ import (
 )
 
 {{range .Methods}}
+{{$method := .}}
 // {{.Name}}WithContext_{{.HTTPMethod}}
 // method: {{.HTTPMethod}}
 // url: {{.Path}}{{if .Summary}}
-// summary: {{.Summary}}{{end}}{{if .HasParams}}
-//
-// Params:{{if .ParamsDocs}}{{range .ParamsDocs}}
+// summary: {{.Summary}}{{end}}{{if or .HasParams .HasBody .IsAsyncTask}}
+//{{if .HasParams}}{{if .ParamsFields}}
+// Params:{{range .ParamsFields}}
+//   - {{.Name}}{{if .Description}}: {{.Description}}{{end}}{{end}}{{end}}{{end}}{{if .HasBody}}
+// Body:{{if .BodyFields}}{{range .BodyFields}}
 //   - {{.Name}}{{if .Description}}: {{.Description}}{{end}}{{end}}{{else}}
-//   < not declared in schema >{{end}}{{end}}{{if .HasBody}}
 //
-// Body:{{if .BodyDocs}}{{range .BodyDocs}}
-//   - {{.Name}}{{if .Description}}: {{.Description}}{{end}}{{end}}{{else}}
-//   < not declared in schema >{{end}}{{end}}{{if .IsAsyncTask}}
+//	< not declared in schema >{{end}}{{end}}{{if .IsAsyncTask}}
 //
 // Parameters:
-//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}{{end}}
 func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{if .HasID}}, id any{{end}}{{if .HasParams}}, params core.Params{{end}}{{if .HasBody}}, body core.Params{{end}}{{if .IsAsyncTask}}, waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
 	{{if .HasID}}resourcePath := core.BuildResourcePathWithID("{{.ResourcePath}}", id{{if .SubPath}}, "{{.SubPath}}"{{end}})
 	{{else}}resourcePath := "{{.Path}}"
@@ -459,19 +505,18 @@ func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx c
 // {{.Name}}_{{.HTTPMethod}}
 // method: {{.HTTPMethod}}
 // url: {{.Path}}{{if .Summary}}
-// summary: {{.Summary}}{{end}}{{if .HasParams}}
-//
-// Params:{{if .ParamsDocs}}{{range .ParamsDocs}}
+// summary: {{.Summary}}{{end}}{{if or .HasParams .HasBody .IsAsyncTask}}
+//{{if .HasParams}}{{if .ParamsFields}}
+// Params:{{range .ParamsFields}}
+//   - {{.Name}}{{if .Description}}: {{.Description}}{{end}}{{end}}{{end}}{{end}}{{if .HasBody}}
+// Body:{{if .BodyFields}}{{range .BodyFields}}
 //   - {{.Name}}{{if .Description}}: {{.Description}}{{end}}{{end}}{{else}}
-//   < not declared in schema >{{end}}{{end}}{{if .HasBody}}
 //
-// Body:{{if .BodyDocs}}{{range .BodyDocs}}
-//   - {{.Name}}{{if .Description}}: {{.Description}}{{end}}{{end}}{{else}}
-//   < not declared in schema >{{end}}{{end}}{{if .IsAsyncTask}}
+//	< not declared in schema >{{end}}{{end}}{{if .IsAsyncTask}}
 //
 // Parameters:
-//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}
-func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{if .HasID}}id any{{if or .HasParams .HasBody .IsAsyncTask}}, {{end}}{{end}}{{if .HasParams}}params core.Params{{if or .HasBody .IsAsyncTask}}, {{end}}{{end}}{{if .HasBody}}body core.Params{{if .IsAsyncTask}}, {{end}}{{end}}{{if .IsAsyncTask}}waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}{{end}}
+func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{if .HasID}}id any, {{end}}{{if .HasParams}}params core.Params, {{end}}{{if .HasBody}}body core.Params{{if .IsAsyncTask}}, {{end}}{{end}}{{if .IsAsyncTask}}waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
 	return {{$.ReceiverName}}.{{.Name}}WithContext_{{.HTTPMethod}}({{$.ReceiverName}}.Rest.GetCtx(){{if .HasID}}, id{{end}}{{if .HasParams}}, params{{end}}{{if .HasBody}}, body{{end}}{{if .IsAsyncTask}}, waitTimeout{{end}})
 }
 
@@ -490,6 +535,68 @@ func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{if .HasID}}id 
 
 	if err := t.Execute(file, data); err != nil {
 		return fmt.Errorf("failed to execute autogen template: %w", err)
+	}
+
+	return nil
+}
+
+// generateMetadataFile generates the metadata file with init() function for method registration
+func generateMetadataFile(filename string, data UntypedResourceData, config *vastparser.RestResourceConfig) error {
+	tmpl := `// Code generated by generate-untyped-resources. DO NOT EDIT.
+
+package untyped
+
+import "github.com/vast-data/go-vast-client/core"
+
+// This file registers metadata for all extra methods on the {{.Name}} resource
+// This information comes from the OpenAPI schema during code generation
+
+func init() {
+	{{if .ResourcePath}}// Register metadata for {{.Name}} extra methods
+	// Resource path: {{.ResourcePath}}
+	{{range .Methods}}
+	core.RegisterExtraMethod(
+		"{{$.Name}}",                   // resource type (Go struct name)
+		"{{.Name}}_{{.HTTPMethod}}",    // method name
+		"{{.HTTPMethod}}",              // HTTP verb
+		"{{.Path}}",                    // URL path with placeholders{{if .Summary}}
+		"{{.Summary}}",                 // summary from OpenAPI{{else}}
+		"",                             // no summary available{{end}}
+	)
+	{{end}}{{else}}// No resource path found for {{.Name}}
+	{{end}}
+}
+`
+
+	t, err := template.New("metadata").Parse(tmpl)
+	if err != nil {
+		return fmt.Errorf("failed to parse metadata template: %w", err)
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to create metadata file: %w", err)
+	}
+	defer file.Close()
+
+	// Create template data with ResourcePath
+	type TemplateData struct {
+		UntypedResourceData
+		ResourcePath string
+	}
+
+	templateData := TemplateData{
+		UntypedResourceData: data,
+		ResourcePath:        "",
+	}
+
+	// Get resource path from config
+	if config != nil {
+		templateData.ResourcePath = config.ResourcePath
+	}
+
+	if err := t.Execute(file, templateData); err != nil {
+		return fmt.Errorf("failed to execute metadata template: %w", err)
 	}
 
 	return nil

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
-	"unicode"
 )
 
 // Dummy resource is used to support Request interceptors for "low level" session methods like GET, POST etc.
@@ -595,111 +594,43 @@ func GetCRUDHintsFromResource(resource any) ResourceOps {
 	return ResourceOps(0)
 }
 
-// DiscoverExtraMethodsFromResource uses reflection to find all extra methods on a resource.
-// It looks for methods matching the pattern *_GET, *_POST, *_PATCH, *_DELETE, *_PUT.
-// This is useful for introspection and tooling purposes (e.g., auto-generating widgets).
-//
-// Example:
-//
-//	extraMethods := core.DiscoverExtraMethodsFromResource(rest.Users)
-//	for _, method := range extraMethods {
-//	    fmt.Printf("Method: %s, Verb: %s, Path: %s\n", method.Name, method.HTTPVerb, method.Path)
-//	}
+// DiscoverExtraMethodsFromResource discovers all extra methods for a resource using the metadata registry.
 func DiscoverExtraMethodsFromResource(resource any) []ExtraMethodInfo {
-	// Get resource type and path using reflection
-	var resourceType, resourcePath string
+	var resourceType string
 
-	// Try to get via VastResourceAPI interface methods
 	if api, ok := resource.(VastResourceAPI); ok {
 		resourceType = api.GetResourceType()
-		resourcePath = api.GetResourcePath()
 	} else {
-		// Fallback: try to access via reflection
-		val := reflect.ValueOf(resource)
-		if val.Kind() == reflect.Ptr {
-			val = val.Elem()
-		}
-
-		// Look for GetResourceType and GetResourcePath methods
 		if method := reflect.ValueOf(resource).MethodByName("GetResourceType"); method.IsValid() {
 			if results := method.Call(nil); len(results) > 0 {
 				resourceType = results[0].String()
 			}
 		}
-		if method := reflect.ValueOf(resource).MethodByName("GetResourcePath"); method.IsValid() {
-			if results := method.Call(nil); len(results) > 0 {
-				resourcePath = results[0].String()
-			}
-		}
 	}
 
-	// Use reflection to find all methods on the resource
-	resourceValue := reflect.ValueOf(resource)
-	resourceTypeReflect := resourceValue.Type()
+	// If we couldn't get the resource type, return empty
+	if resourceType == "" {
+		return []ExtraMethodInfo{}
+	}
 
+	metadataList := GetAllExtraMethodsForResource(resourceType)
+
+	if len(metadataList) == 0 {
+		// No metadata found - this means either:
+		// 1. This resource has no extra methods
+		// 2. The metadata files haven't been generated yet (run `make autogen`)
+		return []ExtraMethodInfo{}
+	}
+
+	// Convert metadata to ExtraMethodInfo
 	var discovered []ExtraMethodInfo
-	httpVerbs := []string{"GET", "POST", "PATCH", "PUT", "DELETE"}
-
-	for i := 0; i < resourceTypeReflect.NumMethod(); i++ {
-		method := resourceTypeReflect.Method(i)
-		methodName := method.Name
-
-		// Check if method ends with _<HTTP_VERB>
-		for _, verb := range httpVerbs {
-			suffix := "_" + verb
-			if strings.HasSuffix(methodName, suffix) {
-				// Extract base name (remove _GET, _POST, etc.)
-				baseName := strings.TrimSuffix(methodName, suffix)
-
-				// Try to infer the URL path from the method name
-				path := inferPathFromMethodName(baseName, resourceType, resourcePath)
-
-				discovered = append(discovered, ExtraMethodInfo{
-					Name:     methodName,
-					HTTPVerb: verb,
-					Path:     path,
-				})
-				break
-			}
-		}
+	for _, metadata := range metadataList {
+		discovered = append(discovered, ExtraMethodInfo{
+			Name:     metadata.MethodName,
+			HTTPVerb: metadata.HTTPVerb,
+			Path:     metadata.URLPath,
+		})
 	}
 
 	return discovered
-}
-
-// inferPathFromMethodName attempts to infer the URL path from a method name.
-// e.g., HostDiscoveredHosts -> /hosts/discovered_hosts/
-func inferPathFromMethodName(methodName, resourceType, resourcePath string) string {
-	// Remove "WithContext" suffix if present
-	methodName = strings.TrimSuffix(methodName, "WithContext")
-
-	// Remove the resource name prefix
-	// e.g., HostDiscoveredHosts -> DiscoveredHosts
-	var resourceNameTitle string
-	if len(resourceType) > 0 {
-		resourceNameTitle = strings.ToUpper(resourceType[:1]) + resourceType[1:]
-	}
-	methodName = strings.TrimPrefix(methodName, resourceNameTitle)
-
-	if methodName == "" {
-		// This is a standard CRUD method, not an extra method
-		return ""
-	}
-
-	// Convert CamelCase to snake_case
-	// e.g., DiscoveredHosts -> discovered_hosts
-	var result strings.Builder
-	for i, r := range methodName {
-		if i > 0 && unicode.IsUpper(r) {
-			result.WriteRune('_')
-		}
-		result.WriteRune(unicode.ToLower(r))
-	}
-
-	pathPart := result.String()
-
-	// Build the full path
-	// Try both patterns: /resource/extra/ and /resource/{id}/extra/
-	// For now, assume non-id pattern (most common for extra methods)
-	return strings.TrimSuffix(resourcePath, "/") + "/" + pathPart + "/"
 }

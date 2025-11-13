@@ -645,7 +645,7 @@ func unmarshalToRecordUnion(response *http.Response) (Renderable, error) {
 		}
 		return recordSet, nil
 	case '"': // string
-		return Record{customRawKey: body}, nil
+		return Record{customRawKey: string(body)}, nil
 	default:
 		return nil, fmt.Errorf("unsupported JSON format: must be object or array")
 	}

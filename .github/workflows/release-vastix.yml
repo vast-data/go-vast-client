@@ -1,0 +1,178 @@
+name: Release Vastix
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version from vastix/version file (optional)'
+        required: false
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+      draft:
+        description: 'Create as draft'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and Release Vastix
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Read version
+      id: version
+      run: |
+        if [ -n "${{ inputs.version_override }}" ]; then
+          VERSION="${{ inputs.version_override }}"
+          echo "Using override version: $VERSION"
+        else
+          VERSION=$(cat vastix/version)
+          echo "Using version from file: $VERSION"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=vastix-v$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Check if tag exists
+      id: check_tag
+      run: |
+        if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "⚠️  Tag ${{ steps.version.outputs.tag }} already exists"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "✓ Tag ${{ steps.version.outputs.tag }} is available"
+        fi
+
+    - name: Build VPN server binaries
+      run: |
+        cd vastix
+        chmod +x scripts/build-vpn-binaries.sh
+        ./scripts/build-vpn-binaries.sh
+
+    - name: Build Vastix for multiple platforms
+      run: |
+        cd vastix
+        chmod +x scripts/build-multi-platform.sh
+        ./scripts/build-multi-platform.sh
+
+    - name: Generate checksums
+      run: |
+        cd vastix/dist
+        sha256sum vx-* > checksums.txt
+        cat checksums.txt
+
+    - name: Create release notes
+      id: release_notes
+      run: |
+        cat > release_notes.md << 'EOF'
+        # Vastix Release ${{ steps.version.outputs.version }}
+
+        ## 📦 Downloads
+
+        Choose the binary for your platform:
+
+        | Platform | Architecture | Binary |
+        |----------|--------------|--------|
+        | Linux | x86_64 | `vx-linux-amd64.${{ steps.version.outputs.version }}` |
+        | Linux | ARM64 | `vx-linux-arm64.${{ steps.version.outputs.version }}` |
+        | macOS | Intel | `vx-darwin-amd64.${{ steps.version.outputs.version }}` |
+        | macOS | Apple Silicon | `vx-darwin-arm64.${{ steps.version.outputs.version }}` |
+
+        ## 🚀 Installation
+
+        ### Linux / macOS
+
+        ```bash
+        # Download the appropriate binary for your platform
+        # Example for Linux x86_64:
+        wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/vx-linux-amd64.${{ steps.version.outputs.version }}
+
+        # Make it executable
+        chmod +x vx-linux-amd64.${{ steps.version.outputs.version }}
+
+        # Move to PATH and rename to 'vx'
+        sudo mv vx-linux-amd64.${{ steps.version.outputs.version }} /usr/local/bin/vx
+
+        # Now you can run it from anywhere
+        vx
+        ```
+
+        ## ✨ Features
+
+        - Multi-platform support (Linux, macOS, x86_64, ARM64)
+        - Pre-compiled VPN server binaries embedded
+        - Automatic WireGuard setup for VIP Pool Forwarding
+        - TUI-based VAST cluster management
+
+        ## 🔐 Verification
+
+        Verify your download with checksums:
+
+        ```bash
+        sha256sum -c checksums.txt
+        ```
+
+        ## 📝 Changelog
+
+        See [commits](https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }}) for details.
+
+        ---
+
+        **Full Documentation**: [vastix/docs/](https://github.com/${{ github.repository }}/tree/main/vastix/docs)
+        EOF
+
+    - name: Create or update tag
+      if: steps.check_tag.outputs.exists == 'false'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag -a "${{ steps.version.outputs.tag }}" -m "Vastix release ${{ steps.version.outputs.version }}"
+        git push origin "${{ steps.version.outputs.tag }}"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: Vastix ${{ steps.version.outputs.version }}
+        body_path: release_notes.md
+        draft: ${{ inputs.draft }}
+        prerelease: ${{ inputs.prerelease }}
+        files: |
+          vastix/dist/vx-*
+          vastix/dist/checksums.txt
+        fail_on_unmatched_files: true
+
+    - name: Summary
+      run: |
+        echo "## 🎉 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Tag:** ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Draft:** ${{ inputs.draft }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Pre-release:** ${{ inputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        ls -lh vastix/dist/vx-* >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+        echo "- [Release Page](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
+

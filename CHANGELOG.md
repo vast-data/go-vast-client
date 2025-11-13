@@ -24,6 +24,7 @@ ENHANCEMENTS:
 
 ENHANCEMENTS:
 
+* **Vastix TUI**: Added vastix, a Terminal User Interface (TUI) application for interactive testing and exploration of go-vast-client resources
 * **Iterator Support**: Added comprehensive iterator functionality for handling both paginated and non-paginated API responses
   * New `Iterator` interface with idiomatic Go methods: `Next() (RecordSet, error)`, `Previous() (RecordSet, error)`, `HasNext()`, `HasPrevious()`, `Reset() (RecordSet, error)`, `All() (RecordSet, error)`, `Count()`, `PageSize()`
   * Added `GetIterator(params, pageSize)` and `GetIteratorWithContext(ctx, params, pageSize)` methods to all resources

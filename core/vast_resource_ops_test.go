@@ -215,6 +215,18 @@ func TestGetCRUDHintsFromResource(t *testing.T) {
 }
 
 func TestDiscoverExtraMethodsFromResource(t *testing.T) {
+	// Clear and setup test registry
+	originalRegistry := ExtraMethodRegistry
+	ExtraMethodRegistry = make(map[string]map[string]ExtraMethodMetadata)
+	defer func() {
+		ExtraMethodRegistry = originalRegistry
+	}()
+
+	// Register test methods in the registry (simulating what autogen would do)
+	RegisterExtraMethod("user", "UserAccessKeys_POST", "POST", "/users/{id}/access_keys/", "Create User Access Keys")
+	RegisterExtraMethod("user", "UserAccessKeys_DELETE", "DELETE", "/users/{id}/access_keys/", "Delete User Access Keys")
+	RegisterExtraMethod("user", "UserQuery_GET", "GET", "/users/query/", "Query Users")
+
 	vr := &VastResource{
 		resourceType: "user",
 		resourcePath: "/users/",
@@ -250,53 +262,5 @@ func TestDiscoverExtraMethodsFromResource(t *testing.T) {
 		if !methodNames[expected] {
 			t.Errorf("Expected method %s not found", expected)
 		}
-	}
-}
-
-func TestInferPathFromMethodName(t *testing.T) {
-	tests := []struct {
-		name         string
-		methodName   string
-		resourceType string
-		resourcePath string
-		expected     string
-	}{
-		{
-			name:         "User access keys",
-			methodName:   "UserAccessKeys",
-			resourceType: "user",
-			resourcePath: "/users/",
-			expected:     "/users/access_keys/",
-		},
-		{
-			name:         "User query",
-			methodName:   "UserQuery",
-			resourceType: "user",
-			resourcePath: "/users/",
-			expected:     "/users/query/",
-		},
-		{
-			name:         "Host discovered hosts",
-			methodName:   "HostDiscoveredHosts",
-			resourceType: "host",
-			resourcePath: "/hosts/",
-			expected:     "/hosts/discovered_hosts/",
-		},
-		{
-			name:         "Empty method name (standard CRUD)",
-			methodName:   "User",
-			resourceType: "user",
-			resourcePath: "/users/",
-			expected:     "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := inferPathFromMethodName(tt.methodName, tt.resourceType, tt.resourcePath)
-			if result != tt.expected {
-				t.Errorf("Expected path '%s', got '%s'", tt.expected, result)
-			}
-		})
 	}
 }

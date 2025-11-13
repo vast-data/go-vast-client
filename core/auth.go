@@ -19,6 +19,7 @@ type Authenticator interface {
 	setAuthHeader(headers *http.Header)
 	equal(other Authenticator) bool
 	setInitialized(bool)
+	isInitialized() bool
 }
 
 // createAuthenticator creates a new Authenticator instance based on the provided VMSConfig.
@@ -62,9 +63,6 @@ func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 				return existingAuthenticator, nil
 			}
 		}
-		if err := authenticator.authorize(); err != nil {
-			return nil, err
-		}
 		authenticators = append(authenticators, authenticator)
 		return authenticator, nil
 	}
@@ -103,9 +101,10 @@ func parseToken(rsp *http.Response) (*jwtToken, error) {
 }
 
 func (auth *JWTAuthenticator) refreshToken(client *http.Client) (*http.Response, error) {
+	server := auth.Host + ":" + strconv.FormatUint(auth.Port, 10)
 	path := url.URL{
 		Scheme: "https",
-		Host:   auth.Host,
+		Host:   server,
 		Path:   "api/token/refresh/",
 	}
 	body, err := json.Marshal(map[string]string{"refresh": auth.Token.Refresh})
@@ -169,19 +168,24 @@ func (auth *JWTAuthenticator) authorize() error {
 	}
 	if auth.initialized {
 		resp, err = auth.refreshToken(client)
+		if err == nil && resp != nil {
+			// Check if refresh was successful
+			err = validateResponse(resp, auth.Host, auth.Port)
+		}
 		// If there is an error while getting new token using refresh token and
 		// that error is API error with status code 401, then refresh token is also
 		// expired. Need to re-authenticate.
 		if err != nil && IsApiError(err) {
 			statusCode := err.(*ApiError).StatusCode
 			if statusCode == http.StatusUnauthorized {
+				if resp != nil {
+					resp.Body.Close()
+				}
 				resp, err = auth.acquireToken(client)
-				auth.setInitialized(true)
 			}
 		}
 	} else {
 		resp, err = auth.acquireToken(client)
-		auth.setInitialized(true)
 	}
 	if err != nil {
 		return err
@@ -189,8 +193,11 @@ func (auth *JWTAuthenticator) authorize() error {
 	if resp != nil {
 		defer resp.Body.Close()
 	}
-	if err = validateResponse(resp, auth.Host, auth.Port); err != nil {
-		return err
+	// Validate response if not already validated (for non-refresh paths)
+	if !auth.initialized {
+		if err = validateResponse(resp, auth.Host, auth.Port); err != nil {
+			return err
+		}
 	}
 	// Read response
 	token, err := parseToken(resp)
@@ -198,6 +205,8 @@ func (auth *JWTAuthenticator) authorize() error {
 		return err
 	}
 	auth.Token = token
+	// Only mark as initialized after successful authentication
+	auth.setInitialized(true)
 	return nil
 }
 
@@ -223,6 +232,10 @@ func (auth *JWTAuthenticator) equal(other Authenticator) bool {
 
 func (auth *JWTAuthenticator) setInitialized(state bool) {
 	auth.initialized = state
+}
+
+func (auth *JWTAuthenticator) isInitialized() bool {
+	return auth.initialized
 }
 
 type ApiRTokenAuthenticator struct {
@@ -259,6 +272,11 @@ func (auth *ApiRTokenAuthenticator) equal(other Authenticator) bool {
 
 func (auth *ApiRTokenAuthenticator) setInitialized(_ bool) {
 	// No-op
+}
+
+func (auth *ApiRTokenAuthenticator) isInitialized() bool {
+	// ApiToken is always "initialized" - no auth call needed
+	return true
 }
 
 type BaseAuthAuthenticator struct {
@@ -302,4 +320,9 @@ func (auth *BaseAuthAuthenticator) equal(other Authenticator) bool {
 
 func (auth *BaseAuthAuthenticator) setInitialized(_ bool) {
 	// No-op for Basic Auth
+}
+
+func (auth *BaseAuthAuthenticator) isInitialized() bool {
+	// Basic Auth just encodes credentials, always ready after creation
+	return auth.encodedAuth != ""
 }

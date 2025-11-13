@@ -1,0 +1,58 @@
+# Binaries
+vpn-client
+vpn-server
+vpn-client-*
+vpn-server-*
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build directory
+/build/
+/dist/
+
+# Test binaries
+*.test
+
+# Coverage files
+*.out
+coverage.html
+
+# Go workspace file
+go.work
+
+# Environment files
+.env
+*.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Configuration files with secrets
+*_private.conf
+*.key
+*-keys.txt
+
+# Logs
+*.log
+/logs/
+
+# Temporary files
+/tmp/
+*.tmp
+
+# Deployment artifacts
+deployment-*.log
+client-*-key.txt
+server-*-key.txt
+
+# Build artifacts
+*.o
+*.a
+
