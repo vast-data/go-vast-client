@@ -21,6 +21,40 @@ func toInt(val any) (int64, error) {
 	return idInt, nil
 }
 
+// ToBool converts various types to boolean.
+// Handles special string cases like "true", "false", "1", "0", "yes", "no".
+func ToBool(v any) (bool, error) {
+	switch val := v.(type) {
+	case bool:
+		return val, nil
+	case string:
+		// Handle common string representations of boolean values
+		lower := strings.ToLower(strings.TrimSpace(val))
+		switch lower {
+		case "true", "1", "yes", "y", "on":
+			return true, nil
+		case "false", "0", "no", "n", "off", "":
+			return false, nil
+		default:
+			return false, fmt.Errorf("cannot convert string %q to bool", val)
+		}
+	case int, int64, int32, int16, int8:
+		// Handle integer representations: 0 = false, non-zero = true
+		intVal := reflect.ValueOf(v).Int()
+		return intVal != 0, nil
+	case uint, uint64, uint32, uint16, uint8:
+		// Handle unsigned integer representations: 0 = false, non-zero = true
+		uintVal := reflect.ValueOf(v).Uint()
+		return uintVal != 0, nil
+	case float64, float32:
+		// Handle float representations: 0.0 = false, non-zero = true
+		floatVal := reflect.ValueOf(v).Float()
+		return floatVal != 0.0, nil
+	default:
+		return false, fmt.Errorf("unsupported type %T for bool. Value = %v", v, v)
+	}
+}
+
 func ToRecord(m map[string]interface{}) Record {
 	converted := Record{}
 	for k, v := range m {

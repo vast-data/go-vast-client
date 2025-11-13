@@ -68,6 +68,15 @@ func convertValue(value interface{}, targetType reflect.Type) interface{} {
 		return convertToString(value)
 	}
 
+	// If target is bool, convert non-bools to bools
+	if targetType.Kind() == reflect.Bool {
+		if boolVal, err := ToBool(value); err == nil {
+			return boolVal
+		}
+		// If conversion fails, return the original value and let JSON unmarshaling handle the error
+		return value
+	}
+
 	// If target is a slice, recursively convert elements
 	if targetType.Kind() == reflect.Slice {
 		if arr, ok := value.([]interface{}); ok {

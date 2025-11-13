@@ -204,3 +204,91 @@ func TestFlexibleUnmarshal_IntegerAsFloat(t *testing.T) {
 		t.Errorf("expected Count to be '123', got %q", result.Count)
 	}
 }
+
+func TestFlexibleUnmarshal_StringToBool(t *testing.T) {
+	type TestStruct struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	tests := []struct {
+		name     string
+		json     string
+		expected bool
+	}{
+		{"string true", `{"enabled": "true"}`, true},
+		{"string false", `{"enabled": "false"}`, false},
+		{"string 1", `{"enabled": "1"}`, true},
+		{"string 0", `{"enabled": "0"}`, false},
+		{"bool true", `{"enabled": true}`, true},
+		{"bool false", `{"enabled": false}`, false},
+		{"int 1", `{"enabled": 1}`, true},
+		{"int 0", `{"enabled": 0}`, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result TestStruct
+			err := FlexibleUnmarshal([]byte(tt.json), &result)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if result.Enabled != tt.expected {
+				t.Errorf("expected Enabled to be %v, got %v", tt.expected, result.Enabled)
+			}
+		})
+	}
+}
+
+func TestFlexibleUnmarshal_NestedBoolConversion(t *testing.T) {
+	type Nested struct {
+		Active bool `json:"active"`
+	}
+
+	type TestStruct struct {
+		Config Nested `json:"config"`
+	}
+
+	jsonData := []byte(`{
+		"config": {
+			"active": "true"
+		}
+	}`)
+
+	var result TestStruct
+	err := FlexibleUnmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !result.Config.Active {
+		t.Errorf("expected Config.Active to be true, got false")
+	}
+}
+
+func TestFlexibleUnmarshal_ArrayOfBools(t *testing.T) {
+	type TestStruct struct {
+		Flags []bool `json:"flags"`
+	}
+
+	jsonData := []byte(`{
+		"flags": ["true", "false", "1", "0", true, false]
+	}`)
+
+	var result TestStruct
+	err := FlexibleUnmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := []bool{true, false, true, false, true, false}
+	if len(result.Flags) != len(expected) {
+		t.Fatalf("expected %d flags, got %d", len(expected), len(result.Flags))
+	}
+
+	for i, exp := range expected {
+		if result.Flags[i] != exp {
+			t.Errorf("expected Flags[%d] to be %v, got %v", i, exp, result.Flags[i])
+		}
+	}
+}
