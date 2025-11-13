@@ -16,14 +16,13 @@ import (
 //
 // Params:
 //   - topic_name_filter
-func (k *KafkaBroker) KafkaBrokerListTopicsWithContext_GET(ctx context.Context, id any, params core.Params) (core.RecordSet, error) {
+func (k *KafkaBroker) KafkaBrokerListTopicsWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("kafkabrokers", id, "list_topics")
-	result, err := core.Request[core.RecordSet](ctx, k, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, k, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
-
 }
 
 // KafkaBrokerListTopics_GET
@@ -33,6 +32,6 @@ func (k *KafkaBroker) KafkaBrokerListTopicsWithContext_GET(ctx context.Context, 
 //
 // Params:
 //   - topic_name_filter
-func (k *KafkaBroker) KafkaBrokerListTopics_GET(id any, params core.Params) (core.RecordSet, error) {
+func (k *KafkaBroker) KafkaBrokerListTopics_GET(id any, params core.Params) (core.Record, error) {
 	return k.KafkaBrokerListTopicsWithContext_GET(k.Rest.GetCtx(), id, params)
 }

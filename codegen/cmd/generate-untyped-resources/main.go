@@ -235,9 +235,33 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 			if op != nil {
 				if resp := op.Responses.Status(200); resp != nil && resp.Value != nil {
 					if content := resp.Value.Content["application/json"]; content != nil && content.Schema != nil && content.Schema.Value != nil {
-						if content.Schema.Value.Type != nil && (*content.Schema.Value.Type).Is("array") {
-							methodInfo.ReturnsArray = true
-							fmt.Printf("  ℹ️  Detected bare array response, using core.RecordSet\n")
+						schema := content.Schema.Value
+						if schema.Type != nil && (*schema.Type).Is("array") {
+							// Check if the array contains objects or primitives
+							isArrayOfObjects := false
+							if schema.Items != nil {
+								// Check for $ref (reference to another schema definition)
+								if schema.Items.Ref != "" {
+									// It's a reference - assume it's an object
+									isArrayOfObjects = true
+								} else if schema.Items.Value != nil {
+									itemType := schema.Items.Value.Type
+									// If items type is "object" or has properties, it's an array of objects
+									if itemType != nil && (*itemType).Is("object") {
+										isArrayOfObjects = true
+									} else if schema.Items.Value.Properties != nil && len(schema.Items.Value.Properties) > 0 {
+										isArrayOfObjects = true
+									}
+								}
+							}
+
+							if isArrayOfObjects {
+								methodInfo.ReturnsArray = true
+								fmt.Printf("  ℹ️  Detected array of objects response, using core.RecordSet\n")
+							} else {
+								// Array of primitives - use core.Record with @raw
+								fmt.Printf("  ℹ️  Detected array of primitives response, using core.Record\n")
+							}
 						}
 					}
 				}

@@ -13,20 +13,19 @@ import (
 // method: GET
 // url: /nicports/{id}/related_nicports/
 // summary: Get Related NICPorts
-func (n *NicPort) NicPortRelatedNicportsWithContext_GET(ctx context.Context, id any) (core.RecordSet, error) {
+func (n *NicPort) NicPortRelatedNicportsWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("nicports", id, "related_nicports")
-	result, err := core.Request[core.RecordSet](ctx, n, http.MethodGet, resourcePath, nil, nil)
+	result, err := core.Request[core.Record](ctx, n, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
-
 }
 
 // NicPortRelatedNicports_GET
 // method: GET
 // url: /nicports/{id}/related_nicports/
 // summary: Get Related NICPorts
-func (n *NicPort) NicPortRelatedNicports_GET(id any) (core.RecordSet, error) {
+func (n *NicPort) NicPortRelatedNicports_GET(id any) (core.Record, error) {
 	return n.NicPortRelatedNicportsWithContext_GET(n.Rest.GetCtx(), id)
 }

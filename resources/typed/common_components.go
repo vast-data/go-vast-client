@@ -2738,6 +2738,7 @@ type Component_Quota struct {
 	EnableAlarms                bool                    `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enable alarms when users or groups are exceeding their limit"`
 	EnableEmailProviders        bool                    `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Enable this setting to query Active Directory and LDAP services for user emails when sending userquota alert emails. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global email suffix is used if configured in cluster settings. If no suffix is set, default_email is used."`
 	GracePeriod                 string                  `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	GroupQuotas                 *[]string               `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:""`
 	Guid                        string                  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
 	HardLimit                   int64                   `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage space usage limit beyond which no writes are allowed."`
 	HardLimitInodes             int64                   `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
@@ -2768,6 +2769,7 @@ type Component_Quota struct {
 	UsedEffectiveCapacityTb     float32                 `json:"used_effective_capacity_tb,omitempty" yaml:"used_effective_capacity_tb,omitempty" required:"false" doc:"Used effective capacity in TB"`
 	UsedInodes                  int64                   `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path"`
 	UsedLimitedCapacity         int64                   `json:"used_limited_capacity,omitempty" yaml:"used_limited_capacity,omitempty" required:"false" doc:""`
+	UserQuotas                  *[]string               `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
 }
 
 // Component_QuotaEntityInfo represents the OpenAPI component schema

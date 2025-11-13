@@ -14,21 +14,20 @@ import (
 // method: GET
 // url: /vms/{id}/configured_idps/
 // summary: Return Configured SAML Identify Providers (IdPs)
-func (v *Vms) VmsConfiguredIdpsWithContext_GET(ctx context.Context, id any) (core.RecordSet, error) {
+func (v *Vms) VmsConfiguredIdpsWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("vms", id, "configured_idps")
-	result, err := core.Request[core.RecordSet](ctx, v, http.MethodGet, resourcePath, nil, nil)
+	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
-
 }
 
 // VmsConfiguredIdps_GET
 // method: GET
 // url: /vms/{id}/configured_idps/
 // summary: Return Configured SAML Identify Providers (IdPs)
-func (v *Vms) VmsConfiguredIdps_GET(id any) (core.RecordSet, error) {
+func (v *Vms) VmsConfiguredIdps_GET(id any) (core.Record, error) {
 	return v.VmsConfiguredIdpsWithContext_GET(v.Rest.GetCtx(), id)
 }
 

@@ -374,21 +374,20 @@ func (t *Tenant) TenantRotateEncryptionGroupKey_POST(id any, body core.Params) e
 // method: GET
 // url: /tenants/{id}/same_encryption_group_tenants/
 // summary: Get tenants with the same encryption group
-func (t *Tenant) TenantSameEncryptionGroupTenantsWithContext_GET(ctx context.Context, id any) (core.RecordSet, error) {
+func (t *Tenant) TenantSameEncryptionGroupTenantsWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("tenants", id, "same_encryption_group_tenants")
-	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, nil, nil)
+	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
-
 }
 
 // TenantSameEncryptionGroupTenants_GET
 // method: GET
 // url: /tenants/{id}/same_encryption_group_tenants/
 // summary: Get tenants with the same encryption group
-func (t *Tenant) TenantSameEncryptionGroupTenants_GET(id any) (core.RecordSet, error) {
+func (t *Tenant) TenantSameEncryptionGroupTenants_GET(id any) (core.Record, error) {
 	return t.TenantSameEncryptionGroupTenantsWithContext_GET(t.Rest.GetCtx(), id)
 }
 

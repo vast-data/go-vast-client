@@ -633,17 +633,13 @@ func unmarshalToRecordUnion(response *http.Response) (Renderable, error) {
 		if err := json.Unmarshal(body, &recSet); err == nil {
 			return recSet, nil
 		}
-		// If that fails, it might be an array of any type, convert each to Record
+		// If that fails, it's an array of primitives (not objects)
+		// Return a single Record containing the entire array under @raw
 		var anySlice []any
 		if err := json.Unmarshal(body, &anySlice); err != nil {
 			return nil, err
 		}
-		// Convert each item to a Record with customRawKey
-		recordSet := make(RecordSet, len(anySlice))
-		for i, item := range anySlice {
-			recordSet[i] = Record{customRawKey: item}
-		}
-		return recordSet, nil
+		return Record{customRawKey: anySlice}, nil
 	case '"': // string
 		return Record{customRawKey: string(body)}, nil
 	default:

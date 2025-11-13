@@ -24,14 +24,12 @@ type SnapshotPolicy struct {
 
 // SnapshotPolicySearchParams represents the search parameters for SnapshotPolicy operations
 type SnapshotPolicySearchParams struct {
-	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	ExpirationTime string `json:"expiration_time,omitempty" yaml:"expiration_time,omitempty" required:"false" doc:"Filter by expiration time"`
-	Guid           string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Locked         bool   `json:"locked,omitempty" yaml:"locked,omitempty" required:"false" doc:"Filter for locked snapshots"`
-	Path           string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by snapshot path"`
-	State          string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by state"`
-	TenantId       int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
-	VolumeId       int64  `json:"volume_id,omitempty" yaml:"volume_id,omitempty" required:"false" doc:"Mapped volume id to filter by."`
+	Name               string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Enabled            bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Filter to return only enabled snapshots"`
+	Guid               string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	LastOperationState string `json:"last_operation_state,omitempty" yaml:"last_operation_state,omitempty" required:"false" doc:"Filter by last operation state"`
+	Path               string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by snapshot path"`
+	Schedule           string `json:"schedule,omitempty" yaml:"schedule,omitempty" required:"false" doc:"Filter by schedule"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//
@@ -56,13 +54,14 @@ type SnapshotPolicySearchParams struct {
 
 // SnapshotPolicyRequestBody represents the request body for SnapshotPolicy operations
 type SnapshotPolicyRequestBody struct {
-	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Snapshot name"`
-	Path           string `json:"path,omitempty" yaml:"path,omitempty" required:"true" doc:"The path to take a snapshot on"`
-	ClusterId      int64  `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"Cluster ID"`
-	ExpirationTime string `json:"expiration_time,omitempty" yaml:"expiration_time,omitempty" required:"false" doc:"Snapshot expiration time"`
-	Indestructible bool   `json:"indestructible,omitempty" yaml:"indestructible,omitempty" required:"false" doc:"Set to true to protect the snapshot from accidental or malicious deletion with the indestructibility feature. If this setting is enabled, authorized unlocking of the cluster's indestructibility mechanism is required to do any of the following: deleting the snapshot, shortening its expiration time or disabling this setting."`
-	Locked         bool   `json:"locked,omitempty" yaml:"locked,omitempty" required:"false" doc:"Not in use."`
-	TenantId       int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	MaxCreatedSnapshots int64  `json:"max_created_snapshots,omitempty" yaml:"max_created_snapshots,omitempty" required:"true" doc:"The maximum number of snapshots that will be retained locally"`
+	Name                string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Snapshot policy name"`
+	Path                string `json:"path,omitempty" yaml:"path,omitempty" required:"true" doc:"The source to create the snapshots"`
+	Schedule            string `json:"schedule,omitempty" yaml:"schedule,omitempty" required:"true" doc:"The schedule to take the snapshot"`
+	ClusterId           int64  `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"Cluster ID"`
+	Enabled             bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enable the policy"`
+	Prefix              string `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"The prefix of the snapshot that will be create"`
+	SnapshotExpiration  string `json:"snapshot_expiration,omitempty" yaml:"snapshot_expiration,omitempty" required:"false" doc:"Snapshot expiration time"`
 }
 
 // -----------------------------------------------------
@@ -70,25 +69,25 @@ type SnapshotPolicyRequestBody struct {
 // -----------------------------------------------------
 
 // SnapshotPolicyDetailsModel represents the detailed model returned by GET/List operations
-// Type alias to component definition: #/components/schemas/Snapshot
-type SnapshotPolicyDetailsModel = Component_Snapshot
+// Type alias to component definition: #/components/schemas/SnapshotPolicy
+type SnapshotPolicyDetailsModel = Component_SnapshotPolicy
 
 // SnapshotPolicyUpsertModel represents the model returned by Create/Update operations
-// Type alias to component definition: #/components/schemas/Snapshot
-type SnapshotPolicyUpsertModel = Component_Snapshot
+// Type alias to component definition: #/components/schemas/SnapshotPolicy
+type SnapshotPolicyUpsertModel = Component_SnapshotPolicy
 
 // -----------------------------------------------------
 // LIST
 // -----------------------------------------------------
 
 // List retrieves multiple snapshotpolicys with typed request/response
-// summary: List Snapshots
+// summary: List Snapshot Policies (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) List(req *SnapshotPolicySearchParams) ([]*SnapshotPolicyDetailsModel, error) {
 	return r.ListWithContext(r.Untyped.GetCtx(), req)
 }
 
 // ListWithContext retrieves multiple snapshotpolicys with typed request/response using provided context
-// summary: List Snapshots
+// summary: List Snapshot Policies (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) ListWithContext(ctx context.Context, req *SnapshotPolicySearchParams) ([]*SnapshotPolicyDetailsModel, error) {
 	params, err := core.NewParamsFromStruct(req)
 	if err != nil {
@@ -109,13 +108,13 @@ func (r *SnapshotPolicy) ListWithContext(ctx context.Context, req *SnapshotPolic
 }
 
 // Get retrieves a single snapshotpolicy with typed request/response
-// summary: List Snapshots
+// summary: List Snapshot Policies (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) Get(req *SnapshotPolicySearchParams) (*SnapshotPolicyDetailsModel, error) {
 	return r.GetWithContext(r.Untyped.GetCtx(), req)
 }
 
 // GetWithContext retrieves a single snapshotpolicy with typed request/response using provided context
-// summary: List Snapshots
+// summary: List Snapshot Policies (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) GetWithContext(ctx context.Context, req *SnapshotPolicySearchParams) (*SnapshotPolicyDetailsModel, error) {
 	params, err := core.NewParamsFromStruct(req)
 	if err != nil {
@@ -140,13 +139,13 @@ func (r *SnapshotPolicy) GetWithContext(ctx context.Context, req *SnapshotPolicy
 // -----------------------------------------------------
 
 // GetById retrieves a single snapshotpolicy by ID
-// summary: Return Details of a Snapshot
+// summary: Return Details of a Snapshot Policy (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) GetById(id any) (*SnapshotPolicyDetailsModel, error) {
 	return r.GetByIdWithContext(r.Untyped.GetCtx(), id)
 }
 
 // GetByIdWithContext retrieves a single snapshotpolicy by ID using provided context
-// summary: Return Details of a Snapshot
+// summary: Return Details of a Snapshot Policy (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) GetByIdWithContext(ctx context.Context, id any) (*SnapshotPolicyDetailsModel, error) {
 	record, err := r.Untyped.GetResourceMap()[r.GetResourceType()].GetByIdWithContext(ctx, id)
 	if err != nil {
@@ -166,13 +165,13 @@ func (r *SnapshotPolicy) GetByIdWithContext(ctx context.Context, id any) (*Snaps
 // -----------------------------------------------------
 
 // Create creates a new snapshotpolicy with typed request/response
-// summary: Create Snapshot
+// summary: Create a Snapshot Policy (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) Create(req *SnapshotPolicyRequestBody) (*SnapshotPolicyUpsertModel, error) {
 	return r.CreateWithContext(r.Untyped.GetCtx(), req)
 }
 
 // CreateWithContext creates a new snapshotpolicy with typed request/response using provided context
-// summary: Create Snapshot
+// summary: Create a Snapshot Policy (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) CreateWithContext(ctx context.Context, req *SnapshotPolicyRequestBody) (*SnapshotPolicyUpsertModel, error) {
 	params, err := core.NewParamsFromStruct(req)
 	if err != nil {
@@ -215,19 +214,13 @@ func (r *SnapshotPolicy) DeleteWithContext(ctx context.Context, req *SnapshotPol
 }
 
 // DeleteById deletes a snapshotpolicy by ID
-// summary: Delete a Snapshot
-//
-// Parameters:
-//   - id: Specify the ID of the snapshot.
+// summary: Delete a Snapshot Policy (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) DeleteById(id any) error {
 	return r.DeleteByIdWithContext(r.Untyped.GetCtx(), id)
 }
 
 // DeleteByIdWithContext deletes a snapshotpolicy by ID using provided context
-// summary: Delete a Snapshot
-//
-// Parameters:
-//   - id: Specify the ID of the snapshot.
+// summary: Delete a Snapshot Policy (deprecated from VAST Cluster 3.4)
 func (r *SnapshotPolicy) DeleteByIdWithContext(ctx context.Context, id any) error {
 	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
 	if err != nil {
@@ -300,4 +293,4 @@ func (r *SnapshotPolicy) MustExistsWithContext(ctx context.Context, req *Snapsho
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - UPDATE operation excluded: PATCH/PUT /snapshots/{id}/ has no response schema and doesn't return 204 NO CONTENT
+//   - UPDATE operation excluded: PATCH/PUT /snapshotpolicies/{id}/ has no response schema and doesn't return 204 NO CONTENT
