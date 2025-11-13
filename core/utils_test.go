@@ -83,4 +83,3 @@ func TestToBool(t *testing.T) {
 		})
 	}
 }
-
