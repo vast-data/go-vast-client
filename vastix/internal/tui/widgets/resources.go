@@ -155,7 +155,7 @@ func InitializeWidgets(db *database.Service, restClient *rest.UntypedVMSRest) (*
 	factory.CreateAndRegisterWidgetMust(restClient.Quotas, []string{"id", "name", "path", "tenant_name"})
 	factory.CreateAndRegisterWidgetMust(restClient.Racks, []string{"id", "name", "available_capacity", "guid", "number_of_units"})
 	factory.CreateAndRegisterWidgetMust(restClient.Realms, []string{"id", "name"})
-	factory.CreateAndRegisterWidgetMust(restClient.ReplicationPeers, []string{"id"})
+	factory.CreateAndRegisterWidgetMust(restClient.ReplicationPeers, []string{"id", "name", "peer_name", "pool_name", "leading_vip", "is_local", "remote_vip_range"})
 	factory.CreateAndRegisterWidgetMust(restClient.ReplicationPolicies, []string{"id", "name"})
 	factory.CreateAndRegisterWidgetMust(restClient.ReplicationRestorePoints, []string{"id", "name", "state", "stream_name", "upload_finish_time", "upload_start_time"})
 	factory.CreateAndRegisterWidgetMust(restClient.ReplicationStreams, []string{"id", "name"})
