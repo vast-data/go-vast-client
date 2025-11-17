@@ -26,7 +26,7 @@ type UserQuota struct {
 type UserQuotaSearchParams struct {
 	Guid          string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
 	IsAccountable bool   `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:"Set to true to list only user and group quotas for users and groups that have defined user quotas. Set to false to list only user quotas for users and groups that wrote to the directory but have no defined user/group quota rules."`
-	Name          string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The name"`
+	Name          string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
 	Path          string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:""`
 	QuotaId       int64  `json:"quota_id,omitempty" yaml:"quota_id,omitempty" required:"false" doc:"Filter by specific directory quota"`
 	QuotaSystemId int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:"Filters the list to show only user quotas that belong to a quota with a specified system_id number. This is different to quota ID"`

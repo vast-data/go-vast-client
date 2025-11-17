@@ -2436,20 +2436,26 @@ type Component_PartialUserInfo struct {
 // Component_PartialUserQuota represents the OpenAPI component schema
 // Component: #/components/schemas/PartialUserQuota
 type Component_PartialUserQuota struct {
-	Entity          PartialUserQuota_Entity `json:"entity,omitempty" yaml:"entity,omitempty" required:"false" doc:""`
-	GracePeriod     string                  `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
-	HardLimit       int64                   `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
-	HardLimitInodes int64                   `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
-	IsAccountable   bool                    `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:""`
-	PercentCapacity int64                   `json:"percent_capacity,omitempty" yaml:"percent_capacity,omitempty" required:"false" doc:""`
-	PercentInodes   int64                   `json:"percent_inodes,omitempty" yaml:"percent_inodes,omitempty" required:"false" doc:"Percentage of files and directories limit in use"`
-	QuotaSystemId   int64                   `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
-	SoftLimit       int64                   `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
-	SoftLimitInodes int64                   `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
-	State           string                  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
-	TimeToBlock     string                  `json:"time_to_block,omitempty" yaml:"time_to_block,omitempty" required:"false" doc:"Grace period expiration time"`
-	UsedCapacity    int64                   `json:"used_capacity,omitempty" yaml:"used_capacity,omitempty" required:"false" doc:"Used capacity in bytes"`
-	UsedInodes      int64                   `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Used inodes"`
+	Email           string `json:"email,omitempty" yaml:"email,omitempty" required:"false" doc:"The email used to send the user or group notifications of exceeding quota limits."`
+	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
+	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
+	Identifier      string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
+	IdentifierType  string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:""`
+	IsAccountable   bool   `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:""`
+	IsGroup         bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:"True for a group quota. False for a user quota."`
+	IsIamRole       bool   `json:"is_iam_role,omitempty" yaml:"is_iam_role,omitempty" required:"false" doc:""`
+	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
+	PercentCapacity int64  `json:"percent_capacity,omitempty" yaml:"percent_capacity,omitempty" required:"false" doc:""`
+	PercentInodes   int64  `json:"percent_inodes,omitempty" yaml:"percent_inodes,omitempty" required:"false" doc:"Percentage of files and directories limit in use"`
+	QuotaSystemId   int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
+	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
+	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
+	State           string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
+	TimeToBlock     string `json:"time_to_block,omitempty" yaml:"time_to_block,omitempty" required:"false" doc:"Grace period expiration time"`
+	UsedCapacity    int64  `json:"used_capacity,omitempty" yaml:"used_capacity,omitempty" required:"false" doc:"Used capacity in bytes"`
+	UsedInodes      int64  `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Used inodes"`
+	VastId          int64  `json:"vast_id,omitempty" yaml:"vast_id,omitempty" required:"false" doc:"VAST ID of the user or group with the listed user/group quota"`
 }
 
 // Component_PartialVolumeInfo represents the OpenAPI component schema
@@ -3708,27 +3714,30 @@ type Component_UserQueryData struct {
 // Component_UserQuota represents the OpenAPI component schema
 // Component: #/components/schemas/UserQuota
 type Component_UserQuota struct {
-	Entity           UserQuota_Entity `json:"entity,omitempty" yaml:"entity,omitempty" required:"false" doc:""`
-	EntityIdentifier string           `json:"entity_identifier,omitempty" yaml:"entity_identifier,omitempty" required:"false" doc:""`
-	GracePeriod      string           `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
-	Guid             string           `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
-	HardLimit        int64            `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
-	HardLimitInodes  int64            `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
-	Id               int64            `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	Identifier       string           `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
-	IdentifierType   string           `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:""`
-	IsAccountable    bool             `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:""`
-	Name             string           `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The name"`
-	Path             string           `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:""`
-	PercentCapacity  int64            `json:"percent_capacity,omitempty" yaml:"percent_capacity,omitempty" required:"false" doc:""`
-	PercentInodes    int64            `json:"percent_inodes,omitempty" yaml:"percent_inodes,omitempty" required:"false" doc:"Percentage of files and directories limit in use"`
-	QuotaSystemId    int64            `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
-	SoftLimit        int64            `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
-	SoftLimitInodes  int64            `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
-	State            string           `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
-	TimeToBlock      string           `json:"time_to_block,omitempty" yaml:"time_to_block,omitempty" required:"false" doc:"Grace period expiration time"`
-	UsedCapacity     int64            `json:"used_capacity,omitempty" yaml:"used_capacity,omitempty" required:"false" doc:"Used capacity in bytes"`
-	UsedInodes       int64            `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Used inodes"`
+	Email            string `json:"email,omitempty" yaml:"email,omitempty" required:"false" doc:"The email used to send the user or group notifications of exceeding quota limits."`
+	EntityIdentifier string `json:"entity_identifier,omitempty" yaml:"entity_identifier,omitempty" required:"false" doc:""`
+	GracePeriod      string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	Guid             string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
+	HardLimit        int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
+	HardLimitInodes  int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
+	Id               int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Identifier       string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
+	IdentifierType   string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:""`
+	IsAccountable    bool   `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:""`
+	IsGroup          bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:"True for a group quota. False for a user quota."`
+	IsIamRole        bool   `json:"is_iam_role,omitempty" yaml:"is_iam_role,omitempty" required:"false" doc:""`
+	Name             string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
+	Path             string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:""`
+	PercentCapacity  int64  `json:"percent_capacity,omitempty" yaml:"percent_capacity,omitempty" required:"false" doc:""`
+	PercentInodes    int64  `json:"percent_inodes,omitempty" yaml:"percent_inodes,omitempty" required:"false" doc:"Percentage of files and directories limit in use"`
+	QuotaSystemId    int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
+	SoftLimit        int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
+	SoftLimitInodes  int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
+	State            string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
+	TimeToBlock      string `json:"time_to_block,omitempty" yaml:"time_to_block,omitempty" required:"false" doc:"Grace period expiration time"`
+	UsedCapacity     int64  `json:"used_capacity,omitempty" yaml:"used_capacity,omitempty" required:"false" doc:"Used capacity in bytes"`
+	UsedInodes       int64  `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Used inodes"`
+	VastId           int64  `json:"vast_id,omitempty" yaml:"vast_id,omitempty" required:"false" doc:"VAST ID of the user or group with the listed user/group quota"`
 }
 
 // Component_UserTenantData represents the OpenAPI component schema
@@ -4807,17 +4816,6 @@ type NFS4DelegateState_DelegateInfoItem struct {
 	VipAddr           string `json:"vip_addr,omitempty" yaml:"vip_addr,omitempty" required:"false" doc:""`
 }
 
-// PartialUserQuota_Entity represents a nested type within components
-type PartialUserQuota_Entity struct {
-	Email          string `json:"email,omitempty" yaml:"email,omitempty" required:"false" doc:"The email used to send the user or group notifications of exceeding quota limits."`
-	Identifier     string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
-	IdentifierType string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:""`
-	IsGroup        bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:"True for a group quota. False for a user quota."`
-	IsIamRole      bool   `json:"is_iam_role,omitempty" yaml:"is_iam_role,omitempty" required:"false" doc:""`
-	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
-	VastId         int64  `json:"vast_id,omitempty" yaml:"vast_id,omitempty" required:"false" doc:"VAST ID of the user or group with the listed user/group quota"`
-}
-
 // ProtectedPath_MembersInfoValue represents a nested type within components
 type ProtectedPath_MembersInfoValue struct {
 	Capabilities string `json:"capabilities,omitempty" yaml:"capabilities,omitempty" required:"false" doc:""`
@@ -5169,17 +5167,6 @@ type UserQueryData_QuotasItem struct {
 type UserQueryData_UserQosPoliciesItem struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-}
-
-// UserQuota_Entity represents a nested type within components
-type UserQuota_Entity struct {
-	Email          string `json:"email,omitempty" yaml:"email,omitempty" required:"false" doc:"The email used to send the user or group notifications of exceeding quota limits."`
-	Identifier     string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
-	IdentifierType string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:""`
-	IsGroup        bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:"True for a group quota. False for a user quota."`
-	IsIamRole      bool   `json:"is_iam_role,omitempty" yaml:"is_iam_role,omitempty" required:"false" doc:""`
-	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
-	VastId         int64  `json:"vast_id,omitempty" yaml:"vast_id,omitempty" required:"false" doc:"VAST ID of the user or group with the listed user/group quota"`
 }
 
 // UserTenantData_S3PoliciesItem represents a nested type within components
