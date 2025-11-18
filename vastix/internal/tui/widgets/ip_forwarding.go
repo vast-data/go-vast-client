@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/netip"
 	"os"
 	"time"
@@ -16,11 +15,10 @@ import (
 	vpn_common "vastix/internal/vpn_connect/common"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"golang.org/x/crypto/ssh"
 )
 
-// VipPoolForwarding is an extra widget for establishing VPN connection to VIP pool via SSH
-type VipPoolForwarding struct {
+// IpForwarding is an extra widget for establishing VPN connection to a single IP via SSH
+type IpForwarding struct {
 	*BaseWidget
 
 	// VPN components
@@ -43,16 +41,16 @@ type VipPoolForwarding struct {
 	lastError           error
 
 	// Connection details
-	vipPoolName    string // Name of the VIP pool to connect to
+	targetIP       string // Single IP address to route through VPN
 	remoteHost     string
 	remoteUser     string
 	remotePassword string
 	remoteKeyPath  string
-	privateIPs     []netip.Addr // List of VIP pool IPs to route through VPN
+	privateIPs     []netip.Addr // Single IP as array for compatibility
 }
 
-// NewVipPoolForwarding creates a new VIP pool forwarding extra widget
-func NewVipPoolForwarding(db *database.Service, msgChan chan tea.Msg) *VipPoolForwarding {
+// NewIpForwarding creates a new IP forwarding extra widget
+func NewIpForwarding(db *database.Service, msgChan chan tea.Msg) *IpForwarding {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Custom key restrictions: disable ctrl+e in details mode (can't "edit & resubmit" logs)
@@ -66,12 +64,12 @@ func NewVipPoolForwarding(db *database.Service, msgChan chan tea.Msg) *VipPoolFo
 		},
 	}
 
-	widget := &VipPoolForwarding{
-		BaseWidget: NewBaseWidget(db, nil, nil, "vip_pool_forwarding", nil, keyRestrictions),
+	widget := &IpForwarding{
+		BaseWidget: NewBaseWidget(db, nil, nil, "ip_forwarding", nil, keyRestrictions),
 		clientID:   1, // Fixed client ID for now (can be made configurable)
 		ctx:        ctx,
 		cancel:     cancel,
-		privateIPs: []netip.Addr{}, // Will be populated from VIP pool data
+		privateIPs: []netip.Addr{}, // Will contain single IP
 		lastStatus: "Not connected",
 		msgChan:    msgChan, // Store msgChan for health monitoring
 	}
@@ -83,28 +81,25 @@ func NewVipPoolForwarding(db *database.Service, msgChan chan tea.Msg) *VipPoolFo
 	widget.DetailsAdapter.SetPredefinedTitle("Forwarding Logs")
 
 	// Initialize logWriter with DetailsAdapter by default
-	// This ensures we always have a valid writer even before SetLogWriter is called
 	widget.logWriter = widget.DetailsAdapter
 
 	return widget
 }
 
 // SetLogWriter sets the writer for VPN logs (working zone or details adapter)
-func (w *VipPoolForwarding) SetLogWriter(writer interface{ Write([]byte) (int, error) }) {
+func (w *IpForwarding) SetLogWriter(writer interface{ Write([]byte) (int, error) }) {
 	w.logWriter = writer
 
 	// Recreate deployer with new writer
 	w.deployer = vpn_client.NewDeployer(writer)
 }
 
-// Init initializes the VIP pool forwarding widget
-// Called when the extra widget is activated
-// msgChan is already set from constructor via NewVipPoolForwarding
-func (w *VipPoolForwarding) Init() tea.Msg {
-	w.auxlog.Printf("VipPoolForwarding.Init() called")
+// Init initializes the IP forwarding widget
+func (w *IpForwarding) Init() tea.Msg {
+	w.auxlog.Printf("IpForwarding.Init() called")
 
 	if w.msgChan == nil {
-		w.auxlog.Printf("WARNING: msgChan not set in VipPoolForwarding.Init, health monitoring will be limited")
+		w.auxlog.Printf("WARNING: msgChan not set in IpForwarding.Init, health monitoring will be limited")
 	}
 
 	// Cancel old context if exists, create new one for fresh start
@@ -113,37 +108,36 @@ func (w *VipPoolForwarding) Init() tea.Msg {
 	}
 	w.ctx, w.cancel = context.WithCancel(context.Background())
 
-	// Reset state for fresh start - user can enter new VIP pool each time
-	w.vipPoolName = ""
+	// Reset state for fresh start - user can enter new IP each time
+	w.targetIP = ""
 	w.privateIPs = []netip.Addr{}
 	w.needingSudoPassword = false
 	w.connected = false
 	w.deploying = false
-	w.auxlog.Printf("VipPoolForwarding state reset for new connection")
+	w.auxlog.Printf("IpForwarding state reset for new connection")
 
 	return nil
 }
 
 // ShortCut returns the keyboard shortcut for this extra widget
-func (*VipPoolForwarding) ShortCut() *common.KeyBinding {
+func (*IpForwarding) ShortCut() *common.KeyBinding {
 	return &common.KeyBinding{
-		Key:           "<2>",
-		Desc:          "vip pool forwarding",
+		Key:           "<1>",
+		Desc:          "ip forwarding",
 		IsExtraAction: true,
 	}
 }
 
 // GetSummary returns a short description of this extra widget for display in the extra actions list
-func (*VipPoolForwarding) GetSummary() string {
-	return "Deploy VPN server via SSH and route VIP pool traffic through tunnel"
+func (*IpForwarding) GetSummary() string {
+	return "Deploy VPN server via SSH and route single IP address through tunnel"
 }
 
 // GetAllowedExtraNavigatorModes restricts which modes are available for this widget
-// VIP Pool Forwarding uses all modes except Delete (not applicable for this action-based widget)
-func (*VipPoolForwarding) GetAllowedExtraNavigatorModes() []common.ExtraNavigatorMode {
+func (*IpForwarding) GetAllowedExtraNavigatorModes() []common.ExtraNavigatorMode {
 	return []common.ExtraNavigatorMode{
-		common.ExtraNavigatorModeList,    // Select SSH connection / VIP pool
-		common.ExtraNavigatorModeCreate,  // Initial VIP pool selection form
+		common.ExtraNavigatorModeList,    // Select SSH connection
+		common.ExtraNavigatorModeCreate,  // Initial IP address input form
 		common.ExtraNavigatorModeDetails, // View connection logs
 		common.ExtraNavigatorModePrompt,  // Disconnect confirmation
 		// ExtraNavigatorModeDelete is intentionally excluded (not applicable)
@@ -151,8 +145,7 @@ func (*VipPoolForwarding) GetAllowedExtraNavigatorModes() []common.ExtraNavigato
 }
 
 // GetDetailsKeyBindings returns key bindings for details mode (viewing logs)
-// Overrides base implementation to exclude <ctrl+e> (can't "edit & resubmit" logs)
-func (w *VipPoolForwarding) GetDetailsKeyBindings() []common.KeyBinding {
+func (w *IpForwarding) GetDetailsKeyBindings() []common.KeyBinding {
 	return []common.KeyBinding{
 		{Key: "</>", Desc: "search", Generic: true},
 		{Key: "<↑/↓>", Desc: "scroll"},
@@ -164,28 +157,28 @@ func (w *VipPoolForwarding) GetDetailsKeyBindings() []common.KeyBinding {
 }
 
 // InitialExtraMode returns the initial mode for this extra widget
-func (*VipPoolForwarding) InitialExtraMode() common.ExtraNavigatorMode {
-	// Start with Create mode to ask for VIP pool name first
+func (*IpForwarding) InitialExtraMode() common.ExtraNavigatorMode {
+	// Start with Create mode to ask for IP address first
 	return common.ExtraNavigatorModeCreate
 }
 
 // GetInputs returns the input fields for the create form
-func (w *VipPoolForwarding) GetInputs() (common.Inputs, error) {
+func (w *IpForwarding) GetInputs() (common.Inputs, error) {
 	inputs := common.Inputs{}
 
-	// VIP Pool Name input
-	inputs.NewTextInput("vip_pool_name", "Enter VIP pool name (e.g., protocols-pool)", true, "")
+	// IP Address input
+	inputs.NewTextInput("ip_address", "Enter IP address (e.g., 192.168.1.100)", true, "")
 
 	return inputs, nil
 }
 
 // ViewCreateForm displays the create form
-func (w *VipPoolForwarding) ViewCreateForm() string {
+func (w *IpForwarding) ViewCreateForm() string {
 	return w.viewCreateForm()
 }
 
-// ViewPrompt displays the VIP pool forwarding connection prompt
-func (w *VipPoolForwarding) ViewPrompt() string {
+// ViewPrompt displays the IP forwarding connection prompt
+func (w *IpForwarding) ViewPrompt() string {
 	selectedRowData := w.selectedRowData
 
 	// Extract SSH connection details
@@ -195,15 +188,14 @@ func (w *VipPoolForwarding) ViewPrompt() string {
 
 	// Create the prompt message
 	promptMsg := fmt.Sprintf(
-		"Deploy and connect to VIP Pool '%s' via %s (%s@%s)?\n\n"+
+		"Deploy and connect to IP '%s' via %s (%s@%s)?\n\n"+
 			"This will:\n"+
 			"  • Deploy VPN server via SSH\n"+
-			"  • Fetch IPs from VIP pool '%s'\n"+
-			"  • Route VIP pool IPs through VPN tunnel\n"+
-			"  • Allow access to VIP pool resources",
-		w.vipPoolName, sshName, sshUser, sshHost, w.vipPoolName,
+			"  • Route traffic to %s through VPN tunnel\n"+
+			"  • Allow direct access to the IP address",
+		w.targetIP, sshName, sshUser, sshHost, w.targetIP,
 	)
-	promptTitle := fmt.Sprintf("Connect to VIP Pool: %s", w.vipPoolName)
+	promptTitle := fmt.Sprintf("Connect to IP: %s", w.targetIP)
 
 	// Use the prompt adapter to render the prompt
 	width := w.GetWidth()
@@ -212,137 +204,11 @@ func (w *VipPoolForwarding) ViewPrompt() string {
 	return w.PromptAdapter.PromptDo(promptMsg, promptTitle, width, height)
 }
 
-// fetchVipPoolIPs fetches all VIP pool IPs from the VAST REST API
-// This is a potentially long-running operation and should be called in a background goroutine
-func (w *VipPoolForwarding) fetchVipPoolIPs(_ *database.SshConnection) error {
-	w.auxlog.Printf("Fetching VIP pool IPs for pool '%s'", w.vipPoolName)
-
-	// Get active profile from database
-	activeProfile, err := w.db.GetActiveProfile()
-	if err != nil {
-		return fmt.Errorf("failed to get active profile: %w", err)
-	}
-	if activeProfile == nil {
-		return fmt.Errorf("no active profile found")
-	}
-
-	// Create REST client from profile
-	rest, err := activeProfile.RestClientFromProfile()
-	if err != nil {
-		return fmt.Errorf("failed to create REST client: %w", err)
-	}
-
-	w.auxlog.Printf("Fetching IPs from VIP pool '%s'", w.vipPoolName)
-
-	// Fetch all IPs from the VIP pool
-	ipStrings, err := rest.VipPools.IpRangeFor(w.vipPoolName)
-	if err != nil {
-		return fmt.Errorf("failed to fetch IPs from VIP pool '%s': %w", w.vipPoolName, err)
-	}
-
-	if len(ipStrings) == 0 {
-		return fmt.Errorf("VIP pool '%s' has no IPs", w.vipPoolName)
-	}
-
-	w.auxlog.Printf("Fetched %d IPs from VIP pool", len(ipStrings))
-
-	// Parse IP strings to netip.Addr
-	w.privateIPs = make([]netip.Addr, 0, len(ipStrings))
-	for _, ipStr := range ipStrings {
-		ip, err := netip.ParseAddr(ipStr)
-		if err != nil {
-			w.auxlog.Printf("Warning: Failed to parse IP %s: %v", ipStr, err)
-			continue
-		}
-		w.privateIPs = append(w.privateIPs, ip)
-	}
-
-	if len(w.privateIPs) == 0 {
-		return fmt.Errorf("failed to parse any valid IPs from VIP pool '%s'", w.vipPoolName)
-	}
-
-	w.auxlog.Printf("Successfully parsed %d IPs from VIP pool '%s'", len(w.privateIPs), w.vipPoolName)
-	return nil
-}
-
-// verifyIPReachability verifies that at least one random IP from the VIP pool is reachable via SSH
-// This is called before establishing VPN to ensure IPs are actually accessible
-func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection) error {
-	if len(w.privateIPs) == 0 {
-		return fmt.Errorf("no IPs to verify")
-	}
-
-	// Pick a random IP to test
-	randomIP := w.privateIPs[rand.Intn(len(w.privateIPs))]
-	w.auxlog.Printf("Testing reachability of IP: %s via SSH ping", randomIP)
-
-	// Build SSH config
-	var authMethods []ssh.AuthMethod
-
-	// Add password authentication if provided
-	if sshConn.SshPassword != "" {
-		authMethods = append(authMethods, ssh.Password(sshConn.SshPassword))
-	}
-
-	// Add public key authentication if provided
-	if sshConn.SshKey != "" {
-		key, err := os.ReadFile(sshConn.SshKey)
-		if err != nil {
-			return fmt.Errorf("failed to read SSH private key: %w", err)
-		}
-
-		signer, err := ssh.ParsePrivateKey(key)
-		if err != nil {
-			return fmt.Errorf("failed to parse SSH private key: %w", err)
-		}
-
-		authMethods = append(authMethods, ssh.PublicKeys(signer))
-	}
-
-	sshConfig := &ssh.ClientConfig{
-		User:            sshConn.SshUserName,
-		Auth:            authMethods,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         30 * time.Second,
-	}
-
-	// Connect to SSH
-	addr := fmt.Sprintf("%s:%d", sshConn.SshHost, sshConn.SshPort)
-	client, err := ssh.Dial("tcp", addr, sshConfig)
-	if err != nil {
-		return fmt.Errorf("failed to connect via SSH: %w", err)
-	}
-	defer client.Close()
-
-	// Run ping command (2 pings, 2 sec timeout per ping = 10 sec total)
-	pingCmd := fmt.Sprintf("ping -c 2 -W 2 %s", randomIP)
-	w.auxlog.Printf("Running: %s", pingCmd)
-
-	session, err := client.NewSession()
-	if err != nil {
-		return fmt.Errorf("failed to create SSH session: %w", err)
-	}
-	defer session.Close()
-
-	// Capture output to auxlog for first ping
-	session.Stdout = w.auxlog.Writer()
-	session.Stderr = w.auxlog.Writer()
-
-	if err := session.Run(pingCmd); err != nil {
-		return fmt.Errorf("ping to %s failed: %w", randomIP, err)
-	}
-
-	w.auxlog.Printf("Successfully verified IP %s is reachable", randomIP)
-	return nil
-}
-
 // getSudoPassword gets or validates sudo password, returns error if not available/valid
-func (w *VipPoolForwarding) getSudoPassword() error {
+func (w *IpForwarding) getSudoPassword() error {
 	w.auxlog.Printf("DEBUG getSudoPassword: checking if password is needed...")
 
 	// Check if wg-quick specifically needs a password
-	// This is more accurate than checking generic sudo, as wg-quick might be
-	// configured in sudoers for passwordless execution
 	if !vpn_client.CheckWgQuickNeedsPassword() {
 		// wg-quick doesn't need password, use empty string
 		w.sudoPassword = ""
@@ -376,74 +242,41 @@ func (w *VipPoolForwarding) getSudoPassword() error {
 	return fmt.Errorf("sudo password required but not available")
 }
 
-// CreateFromInputs initiates the VIP pool forwarding connection
-func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
+// CreateFromInputs initiates the IP forwarding connection
+func (w *IpForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 	w.auxlog.Printf("DEBUG CreateFromInputs: called, needingSudoPassword=%v", w.needingSudoPassword)
 
-	// Step 1: Handle VIP pool name input (every time user enters Create mode)
-	// User can specify different VIP pool each time they use this widget
-	// Check if we need to fetch IPs (either no name set yet, or no IPs fetched yet)
-	if (w.vipPoolName == "" || len(w.privateIPs) == 0) && !w.needingSudoPassword {
-		w.auxlog.Printf("DEBUG CreateFromInputs: extracting VIP pool name from inputs")
+	// Step 1: Handle IP address input (first time entering Create mode)
+	if w.targetIP == "" && !w.needingSudoPassword {
+		w.auxlog.Printf("DEBUG CreateFromInputs: extracting IP address from inputs")
 
-		// Find the vip_pool_name input
-		var vipPoolName string
+		// Find the ip_address input
+		var ipAddress string
 		for _, input := range inputs {
-			if input.GetLabel() == "vip_pool_name" {
-				vipPoolName = input.Value()
+			if input.GetLabel() == "ip_address" {
+				ipAddress = input.Value()
 				break
 			}
 		}
 
-		if vipPoolName == "" {
-			return nil, fmt.Errorf("VIP pool name cannot be empty")
+		if ipAddress == "" {
+			return nil, fmt.Errorf("IP address cannot be empty")
 		}
 
-		// Store the name temporarily for the fetch
-		tempVipPoolName := vipPoolName
-		w.auxlog.Printf("Attempting to fetch IPs for VIP pool: %s", tempVipPoolName)
-
-		// Get SSH connection for IP reachability check
-		selectedRowData := w.selectedRowData
-		sshConnID, err := selectedRowData.GetIntID()
+		// Parse and validate IP address
+		ip, err := netip.ParseAddr(ipAddress)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get SSH connection ID: %w", err)
+			return nil, fmt.Errorf("invalid IP address: %w", err)
 		}
 
-		// Fetch full SSH connection details from database
-		sshConn, err := w.db.GetSshConnection(uint(sshConnID))
-		if err != nil {
-			return nil, fmt.Errorf("failed to get SSH connection details: %w", err)
-		}
+		// Store the IP address
+		w.targetIP = ipAddress
+		w.privateIPs = []netip.Addr{ip}
+		w.auxlog.Printf("IP address set to: %s", w.targetIP)
 
-		// Fetch VIP pool IPs and verify reachability in background, then switch to Prompt mode
-		return msg_types.ProcessWithSpinner(func() tea.Msg {
-			// Set the VIP pool name in the widget for fetchVipPoolIPs to use
-			w.vipPoolName = tempVipPoolName
-
-			// Fetch VIP pool IPs from the active profile
-			if err := w.fetchVipPoolIPs(nil); err != nil {
-				w.auxlog.Printf("Error fetching VIP pool IPs: %v", err)
-				// Reset state on error so user can try again with a different name
-				w.vipPoolName = ""
-				w.privateIPs = []netip.Addr{}
-				return msg_types.ErrorMsg{Err: fmt.Errorf("Failed to fetch VIP pool IPs:\n%w", err)}
-			}
-
-			// Verify IP reachability via SSH
-			w.auxlog.Printf("Verifying VIP pool IP reachability via SSH...")
-			if err := w.verifyIPReachability(sshConn); err != nil {
-				w.auxlog.Printf("VIP pool IP verification failed: %v", err)
-				// Reset state on error so user can try again
-				w.vipPoolName = ""
-				w.privateIPs = []netip.Addr{}
-				return msg_types.ErrorMsg{Err: fmt.Errorf("VIP pool IP verification failed:\n%w", err)}
-			}
-
-			// Successfully fetched IPs and verified reachability, switch to Prompt mode
-			w.SetExtraMode(common.ExtraNavigatorModePrompt)
-			return nil
-		}), nil
+		// Switch to Prompt mode for confirmation
+		w.SetExtraMode(common.ExtraNavigatorModePrompt)
+		return nil, nil
 	}
 
 	// Step 2: Check if we're waiting for sudo password from popup
@@ -529,11 +362,11 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		return nil, fmt.Errorf("SSH password is required for password-based authentication")
 	}
 
-	// VIP pool IPs should already be fetched and verified (done in background after user entered VIP pool name)
+	// IP should already be set
 	if len(w.privateIPs) == 0 {
-		return nil, fmt.Errorf("no VIP pool IPs available - this should not happen")
+		return nil, fmt.Errorf("no IP address available - this should not happen")
 	}
-	w.auxlog.Printf("Using %d VIP pool IPs for VPN routing", len(w.privateIPs))
+	w.auxlog.Printf("Using IP address %s for VPN routing", w.targetIP)
 
 	// Check/get sudo password before proceeding
 	if err := w.getSudoPassword(); err != nil {
@@ -556,8 +389,6 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		w.DetailsAdapter.ClearContent()
 
 		// Create writer that writes to DetailsAdapter AND auxlog
-		// This preserves logs in DetailsAdapter and shows real-time progress in auxlog zone
-		// Note: logWriter is initialized to DetailsAdapter by default, and can be updated via SetLogWriter
 		var writer io.Writer
 		auxLogWriter := w.auxlog.Writer()
 
@@ -571,7 +402,7 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 
 		w.deployer = vpn_client.NewDeployer(writer)
 
-		// Set VIP pool IPs for health monitoring
+		// Set IP for health monitoring
 		w.deployer.SetVipPoolIPs(w.privateIPs)
 
 		// Step 0: Check if WireGuard is installed
@@ -587,7 +418,7 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 
 		w.lastStatus = "Deploying VPN server..."
 
-		// Get local hostname for remote directory structure (needed for initial SSH connection)
+		// Get local hostname for remote directory structure
 		hostname, err := os.Hostname()
 		if err != nil {
 			w.lastError = err
@@ -597,7 +428,7 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to get local hostname: %w", err)}
 		}
 
-		// Step 1: Connect to remote host via SSH (using temporary directory for port check)
+		// Step 1: Connect to remote host via SSH
 		w.lastStatus = "Connecting to remote host..."
 		deployConfig := &vpn_client.DeploymentConfig{
 			Host:           w.remoteHost,
@@ -624,7 +455,7 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			w.lastStatus = "SSH connection verification failed"
 			w.deploying = false
 			w.auxlog.Printf("Error: SSH connection verification failed: %v", err)
-			return msg_types.ErrorMsg{Err: fmt.Errorf("SSH connection verification failed:\n%w\n\nThe remote host may be unreachable or VIP pool IPs are not accessible from this host", err)}
+			return msg_types.ErrorMsg{Err: fmt.Errorf("SSH connection verification failed:\n%w\n\nThe remote host may be unreachable or the target IP is not accessible from this host", err)}
 		}
 		w.auxlog.Printf("SSH connection verified successfully")
 
@@ -659,7 +490,6 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		}
 
 		// Remote directory: /tmp/vastix_vpn/<local_hostname>-<port>
-		// Each connection gets its own directory to avoid conflicts
 		remoteWorkDir := fmt.Sprintf("/tmp/vastix_vpn/%s-port%d", hostname, port)
 		deployConfig.RemoteWorkDir = remoteWorkDir // Update the work directory
 
@@ -702,11 +532,10 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to deploy server: %w", err)}
 		}
 
-		// Step 5: Start server in background (long-running, streams logs)
-		// The server will run until w.ctx is cancelled (when user leaves widget)
+		// Step 5: Start server in background
 		w.lastStatus = "Starting VPN server..."
 
-		// Start server in goroutine - it will stream logs to writer in real-time
+		// Start server in goroutine
 		go func() {
 			if err := w.deployer.StartServer(w.ctx, deployConfig.RemoteWorkDir, serverConfig); err != nil {
 				w.auxlog.Printf("Server stopped: %v", err)
@@ -717,11 +546,11 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			}
 		}()
 
-		// Give server a moment to initialize before continuing
+		// Give server a moment to initialize
 		w.auxlog.Printf("Waiting for VPN server to initialize...")
 		time.Sleep(3 * time.Second)
 
-		// Start heartbeat monitoring to enable server self-destruction if client disconnects
+		// Start heartbeat monitoring
 		w.auxlog.Printf("Starting heartbeat to remote server...")
 		if err := w.deployer.StartHeartbeat(deployConfig.RemoteWorkDir); err != nil {
 			w.lastError = err
@@ -731,7 +560,7 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to start heartbeat: %w", err)}
 		}
 		time.Sleep(3 * time.Second)
-		w.auxlog.Printf("VPN server should be running now (streaming logs in background)")
+		w.auxlog.Printf("VPN server should be running now")
 
 		// Step 6: Generate client keys
 		w.lastStatus = "Generating client keys..."
@@ -768,16 +597,14 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			ServerEndpoint:  fmt.Sprintf("%s:%d", w.remoteHost, port),
 			ClientIP:        clientIP,
 			ServerIP:        serverIP,
-			PrivateIPs:      w.privateIPs, // Use individual IPs instead of network
+			PrivateIPs:      w.privateIPs, // Single IP
 		}
 
-		// Step 8: Create VPN client with appropriate writer
+		// Step 8: Create VPN client
 		w.lastStatus = "Preparing VPN connection..."
 		w.auxlog.Printf("Initiating VPN connection with output display...")
 		w.deploying = false
 
-		// Use the same multi-writer approach for client
-		// Note: writer was already set up above to write to DetailsAdapter, auxlog, and optionally working zone
 		w.vpnClient, err = vpn_client.NewClient(clientConfig, writer)
 		if err != nil {
 			w.lastError = err
@@ -786,12 +613,12 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to create VPN client:\n%w", err)}
 		}
 
-		// Switch to details mode if using only DetailsAdapter (not working zone)
+		// Switch to details mode if using only DetailsAdapter
 		if w.logWriter == w.DetailsAdapter {
 			w.SetExtraMode(common.ExtraNavigatorModeDetails)
 		}
 
-		// Step 9: Connect VPN (this will write logs to the writer)
+		// Step 9: Connect VPN
 		if err := w.vpnClient.Connect(w.sudoPassword); err != nil {
 			w.lastError = err
 			w.lastStatus = "Failed to connect"
@@ -800,20 +627,9 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		}
 
 		// Step 10: Connection successful!
-		// Note: Server will run until w.ctx is cancelled (when user leaves widget)
-		// No need for heartbeat files - the SSH session closing will stop the server
-
 		w.connected = true
 		w.lastStatus = "Connected successfully"
 		w.lastError = nil
-
-		// Inject msgChan from working zone if not already set
-		if w.msgChan == nil {
-			// Try to get msgChan from the working zone via database callback
-			// This is a workaround since we don't have direct access to working zone here
-			w.auxlog.Printf("WARNING: msgChan not set, attempting to retrieve from working zone")
-			// For now, we'll set it in Init() method instead
-		}
 
 		// Start health monitoring
 		w.StartHealthMonitoring(w.ctx)
@@ -823,7 +639,7 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 }
 
 // UpdateViewPort overrides the base UpdateViewPort to handle popup submissions
-func (w *VipPoolForwarding) UpdateViewPort(msg tea.Msg) tea.Cmd {
+func (w *IpForwarding) UpdateViewPort(msg tea.Msg) tea.Cmd {
 	w.auxlog.Printf("DEBUG UpdateViewPort: called, needingSudoPassword=%v", w.needingSudoPassword)
 
 	// First, let the DetailsAdapter handle the message (including popup input)
@@ -852,8 +668,8 @@ func (w *VipPoolForwarding) UpdateViewPort(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-// Update handles messages for the VIP pool forwarding widget
-func (w *VipPoolForwarding) Update(msg tea.Msg) tea.Cmd {
+// Update handles messages for the IP forwarding widget
+func (w *IpForwarding) Update(msg tea.Msg) tea.Cmd {
 	// Debug: Log when Update is called while needing sudo password
 	if w.needingSudoPassword {
 		isHidden := w.DetailsAdapter.IsPopupHidden()
@@ -899,7 +715,6 @@ func (w *VipPoolForwarding) Update(msg tea.Msg) tea.Cmd {
 			w.SetExtraMode(common.ExtraNavigatorModeDetails)
 
 			// Now proceed with deployment
-			// Call CreateFromInputs again with empty inputs
 			cmd, err := w.CreateFromInputs(common.Inputs{})
 			if err != nil {
 				w.auxlog.Printf("Error calling CreateFromInputs: %v", err)
@@ -908,65 +723,6 @@ func (w *VipPoolForwarding) Update(msg tea.Msg) tea.Cmd {
 
 			w.auxlog.Printf("Deployment command created successfully")
 			return cmd
-		}
-	}
-
-	// Check for popup submission (sudo password input)
-	if w.needingSudoPassword {
-		w.auxlog.Printf("DEBUG Update: needingSudoPassword=true, checking popup state...")
-		if w.DetailsAdapter.IsPopupHidden() {
-			popupContent := w.DetailsAdapter.GetPopupContent()
-			w.auxlog.Printf("DEBUG Update: popup is hidden, content length=%d", len(popupContent))
-
-			if popupContent != "" {
-				w.auxlog.Printf("DEBUG Update: processing popup submission")
-				// Validate the password
-				if err := vpn_client.ValidateSudoPassword(popupContent); err != nil {
-					w.auxlog.Printf("Invalid sudo password: %v", err)
-					w.DetailsAdapter.ClearPopupContent()
-
-					// Show the popup again with error message
-					w.DetailsAdapter.ShowPopup(
-						"Invalid Sudo Password - Try Again",
-						"Enter your local system password",
-						true, // isSecret
-					)
-					return nil
-				}
-
-				// Save the password to database
-				db := database.New()
-				if err := db.SaveSudoPassword(popupContent); err != nil {
-					w.auxlog.Printf("Warning: Failed to save sudo password: %v", err)
-					// Continue anyway with the in-memory password
-				} else {
-					w.auxlog.Printf("Sudo password validated and saved to database")
-				}
-
-				// Store password and clear the flag
-				w.sudoPassword = popupContent
-				w.needingSudoPassword = false
-				w.DetailsAdapter.ClearPopupContent()
-
-				// Clear details content and prepare for logs
-				w.DetailsAdapter.ClearContent()
-				w.DetailsAdapter.AppendContent("Starting VPN deployment...\n\n")
-
-				// Switch to Details mode to show deployment logs
-				w.SetExtraMode(common.ExtraNavigatorModeDetails)
-
-				// Now call CreateFromInputs to start deployment
-				w.auxlog.Printf("Calling CreateFromInputs after password validated...")
-				cmd, err := w.CreateFromInputs(common.Inputs{})
-				if err != nil {
-					w.auxlog.Printf("Error calling CreateFromInputs: %v", err)
-					return func() tea.Msg { return msg_types.ErrorMsg{Err: err} }
-				}
-				w.auxlog.Printf("Deployment command created successfully")
-				return cmd
-			}
-		} else {
-			w.auxlog.Printf("DEBUG Update: popup is still visible, waiting for submission")
 		}
 	}
 
@@ -995,27 +751,21 @@ func (w *VipPoolForwarding) Update(msg tea.Msg) tea.Cmd {
 	return nil
 }
 
-// ViewDetails displays the VIP pool forwarding connection details
-func (w *VipPoolForwarding) ViewDetails() string {
+// ViewDetails displays the IP forwarding connection details
+func (w *IpForwarding) ViewDetails() string {
 	// Just show the base details view (logs)
-	// No additional headers, footers, or status messages
 	return w.viewDetails()
 }
 
-// Disconnect closes the VIP pool forwarding connection and stops the remote server
-func (w *VipPoolForwarding) Disconnect() error {
+// Disconnect closes the IP forwarding connection and stops the remote server
+func (w *IpForwarding) Disconnect() error {
 	w.auxlog.Printf("Disconnecting VPN...")
 
 	// Step 1: Disconnect local VPN client
-	// Always clean up the local interface if vpnClient exists, regardless of connected state
-	// (connection might be marked as lost but interface is still up)
 	if w.vpnClient != nil {
 		w.auxlog.Printf("Bringing down local WireGuard interface...")
-		// Use cached sudo password (may have expired after long connection)
-		// Empty string works if passwordless sudo is configured
 		if err := w.vpnClient.Disconnect(w.sudoPassword); err != nil {
 			w.auxlog.Printf("Warning: Failed to disconnect VPN client: %v", err)
-			// Don't return error, try to clean up other resources
 		} else {
 			w.auxlog.Printf("Local WireGuard interface cleaned up successfully")
 		}
@@ -1026,12 +776,10 @@ func (w *VipPoolForwarding) Disconnect() error {
 	}
 
 	// Step 2: Close SSH connection (this will automatically stop the remote server)
-	// When SSH session closes, the remote server process receives SIGTERM/SIGHUP
 	if w.deployer != nil {
 		w.auxlog.Printf("Closing SSH connection to remote server...")
 		if err := w.deployer.Disconnect(); err != nil {
 			w.auxlog.Printf("Warning: Failed to close SSH connection: %v", err)
-			// Don't return error
 		} else {
 			w.auxlog.Printf("SSH connection closed successfully")
 		}
@@ -1043,13 +791,11 @@ func (w *VipPoolForwarding) Disconnect() error {
 	return nil
 }
 
-// LeaveWidget is called when user leaves the widget (e.g., by pressing escape)
-// It implements the LeaveWidget interface
-func (w *VipPoolForwarding) LeaveWidget() error {
-	w.auxlog.Printf("Leaving VIP Pool Forwarding Widget")
+// LeaveWidget is called when user leaves the widget
+func (w *IpForwarding) LeaveWidget() error {
+	w.auxlog.Printf("Leaving IP Forwarding Widget")
 
 	// Cancel context to stop the server goroutine
-	// This will close the SSH session, which automatically sends SIGTERM to the remote server
 	if w.cancel != nil {
 		w.auxlog.Printf("Cancelling VPN context - this will stop remote server")
 		w.cancel()
@@ -1063,13 +809,12 @@ func (w *VipPoolForwarding) LeaveWidget() error {
 }
 
 // IsConnected returns whether VPN is connected
-func (w *VipPoolForwarding) IsConnected() bool {
+func (w *IpForwarding) IsConnected() bool {
 	return w.connected && w.vpnClient != nil && w.vpnClient.IsConnected()
 }
 
 // StartHealthMonitoring starts monitoring VPN connection health
-// Checks both SSH connection (with VIP pool IP ping) and VPN tunnel every 12 seconds
-func (w *VipPoolForwarding) StartHealthMonitoring(ctx context.Context) {
+func (w *IpForwarding) StartHealthMonitoring(ctx context.Context) {
 	if w.msgChan == nil {
 		w.auxlog.Printf("WARNING: msgChan is nil, health monitoring disabled")
 		return
@@ -1094,7 +839,7 @@ func (w *VipPoolForwarding) StartHealthMonitoring(ctx context.Context) {
 }
 
 // checkHealth performs health checks on the VPN connection
-func (w *VipPoolForwarding) checkHealth() {
+func (w *IpForwarding) checkHealth() {
 	// Check if we're supposed to be connected
 	if !w.connected && !w.deploying {
 		return // Not connected, no need to check
@@ -1102,7 +847,7 @@ func (w *VipPoolForwarding) checkHealth() {
 
 	w.auxlog.Printf("🔍 Running VPN health check...")
 
-	// Check 1: SSH connection health (for deployer)
+	// Check 1: SSH connection health
 	if w.deployer != nil {
 		w.auxlog.Printf("   → Checking SSH connection to VPN server...")
 		if err := w.deployer.CheckSSHHealth(); err != nil {
@@ -1118,7 +863,7 @@ func (w *VipPoolForwarding) checkHealth() {
 		w.auxlog.Printf("   ✓ SSH connection OK")
 	}
 
-	// Check 2: VPN tunnel health (ping gateway)
+	// Check 2: VPN tunnel health
 	if w.vpnClient != nil && w.connected {
 		w.auxlog.Printf("   → Checking VPN tunnel (ping gateway)...")
 		if err := w.vpnClient.CheckTunnelHealth(); err != nil {
@@ -1138,7 +883,7 @@ func (w *VipPoolForwarding) checkHealth() {
 }
 
 // sendError sends an error message to the app's message channel
-func (w *VipPoolForwarding) sendError(err error) {
+func (w *IpForwarding) sendError(err error) {
 	if w.msgChan == nil {
 		w.auxlog.Printf("WARNING: Cannot send error, msgChan is nil: %v", err)
 		return

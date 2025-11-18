@@ -279,23 +279,19 @@ After configuring, try connecting again.`, d.sshHost, d.sshUser)
 		privateIPsStr = strings.Join(ipStrs, ",")
 	}
 
-	// Log file path (next to the binary)
-	logFile := filepath.Join(workDir, "server.log")
-
 	// Heartbeat file path (next to the binary)
 	heartbeatFile := filepath.Join(workDir, "heartbeat")
 
 	// Run server in foreground using setsid to create a new session
 	// This ensures the process dies when the SSH session closes
 	// setsid creates a new session and detaches from the controlling terminal
-	startCmd := fmt.Sprintf("setsid sudo env PATH=$PATH %s -port %d -server-ip %s -vpn-network %s -private-ips '%s' -private-key '%s' -log-file '%s' -heartbeat-file '%s'",
+	startCmd := fmt.Sprintf("setsid sudo env PATH=$PATH:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin %s -port %d -server-ip %s -vpn-network %s -private-ips '%s' -private-key '%s' -heartbeat-file '%s'",
 		remoteBinary,
 		config.ListenPort,
 		config.ServerIP.String(),
 		config.VPNNetwork.String(),
 		privateIPsStr,
 		config.PrivateKey,
-		logFile,
 		heartbeatFile)
 
 	// Connect stdout/stderr to writer for real-time log streaming
@@ -303,9 +299,8 @@ After configuring, try connecting again.`, d.sshHost, d.sshUser)
 	session.Stderr = d.writer
 
 	d.writef("Starting server in foreground mode (will run until cancelled)...\n")
-	d.writef("Server log file: %s\n", logFile)
 	d.writef("Command: %s\n\n", startCmd)
-	d.writef("--- Server Output (streaming to TUI) ---\n")
+	d.writef("--- Server Output (streaming to TUI in real-time) ---\n")
 
 	// Start the command (blocking) - will run until context is cancelled or command exits
 	errChan := make(chan error, 1)

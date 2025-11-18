@@ -1,13 +1,13 @@
 package adapters
 
 import (
-	"vastix/internal/colors"
 	"encoding/json"
 	"fmt"
 	"math"
 	"reflect"
 	"sort"
 	"strings"
+	"vastix/internal/colors"
 	"vastix/internal/database"
 	log "vastix/internal/logging"
 	"vastix/internal/msg_types"
@@ -99,14 +99,59 @@ func (da *DetailsAdapter) SetContent(rawContent any) {
 	}
 }
 
+// wrapLine wraps a long line to fit within the given width
+func (da *DetailsAdapter) wrapLine(line string, maxWidth int) []string {
+	if maxWidth <= 0 {
+		return []string{line}
+	}
+
+	// If line fits, return as-is
+	if len(line) <= maxWidth {
+		return []string{line}
+	}
+
+	// Wrap the line
+	var wrapped []string
+	remaining := line
+
+	for len(remaining) > maxWidth {
+		// Try to break at a space
+		breakPoint := maxWidth
+		for breakPoint > 0 && remaining[breakPoint] != ' ' {
+			breakPoint--
+		}
+
+		// If no space found, just hard break
+		if breakPoint == 0 {
+			breakPoint = maxWidth
+		}
+
+		wrapped = append(wrapped, remaining[:breakPoint])
+		remaining = strings.TrimLeft(remaining[breakPoint:], " ")
+	}
+
+	if len(remaining) > 0 {
+		wrapped = append(wrapped, remaining)
+	}
+
+	return wrapped
+}
+
 // Write implements io.Writer interface for streaming logs to the viewport
 // Applies left padding and gray color styling to log lines
+// Wraps long lines to fit within viewport width
 func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
 	text := string(p)
 
 	// Apply styling: left padding and gray color
-	leftPadding := "  "                                                // 2 spaces left padding
+	leftPadding := "  "                                         // 2 spaces left padding
 	grayStyle := lipgloss.NewStyle().Foreground(colors.Grey240) // Gray color
+
+	// Calculate max line width (viewport width - padding - borders - small margin)
+	maxWidth := da.width - len(leftPadding) - 4 // 4 for borders and margin
+	if maxWidth < 20 {
+		maxWidth = 20 // Minimum width for readability
+	}
 
 	lines := strings.Split(text, "\n")
 	var styledLines []string
@@ -116,9 +161,13 @@ func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
 			// Keep empty lines as-is
 			styledLines = append(styledLines, line)
 		} else {
-			// Apply padding and gray color
-			styledLine := leftPadding + grayStyle.Render(line)
-			styledLines = append(styledLines, styledLine)
+			// Wrap long lines
+			wrappedLines := da.wrapLine(line, maxWidth)
+			for _, wrappedLine := range wrappedLines {
+				// Apply padding and gray color
+				styledLine := leftPadding + grayStyle.Render(wrappedLine)
+				styledLines = append(styledLines, styledLine)
+			}
 		}
 	}
 
@@ -136,10 +185,17 @@ func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
 
 // AppendContent appends a string to the current content
 // Applies left padding and gray color styling to log lines
+// Wraps long lines to fit within viewport width
 func (da *DetailsAdapter) AppendContent(text string) {
 	// Apply styling: left padding and gray color
-	leftPadding := "  "                                                // 2 spaces left padding
+	leftPadding := "  "                                         // 2 spaces left padding
 	grayStyle := lipgloss.NewStyle().Foreground(colors.Grey240) // Gray color
+
+	// Calculate max line width (viewport width - padding - borders - small margin)
+	maxWidth := da.width - len(leftPadding) - 4 // 4 for borders and margin
+	if maxWidth < 20 {
+		maxWidth = 20 // Minimum width for readability
+	}
 
 	lines := strings.Split(text, "\n")
 	var styledLines []string
@@ -149,9 +205,13 @@ func (da *DetailsAdapter) AppendContent(text string) {
 			// Keep empty lines as-is
 			styledLines = append(styledLines, line)
 		} else {
-			// Apply padding and gray color
-			styledLine := leftPadding + grayStyle.Render(line)
-			styledLines = append(styledLines, styledLine)
+			// Wrap long lines
+			wrappedLines := da.wrapLine(line, maxWidth)
+			for _, wrappedLine := range wrappedLines {
+				// Apply padding and gray color
+				styledLine := leftPadding + grayStyle.Render(wrappedLine)
+				styledLines = append(styledLines, styledLine)
+			}
 		}
 	}
 
@@ -250,8 +310,8 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 	}
 
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(colors.Orange). // Orange background
-		Foreground(colors.BlackTerm)    // Black text
+		Background(colors.Orange).   // Orange background
+		Foreground(colors.BlackTerm) // Black text
 
 	// Apply fuzzy search to the FULL content first (not just visible content)
 	var filteredContent string
@@ -333,7 +393,7 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 	if fuzzyDetailsLocalSearch != "" {
 		labelStyle := lipgloss.NewStyle().
 			Background(colors.DarkGreenBlue). // Muted green background
-			Foreground(colors.BlackTerm)   // Black text
+			Foreground(colors.BlackTerm)      // Black text
 
 		label := labelStyle.Render(fmt.Sprintf(" fuzzy-search: %s ", fuzzyDetailsLocalSearch))
 		resourceTypeLabel = fmt.Sprintf("%s %s", resourceTypeLabel, label)
@@ -596,11 +656,11 @@ func parseGoMapString(mapStr string) (map[string]interface{}, error) {
 // formatObjectRecursive formats a JSON object string with proper indentation and colors recursively
 func formatObjectRecursive(objStr string, nestLevel int) string {
 	// Define colors for syntax highlighting (balanced brightness)
-	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)      // Medium cyan for keys
-	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)   // Medium green for strings
-	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)  // Muted orange for numbers
-	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)    // Medium purple for booleans
-	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)    // Gray for null values
+	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)        // Medium cyan for keys
+	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)    // Medium green for strings
+	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)    // Muted orange for numbers
+	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)     // Medium purple for booleans
+	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)       // Gray for null values
 	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
 
 	var obj map[string]interface{}
@@ -791,11 +851,11 @@ func formatRecordAsJSON(record map[string]any) string {
 	var details strings.Builder
 
 	// Define colors for syntax highlighting (balanced brightness)
-	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)      // Medium cyan for keys
-	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)   // Medium green for strings
-	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)  // Muted orange for numbers
-	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)    // Medium purple for booleans
-	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)    // Gray for null values
+	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)        // Medium cyan for keys
+	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)    // Medium green for strings
+	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)    // Muted orange for numbers
+	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)     // Medium purple for booleans
+	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)       // Gray for null values
 	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
 
 	// Left margin (2 spaces)

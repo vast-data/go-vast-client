@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -26,9 +27,10 @@ func NewSshConnections(db *database.Service, msgChan chan tea.Msg) common.Widget
 	resourceType := "ssh_connections"
 	listHeaders := []string{"id", "name", "ssh_host", "ssh_user_name", "ssh_port", "auth_method"}
 
-	// Add VIP pool forwarding extra widget with msgChan
+	// Add VIP pool forwarding and IP forwarding extra widgets
 	extraNav := []common.ExtraWidget{
 		NewVipPoolForwarding(db, msgChan),
+		NewIpForwarding(db, msgChan),
 	}
 
 	widget := &SshConnections{
@@ -324,8 +326,18 @@ func (s *SshConnections) GetKeyBindings() []common.KeyBinding {
 		// Add extra widget hints if available (includes <x> and numbered shortcuts 1-7)
 		if s.CanUseExtra() {
 			keyBindings = append(keyBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
-			// Add numbered shortcuts for extra actions
-			for _, widget := range s.ShortCuts() {
+			// Add numbered shortcuts for extra actions (sorted for consistent display)
+			shortcuts := s.ShortCuts()
+			// Sort shortcut keys to ensure consistent ordering (1, 2, 3, etc.)
+			shortcutKeys := make([]string, 0, len(shortcuts))
+			for key := range shortcuts {
+				shortcutKeys = append(shortcutKeys, key)
+			}
+			sort.Strings(shortcutKeys)
+
+			// Add shortcuts in sorted order
+			for _, key := range shortcutKeys {
+				widget := shortcuts[key]
 				if shortcut := widget.ShortCut(); shortcut != nil {
 					keyBindings = append(keyBindings, *shortcut)
 				}

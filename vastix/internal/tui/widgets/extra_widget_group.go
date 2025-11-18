@@ -205,7 +205,18 @@ func (eg *ExtraWidgetGroup) ShortCuts() map[string]common.ExtraWidget {
 		}
 	}
 
-	for _, widget := range eg.entries {
+	// Sort entry keys for deterministic iteration order
+	// This ensures shortcuts are always displayed in consistent order (e.g., <1>, <2>, <3>)
+	entryKeys := make([]string, 0, len(eg.entries))
+	for key := range eg.entries {
+		entryKeys = append(entryKeys, key)
+	}
+	sort.Strings(entryKeys)
+
+	// Iterate in sorted order to ensure consistent shortcut ordering
+	for _, entryKey := range entryKeys {
+		widget := eg.entries[entryKey]
+
 		// Skip widgets that need resources when no data is available
 		// Check if widget has IsResourceless method (works for both BaseWidget and ExtraMethodWidget)
 		if resourcelessChecker, ok := widget.(interface{ IsResourceless() bool }); ok {

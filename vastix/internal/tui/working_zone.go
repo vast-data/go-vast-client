@@ -554,7 +554,6 @@ func (w *WorkingZone) SetListDataThrottled() tea.Msg {
 // SetListDataThrottledWithContext calls SetListDataWithContext only if throttle conditions are met.
 // This allows callers to pass context with special flags (e.g., to skip interceptor logging for ticker updates).
 func (w *WorkingZone) SetListDataThrottledWithContext(ctx context.Context) tea.Msg {
-	auxlog := log.GetAuxLogger()
 	now := time.Now()
 
 	// Check if widget has changed
@@ -563,15 +562,6 @@ func (w *WorkingZone) SetListDataThrottledWithContext(ctx context.Context) tea.M
 	// Check if more than the throttle interval has passed since last call for the same widget
 	timeSinceLastCall := now.Sub(w.lastSetDataTime)
 	timePassed := timeSinceLastCall >= ThrottleInterval
-
-	// Get widget type for logging
-	var currentWidgetType string
-	if w.currentWidget != nil {
-		currentWidgetType = fmt.Sprintf("%T", w.currentWidget)
-	} else {
-		currentWidgetType = "<nil>"
-	}
-
 	// Call SetListDataWithContext if widget changed or enough time has passed
 	if widgetChanged || timePassed {
 		// Call SetListDataWithContext - it will update the throttling fields after execution
@@ -579,7 +569,6 @@ func (w *WorkingZone) SetListDataThrottledWithContext(ctx context.Context) tea.M
 	}
 
 	// Throttled - return nil (no-op)
-	auxlog.Printf("SetListDataThrottled: throttled for widget %s (time since last: %v)", currentWidgetType, timeSinceLastCall)
 	return nil
 }
 
@@ -725,7 +714,7 @@ func (w *WorkingZone) getSpinnerDisplayWidth() int {
 // getFormTitle returns the same title that the normal form would have
 func (w *WorkingZone) getFormTitle() string {
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(colors.Orange).   // Orange background
+		Background(colors.Orange). // Orange background
 		Foreground(colors.BlackTerm) // Black text
 
 	switch w.currentWidget.GetMode() {
