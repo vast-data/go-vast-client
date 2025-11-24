@@ -2658,6 +2658,39 @@ func generateModelFromSchema(schemaName string, registry *TypeRegistry) ([]Field
 	return generateFieldsFromSchema(schema.Value, schemaName+"Model", registry, false, "MODEL")
 }
 
+// getPropertyDescription retrieves the description for a property, with fallbacks for known missing descriptions
+func getPropertyDescription(propRef *openapi3.SchemaRef, parentTypeName, propName string) string {
+	// First, try to get description from the property itself
+	if propRef != nil && propRef.Value != nil && propRef.Value.Description != "" {
+		return propRef.Value.Description
+	}
+
+	// Fallback: Known properties that have descriptions in the source Swagger but lost during conversion
+	// Key format: "ParentTypeName.property_name"
+	// Note: ParentTypeName is the generated type name (e.g., "ViewpolicieRequestBody" from toSingularCamelCase("viewpolicies"))
+	knownDescriptions := map[string]string{
+		"ViewpolicieRequestBody.permission_per_vip_pool": "VIP pools permissions map - {vippool_id: permission}. Example - {1: 'RW'}.",
+		"ViewPolicy.permission_per_vip_pool":             "VIP pools permissions map - {vippool_id: permission}. Example - {1: 'RW'}.",
+	}
+
+	// Check for known description
+	key := parentTypeName + "." + propName
+	if desc, ok := knownDescriptions[key]; ok {
+		return desc
+	}
+
+	// If propRef has a $ref, try to resolve and get description from referenced schema
+	if propRef != nil && propRef.Ref != "" {
+		resolvedSchema := api.ResolveAllRefs(propRef)
+		if resolvedSchema != nil && resolvedSchema.Description != "" {
+			return resolvedSchema.Description
+		}
+	}
+
+	// No description found
+	return ""
+}
+
 // generateFieldsFromSchema recursively generates fields from an OpenAPI schema
 func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, registry *TypeRegistry, usePointers bool, section string) ([]Field, error) {
 	if schema == nil || schema.Properties == nil {
@@ -2710,12 +2743,15 @@ func generateFieldsFromSchema(schema *openapi3.Schema, parentTypeName string, re
 			}
 		}
 
+		// Get description - try property-level first, then fallback to known descriptions
+		description := getPropertyDescription(propRef, parentTypeName, propName)
+
 		field := Field{
 			Name:        toCamelCase(propName),
 			JSONTag:     propName,
 			YAMLTag:     propName,
 			RequiredTag: isRequired,
-			DocTag:      escapeQuotes(propRef.Value.Description),
+			DocTag:      escapeQuotes(description),
 		}
 
 		// Recursively determine Go type - pass false for isNestedArray since this is a top-level field
