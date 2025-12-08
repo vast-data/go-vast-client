@@ -1,0 +1,851 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../images/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.12">
+    
+    
+      
+        <title>Development Guide - VAST Go Client</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.2afb09e1.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#development-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="VAST Go Client" class="md-header__button md-logo" aria-label="VAST Go Client" data-md-component="logo">
+      
+  <img src="../images/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            VAST Go Client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Development Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="red"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="VAST Go Client" class="md-nav__button md-logo" aria-label="VAST Go Client" data-md-component="logo">
+      
+  <img src="../images/logo.png" alt="logo">
+
+    </a>
+    VAST Go Client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vmsrest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    VMSRest
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Session
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../response/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Response
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-lock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Resource Lock
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../iterators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Iterators
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Errors
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="development-guide">Development Guide</h1>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Go 1.20 or later</li>
+<li>golangci-lint (for linting)</li>
+<li>git</li>
+</ul>
+<h2 id="building">Building</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Build the library</span>
+make<span class="w"> </span>build
+
+<span class="c1"># Run all checks (format, lint, test)</span>
+make<span class="w"> </span>all
+</code></pre></div>
+<h2 id="testing">Testing</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run all tests</span>
+make<span class="w"> </span><span class="nb">test</span>
+
+<span class="c1"># Run tests with coverage</span>
+make<span class="w"> </span>test-coverage
+
+<span class="c1"># View coverage report</span>
+make<span class="w"> </span>coverage-report
+
+<span class="c1"># Run short tests only</span>
+make<span class="w"> </span>test-short
+</code></pre></div>
+<h2 id="code-quality">Code Quality</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Format code</span>
+make<span class="w"> </span>fmt
+
+<span class="c1"># Run linter</span>
+make<span class="w"> </span>lint
+
+<span class="c1"># Run static analysis</span>
+make<span class="w"> </span>vet
+
+<span class="c1"># Run security checks</span>
+make<span class="w"> </span>security
+</code></pre></div>
+<h2 id="contributing">Contributing</h2>
+<ol>
+<li>Fork the repository</li>
+<li>Create your feature branch (<code>git checkout -b feature/amazing-feature</code>)</li>
+<li>Make your changes</li>
+<li>Run tests and linting (<code>make all</code>)</li>
+<li>Commit your changes (<code>git commit -m 'Add some amazing feature'</code>)</li>
+<li>Push to the branch (<code>git push origin feature/amazing-feature</code>)</li>
+<li>Open a Pull Request</li>
+</ol>
+<p>Please ensure your code follows the existing style and includes appropriate tests.</p>
+<h2 id="continuous-integration">Continuous Integration</h2>
+<p>This project uses GitHub Actions for CI/CD:</p>
+<ul>
+<li><strong>Tests</strong>: Run on Go 1.20, 1.21, and 1.22</li>
+<li><strong>Linting</strong>: golangci-lint with comprehensive rules</li>
+<li><strong>Security</strong>: gosec and govulncheck</li>
+<li><strong>Coverage</strong>: Reports sent to Coveralls</li>
+<li><strong>Dependencies</strong>: Automated updates via Dependabot</li>
+</ul>
+<hr />
+<h2 id="adding-new-api-resources">Adding New API Resources</h2>
+<h3 id="do-you-want-to-add-new-api-resource">Do you want to add new API resource?</h3>
+<p>Suppose you want to add a User resource so that it can be queried
+using the endpoints <code>&lt;base url&gt;/users</code> for listing and <code>&lt;base url&gt;/users/&lt;id&gt;</code> for retrieving details.</p>
+<ul>
+<li>Start by defining a new VastResource named User in the <code>vast_resource.go</code> file.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">User</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="nx">VastResource</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li>Add new <code>User</code> type to <code>VastResourceType</code> generic type in <code>the vast_resource.go</code> file.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">VastResourceType</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Version</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nx">Quota</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nx">View</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nx">User</span><span class="w"> </span><span class="c1">// &lt;- Here</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li>Declare new <code>Users</code> sub-resource in <code>rest.go</code> file and add resource initialization.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">VMSRest</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Session</span><span class="w">     </span><span class="nx">RESTSession</span>
+<span class="w">    </span><span class="nx">resourceMap</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="nx">VastResource</span>
+
+<span class="w">    </span><span class="nx">Versions</span><span class="w">          </span><span class="o">*</span><span class="nx">Version</span>
+<span class="w">    </span><span class="nx">VTasks</span><span class="w">            </span><span class="o">*</span><span class="nx">VTask</span>
+<span class="w">    </span><span class="nx">Quotas</span><span class="w">            </span><span class="o">*</span><span class="nx">Quota</span>
+<span class="w">    </span><span class="nx">Views</span><span class="w">             </span><span class="o">*</span><span class="nx">View</span>
+<span class="w">    </span><span class="nx">VipPools</span><span class="w">          </span><span class="o">*</span><span class="nx">VipPool</span>
+<span class="w">    </span><span class="nx">Users</span><span class="w">             </span><span class="o">*</span><span class="nx">User</span><span class="w">  </span><span class="c1">// &lt;- Here</span>
+<span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="o">...</span><span class="p">.</span>
+<span class="nx">rest</span><span class="p">.</span><span class="nx">Quotas</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">newResource</span><span class="p">[</span><span class="nx">Quota</span><span class="p">](</span><span class="nx">rest</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quotas&quot;</span><span class="p">)</span>
+<span class="nx">rest</span><span class="p">.</span><span class="nx">Views</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">newResource</span><span class="p">[</span><span class="nx">View</span><span class="p">](</span><span class="nx">rest</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;views&quot;</span><span class="p">)</span>
+<span class="nx">rest</span><span class="p">.</span><span class="nx">VipPools</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">newResource</span><span class="p">[</span><span class="nx">VipPool</span><span class="p">](</span><span class="nx">rest</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;vippools&quot;</span><span class="p">)</span>
+<span class="nx">rest</span><span class="p">.</span><span class="nx">Users</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">newResource</span><span class="p">[</span><span class="nx">User</span><span class="p">](</span><span class="nx">rest</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;users&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">// &lt;- Here</span>
+<span class="o">...</span><span class="p">.</span>
+</code></pre></div>
+<p>At this point methods:
+<code>List</code>, <code>Get</code>, <code>Delete</code>, <code>Update</code>, <code>Create</code>, <code>Ensure</code>, <code>EnsureByName</code>, <code>GetById</code>, <code>DeleteById</code> 
+and also variants of forementioned methods with context:
+<code>ListWithContext</code>, <code>GetWithContext</code>, <code>DeleteWithContext</code>, <code>UpdateWithContext</code>, <code>CreateWithContext</code>, <code>EnsureWithContext</code>, <code>EnsureByNameWithContext</code>, <code>GetByIdWithContext</code>, <code>DeleteByIdWithContext</code>
+are available for <code>User</code> resource.</p>
+<p>Examples:</p>
+<p>Create <code>User</code>:
+<div class="highlight"><pre><span></span><code><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rest</span><span class="p">.</span><span class="nx">Users</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="nx">client</span><span class="p">.</span><span class="nx">Params</span><span class="p">{</span>
+<span class="w">    </span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;myUser&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;uid&quot;</span><span class="p">:</span><span class="w">  </span><span class="mi">9999</span><span class="p">,</span>
+<span class="p">})</span>
+</code></pre></div></p>
+<p>Ensure <code>User</code> by name (Get by name or Create with provided name and additional params):
+<div class="highlight"><pre><span></span><code><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rest</span><span class="p">.</span><span class="nx">Users</span><span class="p">.</span><span class="nx">EnsureByName</span><span class="p">(</span><span class="s">&quot;myUser&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Params</span><span class="p">{</span><span class="s">&quot;uid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9999</span><span class="p">})</span>
+</code></pre></div></p>
+<p>Ensure <code>User</code> by search params (Get by search params or Create with body params):
+<div class="highlight"><pre><span></span><code><span class="nx">searchParams</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Params</span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tenant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span>
+<span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rest</span><span class="p">.</span><span class="nx">Users</span><span class="p">.</span><span class="nx">EnsureByName</span><span class="p">(</span><span class="nx">searchParams</span><span class="p">,</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Params</span><span class="p">{</span><span class="s">&quot;uid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9999</span><span class="p">})</span>
+</code></pre></div></p>
+<p>Update <code>User</code>:
+<div class="highlight"><pre><span></span><code><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rest</span><span class="p">.</span><span class="nx">Users</span><span class="p">.</span><span class="nx">Update</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Params</span><span class="p">{</span><span class="s">&quot;uid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10000</span><span class="p">})</span>
+</code></pre></div></p>
+<p>Get <code>User</code>:
+<div class="highlight"><pre><span></span><code><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rest</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">client</span><span class="p">.</span><span class="nx">Params</span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;myUser&quot;</span><span class="p">})</span>
+</code></pre></div></p>
+<p>Get <code>User</code> by id:
+<div class="highlight"><pre><span></span><code><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rest</span><span class="p">.</span><span class="nx">Users</span><span class="p">.</span><span class="nx">GetById</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Delete <code>User</code> (Get user by search params and if found delete it. Not found is not error condition):
+<div class="highlight"><pre><span></span><code><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rest</span><span class="p">.</span><span class="nx">Users</span><span class="p">.</span><span class="nx">Delete</span><span class="p">(</span><span class="nx">client</span><span class="p">.</span><span class="nx">Params</span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;myUser&quot;</span><span class="p">},</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Delete <code>User</code> by id:
+<div class="highlight"><pre><span></span><code><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rest</span><span class="p">.</span><span class="nx">Users</span><span class="p">.</span><span class="nx">DeleteById</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
+</code></pre></div></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+</div>
+<p>Aforementioned flow covers "classic" API resources of form <code>/&lt;resource name&gt;/&lt;id&gt;</code>.
+For non-standard APIs you have to define custom methods or use "Low level API" (see Overview section)</p>
+<h3 id="define-non-standard-method-for-api-resource">Define non-standard method for API Resource</h3>
+<p>You can define custom methods for API Resource. Good example is <code>UserKey</code> Resource for generating S3 keys.
+It has 2 custom methods <code>CreateKey</code> and <code>DeleteKey</code></p>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">UserKey</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="nx">VastResource</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">UserKey</span><span class="p">)</span><span class="w"> </span><span class="nx">CreateKey</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">userId</span><span class="w"> </span><span class="kt">int64</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">Record</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">path</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">resourcePath</span><span class="p">,</span><span class="w"> </span><span class="nx">userId</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">request</span><span class="p">[</span><span class="nx">Record</span><span class="p">](</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodPost</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">UserKey</span><span class="p">)</span><span class="w"> </span><span class="nx">DeleteKey</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">userId</span><span class="w"> </span><span class="kt">int64</span><span class="p">,</span><span class="w"> </span><span class="nx">accessKey</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">Record</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">path</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">resourcePath</span><span class="p">,</span><span class="w"> </span><span class="nx">userId</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">request</span><span class="p">[</span><span class="nx">Record</span><span class="p">](</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodDelete</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">Params</span><span class="p">{</span><span class="s">&quot;access_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="nx">accessKey</span><span class="p">})</span>
+<span class="p">}</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+</div>
+<p>Main rule: <strong>Do not override standard methods Ensure, Get, List, Create, DeleteById etc</strong>. Create your own methods like CreateUser, DeleteKey etc.</p>
+<p>Another good example is <code>BlockHostMapping</code> Resource where specific methods are used to map BlockHosts to Volumes.</p>
+<h3 id="requestresponse-interceptors">Request/Response interceptors</h3>
+<p>API Resources can implement <code>RequestInterceptor</code> interface</p>
+<p>You can define method <code>beforeRequest</code> for particular resource:
+<div class="highlight"><pre><span></span><code><span class="nx">beforeRequest</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span><span class="w"> </span><span class="nx">verb</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">body</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">Reader</span><span class="p">)</span><span class="w"> </span><span class="kt">error</span>
+</code></pre></div></p>
+<p>Parameters:</p>
+<ul>
+<li>ctx: The request context, useful for deadlines, tracing, or cancellation.</li>
+<li>verb: The HTTP method (e.g., GET, POST, PUT).</li>
+<li>url: The URL path being accessed (including query params)</li>
+<li>body: The request body as an io.Reader, typically containing JSON data.</li>
+</ul>
+<p>Or you can define method <code>afterRequest</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">afterRequest</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="nx">Renderable</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">Renderable</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span>
+</code></pre></div>
+<p>Parameters:</p>
+<ul>
+<li>ctx: The request context, useful for deadlines, tracing, or cancellation.</li>
+<li>response: Resources that implement Renderable interface (Record, RecordSet)</li>
+</ul>
+<p>At this moment I don't have practical example for <code>beforeRequest</code>. Probably it can be used for logging etc.</p>
+<p>For <code>afterRequest</code> good example is <code>Snapshot</code> resource:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">Snapshot</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="nx">VastResource</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><span class="nx">Snapshot</span><span class="p">)</span><span class="w"> </span><span class="nx">afterRequest</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="nx">Renderable</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">Renderable</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// List of snapshots is returned under &quot;results&quot; key</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">applyCallbackForRecordUnion</span><span class="p">[</span><span class="nx">RecordSet</span><span class="p">](</span><span class="nx">response</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="nx">Renderable</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">Renderable</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// This callback is only invoked if response is a RecordSet</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">rawMap</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">any</span><span class="p">(</span><span class="nx">r</span><span class="p">).(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{});</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="nx">inner</span><span class="p">,</span><span class="w"> </span><span class="nx">found</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rawMap</span><span class="p">[</span><span class="s">&quot;results&quot;</span><span class="p">];</span><span class="w"> </span><span class="nx">found</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="nx">list</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">inner</span><span class="p">.([]</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">any</span><span class="p">);</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="nx">toRecordSet</span><span class="p">(</span><span class="nx">list</span><span class="p">)</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Here in case of <code>RecordSet</code> (List endpoint) list of snapshot records are returned under <code>results</code> key. IOW smth like:
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;snapshot1&quot;</span><span class="p">,</span><span class="w">  </span><span class="err">..</span><span class="w"> </span><span class="err">o</span><span class="kc">t</span><span class="err">her</span><span class="w"> </span><span class="kc">f</span><span class="err">ields</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;snapshot2&quot;</span><span class="w"> </span><span class="err">..</span><span class="w"> </span><span class="err">o</span><span class="kc">t</span><span class="err">her</span><span class="w"> </span><span class="kc">f</span><span class="err">ields</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div></p>
+<p>So make sense to get <code>results</code> value and return only it to avoid additional parsing of returned Record.</p>
+<hr />
+<h2 id="typed-resources-auto-generation">Typed Resources Auto-Generation</h2>
+<p>The go-vast-client supports automatic generation of typed resources that provide compile-time type safety and better IDE support. This system uses APIBuilder markers to define how to generate typed structs and methods.</p>
+<h3 id="generating-typed-resources">Generating Typed Resources</h3>
+<p>To generate all typed resources:</p>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>generate-typed
+</code></pre></div>
+<p>This command:
+1. Scans <code>vast_resource.go</code> for resources with APIBuilder markers
+2. Generates typed structs based on OpenAPI schema
+3. Creates typed methods with proper request/response types
+4. Formats the generated code with <code>go fmt</code></p>
+<p>Generated files are placed in the <code>typed/</code> directory:
+- <code>rest.go</code> - Typed VMSRest client
+- <code>&lt;resource&gt;.go</code> - Individual typed resource implementations (e.g., <code>quota.go</code>, <code>user.go</code>)</p>
+<h3 id="apibuilder-markers">APIBuilder Markers</h3>
+<p>APIBuilder markers are Go comments that define how to generate typed resources. They must be placed directly above the resource struct definition.</p>
+<h4 id="required-markers">Required Markers</h4>
+<p>Every resource must have:</p>
+<ol>
+<li><strong>Search Query Marker</strong> - Defines how to search/list resources</li>
+<li><strong>Model Marker</strong> - Defines the response structure</li>
+</ol>
+<p>Non-read-only resources also need:</p>
+<ol>
+<li><strong>Request Body Marker</strong> - Defines the structure for create/update operations</li>
+</ol>
+<h4 id="search-query-markers">Search Query Markers</h4>
+<p>Define how to generate search parameters for listing and filtering resources:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// +apityped:searchQuery:GET=&lt;endpoint&gt;</span>
+<span class="c1">// +apityped:searchQuery:SCHEMA=&lt;SchemaName&gt;</span>
+</code></pre></div>
+<p><strong>Examples:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// Use GET endpoint parameters</span>
+<span class="c1">// +apityped:searchQuery:GET=quotas</span>
+
+<span class="c1">// Use specific OpenAPI schema</span>
+<span class="c1">// +apityped:searchQuery:SCHEMA=QuotaSearchParams</span>
+</code></pre></div></p>
+<p><strong>Generated:</strong> <code>&lt;Resource&gt;SearchParams</code> struct with fields for filtering.</p>
+<h4 id="request-body-markers">Request Body Markers</h4>
+<p>Define the structure for create and update operations:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// +apityped:requestBody:POST=&lt;endpoint&gt;</span>
+<span class="c1">// +apityped:requestBody:PUT=&lt;endpoint&gt;  </span>
+<span class="c1">// +apityped:requestBody:PATCH=&lt;endpoint&gt;</span>
+<span class="c1">// +apityped:requestBody:SCHEMA=&lt;SchemaName&gt;</span>
+</code></pre></div>
+<p><strong>Examples:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// Use POST endpoint request body</span>
+<span class="c1">// +apityped:requestBody:POST=quotas</span>
+
+<span class="c1">// Use specific OpenAPI schema</span>
+<span class="c1">// +apityped:requestBody:SCHEMA=QuotaCreateRequest</span>
+</code></pre></div></p>
+<p><strong>Generated:</strong> <code>&lt;Resource&gt;RequestBody</code> struct for create/update operations.</p>
+<h4 id="model-markers">Model Markers</h4>
+<p>Define the response structure for API operations:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// +apityped:model:GET=&lt;endpoint&gt;</span>
+<span class="c1">// +apityped:model:POST=&lt;endpoint&gt;</span>
+<span class="c1">// +apityped:model:PUT=&lt;endpoint&gt;</span>
+<span class="c1">// +apityped:model:DELETE=&lt;endpoint&gt;</span>
+<span class="c1">// +apityped:model:PATCH=&lt;endpoint&gt;</span>
+<span class="c1">// +apityped:model:SCHEMA=&lt;SchemaName&gt;</span>
+</code></pre></div>
+<p><strong>Examples:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// Use POST endpoint response</span>
+<span class="c1">// +apityped:model:POST=quotas</span>
+
+<span class="c1">// Use specific OpenAPI schema  </span>
+<span class="c1">// +apityped:model:SCHEMA=Quota</span>
+</code></pre></div></p>
+<p><strong>Generated:</strong> <code>&lt;Resource&gt;Model</code> struct for API responses.</p>
+<h4 id="read-only-marker">Read-Only Marker</h4>
+<p>For resources that don't support create/update/delete operations:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// +apityped:readOnly</span>
+</code></pre></div>
+<p>Read-only resources only generate <code>Get*</code>, <code>List*</code>, <code>Exists*</code>, and <code>MustExists*</code> methods.</p>
+<h3 id="complete-resource-examples">Complete Resource Examples</h3>
+<h4 id="full-crud-resource">Full CRUD Resource</h4>
+<div class="highlight"><pre><span></span><code><span class="c1">// +apityped:searchQuery:GET=quotas</span>
+<span class="c1">// +apityped:requestBody:POST=quotas  </span>
+<span class="c1">// +apityped:model:SCHEMA=Quota</span>
+<span class="kd">type</span><span class="w"> </span><span class="nx">Quota</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="nx">VastResource</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Generates:</strong>
+- <code>QuotaSearchParams</code> - for filtering/searching
+- <code>QuotaRequestBody</code> - for create/update operations
+- <code>QuotaModel</code> - for API responses
+- Full CRUD methods: <code>Create</code>, <code>Update</code>, <code>Delete</code>, <code>Get</code>, <code>List</code>, <code>Ensure</code>, etc.</p>
+<h4 id="read-only-resource">Read-Only Resource</h4>
+<div class="highlight"><pre><span></span><code><span class="c1">// +apityped:readOnly</span>
+<span class="c1">// +apityped:searchQuery:GET=versions</span>
+<span class="c1">// +apityped:model:SCHEMA=Version</span>
+<span class="kd">type</span><span class="w"> </span><span class="nx">Version</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="nx">VastResource</span><span class="w">  </span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Generates:</strong>
+- <code>VersionSearchParams</code> - for filtering/searching
+- <code>VersionModel</code> - for API responses<br />
+- Read-only methods: <code>Get</code>, <code>List</code>, <code>Exists</code>, <code>MustExists</code> (no Create/Update/Delete)</p>
+<h4 id="using-schema-references">Using Schema References</h4>
+<div class="highlight"><pre><span></span><code><span class="c1">// +apityped:searchQuery:SCHEMA=UserSearchCriteria</span>
+<span class="c1">// +apityped:requestBody:SCHEMA=UserCreateRequest</span>
+<span class="c1">// +apityped:model:SCHEMA=User</span>
+<span class="kd">type</span><span class="w"> </span><span class="nx">User</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="nx">VastResource</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This approach uses specific OpenAPI schema definitions instead of endpoint-derived schemas.</p>
+<h3 id="generated-struct-features">Generated Struct Features</h3>
+<p>All generated structs include:</p>
+<ul>
+<li><strong>JSON Tags</strong>: For serialization (<code>json:"field_name,omitempty"</code>)</li>
+<li><strong>YAML Tags</strong>: For YAML support (<code>yaml:"field_name,omitempty"</code>)  </li>
+<li><strong>Required Tags</strong>: Field requirement info (<code>required:"true/false"</code>)</li>
+<li><strong>Doc Tags</strong>: Field documentation (<code>doc:"Field description"</code>)</li>
+<li><strong>Type Safety</strong>: Proper Go types (string, int64, bool, etc.)</li>
+<li><strong>Nested Structs</strong>: For complex object fields</li>
+<li><strong>Pointer Fields</strong>: For arrays and objects to handle <code>omitempty</code> correctly</li>
+</ul>
+<h3 id="generated-methods">Generated Methods</h3>
+<p>Typed resources provide the same methods as untyped resources but with typed parameters:</p>
+<p><strong>Standard Methods:</strong>
+- <code>Get(req *SearchParams) (*Model, error)</code>
+- <code>List(req *SearchParams) ([]*Model, error)</code><br />
+- <code>Create(req *RequestBody) (*Model, error)</code>
+- <code>Update(id any, req *RequestBody) (*Model, error)</code>
+- <code>Delete(req *SearchParams) error</code>
+- <code>Ensure(searchParams *SearchParams, body *RequestBody) (*Model, error)</code></p>
+<p><strong>Context Methods:</strong>
+- <code>GetWithContext(ctx context.Context, req *SearchParams) (*Model, error)</code>
+- <code>ListWithContext(ctx context.Context, req *SearchParams) ([]*Model, error)</code>
+- And so on...</p>
+<h3 id="accessing-untyped-methods">Accessing Untyped Methods</h3>
+<p>From any typed resource, you can access the underlying untyped client:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Access untyped methods when needed</span>
+<span class="nx">record</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">typedRest</span><span class="p">.</span><span class="nx">Untyped</span><span class="p">.</span><span class="nx">Quotas</span><span class="p">.</span><span class="nx">GetWithContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">params</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="troubleshooting-generation">Troubleshooting Generation</h3>
+<p><strong>Common Issues:</strong></p>
+<ol>
+<li><strong>Missing Markers</strong>: Ensure all required markers are present</li>
+<li><strong>Invalid Schema Names</strong>: Verify schema names exist in OpenAPI spec</li>
+<li><strong>Compilation Errors</strong>: Check generated code for syntax issues</li>
+<li><strong>Missing Fields</strong>: Verify OpenAPI schema completeness</li>
+</ol>
+<p><strong>Debug Generation:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Verbose generation output</span>
+<span class="nb">cd</span><span class="w"> </span>autogen<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>go<span class="w"> </span>run<span class="w"> </span>./cmd/generate-typed-resources
+</code></pre></div></p>
+<h3 id="adding-new-resources-for-typed-generation">Adding New Resources for Typed Generation</h3>
+<ol>
+<li>Add APIBuilder markers to your resource in <code>vast_resource.go</code></li>
+<li>Ensure the resource exists in the untyped <code>VMSRest</code> struct</li>
+<li>Run <code>make generate-typed</code></li>
+<li>Verify generated code compiles: <code>go build ./typed/...</code></li>
+</ol>
+<h3 id="release-new-version-of-the-client">Release new version of the client</h3>
+<p>To release a new version of the client:</p>
+<ol>
+<li>Update the version in <code>version</code> file.</li>
+<li>Push changes to the <code>main</code> branch.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["toc.integrate"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+    
+  </body>
+</html>
