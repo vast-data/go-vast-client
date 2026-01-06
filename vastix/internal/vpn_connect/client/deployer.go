@@ -611,65 +611,48 @@ func (d *Deployer) ensureWireGuard(ctx context.Context) error {
 	// Check 1: WireGuard kernel module (try to create a test interface)
 	d.writef("Checking for WireGuard kernel module...\n")
 	checkKernel := "sudo ip link add name wgtest type wireguard 2>/dev/null && sudo ip link del wgtest 2>/dev/null"
-	if err := d.runCommand(checkKernel); err == nil {
+	kernelAvailable := d.runCommand(checkKernel) == nil
+	if kernelAvailable {
 		d.writef("✓ WireGuard kernel module available\n")
-		return nil
 	}
 
-	// Check 2: wireguard-go (userspace implementation)
-	d.writef("Checking for wireguard-go (userspace implementation)...\n")
+	// Check 2: wireguard-go (userspace implementation) - REQUIRED for VPN server
+	// The VPN server code currently only supports wireguard-go, not kernel module
+	d.writef("Checking for wireguard-go (userspace implementation - required for VPN server)...\n")
 	checkWgGo := "which wireguard-go"
-	if err := d.runCommand(checkWgGo); err == nil {
+	wgGoAvailable := d.runCommand(checkWgGo) == nil
+	if wgGoAvailable {
 		d.writef("✓ wireguard-go available\n")
-		return nil
+	} else {
+		d.writef("wireguard-go not found (will install)\n")
 	}
 
-	// Check 3: wg command exists (might help with installation)
+	// Check 3: wg command exists (needed by wireguard-go)
+	// ALWAYS check this, even if wireguard-go is already installed
+	d.writef("Checking for wg command (needed by wireguard-go)...\n")
 	checkWg := "which wg"
 	wgExists := d.runCommand(checkWg) == nil
 
-	// Get kernel info for error message
-	kernelInfo, _ := d.runCommandWithOutput("uname -r")
-	kernelInfo = strings.TrimSpace(kernelInfo)
-
-	// Detect if this is a custom kernel (Lightbits, etc.)
-	isCustomKernel := strings.Contains(strings.ToLower(kernelInfo), ".lb") ||
-		strings.Contains(strings.ToLower(kernelInfo), "lightbits")
-
-	// Try auto-installation for both standard and custom kernels
+	// Install wireguard-tools if wg command doesn't exist
+	// wireguard-go needs the wg command to configure interfaces
 	if !wgExists {
-		d.writef("WireGuard not found, attempting auto-installation...\n")
-		if isCustomKernel {
-			d.writef("Note: Custom kernel detected (%s), kernel module won't work\n", kernelInfo)
-			d.writef("Will install wireguard-tools for userspace implementation\n")
+		d.writef("wg command not found, installing WireGuard tools...\n")
+		if err := d.installWireGuard(ctx); err != nil {
+			return err
 		}
-		return d.installWireGuard(ctx)
+	} else {
+		d.writef("✓ wg command available\n")
 	}
 
-	// wg command exists but kernel module doesn't work
-	// For custom kernels, wireguard-go is REQUIRED (kernel module won't work)
-	if isCustomKernel {
-		d.writef("✓ WireGuard tools (wg command) found\n")
-		d.writef("Note: Custom kernel detected, wireguard-go is required\n")
-		// Install wireguard-go for userspace implementation
-		return d.installWireGuardGo(ctx)
+	// If wireguard-go is already available and wg command exists, we're done
+	if wgGoAvailable {
+		d.writef("✓ All WireGuard components ready\n")
+		return nil
 	}
 
-	// Standard kernel but module isn't working - this is unexpected
-	return fmt.Errorf(`WireGuard tools are installed but the kernel module is not available.
-
-Kernel: %s
-
-This might be because:
-1. The kernel module is not loaded: Try 'sudo modprobe wireguard'
-2. The kernel doesn't support WireGuard: Upgrade your kernel
-
-SOLUTIONS:
-
-Try loading the module:
-  sudo modprobe wireguard
-
-After fixing, try connecting again.`, kernelInfo)
+	// Install wireguard-go (required by VPN server)
+	d.writef("Installing wireguard-go (required by VPN server)...\n")
+	return d.installWireGuardGo(ctx)
 }
 
 // installWireGuard attempts to auto-install WireGuard on supported systems
@@ -690,15 +673,19 @@ func (d *Deployer) installWireGuard(ctx context.Context) error {
 		osName = "CentOS/Rocky"
 		version, _ := d.detectOSVersion()
 		if strings.HasPrefix(version, "7") {
+			// CentOS/Rocky 7: Need EPEL and ELRepo
 			installCmd = `
 				sudo yum install -y epel-release elrepo-release && \
 				sudo yum install -y kmod-wireguard wireguard-tools
 			`
+		} else if strings.HasPrefix(version, "9") {
+			// Rocky/CentOS 9+: wireguard-tools is in standard repos
+			installCmd = "sudo dnf install -y wireguard-tools"
 		} else {
-			// CentOS/Rocky 8+
+			// CentOS/Rocky 8: Need EPEL and ELRepo
 			installCmd = `
-				sudo yum install -y epel-release elrepo-release && \
-				sudo yum install -y kmod-wireguard wireguard-tools
+				sudo dnf install -y epel-release elrepo-release && \
+				sudo dnf install -y kmod-wireguard wireguard-tools
 			`
 		}
 

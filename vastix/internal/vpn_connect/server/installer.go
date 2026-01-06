@@ -60,9 +60,19 @@ func installWireGuardLinux() error {
 		}
 		cmd = exec.Command("sudo", "apt-get", "install", "-y", "wireguard")
 
-	case "centos", "rhel", "fedora":
-		// For CentOS/RHEL, wireguard-go is safer as kernel module may not be available
-		return installWireGuardGo()
+	case "centos", "rhel", "fedora", "rocky":
+		// Try to install wireguard-tools via package manager first (available in RHEL 9+, Rocky 9+, Fedora)
+		// Fall back to wireguard-go if package manager installation fails
+		cmd = exec.Command("sudo", "dnf", "install", "-y", "wireguard-tools")
+		if err := cmd.Run(); err != nil {
+			// Fallback: try yum for older systems
+			cmd = exec.Command("sudo", "yum", "install", "-y", "wireguard-tools")
+			if err := cmd.Run(); err != nil {
+				// If package manager fails, try wireguard-go (requires Go)
+				return installWireGuardGo()
+			}
+		}
+		return nil
 
 	case "arch":
 		cmd = exec.Command("sudo", "pacman", "-Sy", "--noconfirm", "wireguard-tools")
