@@ -881,7 +881,10 @@ type ResourceData struct {
 	UpdateIsAsync     bool     // True if Update operation returns AsyncTaskInResponse
 	DeleteIsAsync     bool     // True if Delete operation returns AsyncTaskInResponse
 	DeleteByIdIsAsync bool     // True if DeleteById operation returns AsyncTaskInResponse
-	GenerationIssues  []string // List of issues encountered during generation
+	// Array response support for Create/Update operations
+	CreateReturnsArray bool // True if Create operation returns an array
+	UpdateReturnsArray bool // True if Update operation returns an array
+	GenerationIssues   []string // List of issues encountered during generation
 }
 
 // GetRequestURL returns the request URL for the given method
@@ -1332,9 +1335,52 @@ func main() {
 				allNestedTypes = append(allNestedTypes, requestRegistry.GetTypes()...)
 
 				// Generate UpsertModel (or EditModel for UPDATE-only) from upsert response schema
+				// First, check if the response is an array
+				if rawResp, err := api.GetOpenApiResource(createURL); err == nil && rawResp != nil {
+					var op *openapi3.Operation
+					switch createMethod {
+					case "POST":
+						op = rawResp.Post
+					case "PUT":
+						op = rawResp.Put
+					case "PATCH":
+						op = rawResp.Patch
+					}
+					if op != nil {
+						// Check 200 or 201 response
+						for _, statusCode := range []int{200, 201} {
+							if resp := op.Responses.Status(statusCode); resp != nil && resp.Value != nil {
+								if content := resp.Value.Content["application/json"]; content != nil && content.Schema != nil && content.Schema.Value != nil {
+									if content.Schema.Value.Type != nil && (*content.Schema.Value.Type).Is("array") {
+										// Response is an array!
+										if createMethod == "POST" && resource.Operations.HasCreate() {
+											resourceData.CreateReturnsArray = true
+											fmt.Printf("  ℹ️  Create operation returns array\n")
+										}
+										if (createMethod == "PATCH" || createMethod == "PUT") && resource.Operations.HasUpdate() {
+											resourceData.UpdateReturnsArray = true
+											fmt.Printf("  ℹ️  Update operation returns array\n")
+										}
+										break
+									}
+								}
+							}
+						}
+					}
+				}
+				
 				// Check if response is a direct component reference (for alias optimization)
 				upsertSchemaRef, upsertSchemaErr := api.GetResponseModelSchemaUnresolved(createMethod, createURL)
 				if upsertSchemaErr == nil && upsertSchemaRef != nil {
+					// If array response, unwrap to get the item schema
+					if resourceData.CreateReturnsArray || resourceData.UpdateReturnsArray {
+						// For array responses, upsertSchemaRef is the array schema
+						// We need to get the items schema for the alias check
+						if upsertSchemaRef.Value != nil && upsertSchemaRef.Value.Items != nil {
+							upsertSchemaRef = upsertSchemaRef.Value.Items
+						}
+					}
+					
 					if componentName := api.IsDirectComponentReference(upsertSchemaRef); componentName != "" {
 						// Verify the component is not ambiguous before aliasing
 						componentSchema, compErr := api.GetSchemaFromComponent(componentName)
@@ -1344,7 +1390,11 @@ func main() {
 								resourceData.UpsertModelIsAlias = true
 								resourceData.UpsertModelAlias = "Component_" + componentName
 								resourceData.UpsertModelComponentRef = "#/components/schemas/" + componentName
-								fmt.Printf("  ✅ UpsertModel is alias to %s\n", resourceData.UpsertModelAlias)
+								if resourceData.CreateReturnsArray || resourceData.UpdateReturnsArray {
+									fmt.Printf("  ✅ UpsertModel is alias to %s (array response: []*%s)\n", resourceData.UpsertModelAlias, resourceData.UpsertModelAlias)
+								} else {
+									fmt.Printf("  ✅ UpsertModel is alias to %s\n", resourceData.UpsertModelAlias)
+								}
 							}
 						}
 					}

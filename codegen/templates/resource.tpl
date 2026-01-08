@@ -217,13 +217,13 @@ func (r *{{.Name}}) GetByIdWithContext(ctx context.Context, id any) (*{{.Name}}D
 
 // Create creates a new {{.LowerName}} with typed request/response{{if .CreateSummary}}
 // summary: {{.CreateSummary}}{{end}}
-func (r *{{.Name}}) Create(req *{{.Name}}RequestBody) (*{{.Name}}UpsertModel, error) {
+func (r *{{.Name}}) Create(req *{{.Name}}RequestBody) ({{if .CreateReturnsArray}}[]*{{.Name}}UpsertModel{{else}}*{{.Name}}UpsertModel{{end}}, error) {
 	return r.CreateWithContext(r.Untyped.GetCtx(), req)
 }
 
 // CreateWithContext creates a new {{.LowerName}} with typed request/response using provided context{{if .CreateSummary}}
 // summary: {{.CreateSummary}}{{end}}
-func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}RequestBody) (*{{.Name}}UpsertModel, error) {
+func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}RequestBody) ({{if .CreateReturnsArray}}[]*{{.Name}}UpsertModel{{else}}*{{.Name}}UpsertModel{{end}}, error) {
 	params, err := core.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -233,13 +233,19 @@ func (r *{{.Name}}) CreateWithContext(ctx context.Context, req *{{.Name}}Request
 	if err != nil {
 		return nil, err
 	}
+{{if .CreateReturnsArray}}
+	var response []*{{.Name}}UpsertModel
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
 
+	return response, nil{{else}}
 	var response {{.Name}}UpsertModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	return &response, nil{{end}}
 }
 {{end}}
 {{if .HasUpdate}}
@@ -314,7 +320,7 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}
 //
 // Parameters:{{range .UpdateInlineParams}}
 //   - {{.Name}}: {{if .Description}}{{.Description}}{{else}}Update parameter{{end}}{{end}}
-func (r *{{.Name}}) Update(id any{{range .UpdateInlineParams}}, {{.Name}} {{.Type}}{{end}}) (*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}, error) {
+func (r *{{.Name}}) Update(id any{{range .UpdateInlineParams}}, {{.Name}} {{.Type}}{{end}}) ({{if .UpdateReturnsArray}}[]*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}{{else}}*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}{{end}}, error) {
 	return r.UpdateWithContext(r.Untyped.GetCtx(), id{{range .UpdateInlineParams}}, {{.Name}}{{end}})
 }
 
@@ -323,7 +329,7 @@ func (r *{{.Name}}) Update(id any{{range .UpdateInlineParams}}, {{.Name}} {{.Typ
 //
 // Parameters:{{range .UpdateInlineParams}}
 //   - {{.Name}}: {{if .Description}}{{.Description}}{{else}}Update parameter{{end}}{{end}}
-func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any{{range .UpdateInlineParams}}, {{.Name}} {{.Type}}{{end}}) (*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}, error) {
+func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any{{range .UpdateInlineParams}}, {{.Name}} {{.Type}}{{end}}) ({{if .UpdateReturnsArray}}[]*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}{{else}}*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}{{end}}, error) {
 	params := core.Params{
 		{{range .UpdateInlineParams}}"{{.BodyField}}": {{.Name}},
 		{{end}}
@@ -333,24 +339,30 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any{{range .Update
 	if err != nil {
 		return nil, err
 	}
+{{if .UpdateReturnsArray}}
+	var response []*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
 
+	return response, nil{{else}}
 	var response {{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	return &response, nil{{end}}
 }
 {{else}}
 // Update updates an existing {{.LowerName}} with typed request/response{{if .UpdateSummary}}
 // summary: {{.UpdateSummary}}{{end}}
-func (r *{{.Name}}) Update(id any, req *{{.Name}}RequestBody) (*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}, error) {
+func (r *{{.Name}}) Update(id any, req *{{.Name}}RequestBody) ({{if .UpdateReturnsArray}}[]*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}{{else}}*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}{{end}}, error) {
 	return r.UpdateWithContext(r.Untyped.GetCtx(), id, req)
 }
 
 // UpdateWithContext updates an existing {{.LowerName}} with typed request/response using provided context{{if .UpdateSummary}}
 // summary: {{.UpdateSummary}}{{end}}
-func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}}RequestBody) (*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}, error) {
+func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}}RequestBody) ({{if .UpdateReturnsArray}}[]*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}{{else}}*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}{{end}}, error) {
 	params, err := core.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -360,13 +372,19 @@ func (r *{{.Name}}) UpdateWithContext(ctx context.Context, id any, req *{{.Name}
 	if err != nil {
 		return nil, err
 	}
+{{if .UpdateReturnsArray}}
+	var response []*{{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
 
+	return response, nil{{else}}
 	var response {{if .UseEditModel}}{{.Name}}EditModel{{else}}{{.Name}}UpsertModel{{end}}
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	return &response, nil{{end}}
 }
 {{end}}
 {{end}}

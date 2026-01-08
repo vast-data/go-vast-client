@@ -3639,6 +3639,7 @@ type Component_TruncatedQOSStaticLimits struct {
 // Component: #/components/schemas/User
 type Component_User struct {
 	Name                string                 `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the user"`
+	AccessKeys          *[]User_AccessKeysItem `json:"access_keys,omitempty" yaml:"access_keys,omitempty" required:"false" doc:"S3 Access Keys"`
 	AllowCreateBucket   bool                   `json:"allow_create_bucket,omitempty" yaml:"allow_create_bucket,omitempty" required:"false" doc:"If enabled, the user has permission to create S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a elevant group, this setting is overridden."`
 	AllowDeleteBucket   bool                   `json:"allow_delete_bucket,omitempty" yaml:"allow_delete_bucket,omitempty" required:"false" doc:"If enabled, the user has permission to delete S3 buckets. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden"`
 	Gids                *[]int64               `json:"gids,omitempty" yaml:"gids,omitempty" required:"false" doc:"List of GIDs of groups to which the user belongs"`
@@ -3685,6 +3686,7 @@ type Component_UserKeyPair struct {
 // Component_UserQueryData represents the OpenAPI component schema
 // Component: #/components/schemas/UserQueryData
 type Component_UserQueryData struct {
+	AccessKeys         *[]UserQueryData_AccessKeysItem      `json:"access_keys,omitempty" yaml:"access_keys,omitempty" required:"false" doc:""`
 	AllowCreateBucket  bool                                 `json:"allow_create_bucket,omitempty" yaml:"allow_create_bucket,omitempty" required:"false" doc:""`
 	AllowDeleteBucket  bool                                 `json:"allow_delete_bucket,omitempty" yaml:"allow_delete_bucket,omitempty" required:"false" doc:""`
 	GroupCount         int64                                `json:"group_count,omitempty" yaml:"group_count,omitempty" required:"false" doc:""`
@@ -5157,6 +5159,14 @@ type TruncatedQOS_StaticLimits struct {
 	MaxWritesIops       int64 `json:"max_writes_iops,omitempty" yaml:"max_writes_iops,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
 }
 
+// UserQueryData_AccessKeysItem represents a nested type within components
+type UserQueryData_AccessKeysItem struct {
+	AccessKey    string `json:"access_key,omitempty" yaml:"access_key,omitempty" required:"false" doc:""`
+	CreationTime string `json:"creation_time,omitempty" yaml:"creation_time,omitempty" required:"false" doc:""`
+	Enabled      bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:""`
+	Remote       bool   `json:"remote,omitempty" yaml:"remote,omitempty" required:"false" doc:""`
+}
+
 // UserQueryData_QuotasItem represents a nested type within components
 type UserQueryData_QuotasItem struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
@@ -5173,6 +5183,14 @@ type UserQueryData_UserQosPoliciesItem struct {
 type UserTenantData_S3PoliciesItem struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Identity Policy ID"`
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Identity Policy name"`
+}
+
+// User_AccessKeysItem represents a nested type within components
+type User_AccessKeysItem struct {
+	AccessKey    string `json:"access_key,omitempty" yaml:"access_key,omitempty" required:"false" doc:""`
+	CreationTime string `json:"creation_time,omitempty" yaml:"creation_time,omitempty" required:"false" doc:""`
+	Enabled      bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:""`
+	TenantId     int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
 }
 
 // User_LocalProvider represents a nested type within components

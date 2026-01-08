@@ -165,13 +165,13 @@ func (r *KafkaBroker) GetByIdWithContext(ctx context.Context, id any) (*KafkaBro
 
 // Create creates a new kafkabroker with typed request/response
 // summary: Create External Kafka Broker Configuration
-func (r *KafkaBroker) Create(req *KafkaBrokerRequestBody) (*KafkaBrokerUpsertModel, error) {
+func (r *KafkaBroker) Create(req *KafkaBrokerRequestBody) ([]*KafkaBrokerUpsertModel, error) {
 	return r.CreateWithContext(r.Untyped.GetCtx(), req)
 }
 
 // CreateWithContext creates a new kafkabroker with typed request/response using provided context
 // summary: Create External Kafka Broker Configuration
-func (r *KafkaBroker) CreateWithContext(ctx context.Context, req *KafkaBrokerRequestBody) (*KafkaBrokerUpsertModel, error) {
+func (r *KafkaBroker) CreateWithContext(ctx context.Context, req *KafkaBrokerRequestBody) ([]*KafkaBrokerUpsertModel, error) {
 	params, err := core.NewParamsFromStruct(req)
 	if err != nil {
 		return nil, err
@@ -182,12 +182,12 @@ func (r *KafkaBroker) CreateWithContext(ctx context.Context, req *KafkaBrokerReq
 		return nil, err
 	}
 
-	var response KafkaBrokerUpsertModel
+	var response []*KafkaBrokerUpsertModel
 	if err := record.Fill(&response); err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	return response, nil
 }
 
 // -----------------------------------------------------
