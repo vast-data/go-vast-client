@@ -423,7 +423,56 @@ func (r *Group) GroupQuery_GET(params *GroupQuery_GET_Body) (*GroupQuery_GET_Mod
 	return r.GroupQueryWithContext_GET(r.Untyped.GetCtx(), params)
 }
 
-// -----------------------------------------------------
-// GENERATION ISSUES
-// -----------------------------------------------------
-//   - Extra method PATCH /groups/query/ skipped: PATCH /groups/query/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /groups/query/
+// GroupQuery_PATCH_Body represents the request body for GroupQuery
+type GroupQuery_PATCH_Body struct {
+	Gid           int64    `json:"gid,omitempty" yaml:"gid,omitempty" required:"false" doc:"Group GID"`
+	Groupname     string   `json:"groupname,omitempty" yaml:"groupname,omitempty" required:"false" doc:"Group name"`
+	S3PoliciesIds *[]int64 `json:"s3_policies_ids,omitempty" yaml:"s3_policies_ids,omitempty" required:"false" doc:"list of s3 policy ids"`
+	Sid           string   `json:"sid,omitempty" yaml:"sid,omitempty" required:"false" doc:"Group SID"`
+	TenantId      int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	Vaid          string   `json:"vaid,omitempty" yaml:"vaid,omitempty" required:"false" doc:"Group vast ID"`
+}
+
+// GroupQuery_PATCH_Model represents the response model for GroupQuery
+type GroupQuery_PATCH_Model struct {
+	Gid           int64     `json:"gid,omitempty" yaml:"gid,omitempty" required:"false" doc:""`
+	Name          string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	ProviderType  string    `json:"provider_type,omitempty" yaml:"provider_type,omitempty" required:"false" doc:""`
+	S3Policies    *[]string `json:"s3_policies,omitempty" yaml:"s3_policies,omitempty" required:"false" doc:""`
+	S3PoliciesIds *[]int64  `json:"s3_policies_ids,omitempty" yaml:"s3_policies_ids,omitempty" required:"false" doc:""`
+	Sid           string    `json:"sid,omitempty" yaml:"sid,omitempty" required:"false" doc:""`
+}
+
+// GroupQueryWithContext_PATCH
+// method: PATCH
+// url: /groups/query/
+// summary: Modify non-Local Group
+func (r *Group) GroupQueryWithContext_PATCH(ctx context.Context, body *GroupQuery_PATCH_Body) (*GroupQuery_PATCH_Model, error) {
+	resourcePath := "/groups/query/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response GroupQuery_PATCH_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// GroupQuery_PATCH
+// method: PATCH
+// url: /groups/query/
+// summary: Modify non-Local Group
+func (r *Group) GroupQuery_PATCH(body *GroupQuery_PATCH_Body) (*GroupQuery_PATCH_Model, error) {
+	return r.GroupQueryWithContext_PATCH(r.Untyped.GetCtx(), body)
+}
