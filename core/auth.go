@@ -9,10 +9,14 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 )
 
-var authenticators []Authenticator
+var (
+	authenticators   []Authenticator
+	authenticatorsMu sync.Mutex
+)
 
 type Authenticator interface {
 	authorize() error
@@ -46,7 +50,7 @@ func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 			Tenant:    config.Tenant,
 		}
 	} else if config.Username != "" && config.Password != "" {
-		authenticator = &JWTAuthenticator{
+		jwtAuth := &JWTAuthenticator{
 			Host:         config.Host,
 			Port:         config.Port,
 			SslVerify:    config.SslVerify,
@@ -56,8 +60,13 @@ func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 			Tenant:       config.Tenant,
 			Token:        &jwtToken{},
 		}
+		jwtAuth.authCond = sync.NewCond(&jwtAuth.mu)
+		authenticator = jwtAuth
 	}
 	if authenticator != nil {
+		authenticatorsMu.Lock()
+		defer authenticatorsMu.Unlock()
+
 		for _, existingAuthenticator := range authenticators {
 			if existingAuthenticator.equal(authenticator) {
 				return existingAuthenticator, nil
@@ -85,6 +94,9 @@ type JWTAuthenticator struct {
 	Token        *jwtToken
 	Tenant       string
 	initialized  bool
+	mu           sync.RWMutex // Protects Token and initialized
+	authorizing  bool         // Indicates authorization in progress
+	authCond     *sync.Cond   // Condition variable for waiting goroutines
 }
 
 func parseToken(rsp *http.Response) (*jwtToken, error) {
@@ -100,117 +112,222 @@ func parseToken(rsp *http.Response) (*jwtToken, error) {
 	return &tokens, nil
 }
 
-func (auth *JWTAuthenticator) refreshToken(client *http.Client) (*http.Response, error) {
+func (auth *JWTAuthenticator) refreshToken(client *http.Client) error {
+	auth.mu.RLock()
+	if auth.Token == nil || auth.Token.Refresh == "" {
+		panic("refreshToken called without valid token - auth.initialized state is corrupted!")
+	}
+	refreshToken := auth.Token.Refresh
+	auth.mu.RUnlock()
+
 	server := auth.Host + ":" + strconv.FormatUint(auth.Port, 10)
 	path := url.URL{
 		Scheme: "https",
 		Host:   server,
 		Path:   "api/token/refresh/",
 	}
-	body, err := json.Marshal(map[string]string{"refresh": auth.Token.Refresh})
+	body, err := json.Marshal(map[string]string{"refresh": refreshToken})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, path.String(), bytes.NewBuffer(body))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	req.Header.Set(HeaderContentType, ContentTypeJSON)
 	if auth.Tenant != "" {
 		req.Header.Set(HeaderXTenantName, auth.Tenant)
 	}
 
-	return client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Validate response first (reads body only on error)
+	if err := validateResponse(resp, auth.Host, auth.Port); err != nil {
+		return err
+	}
+
+	// Parse the token (reads body on success path)
+	token, parseErr := parseToken(resp)
+	if parseErr != nil {
+		return parseErr
+	}
+
+	auth.mu.Lock()
+	auth.Token = token
+	auth.mu.Unlock()
+
+	return nil
 }
 
-func (auth *JWTAuthenticator) acquireToken(client *http.Client) (*http.Response, error) {
-	// obtain new access & refresh tokens
+func (auth *JWTAuthenticator) acquireToken(client *http.Client) error {
 	userPass := map[string]string{"username": auth.Username, "password": auth.Password}
 	server := auth.Host + ":" + strconv.FormatUint(auth.Port, 10)
 	body, err := json.Marshal(userPass)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	// Generate URL to obtain token keys
 	path := url.URL{
 		Scheme: "https",
 		Host:   server,
 		Path:   "api/token/",
 	}
+
 	req, err := http.NewRequest(http.MethodPost, path.String(), bytes.NewBuffer(body))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	req.Header.Set(HeaderContentType, ContentTypeJSON)
 	if auth.Tenant != "" {
 		req.Header.Set(HeaderXTenantName, auth.Tenant)
 	}
 
-	return client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Validate response first (reads body only on error)
+	if err := validateResponse(resp, auth.Host, auth.Port); err != nil {
+		return err
+	}
+
+	// Parse the token (reads body on success path)
+	token, parseErr := parseToken(resp)
+	if parseErr != nil {
+		return parseErr
+	}
+
+	auth.mu.Lock()
+	auth.Token = token
+	auth.mu.Unlock()
+
+	return nil
 }
 
+// authorize acquires or refreshes the JWT token for API authentication.
+//
+// This method implements a thread-safe, single-authorization-at-a-time pattern
+// to prevent the "thundering herd" problem where multiple concurrent goroutines
+// would all attempt to acquire/refresh tokens simultaneously, causing redundant
+// API calls and potential rate limiting.
+//
+// Concurrency Strategy:
+//
+//  1. Authorization In Progress Flag (auth.authorizing):
+//     - Acts as a signal that one goroutine is currently performing authorization
+//     - Protected by auth.mu mutex for thread-safe access
+//
+//  2. Condition Variable (auth.authCond):
+//     - Coordinates goroutines waiting for authorization to complete
+//     - Wait() atomically: releases lock → sleeps → re-acquires lock when signaled
+//     - Broadcast() wakes all waiting goroutines when authorization completes
+//
+//  3. Token Clearing Strategy:
+//     - Before attempting authorization, we clear auth.Token.Access
+//     - This ensures waiting goroutines won't use stale/invalid tokens if authorization fails
+//     - If authorization succeeds, the new token is written; if it fails, token stays empty
+//
+// Flow for Concurrent Calls:
+//
+//	Goroutine 1 (first to arrive):
+//	  → Acquires lock
+//	  → Sets auth.authorizing = true
+//	  → Clears auth.Token.Access (invalidate old token)
+//	  → Releases lock
+//	  → Makes HTTP call to acquire/refresh token
+//	  → Sets auth.authorizing = false, Broadcast() to wake waiters
+//
+//	Goroutines 2-N (arrive while G1 is working):
+//	  → Acquire lock
+//	  → See auth.authorizing = true
+//	  → Call authCond.Wait() - releases lock and sleeps
+//	  → Woken by Broadcast() when G1 completes
+//	  → Re-acquire lock and check if token is now available:
+//	     - If token exists → return (use G1's token)
+//	     - If token is empty → G2 tries authorization (G1 failed)
+//
+// This design ensures:
+//   - Only 1 HTTP call per authorization attempt (no thundering herd)
+//   - Automatic retry on transient failures (next waiting goroutine tries)
+//   - Thread-safe access to shared auth.Token state
 func (auth *JWTAuthenticator) authorize() error {
-	var (
-		resp *http.Response
-		err  error
-	)
+	// Acquire lock and check if authorization is already in progress
+	auth.mu.Lock()
+
+	// Wait while another goroutine is authorizing
+	if auth.authorizing {
+		for auth.authorizing {
+			auth.authCond.Wait() // Releases lock and waits, re-acquires when signaled
+		}
+		// We were waiting - check if token is now available
+		if auth.initialized && auth.Token != nil && auth.Token.Access != "" {
+			auth.mu.Unlock()
+			return nil // Another goroutine got the token while we waited
+		}
+	}
+
+	// We're the first - set authorizing flag and capture state
+	auth.authorizing = true
+	isInitialized := auth.initialized
+
+	// Clear the access token before attempting authorization
+	// This ensures waiting goroutines won't use stale token if authorization fails
+	if auth.Token != nil {
+		auth.Token.Access = ""
+	}
+
+	auth.mu.Unlock() // Release lock before making HTTP calls
+
+	// Now make HTTP calls without holding the lock
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: !auth.SslVerify},
 	}
 	if auth.RespectProxy {
-		// Ensure proxy environment variables are respected during authentication
 		tr.Proxy = http.ProxyFromEnvironment
 	}
 	client := &http.Client{
 		Transport: tr,
 		Timeout:   20 * time.Second,
 	}
-	if auth.initialized {
-		resp, err = auth.refreshToken(client)
-		if err == nil && resp != nil {
-			// Check if refresh was successful
-			err = validateResponse(resp, auth.Host, auth.Port)
-		}
+
+	var err error
+	if isInitialized {
+		err = auth.refreshToken(client)
 		// If there is an error while getting new token using refresh token and
 		// that error is API error with status code 401, then refresh token is also
 		// expired. Need to re-authenticate.
 		if err != nil && IsApiError(err) {
 			statusCode := err.(*ApiError).StatusCode
 			if statusCode == http.StatusUnauthorized {
-				if resp != nil {
-					resp.Body.Close()
-				}
-				resp, err = auth.acquireToken(client)
+				err = auth.acquireToken(client)
 			}
 		}
 	} else {
-		resp, err = auth.acquireToken(client)
+		err = auth.acquireToken(client)
 	}
-	if err != nil {
-		return err
+
+	// Clear authorizing flag and notify waiting goroutines
+	auth.mu.Lock()
+	if err == nil {
+		auth.initialized = true
 	}
-	if resp != nil {
-		defer resp.Body.Close()
-	}
-	// Validate response if not already validated (for non-refresh paths)
-	if !auth.initialized {
-		if err = validateResponse(resp, auth.Host, auth.Port); err != nil {
-			return err
-		}
-	}
-	// Read response
-	token, err := parseToken(resp)
-	if err != nil {
-		return err
-	}
-	auth.Token = token
-	// Only mark as initialized after successful authentication
-	auth.setInitialized(true)
-	return nil
+	auth.authorizing = false
+	auth.authCond.Broadcast() // Wake up all waiting goroutines
+	auth.mu.Unlock()
+
+	return err
 }
 
 func (auth *JWTAuthenticator) setAuthHeader(headers *http.Header) {
+	auth.mu.RLock()
+	defer auth.mu.RUnlock()
+
 	headers.Add(HeaderAuthorization, AuthTypeBearer+" "+auth.Token.Access)
 	if auth.Tenant != "" {
 		headers.Add(HeaderXTenantName, auth.Tenant)
@@ -231,10 +348,14 @@ func (auth *JWTAuthenticator) equal(other Authenticator) bool {
 }
 
 func (auth *JWTAuthenticator) setInitialized(state bool) {
+	auth.mu.Lock()
+	defer auth.mu.Unlock()
 	auth.initialized = state
 }
 
 func (auth *JWTAuthenticator) isInitialized() bool {
+	auth.mu.RLock()
+	defer auth.mu.RUnlock()
 	return auth.initialized
 }
 
