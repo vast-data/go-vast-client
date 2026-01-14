@@ -356,7 +356,7 @@ func (auth *JWTAuthenticator) setInitialized(state bool) {
 func (auth *JWTAuthenticator) isInitialized() bool {
 	auth.mu.RLock()
 	defer auth.mu.RUnlock()
-	return auth.initialized
+	return auth.initialized && auth.Token != nil && auth.Token.Access != ""
 }
 
 type ApiRTokenAuthenticator struct {

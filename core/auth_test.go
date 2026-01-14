@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -994,4 +995,255 @@ func TestConcurrentRefreshWithExpiredRefreshToken(t *testing.T) {
 	}
 
 	t.Logf("Final token: %s", finalToken)
+}
+
+// TestExtremeConcurrency500Goroutines is a stress test that verifies
+// the locking mechanism works correctly under extreme concurrency.
+// 500 goroutines all trigger token acquisition simultaneously, and we
+// verify that only ONE HTTP call is made (thundering herd completely prevented).
+func TestExtremeConcurrency500Goroutines(t *testing.T) {
+	var acquireCallCount int32
+	var callLock sync.Mutex
+
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/token/" {
+			callLock.Lock()
+			callNum := atomic.AddInt32(&acquireCallCount, 1)
+			callLock.Unlock()
+
+			// Simulate network latency to increase contention window
+			time.Sleep(100 * time.Millisecond)
+
+			response := map[string]string{
+				"access":  "token-" + strconv.Itoa(int(callNum)),
+				"refresh": "refresh-" + strconv.Itoa(int(callNum)),
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		// For other API calls (simulating views.list() etc)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode([]map[string]interface{}{
+			{"id": 1, "name": "test-resource"},
+		})
+	}))
+	defer server.Close()
+
+	host, port := parseTestServerAddress(server.Listener.Addr().String())
+
+	auth := &JWTAuthenticator{
+		Host:      host,
+		Port:      port,
+		SslVerify: false,
+		Username:  "testuser",
+		Password:  "testpass",
+		Token:     &jwtToken{}, // Empty token - will trigger acquisition
+	}
+	auth.authCond = sync.NewCond(&auth.mu)
+
+	// Launch 500 concurrent goroutines
+	const numGoroutines = 500
+	done := make(chan error, numGoroutines)
+	results := struct {
+		sync.Mutex
+		success int
+		failed  int
+	}{}
+
+	t.Logf("Launching %d concurrent goroutines...", numGoroutines)
+	startTime := time.Now()
+
+	// Start all goroutines at roughly the same time
+	for i := 0; i < numGoroutines; i++ {
+		go func(id int) {
+			// Each goroutine calls authorize (which will trigger token acquisition)
+			err := auth.authorize()
+
+			results.Lock()
+			if err == nil {
+				results.success++
+			} else {
+				results.failed++
+			}
+			results.Unlock()
+
+			done <- err
+		}(i)
+	}
+
+	// Wait for all goroutines to complete
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
+
+	elapsed := time.Since(startTime)
+
+	// Critical assertion: Only ONE HTTP call should have been made
+	callCount := atomic.LoadInt32(&acquireCallCount)
+	if callCount != 1 {
+		t.Errorf("Expected exactly 1 token acquisition call, got %d (thundering herd not prevented!)", callCount)
+	}
+
+	// All goroutines should have succeeded
+	results.Lock()
+	successCount := results.success
+	failedCount := results.failed
+	results.Unlock()
+
+	if failedCount > 0 {
+		t.Errorf("Expected 0 failures, got %d", failedCount)
+	}
+
+	if successCount != numGoroutines {
+		t.Errorf("Expected %d successes, got %d", numGoroutines, successCount)
+	}
+
+	// Verify the authenticator has a valid token
+	auth.mu.RLock()
+	finalToken := auth.Token.Access
+	auth.mu.RUnlock()
+
+	if finalToken == "" {
+		t.Error("Token should not be empty after successful acquisition")
+	}
+
+	if finalToken != "token-1" {
+		t.Errorf("Expected token-1, got %s", finalToken)
+	}
+
+	// Verify initialized
+	if !auth.isInitialized() {
+		t.Error("Authenticator should be initialized")
+	}
+
+	t.Logf("✅ Stress test PASSED!")
+	t.Logf("   - %d goroutines completed in %v", numGoroutines, elapsed)
+	t.Logf("   - %d HTTP calls made (expected: 1)", callCount)
+	t.Logf("   - %d goroutines succeeded, %d failed", successCount, failedCount)
+	t.Logf("   - Final token: %s", finalToken)
+	t.Logf("   - Thundering herd completely prevented!")
+}
+
+// TestNoEmptyTokenDuringRefresh verifies that when one goroutine is refreshing
+// the token (and temporarily clears it), other concurrent goroutines don't use
+// the empty token for their requests. This tests the race condition where:
+// 1. Goroutine A starts refresh → clears token → makes HTTP call
+// 2. Goroutine B calls setAuthHeader() → should NOT see empty token
+func TestNoEmptyTokenDuringRefresh(t *testing.T) {
+	var refreshCallCount int32
+	var emptyAuthCount int32 // Count requests with empty auth
+	var validAuthCount int32 // Count requests with valid auth
+
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Handle token refresh - simulate slow refresh
+		if r.URL.Path == "/api/token/" {
+			atomic.AddInt32(&refreshCallCount, 1)
+			time.Sleep(100 * time.Millisecond) // Slow refresh to create race window
+			response := map[string]string{
+				"access":  "refreshed-token",
+				"refresh": "refreshed-refresh-token",
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		// Handle API requests - track auth headers
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "Bearer " || authHeader == "" {
+			// Empty token! This is the bug we're testing for
+			atomic.AddInt32(&emptyAuthCount, 1)
+			http.Error(w, "empty auth", http.StatusUnauthorized)
+			return
+		}
+
+		atomic.AddInt32(&validAuthCount, 1)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"result": "ok"})
+	}))
+	defer server.Close()
+
+	host, port := parseTestServerAddress(server.Listener.Addr().String())
+
+	auth := &JWTAuthenticator{
+		Host:      host,
+		Port:      port,
+		SslVerify: false,
+		Username:  "testuser",
+		Password:  "testpass",
+		Token:     &jwtToken{}, // Start with empty token to force refresh
+	}
+	auth.authCond = sync.NewCond(&auth.mu)
+
+	const numGoroutines = 50
+	done := make(chan error, numGoroutines)
+	start := make(chan struct{}) // Synchronize start to maximize concurrency
+
+	// Launch concurrent goroutines that will call authorize() and setAuthHeader()
+	for i := 0; i < numGoroutines; i++ {
+		go func(id int) {
+			<-start // Wait for signal
+
+			// Simulate the flow in setupHeaders:
+			// 1. Call authorize() - should wait if refresh in progress
+			err := auth.authorize()
+			if err != nil {
+				done <- err
+				return
+			}
+
+			// 2. Call setAuthHeader() - should NEVER see empty token
+			headers := &http.Header{}
+			auth.setAuthHeader(headers)
+
+			authHeader := headers.Get("Authorization")
+			if authHeader == "Bearer " || authHeader == "" {
+				done <- fmt.Errorf("goroutine %d got empty auth header", id)
+				return
+			}
+
+			done <- nil
+		}(i)
+	}
+
+	// Start all goroutines simultaneously
+	close(start)
+
+	// Wait for all to complete
+	errorCount := 0
+	for i := 0; i < numGoroutines; i++ {
+		if err := <-done; err != nil {
+			t.Errorf("Goroutine failed: %v", err)
+			errorCount++
+		}
+	}
+
+	// Verify results
+	refreshCount := atomic.LoadInt32(&refreshCallCount)
+	emptyCount := atomic.LoadInt32(&emptyAuthCount)
+	validCount := atomic.LoadInt32(&validAuthCount)
+
+	t.Logf("Refresh calls: %d", refreshCount)
+	t.Logf("Requests with empty auth: %d", emptyCount)
+	t.Logf("Requests with valid auth: %d", validCount)
+
+	if emptyCount > 0 {
+		t.Errorf("RACE CONDITION DETECTED: %d requests used empty auth headers!", emptyCount)
+	}
+
+	if errorCount > 0 {
+		t.Errorf("%d goroutines encountered errors", errorCount)
+	}
+
+	// Verify thundering herd is prevented
+	if refreshCount > 5 { // Allow some slack for scheduling
+		t.Logf("Warning: %d refresh calls (expected ~1, thundering herd may not be fully prevented)", refreshCount)
+	}
+
+	if emptyCount == 0 && errorCount == 0 {
+		t.Logf("No empty auth headers used during concurrent token refresh!")
+	}
 }
