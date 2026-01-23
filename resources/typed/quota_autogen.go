@@ -57,25 +57,47 @@ type QuotaSearchParams struct {
 // REQUEST BODY
 // -----------------------------------------------------
 
+// QuotaRequestBody_DefaultGroupQuota represents a nested type for request body
+type QuotaRequestBody_DefaultGroupQuota struct {
+	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
+	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
+	QuotaSystemId   int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
+	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
+	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
+}
+
+// QuotaRequestBody_DefaultUserQuota represents a nested type for request body
+type QuotaRequestBody_DefaultUserQuota struct {
+	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
+	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
+	QuotaSystemId   int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
+	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
+	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
+}
+
 // QuotaRequestBody represents the request body for Quota operations
 type QuotaRequestBody struct {
-	Name                 string    `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the quota"`
-	Path                 string    `json:"path,omitempty" yaml:"path,omitempty" required:"true" doc:"The directory path on which to enforce the quota"`
-	CreateDir            bool      `json:"create_dir,omitempty" yaml:"create_dir,omitempty" required:"false" doc:"Set to true to create the directory if the directory was not created yet."`
-	CreateDirMode        int64     `json:"create_dir_mode,omitempty" yaml:"create_dir_mode,omitempty" required:"false" doc:"Unix permissions mode for the new directory"`
-	DefaultEmail         string    `json:"default_email,omitempty" yaml:"default_email,omitempty" required:"false" doc:"Emails are sent to users if and when they exceed their user/group quota limits. default_email is a default email address that is used instead of a user's email address in the event that no email address is found for the user on a provider and no email suffix is set."`
-	EnableAlarms         bool      `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enables alarms on relevant events for user and group quotas. Applicable only if is_user_quota is true. Raises alarms reporting the number of users that exceed their quotas and when one or more users is/are blocked from writing to the quota directory."`
-	EnableEmailProviders bool      `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Set to true to enable querying Active Directory and LDAP services for user emails when sending user notifications to users if they exceed their user/group quota limits. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global suffix is used to form an email. If no suffix is set, default_email is used."`
-	GracePeriod          string    `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period. An alarm is triggered and write operations are blocked if storage usage continues to exceed the soft limit for the grace period. Format: [DD] [HH:[MM:]]ss"`
-	GroupQuotas          *[]string `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:""`
-	HardLimit            int64     `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage usage limit beyond which no writes will be allowed."`
-	HardLimitInodes      int64     `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
-	InheritAcl           bool      `json:"inherit_acl,omitempty" yaml:"inherit_acl,omitempty" required:"false" doc:"Indicates whether the directory should inherit ACLs from its parent directory"`
-	IsUserQuota          bool      `json:"is_user_quota,omitempty" yaml:"is_user_quota,omitempty" required:"false" doc:"Set to true to enable user and group quotas. False by default. Cannot be disabled later."`
-	SoftLimit            int64     `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Storage usage limit at which warnings of exceeding the quota are issued."`
-	SoftLimitInodes      int64     `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path at which warnings of exceeding the quota will be issued. A file with multiple hardlinks is counted only once."`
-	TenantId             int64     `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
-	UserQuotas           *[]string `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
+	Name                 string                             `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the quota"`
+	Path                 string                             `json:"path,omitempty" yaml:"path,omitempty" required:"true" doc:"The directory path on which to enforce the quota"`
+	CreateDir            bool                               `json:"create_dir,omitempty" yaml:"create_dir,omitempty" required:"false" doc:"Set to true to create the directory if the directory was not created yet."`
+	CreateDirMode        int64                              `json:"create_dir_mode,omitempty" yaml:"create_dir_mode,omitempty" required:"false" doc:"Unix permissions mode for the new directory"`
+	DefaultEmail         string                             `json:"default_email,omitempty" yaml:"default_email,omitempty" required:"false" doc:"Emails are sent to users if and when they exceed their user/group quota limits. default_email is a default email address that is used instead of a user's email address in the event that no email address is found for the user on a provider and no email suffix is set."`
+	DefaultGroupQuota    QuotaRequestBody_DefaultGroupQuota `json:"default_group_quota,omitempty" yaml:"default_group_quota,omitempty" required:"false" doc:""`
+	DefaultUserQuota     QuotaRequestBody_DefaultUserQuota  `json:"default_user_quota,omitempty" yaml:"default_user_quota,omitempty" required:"false" doc:""`
+	EnableAlarms         bool                               `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enables alarms on relevant events for user and group quotas. Applicable only if is_user_quota is true. Raises alarms reporting the number of users that exceed their quotas and when one or more users is/are blocked from writing to the quota directory."`
+	EnableEmailProviders bool                               `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Set to true to enable querying Active Directory and LDAP services for user emails when sending user notifications to users if they exceed their user/group quota limits. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global suffix is used to form an email. If no suffix is set, default_email is used."`
+	GracePeriod          string                             `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period. An alarm is triggered and write operations are blocked if storage usage continues to exceed the soft limit for the grace period. Format: [DD] [HH:[MM:]]ss"`
+	GroupQuotas          *[]string                          `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:""`
+	HardLimit            int64                              `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage usage limit beyond which no writes will be allowed."`
+	HardLimitInodes      int64                              `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
+	InheritAcl           bool                               `json:"inherit_acl,omitempty" yaml:"inherit_acl,omitempty" required:"false" doc:"Indicates whether the directory should inherit ACLs from its parent directory"`
+	IsUserQuota          bool                               `json:"is_user_quota,omitempty" yaml:"is_user_quota,omitempty" required:"false" doc:"Set to true to enable user and group quotas. False by default. Cannot be disabled later."`
+	SoftLimit            int64                              `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Storage usage limit at which warnings of exceeding the quota are issued."`
+	SoftLimitInodes      int64                              `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path at which warnings of exceeding the quota will be issued. A file with multiple hardlinks is counted only once."`
+	TenantId             int64                              `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	UserQuotas           *[]string                          `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
 }
 
 // -----------------------------------------------------
