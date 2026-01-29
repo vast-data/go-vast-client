@@ -61,6 +61,7 @@ type ViewpolicieRequestBody_ProtocolsAudit struct {
 	CreateDeleteFilesDirsObjects bool `json:"create_delete_files_dirs_objects,omitempty" yaml:"create_delete_files_dirs_objects,omitempty" required:"false" doc:"Audit operations that create or delete files, directories, or objects"`
 	LogDeletedFilesDirs          bool `json:"log_deleted_files_dirs,omitempty" yaml:"log_deleted_files_dirs,omitempty" required:"false" doc:"Log deleted files and directories"`
 	LogFullPath                  bool `json:"log_full_path,omitempty" yaml:"log_full_path,omitempty" required:"false" doc:"Log full Element Store path to the requested resource. Enabled by default. May affect performance. When disabled, the view path is recorded."`
+	LogHostname                  bool `json:"log_hostname,omitempty" yaml:"log_hostname,omitempty" required:"false" doc:"Log hostname"`
 	LogUsername                  bool `json:"log_username,omitempty" yaml:"log_username,omitempty" required:"false" doc:"Log username of requesting user. Disabled by default"`
 	ModifyData                   bool `json:"modify_data,omitempty" yaml:"modify_data,omitempty" required:"false" doc:""`
 	ModifyDataMd                 bool `json:"modify_data_md,omitempty" yaml:"modify_data_md,omitempty" required:"false" doc:"Audit operations that modify data (including operations that change the file size) and metadata"`
