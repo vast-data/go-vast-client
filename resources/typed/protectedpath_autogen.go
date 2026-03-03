@@ -68,6 +68,7 @@ type ProtectedPathRequestBody struct {
 	ProtectionPolicyId       string `json:"protection_policy_id,omitempty" yaml:"protection_policy_id,omitempty" required:"false" doc:"Specifies whcih protection policy to use"`
 	RemoteTargetId           int64  `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:"Remote target ID for streams with global namespace or synchronous replication capability."`
 	RemoteTenantGuid         string `json:"remote_tenant_guid,omitempty" yaml:"remote_tenant_guid,omitempty" required:"false" doc:"Tenant GUID of the remote peer tenant to which to replicate"`
+	RemoteTenantName         string `json:"remote_tenant_name,omitempty" yaml:"remote_tenant_name,omitempty" required:"false" doc:"remote tenant name"`
 	SourceMemberCapabilities string `json:"source_member_capabilities,omitempty" yaml:"source_member_capabilities,omitempty" required:"false" doc:"Stream capabilities for the source member"`
 	SyncDisconnectTime       int64  `json:"sync_disconnect_time,omitempty" yaml:"sync_disconnect_time,omitempty" required:"false" doc:"A period of time, in seconds, without communication between sync replication peers, after which the peers are disconnected."`
 	SyncInterval             int64  `json:"sync_interval,omitempty" yaml:"sync_interval,omitempty" required:"false" doc:"Replication group sync interval"`

@@ -21,6 +21,7 @@ import (
 //   - protection_policy_id: The ID of the protection policy that defines the replicaiton peer and schedule
 //   - remote_target_id: Remote target ID for streams with global namespace or synchronous replication capability.
 //   - remote_tenant_guid: The GUID of the tenant on the remote target where the target directory should be created
+//   - remote_tenant_name: remote tenant name
 //   - source_member_capabilities: Source member capabilities
 //   - sync_disconnect_time: For a synchronous replication, a period of time, in seconds, without communication between sync replication peers, after which the peers are disconnected.
 //   - sync_interval: Minimal duration, in seconds, since the last snapshot shared between all destination peers in the replication group.
@@ -46,6 +47,7 @@ func (p *ProtectedPath) ProtectedPathAddStreamWithContext_PATCH(ctx context.Cont
 //   - protection_policy_id: The ID of the protection policy that defines the replicaiton peer and schedule
 //   - remote_target_id: Remote target ID for streams with global namespace or synchronous replication capability.
 //   - remote_tenant_guid: The GUID of the tenant on the remote target where the target directory should be created
+//   - remote_tenant_name: remote tenant name
 //   - source_member_capabilities: Source member capabilities
 //   - sync_disconnect_time: For a synchronous replication, a period of time, in seconds, without communication between sync replication peers, after which the peers are disconnected.
 //   - sync_interval: Minimal duration, in seconds, since the last snapshot shared between all destination peers in the replication group.
