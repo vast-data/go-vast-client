@@ -46,7 +46,7 @@ jobs:
         echo "✅ Coverage $COVERAGE% meets threshold $THRESHOLD%"
         
     - name: Upload Coverage Report
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: core-coverage
         path: core_coverage.out
