@@ -26,6 +26,7 @@ type KafkaBroker struct {
 
 // KafkaBrokerSearchParams represents the search parameters for KafkaBroker operations
 type KafkaBrokerSearchParams struct {
+	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the Kafka broker configuration"`
 	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID. If missing, accessed by all tenants"`
 

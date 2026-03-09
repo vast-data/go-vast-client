@@ -459,11 +459,19 @@ type TenantClientIpRangesModel_VippoolsItem struct {
 
 // TenantNfs4DelegsModel_DelegateInfoItem represents a nested type for Tenant extra method response
 type TenantNfs4DelegsModel_DelegateInfoItem struct {
-	ClientId          int64  `json:"client_id,omitempty" yaml:"client_id,omitempty" required:"false" doc:""`
-	DelegationStateid int64  `json:"delegation_stateid,omitempty" yaml:"delegation_stateid,omitempty" required:"false" doc:""`
-	DelegationType    string `json:"delegation_type,omitempty" yaml:"delegation_type,omitempty" required:"false" doc:""`
-	RevokeInProgress  bool   `json:"revoke_in_progress,omitempty" yaml:"revoke_in_progress,omitempty" required:"false" doc:""`
-	VipAddr           string `json:"vip_addr,omitempty" yaml:"vip_addr,omitempty" required:"false" doc:""`
+	ClientId            int64                                                      `json:"client_id,omitempty" yaml:"client_id,omitempty" required:"false" doc:"Tenant ID"`
+	DelegationStateid   int64                                                      `json:"delegation_stateid,omitempty" yaml:"delegation_stateid,omitempty" required:"false" doc:""`
+	DelegationType      string                                                     `json:"delegation_type,omitempty" yaml:"delegation_type,omitempty" required:"false" doc:""`
+	ListOpenHandlesTask TenantNfs4DelegsModel_DelegateInfoItem_ListOpenHandlesTask `json:"list_open_handles_task,omitempty" yaml:"list_open_handles_task,omitempty" required:"false" doc:""`
+	RevokeInProgress    bool                                                       `json:"revoke_in_progress,omitempty" yaml:"revoke_in_progress,omitempty" required:"false" doc:""`
+	VipAddr             string                                                     `json:"vip_addr,omitempty" yaml:"vip_addr,omitempty" required:"false" doc:""`
+}
+
+// TenantNfs4DelegsModel_DelegateInfoItem_ListOpenHandlesTask represents a nested type for Tenant extra method response
+type TenantNfs4DelegsModel_DelegateInfoItem_ListOpenHandlesTask struct {
+	Id        int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Task ID"`
+	StartTime string `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Task start time"`
+	State     string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
 }
 
 // TenantRemoteObjectsItem represents a nested type for Tenant extra method response
