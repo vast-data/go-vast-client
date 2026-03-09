@@ -1888,6 +1888,7 @@ type Component_KafkaBrokerAddressParams struct {
 // Component: #/components/schemas/KafkaBrokerConfig
 type Component_KafkaBrokerConfig struct {
 	Addresses *[]KafkaBrokerConfig_AddressesItem `json:"addresses,omitempty" yaml:"addresses,omitempty" required:"false" doc:"List of Kafka server addresses"`
+	Guid      string                             `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 	Id        int64                              `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Kafka broker configuration ID"`
 	Name      string                             `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the Kafka broker configuration"`
 	TenantId  int64                              `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID. If missing, accessed by all tenants"`
@@ -1957,6 +1958,7 @@ type Component_Ldap struct {
 	Method                     string    `json:"method,omitempty" yaml:"method,omitempty" required:"false" doc:"Bind Authentication Method"`
 	MonitorAction              string    `json:"monitor_action,omitempty" yaml:"monitor_action,omitempty" required:"false" doc:"The type of periodic health check that VAST Cluster performs for the LDAP provider. PING (default, less overhead and impact on the provider) = pings the provider. BIND = binds to the provider."`
 	Name                       string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	NetgroupSearchbase         string    `json:"netgroup_searchbase,omitempty" yaml:"netgroup_searchbase,omitempty" required:"false" doc:"Base DN for netgroup queries."`
 	Port                       int64     `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"LDAP server port. 389 (LDAP) 636 (LDAPS)"`
 	PosixAccount               string    `json:"posix_account,omitempty" yaml:"posix_account,omitempty" required:"false" doc:""`
 	PosixAttributesSource      string    `json:"posix_attributes_source,omitempty" yaml:"posix_attributes_source,omitempty" required:"false" doc:"Defines which domains POSIX attributes will be supported from."`
@@ -2159,11 +2161,12 @@ type Component_MonitorData struct{}
 // Component_NFS4DelegateInfo represents the OpenAPI component schema
 // Component: #/components/schemas/NFS4DelegateInfo
 type Component_NFS4DelegateInfo struct {
-	ClientId          int64  `json:"client_id,omitempty" yaml:"client_id,omitempty" required:"false" doc:""`
-	DelegationStateid int64  `json:"delegation_stateid,omitempty" yaml:"delegation_stateid,omitempty" required:"false" doc:""`
-	DelegationType    string `json:"delegation_type,omitempty" yaml:"delegation_type,omitempty" required:"false" doc:""`
-	RevokeInProgress  bool   `json:"revoke_in_progress,omitempty" yaml:"revoke_in_progress,omitempty" required:"false" doc:""`
-	VipAddr           string `json:"vip_addr,omitempty" yaml:"vip_addr,omitempty" required:"false" doc:""`
+	ClientId            int64                                `json:"client_id,omitempty" yaml:"client_id,omitempty" required:"false" doc:"Tenant ID"`
+	DelegationStateid   int64                                `json:"delegation_stateid,omitempty" yaml:"delegation_stateid,omitempty" required:"false" doc:""`
+	DelegationType      string                               `json:"delegation_type,omitempty" yaml:"delegation_type,omitempty" required:"false" doc:""`
+	ListOpenHandlesTask NFS4DelegateInfo_ListOpenHandlesTask `json:"list_open_handles_task,omitempty" yaml:"list_open_handles_task,omitempty" required:"false" doc:""`
+	RevokeInProgress    bool                                 `json:"revoke_in_progress,omitempty" yaml:"revoke_in_progress,omitempty" required:"false" doc:""`
+	VipAddr             string                               `json:"vip_addr,omitempty" yaml:"vip_addr,omitempty" required:"false" doc:""`
 }
 
 // Component_NFS4DelegateState represents the OpenAPI component schema
@@ -2346,6 +2349,82 @@ type Component_ObjectPermission struct {
 	Username    string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:""`
 }
 
+// Component_OpenFile represents the OpenAPI component schema
+// Component: #/components/schemas/OpenFile
+type Component_OpenFile struct {
+	HasLocks            bool                         `json:"has_locks,omitempty" yaml:"has_locks,omitempty" required:"false" doc:"Whether the open file has locks"`
+	Id                  int64                        `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	ListOpenHandlesTask OpenFile_ListOpenHandlesTask `json:"list_open_handles_task,omitempty" yaml:"list_open_handles_task,omitempty" required:"false" doc:""`
+	OpenFilesQueryId    int64                        `json:"open_files_query_id,omitempty" yaml:"open_files_query_id,omitempty" required:"false" doc:"Open files query ID"`
+	Path                string                       `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Open file's path"`
+	TenantId            int64                        `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+}
+
+// Component_OpenFileHandle represents the OpenAPI component schema
+// Component: #/components/schemas/OpenFileHandle
+type Component_OpenFileHandle struct {
+	AccessMask   string `json:"access_mask,omitempty" yaml:"access_mask,omitempty" required:"false" doc:"Access mask"`
+	ClientIp     string `json:"client_ip,omitempty" yaml:"client_ip,omitempty" required:"false" doc:"Client IP"`
+	HasLease     bool   `json:"has_lease,omitempty" yaml:"has_lease,omitempty" required:"false" doc:"Whether the handle has a lease"`
+	HasLocks     bool   `json:"has_locks,omitempty" yaml:"has_locks,omitempty" required:"false" doc:"Whether the open file handle has locks"`
+	Id           int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	OpenFileId   int64  `json:"open_file_id,omitempty" yaml:"open_file_id,omitempty" required:"false" doc:"Open file ID"`
+	OpenFilePath string `json:"open_file_path,omitempty" yaml:"open_file_path,omitempty" required:"false" doc:"File's path"`
+	Protocol     string `json:"protocol,omitempty" yaml:"protocol,omitempty" required:"false" doc:"Protocol type"`
+	SessionId    string `json:"session_id,omitempty" yaml:"session_id,omitempty" required:"false" doc:"Session ID hex"`
+	ShareAccess  string `json:"share_access,omitempty" yaml:"share_access,omitempty" required:"false" doc:"Share access"`
+	TenantId     int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	UniqueId     string `json:"unique_id,omitempty" yaml:"unique_id,omitempty" required:"false" doc:"Unique ID hex"`
+	Username     string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:"Username"`
+}
+
+// Component_OpenFileHandlesQueryParams represents the OpenAPI component schema
+// Component: #/components/schemas/OpenFileHandlesQueryParams
+type Component_OpenFileHandlesQueryParams struct {
+	Protocol string `json:"protocol,omitempty" yaml:"protocol,omitempty" required:"true" doc:"Protocol type"`
+}
+
+// Component_OpenFilesQuery represents the OpenAPI component schema
+// Component: #/components/schemas/OpenFilesQuery
+type Component_OpenFilesQuery struct {
+	AsyncTaskId int64                  `json:"async_task_id,omitempty" yaml:"async_task_id,omitempty" required:"false" doc:"Async task ID"`
+	Created     string                 `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:""`
+	Filters     OpenFilesQuery_Filters `json:"filters,omitempty" yaml:"filters,omitempty" required:"false" doc:"Filters used to create the query"`
+	Guid        string                 `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Id          int64                  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Name        string                 `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	PathPrefix  string                 `json:"path_prefix,omitempty" yaml:"path_prefix,omitempty" required:"false" doc:"Path prefix"`
+	State       string                 `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"State"`
+	TenantId    int64                  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
+	Title       string                 `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:""`
+	Url         string                 `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+}
+
+// Component_OpenFilesQueryParams represents the OpenAPI component schema
+// Component: #/components/schemas/OpenFilesQueryParams
+type Component_OpenFilesQueryParams struct {
+	PathPrefix string `json:"path_prefix,omitempty" yaml:"path_prefix,omitempty" required:"true" doc:"Path prefix"`
+	Protocol   string `json:"protocol,omitempty" yaml:"protocol,omitempty" required:"true" doc:"Protocol type"`
+	Name       string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Open files query name"`
+	TenantId   int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+}
+
+// Component_OpenFilesQueryWithAsyncTask represents the OpenAPI component schema
+// Component: #/components/schemas/OpenFilesQueryWithAsyncTask
+type Component_OpenFilesQueryWithAsyncTask struct {
+	AsyncTaskId int64                               `json:"async_task_id,omitempty" yaml:"async_task_id,omitempty" required:"false" doc:"Async task ID"`
+	Created     string                              `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:""`
+	Filters     OpenFilesQueryWithAsyncTask_Filters `json:"filters,omitempty" yaml:"filters,omitempty" required:"false" doc:"Filters used to create the query"`
+	Guid        string                              `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Id          int64                               `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Name        string                              `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	PathPrefix  string                              `json:"path_prefix,omitempty" yaml:"path_prefix,omitempty" required:"false" doc:"Path prefix"`
+	State       string                              `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"State"`
+	TenantId    int64                               `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
+	Title       string                              `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:""`
+	Url         string                              `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+}
+
 // Component_OpenProtocolHandle represents the OpenAPI component schema
 // Component: #/components/schemas/OpenProtocolHandle
 type Component_OpenProtocolHandle struct {
@@ -2456,6 +2535,14 @@ type Component_PartialUserQuota struct {
 	UsedCapacity    int64  `json:"used_capacity,omitempty" yaml:"used_capacity,omitempty" required:"false" doc:"Used capacity in bytes"`
 	UsedInodes      int64  `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Used inodes"`
 	VastId          int64  `json:"vast_id,omitempty" yaml:"vast_id,omitempty" required:"false" doc:"VAST ID of the user or group with the listed user/group quota"`
+}
+
+// Component_PartialVTask represents the OpenAPI component schema
+// Component: #/components/schemas/PartialVTask
+type Component_PartialVTask struct {
+	Id        int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Task ID"`
+	StartTime string `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Task start time"`
+	State     string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
 }
 
 // Component_PartialVolumeInfo represents the OpenAPI component schema
@@ -3048,24 +3135,25 @@ type Component_S3Key struct {
 // Component_S3LifeCycleRule represents the OpenAPI component schema
 // Component: #/components/schemas/S3LifeCycleRule
 type Component_S3LifeCycleRule struct {
-	Name                        string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A unique name"`
-	ViewId                      int64  `json:"view_id,omitempty" yaml:"view_id,omitempty" required:"true" doc:"The ID of a view, when the rule applies to all objects in a view (bucket)"`
-	AbortMpuDaysAfterInitiation int64  `json:"abort_mpu_days_after_initiation,omitempty" yaml:"abort_mpu_days_after_initiation,omitempty" required:"false" doc:"The number of days until expiration after an incomplete multipart upload"`
-	Enabled                     bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:""`
-	ExpirationDate              string `json:"expiration_date,omitempty" yaml:"expiration_date,omitempty" required:"false" doc:"The expiration date of the object"`
-	ExpirationDays              int64  `json:"expiration_days,omitempty" yaml:"expiration_days,omitempty" required:"false" doc:"The number of days from creation until an object expires"`
-	ExpiredObjDeleteMarker      bool   `json:"expired_obj_delete_marker,omitempty" yaml:"expired_obj_delete_marker,omitempty" required:"false" doc:"If true, delete markets of objects are removed when objects expire"`
-	Guid                        string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Id                          int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"The ID of an S3 Lifecycle rule"`
-	MaxSize                     int64  `json:"max_size,omitempty" yaml:"max_size,omitempty" required:"false" doc:"Maximum object size"`
-	MinSize                     int64  `json:"min_size,omitempty" yaml:"min_size,omitempty" required:"false" doc:"Minimum object size"`
-	NewerNoncurrentVersions     int64  `json:"newer_noncurrent_versions,omitempty" yaml:"newer_noncurrent_versions,omitempty" required:"false" doc:"The number of newer versions to retain"`
-	NoncurrentDays              int64  `json:"noncurrent_days,omitempty" yaml:"noncurrent_days,omitempty" required:"false" doc:"Number of days at which objects become noncurrent"`
-	ObjectAgeAttr               string `json:"object_age_attr,omitempty" yaml:"object_age_attr,omitempty" required:"false" doc:"Defines which time to use for expiration."`
-	Prefix                      string `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Defines a scope of elements (objects, files or directories) by prefix. All objects with keys that begin with the specified prefix are included in the scope. In file and directory nomenclature, a prefix is a file and/or directory path within the view that can include part of the file or directory name. For example, 'sales/jan' would include the file sales/january and the directory sales/jan/week1/. No characters are handled as wildcards."`
-	Title                       string `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:""`
-	Url                         string `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
-	ViewPath                    string `json:"view_path,omitempty" yaml:"view_path,omitempty" required:"false" doc:"The path of a view, when the rule applies to all objects in a view (bucket)"`
+	Name                        string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A unique name"`
+	ViewId                      int64             `json:"view_id,omitempty" yaml:"view_id,omitempty" required:"true" doc:"The ID of a view, when the rule applies to all objects in a view (bucket)"`
+	AbortMpuDaysAfterInitiation int64             `json:"abort_mpu_days_after_initiation,omitempty" yaml:"abort_mpu_days_after_initiation,omitempty" required:"false" doc:"The number of days until expiration after an incomplete multipart upload"`
+	Enabled                     bool              `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:""`
+	ExpirationDate              string            `json:"expiration_date,omitempty" yaml:"expiration_date,omitempty" required:"false" doc:"The expiration date of the object"`
+	ExpirationDays              int64             `json:"expiration_days,omitempty" yaml:"expiration_days,omitempty" required:"false" doc:"The number of days from creation until an object expires"`
+	ExpiredObjDeleteMarker      bool              `json:"expired_obj_delete_marker,omitempty" yaml:"expired_obj_delete_marker,omitempty" required:"false" doc:"If true, delete markets of objects are removed when objects expire"`
+	Guid                        string            `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Id                          int64             `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"The ID of an S3 Lifecycle rule"`
+	MaxSize                     int64             `json:"max_size,omitempty" yaml:"max_size,omitempty" required:"false" doc:"Maximum object size"`
+	MinSize                     int64             `json:"min_size,omitempty" yaml:"min_size,omitempty" required:"false" doc:"Minimum object size"`
+	NewerNoncurrentVersions     int64             `json:"newer_noncurrent_versions,omitempty" yaml:"newer_noncurrent_versions,omitempty" required:"false" doc:"The number of newer versions to retain"`
+	NoncurrentDays              int64             `json:"noncurrent_days,omitempty" yaml:"noncurrent_days,omitempty" required:"false" doc:"Number of days at which objects become noncurrent"`
+	ObjectAgeAttr               string            `json:"object_age_attr,omitempty" yaml:"object_age_attr,omitempty" required:"false" doc:"Defines which time to use for expiration."`
+	Prefix                      string            `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Defines a scope of elements (objects, files or directories) by prefix. All objects with keys that begin with the specified prefix are included in the scope. In file and directory nomenclature, a prefix is a file and/or directory path within the view that can include part of the file or directory name. For example, 'sales/jan' would include the file sales/january and the directory sales/jan/week1/. No characters are handled as wildcards."`
+	Tags                        map[string]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:""`
+	Title                       string            `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:""`
+	Url                         string            `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+	ViewPath                    string            `json:"view_path,omitempty" yaml:"view_path,omitempty" required:"false" doc:"The path of a view, when the rule applies to all objects in a view (bucket)"`
 }
 
 // Component_S3Policy represents the OpenAPI component schema
@@ -4137,6 +4225,7 @@ type Component_ViewPolicy struct {
 	SmbIsCa                            bool                      `json:"smb_is_ca,omitempty" yaml:"smb_is_ca,omitempty" required:"false" doc:"When enabled, the SMB share exposed by the view is set as continuously available, which allows SMB3 clients to request use of persistent file handles and keep their connections to this share in case of a failover event."`
 	SmbReadOnly                        *[]string                 `json:"smb_read_only,omitempty" yaml:"smb_read_only,omitempty" required:"false" doc:"Hosts with SMB read only permissions"`
 	SmbReadWrite                       *[]string                 `json:"smb_read_write,omitempty" yaml:"smb_read_write,omitempty" required:"false" doc:"Hosts with SMB read/write permissions"`
+	SmbRecursiveChangeNotify           bool                      `json:"smb_recursive_change_notify,omitempty" yaml:"smb_recursive_change_notify,omitempty" required:"false" doc:"Whether SMB Recursive Change Notify is enabled"`
 	Sync                               string                    `json:"sync,omitempty" yaml:"sync,omitempty" required:"false" doc:"Synchronization state with leader"`
 	SyncTime                           string                    `json:"sync_time,omitempty" yaml:"sync_time,omitempty" required:"false" doc:"Synchronization time with leader"`
 	TenantId                           int64                     `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
@@ -4350,6 +4439,7 @@ type ActiveDirectory_Ldap struct {
 	Method                     string    `json:"method,omitempty" yaml:"method,omitempty" required:"false" doc:"Bind Authentication Method"`
 	MonitorAction              string    `json:"monitor_action,omitempty" yaml:"monitor_action,omitempty" required:"false" doc:"The type of periodic health check that VAST Cluster performs for the LDAP provider. PING (default, less overhead and impact on the provider) = pings the provider. BIND = binds to the provider."`
 	Name                       string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	NetgroupSearchbase         string    `json:"netgroup_searchbase,omitempty" yaml:"netgroup_searchbase,omitempty" required:"false" doc:"Base DN for netgroup queries."`
 	Port                       int64     `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"LDAP server port. 389 (LDAP) 636 (LDAPS)"`
 	PosixAccount               string    `json:"posix_account,omitempty" yaml:"posix_account,omitempty" required:"false" doc:""`
 	PosixAttributesSource      string    `json:"posix_attributes_source,omitempty" yaml:"posix_attributes_source,omitempty" required:"false" doc:"Defines which domains POSIX attributes will be supported from."`
@@ -4809,13 +4899,45 @@ type Manager_Tenant struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Tenant Name"`
 }
 
+// NFS4DelegateInfo_ListOpenHandlesTask represents a nested type within components
+type NFS4DelegateInfo_ListOpenHandlesTask struct {
+	Id        int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Task ID"`
+	StartTime string `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Task start time"`
+	State     string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
+}
+
 // NFS4DelegateState_DelegateInfoItem represents a nested type within components
 type NFS4DelegateState_DelegateInfoItem struct {
-	ClientId          int64  `json:"client_id,omitempty" yaml:"client_id,omitempty" required:"false" doc:""`
-	DelegationStateid int64  `json:"delegation_stateid,omitempty" yaml:"delegation_stateid,omitempty" required:"false" doc:""`
-	DelegationType    string `json:"delegation_type,omitempty" yaml:"delegation_type,omitempty" required:"false" doc:""`
-	RevokeInProgress  bool   `json:"revoke_in_progress,omitempty" yaml:"revoke_in_progress,omitempty" required:"false" doc:""`
-	VipAddr           string `json:"vip_addr,omitempty" yaml:"vip_addr,omitempty" required:"false" doc:""`
+	ClientId            int64                                                  `json:"client_id,omitempty" yaml:"client_id,omitempty" required:"false" doc:"Tenant ID"`
+	DelegationStateid   int64                                                  `json:"delegation_stateid,omitempty" yaml:"delegation_stateid,omitempty" required:"false" doc:""`
+	DelegationType      string                                                 `json:"delegation_type,omitempty" yaml:"delegation_type,omitempty" required:"false" doc:""`
+	ListOpenHandlesTask NFS4DelegateState_DelegateInfoItem_ListOpenHandlesTask `json:"list_open_handles_task,omitempty" yaml:"list_open_handles_task,omitempty" required:"false" doc:""`
+	RevokeInProgress    bool                                                   `json:"revoke_in_progress,omitempty" yaml:"revoke_in_progress,omitempty" required:"false" doc:""`
+	VipAddr             string                                                 `json:"vip_addr,omitempty" yaml:"vip_addr,omitempty" required:"false" doc:""`
+}
+
+// NFS4DelegateState_DelegateInfoItem_ListOpenHandlesTask represents a nested type within components
+type NFS4DelegateState_DelegateInfoItem_ListOpenHandlesTask struct {
+	Id        int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Task ID"`
+	StartTime string `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Task start time"`
+	State     string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
+}
+
+// OpenFile_ListOpenHandlesTask represents a nested type within components
+type OpenFile_ListOpenHandlesTask struct {
+	Id        int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Task ID"`
+	StartTime string `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Task start time"`
+	State     string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
+}
+
+// OpenFilesQueryWithAsyncTask_Filters represents a nested type within components
+type OpenFilesQueryWithAsyncTask_Filters struct {
+	ReturnOnlyLockedFiles bool `json:"return_only_locked_files,omitempty" yaml:"return_only_locked_files,omitempty" required:"false" doc:"Whether to return only locked files"`
+}
+
+// OpenFilesQuery_Filters represents a nested type within components
+type OpenFilesQuery_Filters struct {
+	ReturnOnlyLockedFiles bool `json:"return_only_locked_files,omitempty" yaml:"return_only_locked_files,omitempty" required:"false" doc:"Whether to return only locked files"`
 }
 
 // ProtectedPath_MembersInfoValue represents a nested type within components
