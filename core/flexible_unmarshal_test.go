@@ -292,3 +292,169 @@ func TestFlexibleUnmarshal_ArrayOfBools(t *testing.T) {
 		}
 	}
 }
+
+func TestFlexibleUnmarshal_UnparseableStringToNumeric(t *testing.T) {
+	type TestStruct struct {
+		EstimatedTime float32 `json:"estimated_read_only_time"`
+		Count         int     `json:"count"`
+		Size          int64   `json:"size"`
+		Ratio         float64 `json:"ratio"`
+	}
+
+	// JSON with unparseable string values in numeric fields
+	jsonData := []byte(`{
+		"estimated_read_only_time": "UNKNOWN",
+		"count": "INVALID",
+		"size": "N/A",
+		"ratio": "undefined"
+	}`)
+
+	var result TestStruct
+	err := FlexibleUnmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// All unparseable strings should become zero values
+	if result.EstimatedTime != 0 {
+		t.Errorf("expected EstimatedTime to be 0, got %f", result.EstimatedTime)
+	}
+	if result.Count != 0 {
+		t.Errorf("expected Count to be 0, got %d", result.Count)
+	}
+	if result.Size != 0 {
+		t.Errorf("expected Size to be 0, got %d", result.Size)
+	}
+	if result.Ratio != 0 {
+		t.Errorf("expected Ratio to be 0, got %f", result.Ratio)
+	}
+}
+
+func TestFlexibleUnmarshal_ParseableStringToNumeric(t *testing.T) {
+	type TestStruct struct {
+		Count   int     `json:"count"`
+		Size    int64   `json:"size"`
+		Ratio   float32 `json:"ratio"`
+		Percent float64 `json:"percent"`
+	}
+
+	// JSON with parseable string values in numeric fields
+	jsonData := []byte(`{
+		"count": "42",
+		"size": "9876543210",
+		"ratio": "3.14",
+		"percent": "99.99"
+	}`)
+
+	var result TestStruct
+	err := FlexibleUnmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Parseable strings should be converted to their numeric values
+	if result.Count != 42 {
+		t.Errorf("expected Count to be 42, got %d", result.Count)
+	}
+	if result.Size != 9876543210 {
+		t.Errorf("expected Size to be 9876543210, got %d", result.Size)
+	}
+	if result.Ratio != 3.14 {
+		t.Errorf("expected Ratio to be 3.14, got %f", result.Ratio)
+	}
+	if result.Percent != 99.99 {
+		t.Errorf("expected Percent to be 99.99, got %f", result.Percent)
+	}
+}
+
+func TestFlexibleUnmarshal_MixedNumericTypes(t *testing.T) {
+	type TestStruct struct {
+		Int8Val   int8    `json:"int8_val"`
+		Int16Val  int16   `json:"int16_val"`
+		Int32Val  int32   `json:"int32_val"`
+		Uint8Val  uint8   `json:"uint8_val"`
+		Uint16Val uint16  `json:"uint16_val"`
+		Uint32Val uint32  `json:"uint32_val"`
+		Uint64Val uint64  `json:"uint64_val"`
+		Float32   float32 `json:"float32_val"`
+	}
+
+	// Mix of valid numbers, valid strings, and invalid strings
+	jsonData := []byte(`{
+		"int8_val": 127,
+		"int16_val": "32000",
+		"int32_val": "INVALID",
+		"uint8_val": 255,
+		"uint16_val": "65000",
+		"uint32_val": "N/A",
+		"uint64_val": "18446744073709551615",
+		"float32_val": "UNKNOWN"
+	}`)
+
+	var result TestStruct
+	err := FlexibleUnmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.Int8Val != 127 {
+		t.Errorf("expected Int8Val to be 127, got %d", result.Int8Val)
+	}
+	if result.Int16Val != 32000 {
+		t.Errorf("expected Int16Val to be 32000, got %d", result.Int16Val)
+	}
+	if result.Int32Val != 0 {
+		t.Errorf("expected Int32Val to be 0 (unparseable), got %d", result.Int32Val)
+	}
+	if result.Uint8Val != 255 {
+		t.Errorf("expected Uint8Val to be 255, got %d", result.Uint8Val)
+	}
+	if result.Uint16Val != 65000 {
+		t.Errorf("expected Uint16Val to be 65000, got %d", result.Uint16Val)
+	}
+	if result.Uint32Val != 0 {
+		t.Errorf("expected Uint32Val to be 0 (unparseable), got %d", result.Uint32Val)
+	}
+	if result.Uint64Val != 18446744073709551615 {
+		t.Errorf("expected Uint64Val to be 18446744073709551615, got %d", result.Uint64Val)
+	}
+	if result.Float32 != 0 {
+		t.Errorf("expected Float32 to be 0 (unparseable), got %f", result.Float32)
+	}
+}
+
+func TestFlexibleUnmarshal_ProtectedPathExample(t *testing.T) {
+	// Simulate the real-world ProtectedPath case from the issue
+	type ProtectedPath struct {
+		ID                   int     `json:"id"`
+		Name                 string  `json:"name"`
+		EstimatedReadOnlyTime float32 `json:"estimated_read_only_time"`
+		State                string  `json:"state"`
+	}
+
+	jsonData := []byte(`{
+		"id": 6,
+		"name": "vo-b816a408a6",
+		"estimated_read_only_time": "UNKNOWN",
+		"state": "Active"
+	}`)
+
+	var result ProtectedPath
+	err := FlexibleUnmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.ID != 6 {
+		t.Errorf("expected ID to be 6, got %d", result.ID)
+	}
+	if result.Name != "vo-b816a408a6" {
+		t.Errorf("expected Name to be 'vo-b816a408a6', got %q", result.Name)
+	}
+	if result.EstimatedReadOnlyTime != 0 {
+		t.Errorf("expected EstimatedReadOnlyTime to be 0 (UNKNOWN string), got %f", result.EstimatedReadOnlyTime)
+	}
+	if result.State != "Active" {
+		t.Errorf("expected State to be 'Active', got %q", result.State)
+	}
+}

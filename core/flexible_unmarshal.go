@@ -10,9 +10,9 @@ import (
 // FlexibleUnmarshal unmarshals JSON with flexible type conversion for string fields.
 // When a string field in the target struct receives a non-string value (number, boolean),
 // it automatically converts it to a string.
-func FlexibleUnmarshal(data []byte, target interface{}) error {
+func FlexibleUnmarshal(data []byte, target any) error {
 	// First unmarshal into a generic map
-	var rawData map[string]interface{}
+	var rawData map[string]any
 	if err := json.Unmarshal(data, &rawData); err != nil {
 		return err
 	}
@@ -40,8 +40,8 @@ func FlexibleUnmarshal(data []byte, target interface{}) error {
 }
 
 // convertMapToStruct recursively converts map values to match struct field types
-func convertMapToStruct(data map[string]interface{}, structType reflect.Type) map[string]interface{} {
-	result := make(map[string]interface{})
+func convertMapToStruct(data map[string]any, structType reflect.Type) map[string]any {
+	result := make(map[string]any)
 
 	for key, value := range data {
 		// Find the corresponding struct field
@@ -58,7 +58,7 @@ func convertMapToStruct(data map[string]interface{}, structType reflect.Type) ma
 }
 
 // convertValue converts a value to match the target type
-func convertValue(value interface{}, targetType reflect.Type) interface{} {
+func convertValue(value any, targetType reflect.Type) any {
 	if value == nil {
 		return nil
 	}
@@ -77,10 +77,22 @@ func convertValue(value interface{}, targetType reflect.Type) interface{} {
 		return value
 	}
 
+	// If target is a numeric type, handle string values that can't be parsed
+	if isNumericKind(targetType.Kind()) {
+		// If value is a string, try to parse it
+		if strVal, ok := value.(string); ok {
+			if convertedNum := convertStringToNumeric(strVal, targetType.Kind()); convertedNum != nil {
+				return convertedNum
+			}
+			// If parsing fails, return zero value for the numeric type
+			return getZeroValueForNumericKind(targetType.Kind())
+		}
+	}
+
 	// If target is a slice, recursively convert elements
 	if targetType.Kind() == reflect.Slice {
-		if arr, ok := value.([]interface{}); ok {
-			result := make([]interface{}, len(arr))
+		if arr, ok := value.([]any); ok {
+			result := make([]any, len(arr))
 			elemType := targetType.Elem()
 			for i, item := range arr {
 				result[i] = convertValue(item, elemType)
@@ -91,8 +103,8 @@ func convertValue(value interface{}, targetType reflect.Type) interface{} {
 
 	// If target is a pointer to slice, recursively convert
 	if targetType.Kind() == reflect.Ptr && targetType.Elem().Kind() == reflect.Slice {
-		if arr, ok := value.([]interface{}); ok {
-			result := make([]interface{}, len(arr))
+		if arr, ok := value.([]any); ok {
+			result := make([]any, len(arr))
 			elemType := targetType.Elem().Elem()
 			for i, item := range arr {
 				result[i] = convertValue(item, elemType)
@@ -103,7 +115,7 @@ func convertValue(value interface{}, targetType reflect.Type) interface{} {
 
 	// If target is a struct, recursively convert
 	if targetType.Kind() == reflect.Struct {
-		if m, ok := value.(map[string]interface{}); ok {
+		if m, ok := value.(map[string]any); ok {
 			return convertMapToStruct(m, targetType)
 		}
 	}
@@ -112,7 +124,7 @@ func convertValue(value interface{}, targetType reflect.Type) interface{} {
 }
 
 // convertToString converts any value to a string
-func convertToString(value interface{}) string {
+func convertToString(value any) string {
 	switch v := value.(type) {
 	case string:
 		return v
@@ -154,4 +166,102 @@ func findFieldByJSONTag(structType reflect.Type, jsonTag string) (reflect.Struct
 		}
 	}
 	return reflect.StructField{}, false
+}
+
+// isNumericKind returns true if the kind is a numeric type
+func isNumericKind(kind reflect.Kind) bool {
+	switch kind {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64:
+		return true
+	}
+	return false
+}
+
+// convertStringToNumeric tries to parse a string into the target numeric type
+// Returns nil if parsing fails
+func convertStringToNumeric(strVal string, kind reflect.Kind) any {
+	switch kind {
+	case reflect.Int:
+		if val, err := strconv.ParseInt(strVal, 10, 0); err == nil {
+			return int(val)
+		}
+	case reflect.Int8:
+		if val, err := strconv.ParseInt(strVal, 10, 8); err == nil {
+			return int8(val)
+		}
+	case reflect.Int16:
+		if val, err := strconv.ParseInt(strVal, 10, 16); err == nil {
+			return int16(val)
+		}
+	case reflect.Int32:
+		if val, err := strconv.ParseInt(strVal, 10, 32); err == nil {
+			return int32(val)
+		}
+	case reflect.Int64:
+		if val, err := strconv.ParseInt(strVal, 10, 64); err == nil {
+			return val
+		}
+	case reflect.Uint:
+		if val, err := strconv.ParseUint(strVal, 10, 0); err == nil {
+			return uint(val)
+		}
+	case reflect.Uint8:
+		if val, err := strconv.ParseUint(strVal, 10, 8); err == nil {
+			return uint8(val)
+		}
+	case reflect.Uint16:
+		if val, err := strconv.ParseUint(strVal, 10, 16); err == nil {
+			return uint16(val)
+		}
+	case reflect.Uint32:
+		if val, err := strconv.ParseUint(strVal, 10, 32); err == nil {
+			return uint32(val)
+		}
+	case reflect.Uint64:
+		if val, err := strconv.ParseUint(strVal, 10, 64); err == nil {
+			return val
+		}
+	case reflect.Float32:
+		if val, err := strconv.ParseFloat(strVal, 32); err == nil {
+			return float32(val)
+		}
+	case reflect.Float64:
+		if val, err := strconv.ParseFloat(strVal, 64); err == nil {
+			return val
+		}
+	}
+	return nil
+}
+
+// getZeroValueForNumericKind returns the zero value for a numeric kind
+func getZeroValueForNumericKind(kind reflect.Kind) any {
+	switch kind {
+	case reflect.Int:
+		return int(0)
+	case reflect.Int8:
+		return int8(0)
+	case reflect.Int16:
+		return int16(0)
+	case reflect.Int32:
+		return int32(0)
+	case reflect.Int64:
+		return int64(0)
+	case reflect.Uint:
+		return uint(0)
+	case reflect.Uint8:
+		return uint8(0)
+	case reflect.Uint16:
+		return uint16(0)
+	case reflect.Uint32:
+		return uint32(0)
+	case reflect.Uint64:
+		return uint64(0)
+	case reflect.Float32:
+		return float32(0)
+	case reflect.Float64:
+		return float64(0)
+	}
+	return nil
 }
