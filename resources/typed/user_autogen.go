@@ -62,6 +62,7 @@ type UserRequestBody struct {
 	LeadingGid        int64    `json:"leading_gid,omitempty" yaml:"leading_gid,omitempty" required:"false" doc:"Leading GID"`
 	Local             bool     `json:"local,omitempty" yaml:"local,omitempty" required:"false" doc:"Not in use"`
 	Password          string   `json:"password,omitempty" yaml:"password,omitempty" required:"false" doc:"Password"`
+	S3PoliciesIds     *[]int64 `json:"s3_policies_ids,omitempty" yaml:"s3_policies_ids,omitempty" required:"false" doc:"Specify S3 policies to attach to the user."`
 	S3Superuser       bool     `json:"s3_superuser,omitempty" yaml:"s3_superuser,omitempty" required:"false" doc:"Set to true to give the user S3 superuser permission. In case of conflict with an S3 identity policy attached to the user or to a relevant group, this setting is overridden."`
 	Uid               int64    `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"NFS UID"`
 }

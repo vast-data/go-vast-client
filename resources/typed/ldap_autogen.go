@@ -26,7 +26,7 @@ type Ldap struct {
 // LdapSearchParams represents the search parameters for Ldap operations
 type LdapSearchParams struct {
 	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the LDAP configuration"`
 	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 	Uid      string `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:""`
 
@@ -70,6 +70,7 @@ type LdapRequestBody struct {
 	MatchUser                  string    `json:"match_user,omitempty" yaml:"match_user,omitempty" required:"false" doc:"The attribute to use when querying a provider for a user that matches a user that was already retrieved from another provider. A user entry that contains a matching value in this attribute will be considered the same user as the user previously retrieved."`
 	Method                     string    `json:"method,omitempty" yaml:"method,omitempty" required:"false" doc:"The authentication method configured on the LDAP server for authenticating clients."`
 	MonitorAction              string    `json:"monitor_action,omitempty" yaml:"monitor_action,omitempty" required:"false" doc:"The type of periodic health check that VAST Cluster performs for the Active Directory provider. PING (default, less overhead and impact on the provider) = pings the provider. BIND = binds to the provider."`
+	Name                       string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the LDAP configuration"`
 	NetgroupSearchbase         string    `json:"netgroup_searchbase,omitempty" yaml:"netgroup_searchbase,omitempty" required:"false" doc:"Base DN for netgroup queries."`
 	Port                       int64     `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"The port of the remote LDAP server. Typical values: 389, 636."`
 	PosixAccount               string    `json:"posix_account,omitempty" yaml:"posix_account,omitempty" required:"false" doc:"The object class that defines a user entry on the LDAP server, if different from 'posixAccount'. When binding VAST Cluster to AD, set this parameter to 'user' in order for authorization to work properly."`
