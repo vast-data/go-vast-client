@@ -1957,7 +1957,7 @@ type Component_Ldap struct {
 	MatchUser                  string    `json:"match_user,omitempty" yaml:"match_user,omitempty" required:"false" doc:""`
 	Method                     string    `json:"method,omitempty" yaml:"method,omitempty" required:"false" doc:"Bind Authentication Method"`
 	MonitorAction              string    `json:"monitor_action,omitempty" yaml:"monitor_action,omitempty" required:"false" doc:"The type of periodic health check that VAST Cluster performs for the LDAP provider. PING (default, less overhead and impact on the provider) = pings the provider. BIND = binds to the provider."`
-	Name                       string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Name                       string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the LDAP configuration"`
 	NetgroupSearchbase         string    `json:"netgroup_searchbase,omitempty" yaml:"netgroup_searchbase,omitempty" required:"false" doc:"Base DN for netgroup queries."`
 	Port                       int64     `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"LDAP server port. 389 (LDAP) 636 (LDAPS)"`
 	PosixAccount               string    `json:"posix_account,omitempty" yaml:"posix_account,omitempty" required:"false" doc:""`
@@ -4438,7 +4438,7 @@ type ActiveDirectory_Ldap struct {
 	MatchUser                  string    `json:"match_user,omitempty" yaml:"match_user,omitempty" required:"false" doc:""`
 	Method                     string    `json:"method,omitempty" yaml:"method,omitempty" required:"false" doc:"Bind Authentication Method"`
 	MonitorAction              string    `json:"monitor_action,omitempty" yaml:"monitor_action,omitempty" required:"false" doc:"The type of periodic health check that VAST Cluster performs for the LDAP provider. PING (default, less overhead and impact on the provider) = pings the provider. BIND = binds to the provider."`
-	Name                       string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Name                       string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the LDAP configuration"`
 	NetgroupSearchbase         string    `json:"netgroup_searchbase,omitempty" yaml:"netgroup_searchbase,omitempty" required:"false" doc:"Base DN for netgroup queries."`
 	Port                       int64     `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"LDAP server port. 389 (LDAP) 636 (LDAPS)"`
 	PosixAccount               string    `json:"posix_account,omitempty" yaml:"posix_account,omitempty" required:"false" doc:""`
