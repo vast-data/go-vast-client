@@ -169,12 +169,22 @@ func (*VipPoolForwarding) InitialExtraMode() common.ExtraNavigatorMode {
 	return common.ExtraNavigatorModeCreate
 }
 
-// GetInputs returns the input fields for the create form
+// GetInputs returns the input fields for the create form.
+// The VIP pool name field is pre-populated with the last successfully submitted value.
 func (w *VipPoolForwarding) GetInputs() (common.Inputs, error) {
 	inputs := common.Inputs{}
 
-	// VIP Pool Name input
-	inputs.NewTextInput("vip_pool_name", "Enter VIP pool name (e.g., protocols-pool)", true, "")
+	lastUsed, err := w.db.GetVpnLastUsed()
+	if err != nil {
+		w.auxlog.Printf("Warning: failed to load last used VIP pool name: %v", err)
+	}
+
+	defaultVipPool := ""
+	if lastUsed != nil {
+		defaultVipPool = lastUsed.LastVipPoolName
+	}
+
+	inputs.NewTextInput("vip_pool_name", "Enter VIP pool name (e.g., protocols-pool)", true, defaultVipPool)
 
 	return inputs, nil
 }
@@ -397,6 +407,11 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 
 		if vipPoolName == "" {
 			return nil, fmt.Errorf("VIP pool name cannot be empty")
+		}
+
+		// Persist as the new default for next time the form opens
+		if err := w.db.SaveVpnLastUsedVipPool(vipPoolName); err != nil {
+			w.auxlog.Printf("Warning: failed to save last used VIP pool name: %v", err)
 		}
 
 		// Store the name temporarily for the fetch

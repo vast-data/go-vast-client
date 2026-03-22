@@ -187,3 +187,16 @@ type SudoPassword struct {
 	// Password is the sudo password for the current user
 	Password string `json:"password" gorm:"not null"`
 }
+
+// VpnLastUsed is a singleton row that remembers the most recently submitted
+// values for the two VPN forwarding widgets so they can pre-populate their
+// input fields on next use.
+type VpnLastUsed struct {
+	gorm.Model
+
+	// LastIP is the last IP address submitted in the IP Forwarding widget
+	LastIP string `json:"last_ip" gorm:"size:255"`
+
+	// LastVipPoolName is the last VIP pool name submitted in the VIP Pool Forwarding widget
+	LastVipPoolName string `json:"last_vip_pool_name" gorm:"size:255"`
+}

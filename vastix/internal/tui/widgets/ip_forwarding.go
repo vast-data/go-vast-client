@@ -162,12 +162,22 @@ func (*IpForwarding) InitialExtraMode() common.ExtraNavigatorMode {
 	return common.ExtraNavigatorModeCreate
 }
 
-// GetInputs returns the input fields for the create form
+// GetInputs returns the input fields for the create form.
+// The IP address field is pre-populated with the last successfully submitted value.
 func (w *IpForwarding) GetInputs() (common.Inputs, error) {
 	inputs := common.Inputs{}
 
-	// IP Address input
-	inputs.NewTextInput("ip_address", "Enter IP address (e.g., 192.168.1.100)", true, "")
+	lastUsed, err := w.db.GetVpnLastUsed()
+	if err != nil {
+		w.auxlog.Printf("Warning: failed to load last used IP: %v", err)
+	}
+
+	defaultIP := ""
+	if lastUsed != nil {
+		defaultIP = lastUsed.LastIP
+	}
+
+	inputs.NewTextInput("ip_address", "Enter IP address (e.g., 192.168.1.100)", true, defaultIP)
 
 	return inputs, nil
 }
@@ -273,6 +283,11 @@ func (w *IpForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 		w.targetIP = ipAddress
 		w.privateIPs = []netip.Addr{ip}
 		w.auxlog.Printf("IP address set to: %s", w.targetIP)
+
+		// Persist as the new default for next time the form opens
+		if err := w.db.SaveVpnLastUsedIP(ipAddress); err != nil {
+			w.auxlog.Printf("Warning: failed to save last used IP: %v", err)
+		}
 
 		// Switch to Prompt mode for confirmation
 		w.SetExtraMode(common.ExtraNavigatorModePrompt)

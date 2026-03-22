@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"net"
 	"net/netip"
 	"os"
 	"os/exec"
@@ -38,13 +39,14 @@ var vpnServerDarwinArm64 []byte
 
 // Deployer handles deployment of VPN server to remote machines
 type Deployer struct {
-	writer          io.Writer // Writer for streaming logs to UI (includes multiwriter with auxlog)
-	sshClient       *ssh.Client
-	sshConfig       *ssh.ClientConfig
-	sshHost         string             // SSH host for error messages
-	sshUser         string             // SSH user for error messages
-	heartbeatCancel context.CancelFunc // Cancel function for heartbeat goroutine
-	vipPoolIPs      []netip.Addr       // VIP pool IPs to check during health monitoring
+	writer             io.Writer // Writer for streaming logs to UI (includes multiwriter with auxlog)
+	sshClient          *ssh.Client
+	sshConfig          *ssh.ClientConfig
+	sshHost            string             // SSH host for error messages
+	sshUser            string             // SSH user for error messages
+	heartbeatCancel    context.CancelFunc // Cancel function for heartbeat goroutine
+	sshKeepaliveCancel context.CancelFunc // Cancel function for SSH keepalive goroutine
+	vipPoolIPs         []netip.Addr       // VIP pool IPs to check during health monitoring
 }
 
 // DeploymentConfig contains configuration for remote deployment
@@ -70,7 +72,11 @@ func NewDeployer(writer io.Writer) *Deployer {
 	}
 }
 
-// Connect establishes SSH connection to remote host
+// Connect establishes SSH connection to remote host.
+// TCP keepalive is enabled on the underlying socket to prevent NAT/firewall
+// devices from dropping idle connections after a few minutes of inactivity.
+// An SSH application-level keepalive is also started to detect dead connections
+// quickly and to send traffic through the tunnel so NAT tables stay warm.
 func (d *Deployer) Connect(ctx context.Context, config *DeploymentConfig) error {
 	var authMethods []ssh.AuthMethod
 
@@ -108,21 +114,76 @@ func (d *Deployer) Connect(ctx context.Context, config *DeploymentConfig) error 
 	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
 	d.writef("Connecting to remote host: %s\n", addr)
 
-	client, err := ssh.Dial("tcp", addr, d.sshConfig)
+	// Dial with TCP keepalive so the OS sends keepalive probes when the
+	// connection is idle. This prevents NAT/firewall from silently dropping
+	// the TCP session after ~5-10 minutes of no traffic.
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	tcpConn, err := dialer.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return fmt.Errorf("failed to connect via SSH: %w", err)
 	}
 
+	// Upgrade the TCP connection to SSH
+	ncc, chans, reqs, err := ssh.NewClientConn(tcpConn, addr, d.sshConfig)
+	if err != nil {
+		tcpConn.Close()
+		return fmt.Errorf("failed to establish SSH connection: %w", err)
+	}
+	client := ssh.NewClient(ncc, chans, reqs)
+
 	d.sshClient = client
 	d.sshHost = config.Host
 	d.sshUser = config.Username
+
+	// Start application-level SSH keepalive in addition to TCP keepalive.
+	// This sends data through the connection so NAT tables stay warm even
+	// if the OS-level TCP keepalive interval is very long, and enables fast
+	// detection of dead connections at the SSH layer.
+	keepaliveCtx, keepaliveCancel := context.WithCancel(context.Background())
+	d.sshKeepaliveCancel = keepaliveCancel
+	d.startSSHKeepalive(keepaliveCtx)
+
 	d.writef("SSH connection established\n")
 
 	return nil
 }
 
+// startSSHKeepalive sends periodic SSH-level keepalive requests.
+// These serve two purposes:
+//  1. They pass data through the TCP connection, keeping NAT/firewall
+//     session tables alive even when no real SSH activity is happening.
+//  2. A failed keepalive means the connection is dead, allowing early
+//     detection before the heartbeat mechanism triggers server self-destruction.
+func (d *Deployer) startSSHKeepalive(ctx context.Context) {
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				_, _, err := d.sshClient.SendRequest("keepalive@openssh.com", true, nil)
+				if err != nil {
+					d.writef("Warning: SSH keepalive failed (connection may be lost): %v\n", err)
+					return
+				}
+			}
+		}
+	}()
+}
+
 // Disconnect closes the SSH connection
 func (d *Deployer) Disconnect() error {
+	// Stop application-level keepalive goroutine
+	if d.sshKeepaliveCancel != nil {
+		d.sshKeepaliveCancel()
+		d.sshKeepaliveCancel = nil
+	}
+
 	// Stop heartbeat if running
 	if d.heartbeatCancel != nil {
 		d.heartbeatCancel()
@@ -1004,11 +1065,27 @@ func (d *Deployer) StartHeartbeat(workDir string) error {
 	return nil
 }
 
-// sendHeartbeat sends a single heartbeat signal by updating the timestamp file
+// sendHeartbeat sends a single heartbeat signal by updating the timestamp file.
+// It enforces a hard timeout that is shorter than the server's heartbeat window
+// (12 s) so that a silently-dead SSH connection causes a fast, visible error
+// rather than blocking the goroutine until the OS TCP timeout fires.
 func (d *Deployer) sendHeartbeat(heartbeatFile string) error {
+	const heartbeatSendTimeout = 8 * time.Second
+
 	timestamp := time.Now().Unix()
 	cmd := fmt.Sprintf("echo %d > %s", timestamp, heartbeatFile)
-	return d.runCommand(cmd)
+
+	resultChan := make(chan error, 1)
+	go func() {
+		resultChan <- d.runCommand(cmd)
+	}()
+
+	select {
+	case err := <-resultChan:
+		return err
+	case <-time.After(heartbeatSendTimeout):
+		return fmt.Errorf("heartbeat send timeout after %s (SSH connection likely lost)", heartbeatSendTimeout)
+	}
 }
 
 // writef writes a formatted message to the writer if available

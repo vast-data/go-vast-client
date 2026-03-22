@@ -58,7 +58,7 @@ func New() *Service {
 	}
 
 	// Auto-migrate models
-	if err := db.AutoMigrate(&Profile{}, &ResourceHistory{}, &UserKey{}, &ApiToken{}, &SshConnection{}, &SudoPassword{}); err != nil {
+	if err := db.AutoMigrate(&Profile{}, &ResourceHistory{}, &UserKey{}, &ApiToken{}, &SshConnection{}, &SudoPassword{}, &VpnLastUsed{}); err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 
@@ -611,4 +611,47 @@ func (s *Service) SaveSudoPassword(password string) error {
 // DeleteSudoPassword deletes the sudo password for the current user
 func (s *Service) DeleteSudoPassword() error {
 	return s.db.Where("1 = 1").Delete(&SudoPassword{}).Error
+}
+
+// VpnLastUsed operations
+
+// GetVpnLastUsed retrieves the singleton VpnLastUsed record.
+// Returns an empty struct (not nil) when no record exists yet.
+func (s *Service) GetVpnLastUsed() (*VpnLastUsed, error) {
+	var record VpnLastUsed
+	err := s.db.First(&record).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return &VpnLastUsed{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &record, nil
+}
+
+// SaveVpnLastUsedIP persists the most recently submitted IP address.
+func (s *Service) SaveVpnLastUsedIP(ip string) error {
+	return s.saveVpnLastUsed(func(r *VpnLastUsed) { r.LastIP = ip })
+}
+
+// SaveVpnLastUsedVipPool persists the most recently submitted VIP pool name.
+func (s *Service) SaveVpnLastUsedVipPool(name string) error {
+	return s.saveVpnLastUsed(func(r *VpnLastUsed) { r.LastVipPoolName = name })
+}
+
+// saveVpnLastUsed is the shared upsert helper for VpnLastUsed.
+func (s *Service) saveVpnLastUsed(apply func(*VpnLastUsed)) error {
+	var record VpnLastUsed
+	err := s.db.First(&record).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		apply(&record)
+		return s.db.Create(&record).Error
+	}
+	if err != nil {
+		return err
+	}
+
+	apply(&record)
+	return s.db.Save(&record).Error
 }
