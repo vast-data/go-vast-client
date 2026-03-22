@@ -1,6 +1,7 @@
 package core
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -420,6 +421,180 @@ func TestFlexibleUnmarshal_MixedNumericTypes(t *testing.T) {
 	}
 	if result.Float32 != 0 {
 		t.Errorf("expected Float32 to be 0 (unparseable), got %f", result.Float32)
+	}
+}
+
+// --- Unit tests for the float/int coercion helpers ---
+
+func TestIsIntegerKind(t *testing.T) {
+	intKinds := []reflect.Kind{
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+	}
+	for _, k := range intKinds {
+		if !isIntegerKind(k) {
+			t.Errorf("expected isIntegerKind(%v) == true", k)
+		}
+	}
+
+	nonIntKinds := []reflect.Kind{
+		reflect.Float32, reflect.Float64,
+		reflect.Bool, reflect.String, reflect.Slice, reflect.Struct,
+	}
+	for _, k := range nonIntKinds {
+		if isIntegerKind(k) {
+			t.Errorf("expected isIntegerKind(%v) == false", k)
+		}
+	}
+}
+
+func TestToFloat64(t *testing.T) {
+	cases := []struct {
+		input    any
+		expected float64
+	}{
+		{float32(3.14), float64(float32(3.14))},
+		{float64(3.14), 3.14},
+		{int(42), 42},
+		{int8(8), 8},
+		{int16(16), 16},
+		{int32(32), 32},
+		{int64(64), 64},
+		{uint(1), 1},
+		{uint8(2), 2},
+		{uint16(3), 3},
+		{uint32(4), 4},
+		{uint64(5), 5},
+		{"unknown type", 0}, // unrecognised type → 0
+	}
+
+	for _, c := range cases {
+		got := toFloat64(c.input)
+		if got != c.expected {
+			t.Errorf("toFloat64(%v (%T)): expected %v, got %v", c.input, c.input, c.expected, got)
+		}
+	}
+}
+
+func TestConvertFloatToInteger(t *testing.T) {
+	cases := []struct {
+		f        float64
+		kind     reflect.Kind
+		expected any
+	}{
+		{14.3, reflect.Int, int(14)},
+		{14.9, reflect.Int, int(14)}, // truncates, does not round
+		{-5.7, reflect.Int, int(-5)},
+		{127.9, reflect.Int8, int8(127)},
+		{32767.0, reflect.Int16, int16(32767)},
+		{2147483647.0, reflect.Int32, int32(2147483647)},
+		{1000000000.0, reflect.Int64, int64(1000000000)},
+		{255.9, reflect.Uint8, uint8(255)},
+		{65535.0, reflect.Uint16, uint16(65535)},
+		{4294967295.0, reflect.Uint32, uint32(4294967295)},
+		{100.0, reflect.Uint, uint(100)},
+		{100.0, reflect.Uint64, uint64(100)},
+	}
+
+	for _, c := range cases {
+		got := convertFloatToInteger(c.f, c.kind)
+		if got != c.expected {
+			t.Errorf("convertFloatToInteger(%v, %v): expected %v (%T), got %v (%T)",
+				c.f, c.kind, c.expected, c.expected, got, got)
+		}
+	}
+}
+
+// --- Integration: float value into integer struct field (the original bug) ---
+
+func TestFlexibleUnmarshal_FloatToInt(t *testing.T) {
+	type Component_ProtectedPath struct {
+		RoleChangeProgressPromil int    `json:"role_change_progress_promil"`
+		Name                     string `json:"name"`
+	}
+
+	// 14.3 is a float in JSON but the field expects int — must be truncated to 14
+	jsonData := []byte(`{
+		"role_change_progress_promil": 14.3,
+		"name": "myapp-volume-group-repl-16-0-0-2"
+	}`)
+
+	var result Component_ProtectedPath
+	err := FlexibleUnmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.RoleChangeProgressPromil != 14 {
+		t.Errorf("expected RoleChangeProgressPromil to be 14, got %d", result.RoleChangeProgressPromil)
+	}
+	if result.Name != "myapp-volume-group-repl-16-0-0-2" {
+		t.Errorf("expected Name to be 'myapp-volume-group-repl-16-0-0-2', got %q", result.Name)
+	}
+}
+
+func TestFlexibleUnmarshal_FloatToAllIntKinds(t *testing.T) {
+	type AllInts struct {
+		I   int   `json:"i"`
+		I8  int8  `json:"i8"`
+		I16 int16 `json:"i16"`
+		I32 int32 `json:"i32"`
+		I64 int64 `json:"i64"`
+		U   uint  `json:"u"`
+		U8  uint8 `json:"u8"`
+		U16 uint16 `json:"u16"`
+		U32 uint32 `json:"u32"`
+		U64 uint64 `json:"u64"`
+	}
+
+	jsonData := []byte(`{
+		"i":   1.9,
+		"i8":  2.7,
+		"i16": 3.1,
+		"i32": 4.5,
+		"i64": 5.99,
+		"u":   6.3,
+		"u8":  7.8,
+		"u16": 8.2,
+		"u32": 9.6,
+		"u64": 10.1
+	}`)
+
+	var result AllInts
+	err := FlexibleUnmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.I != 1 {
+		t.Errorf("I: expected 1, got %d", result.I)
+	}
+	if result.I8 != 2 {
+		t.Errorf("I8: expected 2, got %d", result.I8)
+	}
+	if result.I16 != 3 {
+		t.Errorf("I16: expected 3, got %d", result.I16)
+	}
+	if result.I32 != 4 {
+		t.Errorf("I32: expected 4, got %d", result.I32)
+	}
+	if result.I64 != 5 {
+		t.Errorf("I64: expected 5, got %d", result.I64)
+	}
+	if result.U != 6 {
+		t.Errorf("U: expected 6, got %d", result.U)
+	}
+	if result.U8 != 7 {
+		t.Errorf("U8: expected 7, got %d", result.U8)
+	}
+	if result.U16 != 8 {
+		t.Errorf("U16: expected 8, got %d", result.U16)
+	}
+	if result.U32 != 9 {
+		t.Errorf("U32: expected 9, got %d", result.U32)
+	}
+	if result.U64 != 10 {
+		t.Errorf("U64: expected 10, got %d", result.U64)
 	}
 }
 

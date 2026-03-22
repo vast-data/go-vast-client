@@ -77,7 +77,7 @@ func convertValue(value any, targetType reflect.Type) any {
 		return value
 	}
 
-	// If target is a numeric type, handle string values that can't be parsed
+	// If target is a numeric type, handle type mismatches
 	if isNumericKind(targetType.Kind()) {
 		// If value is a string, try to parse it
 		if strVal, ok := value.(string); ok {
@@ -86,6 +86,14 @@ func convertValue(value any, targetType reflect.Type) any {
 			}
 			// If parsing fails, return zero value for the numeric type
 			return getZeroValueForNumericKind(targetType.Kind())
+		}
+		// If target is an integer kind but value is any numeric type, truncate to int.
+		// JSON always produces float64 in map[string]any, but handle all numeric
+		// source types for robustness (float32, int variants, etc.).
+		if isIntegerKind(targetType.Kind()) {
+			if isNumericKind(reflect.TypeOf(value).Kind()) {
+				return convertFloatToInteger(toFloat64(value), targetType.Kind())
+			}
 		}
 	}
 
@@ -233,6 +241,74 @@ func convertStringToNumeric(strVal string, kind reflect.Kind) any {
 		}
 	}
 	return nil
+}
+
+// isIntegerKind returns true if the kind is a signed or unsigned integer type
+func isIntegerKind(kind reflect.Kind) bool {
+	switch kind {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return true
+	}
+	return false
+}
+
+// toFloat64 converts any numeric value to float64
+func toFloat64(value any) float64 {
+	switch v := value.(type) {
+	case float32:
+		return float64(v)
+	case float64:
+		return v
+	case int:
+		return float64(v)
+	case int8:
+		return float64(v)
+	case int16:
+		return float64(v)
+	case int32:
+		return float64(v)
+	case int64:
+		return float64(v)
+	case uint:
+		return float64(v)
+	case uint8:
+		return float64(v)
+	case uint16:
+		return float64(v)
+	case uint32:
+		return float64(v)
+	case uint64:
+		return float64(v)
+	}
+	return 0
+}
+
+// convertFloatToInteger truncates a float64 to the target integer kind
+func convertFloatToInteger(f float64, kind reflect.Kind) any {
+	switch kind {
+	case reflect.Int:
+		return int(f)
+	case reflect.Int8:
+		return int8(f)
+	case reflect.Int16:
+		return int16(f)
+	case reflect.Int32:
+		return int32(f)
+	case reflect.Int64:
+		return int64(f)
+	case reflect.Uint:
+		return uint(f)
+	case reflect.Uint8:
+		return uint8(f)
+	case reflect.Uint16:
+		return uint16(f)
+	case reflect.Uint32:
+		return uint32(f)
+	case reflect.Uint64:
+		return uint64(f)
+	}
+	return int64(f)
 }
 
 // getZeroValueForNumericKind returns the zero value for a numeric kind
