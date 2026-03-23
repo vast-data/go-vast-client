@@ -386,10 +386,10 @@ func (c *Client) CheckTunnelHealth() error {
 	c.mu.RUnlock()
 
 	// Ping the VPN gateway (server IP)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	_, err := c.Ping(ctx, c.config.ServerIP.String(), 5*time.Second)
+	_, err := c.Ping(ctx, c.config.ServerIP.String(), 15*time.Second)
 	if err != nil {
 		return fmt.Errorf("VPN tunnel unhealthy (cannot reach gateway %s): %w", c.config.ServerIP, err)
 	}

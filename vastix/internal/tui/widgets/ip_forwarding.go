@@ -2,10 +2,12 @@ package widgets
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/netip"
 	"os"
+	"strings"
 	"time"
 	"vastix/internal/database"
 	"vastix/internal/msg_types"
@@ -41,7 +43,7 @@ type IpForwarding struct {
 	lastError           error
 
 	// Connection details
-	targetIP       string // Single IP address to route through VPN
+	targetIP       string // Comma-separated display string of forwarded IP addresses
 	remoteHost     string
 	remoteUser     string
 	remotePassword string
@@ -163,21 +165,38 @@ func (*IpForwarding) InitialExtraMode() common.ExtraNavigatorMode {
 }
 
 // GetInputs returns the input fields for the create form.
-// The IP address field is pre-populated with the last successfully submitted value.
+// The IP addresses field is pre-populated with the last successfully submitted values.
 func (w *IpForwarding) GetInputs() (common.Inputs, error) {
 	inputs := common.Inputs{}
 
+	// Load last used IPs from DB and restore them as default chips.
+	// LastIP is stored as a JSON array (e.g. ["10.0.0.1","10.0.0.2"]) or a
+	// comma-separated string for backward compatibility with older records.
+	var defaultIPs []string
 	lastUsed, err := w.db.GetVpnLastUsed()
 	if err != nil {
-		w.auxlog.Printf("Warning: failed to load last used IP: %v", err)
+		w.auxlog.Printf("Warning: failed to load last used IPs: %v", err)
+	} else if lastUsed != nil && lastUsed.LastIP != "" {
+		val := strings.TrimSpace(lastUsed.LastIP)
+		if strings.HasPrefix(val, "[") {
+			// JSON array format
+			_ = json.Unmarshal([]byte(val), &defaultIPs)
+		} else {
+			// Legacy comma-separated format
+			for _, part := range strings.Split(val, ",") {
+				if trimmed := strings.TrimSpace(part); trimmed != "" {
+					defaultIPs = append(defaultIPs, trimmed)
+				}
+			}
+		}
 	}
 
-	defaultIP := ""
-	if lastUsed != nil {
-		defaultIP = lastUsed.LastIP
-	}
-
-	inputs.NewTextInput("ip_address", "Enter IP address (e.g., 192.168.1.100)", true, defaultIP)
+	inputs.NewPrimitivesArrayInput(
+		"ip_address",
+		"Type IP and press , to add more (e.g. 192.168.1.100)",
+		true,
+		defaultIPs,
+	)
 
 	return inputs, nil
 }
@@ -196,16 +215,23 @@ func (w *IpForwarding) ViewPrompt() string {
 	sshHost := selectedRowData.GetStringMust("ssh_host")
 	sshUser := selectedRowData.GetStringMust("ssh_user_name")
 
+	// Build a human-readable IP list for the prompt.
+	ipCount := len(w.privateIPs)
+	ipWord := "IP"
+	if ipCount > 1 {
+		ipWord = fmt.Sprintf("%d IPs", ipCount)
+	}
+
 	// Create the prompt message
 	promptMsg := fmt.Sprintf(
-		"Deploy and connect to IP '%s' via %s (%s@%s)?\n\n"+
+		"Deploy and connect to %s via %s (%s@%s)?\n\n"+
 			"This will:\n"+
 			"  • Deploy VPN server via SSH\n"+
 			"  • Route traffic to %s through VPN tunnel\n"+
-			"  • Allow direct access to the IP address",
+			"  • Allow direct access to the IP address(es)",
 		w.targetIP, sshName, sshUser, sshHost, w.targetIP,
 	)
-	promptTitle := fmt.Sprintf("Connect to IP: %s", w.targetIP)
+	promptTitle := fmt.Sprintf("Connect to %s: %s", ipWord, w.targetIP)
 
 	// Use the prompt adapter to render the prompt
 	width := w.GetWidth()
@@ -256,37 +282,42 @@ func (w *IpForwarding) getSudoPassword() error {
 func (w *IpForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 	w.auxlog.Printf("DEBUG CreateFromInputs: called, needingSudoPassword=%v", w.needingSudoPassword)
 
-	// Step 1: Handle IP address input (first time entering Create mode)
-	if w.targetIP == "" && !w.needingSudoPassword {
-		w.auxlog.Printf("DEBUG CreateFromInputs: extracting IP address from inputs")
+	// Step 1: Handle IP addresses input (first time entering Create mode).
+	// The field is now a PrimitivesArrayInput supporting one or more IPs.
+	if len(w.privateIPs) == 0 && !w.needingSudoPassword {
+		w.auxlog.Printf("DEBUG CreateFromInputs: extracting IP addresses from inputs")
 
-		// Find the ip_address input
-		var ipAddress string
+		var ipStrings []string
 		for _, input := range inputs {
 			if input.GetLabel() == "ip_address" {
-				ipAddress = input.Value()
+				ipStrings = input.List() // returns []string from the chip array
 				break
 			}
 		}
 
-		if ipAddress == "" {
-			return nil, fmt.Errorf("IP address cannot be empty")
+		if len(ipStrings) == 0 {
+			return nil, fmt.Errorf("at least one IP address is required")
 		}
 
-		// Parse and validate IP address
-		ip, err := netip.ParseAddr(ipAddress)
-		if err != nil {
-			return nil, fmt.Errorf("invalid IP address: %w", err)
+		// Parse and validate every IP address.
+		parsed := make([]netip.Addr, 0, len(ipStrings))
+		for _, ipStr := range ipStrings {
+			ip, err := netip.ParseAddr(strings.TrimSpace(ipStr))
+			if err != nil {
+				return nil, fmt.Errorf("invalid IP address %q: %w", ipStr, err)
+			}
+			parsed = append(parsed, ip)
 		}
 
-		// Store the IP address
-		w.targetIP = ipAddress
-		w.privateIPs = []netip.Addr{ip}
-		w.auxlog.Printf("IP address set to: %s", w.targetIP)
+		w.privateIPs = parsed
+		w.targetIP = strings.Join(ipStrings, ", ")
+		w.auxlog.Printf("IP addresses set to: %s", w.targetIP)
 
-		// Persist as the new default for next time the form opens
-		if err := w.db.SaveVpnLastUsedIP(ipAddress); err != nil {
-			w.auxlog.Printf("Warning: failed to save last used IP: %v", err)
+		// Persist as the new default for next time the form opens (JSON array).
+		if raw, err := json.Marshal(ipStrings); err == nil {
+			if err := w.db.SaveVpnLastUsedIP(string(raw)); err != nil {
+				w.auxlog.Printf("Warning: failed to save last used IPs: %v", err)
+			}
 		}
 
 		// Switch to Prompt mode for confirmation
@@ -836,10 +867,10 @@ func (w *IpForwarding) StartHealthMonitoring(ctx context.Context) {
 	}
 
 	go func() {
-		ticker := time.NewTicker(12 * time.Second)
+		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 
-		w.auxlog.Printf("VPN health monitoring started (interval: 12s)")
+		w.auxlog.Printf("VPN health monitoring started (interval: 30s)")
 
 		for {
 			select {

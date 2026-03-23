@@ -313,7 +313,7 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 		User:            sshConn.SshUserName,
 		Auth:            authMethods,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         30 * time.Second,
+		Timeout:         60 * time.Second,
 	}
 
 	// Connect to SSH
@@ -324,8 +324,8 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 	}
 	defer client.Close()
 
-	// Run ping command (2 pings, 2 sec timeout per ping = 10 sec total)
-	pingCmd := fmt.Sprintf("ping -c 2 -W 2 %s", randomIP)
+	// Run ping command (1 ping, 5 sec timeout)
+	pingCmd := fmt.Sprintf("ping -c 1 -W 5 %s", randomIP)
 	w.auxlog.Printf("Running: %s", pingCmd)
 
 	session, err := client.NewSession()
@@ -1091,10 +1091,10 @@ func (w *VipPoolForwarding) StartHealthMonitoring(ctx context.Context) {
 	}
 
 	go func() {
-		ticker := time.NewTicker(12 * time.Second)
+		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 
-		w.auxlog.Printf("VPN health monitoring started (interval: 12s)")
+		w.auxlog.Printf("VPN health monitoring started (interval: 30s)")
 
 		for {
 			select {

@@ -504,7 +504,7 @@ func (s *Server) monitorHeartbeat(ctx context.Context, heartbeatFile string) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	const heartbeatTimeout = 12 * time.Second
+	const heartbeatTimeout = 35 * time.Second
 
 	s.logger.Info("Heartbeat monitoring started",
 		slog.String("timeout", heartbeatTimeout.String()),

@@ -1767,6 +1767,15 @@ func (i *Inputs) NewBoolInput(label, description string, required bool, defaultV
 	i.Append(wrapper)
 }
 
+// NewPrimitivesArrayInput creates and appends a primitives array (chip) input.
+// defaultValues are pre-filled as chips; the user can add more by typing and pressing comma.
+func (i *Inputs) NewPrimitivesArrayInput(label, placeholder string, required bool, defaultValues []string) {
+	arrayInput := NewPrimitivesArrayInputWithTypePlaceholder(defaultValues, "array[string]", placeholder)
+	initialValue := strings.Join(defaultValues, ", ")
+	wrapper := NewPrimitivesArrayInputWrapper(label, arrayInput, required, initialValue)
+	i.Append(wrapper)
+}
+
 // NewInt64Input creates and appends an int64 input with standard defaults
 func (i *Inputs) NewInt64Input(label, placeholder string, required bool, defaultValue int64) {
 	input := NewInt64Input("") // Create with empty initial value

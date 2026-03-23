@@ -108,7 +108,7 @@ func (d *Deployer) Connect(ctx context.Context, config *DeploymentConfig) error 
 		User:            config.Username,
 		Auth:            authMethods,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         30 * time.Second,
+		Timeout:         60 * time.Second,
 	}
 
 	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
@@ -118,7 +118,7 @@ func (d *Deployer) Connect(ctx context.Context, config *DeploymentConfig) error 
 	// connection is idle. This prevents NAT/firewall from silently dropping
 	// the TCP session after ~5-10 minutes of no traffic.
 	dialer := &net.Dialer{
-		Timeout:   30 * time.Second,
+		Timeout:   60 * time.Second,
 		KeepAlive: 30 * time.Second,
 	}
 	tcpConn, err := dialer.DialContext(ctx, "tcp", addr)
@@ -1038,10 +1038,10 @@ func (d *Deployer) StartHeartbeat(workDir string) error {
 
 	// Start heartbeat goroutine
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
+		ticker := time.NewTicker(10 * time.Second)
 		defer ticker.Stop()
 
-		d.writef("Heartbeat monitoring started (interval: 5s)\n")
+		d.writef("Heartbeat monitoring started (interval: 10s)\n")
 
 		// Send initial heartbeat
 		if err := d.sendHeartbeat(heartbeatFile); err != nil {
@@ -1066,25 +1066,55 @@ func (d *Deployer) StartHeartbeat(workDir string) error {
 }
 
 // sendHeartbeat sends a single heartbeat signal by updating the timestamp file.
-// It enforces a hard timeout that is shorter than the server's heartbeat window
-// (12 s) so that a silently-dead SSH connection causes a fast, visible error
-// rather than blocking the goroutine until the OS TCP timeout fires.
+// It enforces a hard timeout shorter than the server's heartbeat window so that
+// a slow or dead SSH connection causes a fast, visible error.
+// The timeout budget must satisfy:  heartbeat_interval + heartbeatSendTimeout < server_heartbeatTimeout
+//   10s  +  20s  =  30s  <  35s  ✓
 func (d *Deployer) sendHeartbeat(heartbeatFile string) error {
-	const heartbeatSendTimeout = 8 * time.Second
+	const heartbeatSendTimeout = 20 * time.Second
+
+	ctx, cancel := context.WithTimeout(context.Background(), heartbeatSendTimeout)
+	defer cancel()
 
 	timestamp := time.Now().Unix()
 	cmd := fmt.Sprintf("echo %d > %s", timestamp, heartbeatFile)
+	return d.runCommandWithContext(ctx, cmd)
+}
 
-	resultChan := make(chan error, 1)
+// runCommandWithContext runs a remote command and cancels it (by closing the SSH
+// session) when ctx is done.  Unlike runCommand, this guarantees no goroutine
+// or SSH-session leak when the caller's timeout fires.
+func (d *Deployer) runCommandWithContext(ctx context.Context, cmd string) error {
+	session, err := d.sshClient.NewSession()
+	if err != nil {
+		return fmt.Errorf("failed to create SSH session: %w", err)
+	}
+
+	type result struct{ err error }
+	ch := make(chan result, 1)
+
 	go func() {
-		resultChan <- d.runCommand(cmd)
+		out, err := session.CombinedOutput(cmd)
+		if err != nil {
+			ch <- result{fmt.Errorf("command failed: %w\nOutput: %s", err, string(out))}
+			return
+		}
+		ch <- result{}
 	}()
 
 	select {
-	case err := <-resultChan:
-		return err
-	case <-time.After(heartbeatSendTimeout):
-		return fmt.Errorf("heartbeat send timeout after %s (SSH connection likely lost)", heartbeatSendTimeout)
+	case r := <-ch:
+		session.Close()
+		return r.err
+	case <-ctx.Done():
+		// Close the session so CombinedOutput unblocks and the goroutine exits.
+		session.Close()
+		// Give the goroutine a moment to drain before we return.
+		select {
+		case <-ch:
+		case <-time.After(500 * time.Millisecond):
+		}
+		return fmt.Errorf("command timed out (%w)", ctx.Err())
 	}
 }
 
@@ -1136,7 +1166,7 @@ func (d *Deployer) CheckSSHHealth() error {
 	}
 
 	// Use a context with timeout to prevent blocking indefinitely
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	// Channel to receive the result
@@ -1156,8 +1186,8 @@ func (d *Deployer) CheckSSHHealth() error {
 			// Pick a random IP
 			randomIP := d.vipPoolIPs[rand.Intn(len(d.vipPoolIPs))]
 
-			// Ping the IP (1 ping, 2 sec timeout, no output logged)
-			pingCmd := fmt.Sprintf("ping -c 1 -W 2 %s > /dev/null 2>&1", randomIP)
+			// Ping the IP (1 ping, 5 sec timeout, no output logged)
+			pingCmd := fmt.Sprintf("ping -c 1 -W 5 %s > /dev/null 2>&1", randomIP)
 			if err := session.Run(pingCmd); err != nil {
 				resultChan <- fmt.Errorf("VIP pool IP %s unreachable: %w", randomIP, err)
 				return
