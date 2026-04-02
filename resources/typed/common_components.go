@@ -4392,14 +4392,15 @@ type Component_Warnings struct {
 // Component_Webhook represents the OpenAPI component schema
 // Component: #/components/schemas/Webhook
 type Component_Webhook struct {
-	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the webhook"`
-	CertificateId   int64  `json:"certificate_id,omitempty" yaml:"certificate_id,omitempty" required:"false" doc:"ID of certificate used to secure the webhook"`
-	CertificateName string `json:"certificate_name,omitempty" yaml:"certificate_name,omitempty" required:"false" doc:"Name of the certificate used to secure the webhook"`
-	Data            string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Webhook data"`
-	Enabled         bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"If true, the webhook is enabled."`
-	Id              int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Webhook ID"`
-	Method          string `json:"method,omitempty" yaml:"method,omitempty" required:"false" doc:"Webhook compress_method"`
-	Url             string `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Webhook URL"`
+	Name            string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the webhook"`
+	CertificateId   int64             `json:"certificate_id,omitempty" yaml:"certificate_id,omitempty" required:"false" doc:"ID of certificate used to secure the webhook"`
+	CertificateName string            `json:"certificate_name,omitempty" yaml:"certificate_name,omitempty" required:"false" doc:"Name of the certificate used to secure the webhook"`
+	Data            string            `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Webhook data"`
+	Enabled         bool              `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"If true, the webhook is enabled."`
+	Headers         map[string]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:""`
+	Id              int64             `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Webhook ID"`
+	Method          string            `json:"method,omitempty" yaml:"method,omitempty" required:"false" doc:"Webhook compress_method"`
+	Url             string            `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Webhook URL"`
 }
 
 // -----------------------------------------------------
