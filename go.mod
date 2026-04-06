@@ -7,7 +7,7 @@ toolchain go1.24.4
 require (
 	github.com/bndr/gotabulate v1.1.2
 	github.com/getkin/kin-openapi v0.134.0
-	github.com/hashicorp/go-version v1.8.0
+	github.com/hashicorp/go-version v1.9.0
 )
 
 require (
