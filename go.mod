@@ -1,6 +1,6 @@
 module github.com/vast-data/go-vast-client
 
-go 1.22
+go 1.25
 
 require (
 	github.com/bndr/gotabulate v1.1.2
