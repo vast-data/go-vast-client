@@ -105,8 +105,7 @@ func (s *Server) Start(ctx context.Context) error {
 
 	s.logger.Info("Using WireGuard", slog.String("command", wgCmd))
 
-	// Create interface configuration
-	// Use last 2 digits of port for interface name (e.g., port 51821 → wg21)
+	// Interface name: last 2 digits of port (e.g., port 51821 → wg21)
 	ifaceName := fmt.Sprintf("wg%d", s.config.ListenPort%100)
 	configPath := filepath.Join(s.configDir, "wg.conf")
 
@@ -138,8 +137,24 @@ func (s *Server) Start(ctx context.Context) error {
 	ctxWithCancel, cancel := context.WithCancel(ctx)
 	s.cancel = cancel
 
-	// Start wireguard-go as subprocess
-	if strings.Contains(wgCmd, "wireguard-go") {
+	if wgCmd == "kernel" {
+		// ── Kernel module path ──────────────────────────────────────────────
+		// Create the interface via the kernel module, then configure it with
+		// `wg setconf`.  No subprocess is started; the interface lives until
+		// we explicitly delete it in Stop().
+		s.logger.Info("Creating WireGuard interface via kernel module", slog.String("interface", ifaceName))
+		if err := s.createKernelInterface(ifaceName); err != nil {
+			s.logFile.Close()
+			return fmt.Errorf("failed to create WireGuard interface: %w", err)
+		}
+		if err := s.configureInterface(ifaceName, configPath); err != nil {
+			s.deleteInterface(ifaceName) //nolint:errcheck
+			s.logFile.Close()
+			return fmt.Errorf("failed to configure interface: %w", err)
+		}
+		// No subprocess PID to track in kernel mode.
+	} else {
+		// ── wireguard-go userspace path ──────────────────────────────────────
 		s.process = exec.CommandContext(ctxWithCancel, wgCmd, "-f", ifaceName)
 		s.process.Stdout = io.MultiWriter(s.logFile, logWriter{s.logger, slog.LevelInfo})
 		s.process.Stderr = io.MultiWriter(s.logFile, logWriter{s.logger, slog.LevelError})
@@ -149,41 +164,33 @@ func (s *Server) Start(ctx context.Context) error {
 			return fmt.Errorf("failed to start wireguard-go: %w", err)
 		}
 
-		// Wait for interface to be created
+		// Wait for the tun interface to appear before configuring it.
 		time.Sleep(500 * time.Millisecond)
 
-		// Configure the interface
 		if err := s.configureInterface(ifaceName, configPath); err != nil {
 			s.Stop()
 			return fmt.Errorf("failed to configure interface: %w", err)
 		}
-	} else {
-		// Using kernel module with wg-quick
-		return fmt.Errorf("kernel module not yet supported, please use wireguard-go")
-	}
 
-	// Write PID file
-	if err := os.WriteFile(s.pidFile, []byte(fmt.Sprintf("%d", s.process.Process.Pid)), 0600); err != nil {
-		s.logger.Warn("Failed to write PID file", slog.Any("error", err))
-	}
-
-	s.mu.Lock()
-	s.running = true
-	s.mu.Unlock()
-
-	// Monitor process in background
-	s.wg.Add(1)
-	go func() {
-		defer s.wg.Done()
-		if err := s.process.Wait(); err != nil {
-			if ctxWithCancel.Err() == nil {
-				s.logger.Error("VPN process exited unexpectedly", slog.Any("error", err))
-			}
+		// Write PID file (wireguard-go mode only)
+		if err := os.WriteFile(s.pidFile, []byte(fmt.Sprintf("%d", s.process.Process.Pid)), 0600); err != nil {
+			s.logger.Warn("Failed to write PID file", slog.Any("error", err))
 		}
-		s.mu.Lock()
-		s.running = false
-		s.mu.Unlock()
-	}()
+
+		// Monitor the wireguard-go subprocess in the background.
+		s.wg.Add(1)
+		go func() {
+			defer s.wg.Done()
+			if err := s.process.Wait(); err != nil {
+				if ctxWithCancel.Err() == nil {
+					s.logger.Error("VPN process exited unexpectedly", slog.Any("error", err))
+				}
+			}
+			s.mu.Lock()
+			s.running = false
+			s.mu.Unlock()
+		}()
+	}
 
 	// Monitor heartbeat for self-destruction (if heartbeat file is set)
 	if s.heartbeatFile != "" {
@@ -348,6 +355,16 @@ AllowedIPs = %s
 	}
 
 	return os.WriteFile(path, []byte(config), 0600)
+}
+
+// createKernelInterface creates a WireGuard network interface using the kernel
+// module.  This is equivalent to `ip link add <name> type wireguard`.
+func (s *Server) createKernelInterface(ifaceName string) error {
+	cmd := exec.Command("ip", "link", "add", ifaceName, "type", "wireguard")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("ip link add %s type wireguard: %w\nOutput: %s", ifaceName, err, string(output))
+	}
+	return nil
 }
 
 // configureInterface configures the WireGuard interface

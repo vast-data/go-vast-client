@@ -164,7 +164,7 @@ func main() {
 	// Set heartbeat file if provided
 	if *heartbeatFile != "" {
 		srv.SetHeartbeatFile(*heartbeatFile)
-		logger.Info("Heartbeat self-destruction enabled", slog.String("file", *heartbeatFile), slog.String("timeout", "15s"))
+		logger.Info("Heartbeat self-destruction enabled", slog.String("file", *heartbeatFile), slog.String("timeout", "35s"))
 	}
 
 	// Log server configuration

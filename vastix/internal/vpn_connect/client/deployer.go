@@ -677,42 +677,38 @@ func (d *Deployer) ensureWireGuard(ctx context.Context) error {
 		d.writef("✓ WireGuard kernel module available\n")
 	}
 
-	// Check 2: wireguard-go (userspace implementation) - REQUIRED for VPN server
-	// The VPN server code currently only supports wireguard-go, not kernel module
-	d.writef("Checking for wireguard-go (userspace implementation - required for VPN server)...\n")
-	checkWgGo := "which wireguard-go"
-	wgGoAvailable := d.runCommand(checkWgGo) == nil
-	if wgGoAvailable {
-		d.writef("✓ wireguard-go available\n")
-	} else {
-		d.writef("wireguard-go not found (will install)\n")
-	}
-
-	// Check 3: wg command exists (needed by wireguard-go)
-	// ALWAYS check this, even if wireguard-go is already installed
-	d.writef("Checking for wg command (needed by wireguard-go)...\n")
+	// Check 2: wg command (needed by server to call `wg setconf` / `wg set`)
+	d.writef("Checking for wg command...\n")
 	checkWg := "which wg"
 	wgExists := d.runCommand(checkWg) == nil
-
-	// Install wireguard-tools if wg command doesn't exist
-	// wireguard-go needs the wg command to configure interfaces
 	if !wgExists {
 		d.writef("wg command not found, installing WireGuard tools...\n")
 		if err := d.installWireGuard(ctx); err != nil {
 			return err
 		}
+		wgExists = true
 	} else {
 		d.writef("✓ wg command available\n")
 	}
 
-	// If wireguard-go is already available and wg command exists, we're done
-	if wgGoAvailable {
-		d.writef("✓ All WireGuard components ready\n")
+	// If kernel module is available and wg exists we have everything the server
+	// needs.  Do NOT install wireguard-go on top — running it on kernels with
+	// native WireGuard support causes "sendmmsg: invalid argument" errors.
+	if kernelAvailable && wgExists {
+		d.writef("✓ All WireGuard components ready (kernel module)\n")
 		return nil
 	}
 
-	// Install wireguard-go (required by VPN server)
-	d.writef("Installing wireguard-go (required by VPN server)...\n")
+	// Kernel module not available: fall back to wireguard-go (userspace).
+	d.writef("Checking for wireguard-go (userspace fallback)...\n")
+	wgGoAvailable := d.runCommand("which wireguard-go") == nil
+	if wgGoAvailable {
+		d.writef("✓ wireguard-go available\n")
+		d.writef("✓ All WireGuard components ready (wireguard-go)\n")
+		return nil
+	}
+
+	d.writef("wireguard-go not found, installing...\n")
 	return d.installWireGuardGo(ctx)
 }
 

@@ -129,17 +129,38 @@ func detectLinuxDistro() (string, error) {
 	return "", fmt.Errorf("could not determine Linux distribution")
 }
 
-// GetWireGuardCommand returns the appropriate WireGuard command
+// HasKernelWireGuard checks whether the WireGuard kernel module is available on
+// the running system. It first checks the fast sysfs path and then tries a
+// modprobe (which is a no-op if the module cannot be loaded).
+func HasKernelWireGuard() bool {
+	// Fast path: module is already loaded.
+	if _, err := os.Stat("/sys/module/wireguard"); err == nil {
+		return true
+	}
+	// Try to load the module; the server runs as root so this is allowed.
+	// This is a safe no-op on kernels that don't have the module at all.
+	if err := exec.Command("modprobe", "wireguard").Run(); err == nil {
+		return true
+	}
+	return false
+}
+
+// GetWireGuardCommand returns the appropriate WireGuard command.
+// Returns the sentinel string "kernel" when the native kernel module is
+// available (preferred over wireguard-go to avoid the sendmmsg issue),
+// otherwise returns the path to wireguard-go.
 func GetWireGuardCommand() (string, error) {
-	// Prefer wireguard-go (userspace) for better compatibility
+	// Kernel module is the reliable choice: it avoids the
+	// "sendmmsg: invalid argument" errors that wireguard-go produces on
+	// kernels with native WireGuard support.
+	if HasKernelWireGuard() {
+		return "kernel", nil
+	}
+
+	// Fall back to wireguard-go (userspace implementation).
 	if path, err := exec.LookPath("wireguard-go"); err == nil {
 		return path, nil
 	}
 
-	// Fallback to kernel module
-	if path, err := exec.LookPath("wg"); err == nil {
-		return path, nil
-	}
-
-	return "", fmt.Errorf("no WireGuard installation found")
+	return "", fmt.Errorf("no WireGuard installation found (kernel module unavailable and wireguard-go not in PATH)")
 }
