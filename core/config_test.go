@@ -17,31 +17,25 @@ func TestVMSConfig_Validate(t *testing.T) {
 		config.Validate(WithHost, WithAuth)
 	})
 
-	t.Run("missing host panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Expected panic for missing host")
-			}
-		}()
+	t.Run("missing host returns error", func(t *testing.T) {
 		config := &VMSConfig{
 			Port:     443,
 			Username: "admin",
 			Password: "password",
 		}
-		config.Validate(WithHost)
+		if err := config.Validate(WithHost); err == nil {
+			t.Error("Expected error for missing host, got nil")
+		}
 	})
 
 	t.Run("missing auth returns error", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Expected panic for missing auth")
-			}
-		}()
 		config := &VMSConfig{
 			Host: "localhost",
 			Port: 443,
 		}
-		config.Validate(WithAuth)
+		if err := config.Validate(WithAuth); err == nil {
+			t.Error("Expected error for missing auth, got nil")
+		}
 	})
 }
 
@@ -86,14 +80,11 @@ func TestWithHost(t *testing.T) {
 		}
 	})
 
-	t.Run("empty host panics", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Expected panic for empty host")
-			}
-		}()
+	t.Run("empty host returns error", func(t *testing.T) {
 		config := &VMSConfig{Host: ""}
-		_ = WithHost(config)
+		if err := WithHost(config); err == nil {
+			t.Error("Expected error for empty host, got nil")
+		}
 	})
 }
 
