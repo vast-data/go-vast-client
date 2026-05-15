@@ -385,7 +385,7 @@ type UntypedVMSRest struct {
 }
 
 func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
-	config.Validate(
+	if err := config.Validate(
 		core.WithAuth,
 		core.WithHost,
 		core.WithUserAgent,
@@ -394,7 +394,9 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 		core.WithTimeout(time.Second*30),
 		core.WithMaxConnections(10),
 		core.WithPort(443),
-	)
+	); err != nil {
+		return nil, err
+	}
 	session, err := core.NewVMSSession(config)
 	if err != nil {
 		return nil, err

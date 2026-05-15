@@ -76,13 +76,14 @@ type VMSConfig struct {
 type VMSConfigFunc func(*VMSConfig) error
 
 // Validate applies the given VMSConfigFunc validators to the config.
-// Panics if any validator returns an error.
-func (config *VMSConfig) Validate(validators ...VMSConfigFunc) {
+// Returns the first error encountered, or nil if all validators pass.
+func (config *VMSConfig) Validate(validators ...VMSConfigFunc) error {
 	for _, fn := range validators {
 		if err := fn(config); err != nil {
-			panic(err)
+			return err
 		}
 	}
+	return nil
 }
 
 // WithTimeout returns a VMSConfigFunc that sets a default timeout if none is provided.
@@ -107,10 +108,10 @@ func WithMaxConnections(maxConnections int) VMSConfigFunc {
 }
 
 // WithHost validates that the Host field is not empty.
-// Panics if Host is an empty string.
+// Returns an error if Host is an empty string.
 func WithHost(config *VMSConfig) error {
 	if config.Host == "" {
-		panic("host cannot be empty string")
+		return errors.New("host cannot be empty string")
 	}
 	return nil
 }
