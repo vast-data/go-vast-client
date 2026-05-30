@@ -165,9 +165,10 @@ func structToMap(item interface{}) map[string]interface{} {
 				res[tagName] = nil
 			} else if field.Elem().Kind() == reflect.Struct {
 				// Pointer to struct - recursively process
+				if omitEmpty && field.Elem().IsZero() {
+					continue
+				}
 				nestedMap := structToMap(field.Interface())
-				// Note: JSON marshaling includes empty structs as {} even with omitempty
-				// So we always include nested structs, never omit them
 				res[tagName] = nestedMap
 			} else {
 				// Pointer to primitive - dereference it
@@ -178,10 +179,11 @@ func structToMap(item interface{}) map[string]interface{} {
 			}
 
 		case v.Field(i).Type.Kind() == reflect.Struct:
-			// Direct struct (not pointer)
+			// Direct struct (not pointer): honour omitempty by checking IsZero.
+			if omitEmpty && field.IsZero() {
+				continue
+			}
 			nestedMap := structToMap(fieldValue)
-			// Note: JSON marshaling includes empty structs as {} even with omitempty
-			// So we always include nested structs, never omit them
 			res[tagName] = nestedMap
 
 		case field.Kind() == reflect.Slice || field.Kind() == reflect.Array:

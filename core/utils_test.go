@@ -83,3 +83,58 @@ func TestToBool(t *testing.T) {
 		})
 	}
 }
+
+// TestNewParamsFromStruct_OmitEmptyNestedStruct reproduces the bug from GitHub issue #52:
+// a zero-value nested struct tagged omitempty must not appear in the serialized params.
+func TestNewParamsFromStruct_OmitEmptyNestedStruct(t *testing.T) {
+	type StaticLimits struct {
+		ReadBwMbps *int64 `json:"read_bw_mbps,omitempty"`
+	}
+	type Qos struct {
+		StaticLimits StaticLimits `json:"static_limits,omitempty"`
+	}
+	type TenantBody struct {
+		Name string `json:"name"`
+		Qos  Qos    `json:"qos,omitempty"`
+	}
+
+	params, err := NewParamsFromStruct(&TenantBody{Name: "my-tenant"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if _, ok := params["qos"]; ok {
+		t.Errorf("expected 'qos' to be omitted when zero, but it was included: %v", params["qos"])
+	}
+	if params["name"] != "my-tenant" {
+		t.Errorf("expected name=my-tenant, got %v", params["name"])
+	}
+}
+
+// TestNewParamsFromStruct_IncludeNonZeroNestedStruct verifies that a non-zero
+// nested struct is still serialized even when tagged omitempty.
+func TestNewParamsFromStruct_IncludeNonZeroNestedStruct(t *testing.T) {
+	type StaticLimits struct {
+		ReadBwMbps *int64 `json:"read_bw_mbps,omitempty"`
+	}
+	type Qos struct {
+		StaticLimits StaticLimits `json:"static_limits,omitempty"`
+	}
+	type TenantBody struct {
+		Name string `json:"name"`
+		Qos  Qos    `json:"qos,omitempty"`
+	}
+
+	mbps := int64(100)
+	params, err := NewParamsFromStruct(&TenantBody{
+		Name: "my-tenant",
+		Qos:  Qos{StaticLimits: StaticLimits{ReadBwMbps: &mbps}},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if _, ok := params["qos"]; !ok {
+		t.Errorf("expected 'qos' to be present when non-zero, but it was omitted")
+	}
+}
