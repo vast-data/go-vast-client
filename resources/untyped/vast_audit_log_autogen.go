@@ -66,6 +66,45 @@ func (v *VastAuditLog) VastAuditLogQueryData_GET(params core.Params) (core.Recor
 	return v.VastAuditLogQueryDataWithContext_GET(v.Rest.GetCtx(), params)
 }
 
+// VastAuditLogQueryDataWithContext_POST
+// method: POST
+// url: /vastauditlog/query_data/
+// summary: Queries the VAST Audit log.
+//
+// Params:
+//   - page
+//   - limit
+//   - ordering
+//
+// Body:
+//   - fields: Defines which fields should be displayed
+//   - filters: Defines the filters
+func (v *VastAuditLog) VastAuditLogQueryDataWithContext_POST(ctx context.Context, params core.Params, body core.Params) (core.Record, error) {
+	resourcePath := "/vastauditlog/query_data/"
+	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, params, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// VastAuditLogQueryData_POST
+// method: POST
+// url: /vastauditlog/query_data/
+// summary: Queries the VAST Audit log.
+//
+// Params:
+//   - page
+//   - limit
+//   - ordering
+//
+// Body:
+//   - fields: Defines which fields should be displayed
+//   - filters: Defines the filters
+func (v *VastAuditLog) VastAuditLogQueryData_POST(params core.Params, body core.Params) (core.Record, error) {
+	return v.VastAuditLogQueryDataWithContext_POST(v.Rest.GetCtx(), params, body)
+}
+
 // VastAuditLogStatsWithContext_GET
 // method: GET
 // url: /vastauditlog/stats/

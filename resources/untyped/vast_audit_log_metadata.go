@@ -28,6 +28,14 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"VastAuditLog",                // resource type (Go struct name)
+		"VastAuditLogQueryData_POST",  // method name
+		"POST",                        // HTTP verb
+		"/vastauditlog/query_data/",   // URL path with placeholders
+		"Queries the VAST Audit log.", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"VastAuditLog",          // resource type (Go struct name)
 		"VastAuditLogStats_GET", // method name
 		"GET",                   // HTTP verb

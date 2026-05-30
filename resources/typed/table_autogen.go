@@ -341,4 +341,5 @@ func (r *Table) TableShow_GET(params *TableShow_GET_Body) (*TableShow_GET_Model,
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - CREATE operation excluded: POST tables has no response schema and doesn't return 204 NO CONTENT
+//   - Extra method POST /tables/load_from_file/ skipped: POST /tables/load_from_file/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /tables/load_from_file/
 //   - UPDATE operation excluded: PATCH/PUT /tables/{id}/ has no response schema and doesn't return 204 NO CONTENT

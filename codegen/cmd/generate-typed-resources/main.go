@@ -918,6 +918,20 @@ func main() {
 	configs := restParser.GetAllConfigs()
 	fmt.Printf("Found %d resource configurations in rest/untyped_rest.go\n", len(configs))
 
+	// Auto-discover extra methods from the OpenAPI schema for every resource.
+	// This finds all non-CRUD paths (e.g. /activedirectory/{id}/refresh/) and adds
+	// them automatically, so +apiall:extraMethod: annotations are no longer required.
+	// Use +apiexclude:extraMethod:METHOD=/path/ on the field to opt out a specific path.
+	fmt.Println("Auto-discovering extra methods from OpenAPI schema...")
+	if err := restParser.AutoDiscoverExtraMethods(); err != nil {
+		log.Fatalf("Failed to auto-discover extra methods: %v", err)
+	}
+	totalExtra := 0
+	for _, c := range configs {
+		totalExtra += len(c.ExtraMethods)
+	}
+	fmt.Printf("Auto-discovery complete: %d extra method entries across all resources\n", totalExtra)
+
 	// STEP 2: Parse the input directory to find resources with APITyped markers
 	parser := vastparser.NewVastResourceParser()
 	resources, err := parser.ParseDirectory(inputDir)

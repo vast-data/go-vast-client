@@ -368,6 +368,37 @@ func (c *Cluster) ClusterCeleryStatus_GET(id any) (core.Record, error) {
 	return c.ClusterCeleryStatusWithContext_GET(c.Rest.GetCtx(), id)
 }
 
+// ClusterCloseOpenFilesWithContext_POST
+// method: POST
+// url: /clusters/close_open_files/
+// summary: Close open files
+//
+// Body:
+//   - paths: Files paths
+//   - protocol: Protocol type
+//   - tenant_id: Tenant ID
+func (c *Cluster) ClusterCloseOpenFilesWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+	resourcePath := "/clusters/close_open_files/"
+	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ClusterCloseOpenFiles_POST
+// method: POST
+// url: /clusters/close_open_files/
+// summary: Close open files
+//
+// Body:
+//   - paths: Files paths
+//   - protocol: Protocol type
+//   - tenant_id: Tenant ID
+func (c *Cluster) ClusterCloseOpenFiles_POST(body core.Params) (core.Record, error) {
+	return c.ClusterCloseOpenFilesWithContext_POST(c.Rest.GetCtx(), body)
+}
+
 // ClusterCloseProtocolHandleWithContext_DELETE
 // method: DELETE
 // url: /clusters/close_protocol_handle/
@@ -916,6 +947,39 @@ func (c *Cluster) ClusterListTenantsRemote_GET(params core.Params) (core.Record,
 	return c.ClusterListTenantsRemoteWithContext_GET(c.Rest.GetCtx(), params)
 }
 
+// ClusterLocksWithContext_DELETE
+// method: DELETE
+// url: /clusters/{id}/locks/
+// summary: Deletes NLM Locks
+//
+// Body:
+//   - lock_type: Lock type. Specify if unlock_type is SINGLE.
+//   - path: The full path to a locked file, formed as: VIEW_PATH/FILE_PATH, where VIEW_PATH is the VAST Cluster view path, and FILE_PATH is the client path to a locked file, relative to the mount point.
+//   - tenant_id
+//   - unlock_id: Unlock ID. Specify if unlock_type is SINGLE.
+//   - unlock_type: The type of unlock operation to perform. 'SINGLE' unlocks a single specified lock, 'ALL' unlocks all locks.
+func (c *Cluster) ClusterLocksWithContext_DELETE(ctx context.Context, id any, body core.Params) error {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "locks")
+	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, body)
+	return err
+
+}
+
+// ClusterLocks_DELETE
+// method: DELETE
+// url: /clusters/{id}/locks/
+// summary: Deletes NLM Locks
+//
+// Body:
+//   - lock_type: Lock type. Specify if unlock_type is SINGLE.
+//   - path: The full path to a locked file, formed as: VIEW_PATH/FILE_PATH, where VIEW_PATH is the VAST Cluster view path, and FILE_PATH is the client path to a locked file, relative to the mount point.
+//   - tenant_id
+//   - unlock_id: Unlock ID. Specify if unlock_type is SINGLE.
+//   - unlock_type: The type of unlock operation to perform. 'SINGLE' unlocks a single specified lock, 'ALL' unlocks all locks.
+func (c *Cluster) ClusterLocks_DELETE(id any, body core.Params) error {
+	return c.ClusterLocksWithContext_DELETE(c.Rest.GetCtx(), id, body)
+}
+
 // ClusterLocksWithContext_POST
 // method: POST
 // url: /clusters/{id}/locks/
@@ -1325,6 +1389,33 @@ func (c *Cluster) ClusterShardExpand_POST(body core.Params) (core.Record, error)
 	return c.ClusterShardExpandWithContext_POST(c.Rest.GetCtx(), body)
 }
 
+// ClusterShouldUploadWithContext_POST
+// method: POST
+// url: /clusters/{id}/should_upload/
+// summary: Detect Need for Bundle Upload
+//
+// Body:
+//   - bundle_sha256: sha256 sum of bundle
+func (c *Cluster) ClusterShouldUploadWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "should_upload")
+	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ClusterShouldUpload_POST
+// method: POST
+// url: /clusters/{id}/should_upload/
+// summary: Detect Need for Bundle Upload
+//
+// Body:
+//   - bundle_sha256: sha256 sum of bundle
+func (c *Cluster) ClusterShouldUpload_POST(id any, body core.Params) (core.Record, error) {
+	return c.ClusterShouldUploadWithContext_POST(c.Rest.GetCtx(), id, body)
+}
+
 // ClusterStopUpgradeWithContext_POST
 // method: POST
 // url: /clusters/{id}/stop_upgrade/
@@ -1410,6 +1501,35 @@ func (c *Cluster) ClusterUnfreezeWithContext_POST(ctx context.Context, id any, b
 //   - token: Token
 func (c *Cluster) ClusterUnfreeze_POST(id any, body core.Params) error {
 	return c.ClusterUnfreezeWithContext_POST(c.Rest.GetCtx(), id, body)
+}
+
+// ClusterUpdatePollingIntervalWithContext_PATCH
+// method: PATCH
+// url: /clusters/{id}/update_polling_interval/
+// summary: Change interval for a polling task
+//
+// Body:
+//   - interval: New interval for polling task
+//   - task_name: Name of polling task
+func (c *Cluster) ClusterUpdatePollingIntervalWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "update_polling_interval")
+	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ClusterUpdatePollingInterval_PATCH
+// method: PATCH
+// url: /clusters/{id}/update_polling_interval/
+// summary: Change interval for a polling task
+//
+// Body:
+//   - interval: New interval for polling task
+//   - task_name: Name of polling task
+func (c *Cluster) ClusterUpdatePollingInterval_PATCH(id any, body core.Params) (core.Record, error) {
+	return c.ClusterUpdatePollingIntervalWithContext_PATCH(c.Rest.GetCtx(), id, body)
 }
 
 // ClusterUpgradeOptaneWithContext_POST
@@ -1590,6 +1710,62 @@ func (c *Cluster) ClusterUpgradeWithContext_PATCH(ctx context.Context, id any, b
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *Cluster) ClusterUpgrade_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	return c.ClusterUpgradeWithContext_PATCH(c.Rest.GetCtx(), id, body, waitTimeout)
+}
+
+// ClusterUploadBundleWithContext_DELETE
+// method: DELETE
+// url: /clusters/{id}/upload_bundle/
+// summary: Delete Upgrade Bundle from Cluster
+func (c *Cluster) ClusterUploadBundleWithContext_DELETE(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "upload_bundle")
+	_, err := core.Request[core.Record](ctx, c, http.MethodDelete, resourcePath, nil, nil)
+	return err
+
+}
+
+// ClusterUploadBundle_DELETE
+// method: DELETE
+// url: /clusters/{id}/upload_bundle/
+// summary: Delete Upgrade Bundle from Cluster
+func (c *Cluster) ClusterUploadBundle_DELETE(id any) error {
+	return c.ClusterUploadBundleWithContext_DELETE(c.Rest.GetCtx(), id)
+}
+
+// ClusterUploadBundleWithContext_POST
+// method: POST
+// url: /clusters/{id}/upload_bundle/
+// summary: Upload Upgrade Bundle to Cluster
+//
+// Body:
+//
+//	< not declared in schema >
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (c *Cluster) ClusterUploadBundleWithContext_POST(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "upload_bundle")
+	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+
+}
+
+// ClusterUploadBundle_POST
+// method: POST
+// url: /clusters/{id}/upload_bundle/
+// summary: Upload Upgrade Bundle to Cluster
+//
+// Body:
+//
+//	< not declared in schema >
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (c *Cluster) ClusterUploadBundle_POST(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.ClusterUploadBundleWithContext_POST(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // ClusterUploadFromS3WithContext_POST

@@ -5,8 +5,11 @@ package typed
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
 // -----------------------------------------------------
@@ -315,4 +318,51 @@ func (r *Switch) MustExistsWithContext(ctx context.Context, req *SwitchSearchPar
 		panic(err)
 	}
 	return r.Untyped.GetResourceMap()[r.GetResourceType()].MustExistsWithContext(ctx, params)
+}
+
+// -----------------------------------------------------
+// EXTRA METHODS
+// -----------------------------------------------------
+
+// SwitchBulk_PATCH_Body represents the request body for SwitchBulk
+type SwitchBulk_PATCH_Body struct {
+	Ids      *[]int64 `json:"ids,omitempty" yaml:"ids,omitempty" required:"true" doc:"List of switch IDs to update (e.g., [1,2,3])"`
+	Password string   `json:"password,omitempty" yaml:"password,omitempty" required:"true" doc:"New password for all switches"`
+	Username string   `json:"username,omitempty" yaml:"username,omitempty" required:"true" doc:"New username for all switches"`
+}
+
+// SwitchBulkWithContext_PATCH
+// method: PATCH
+// url: /switches/bulk/
+// summary: Bulk Update Switch Credentials
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Switch) SwitchBulkWithContext_PATCH(ctx context.Context, body *SwitchBulk_PATCH_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/switches/bulk/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// SwitchBulk_PATCH
+// method: PATCH
+// url: /switches/bulk/
+// summary: Bulk Update Switch Credentials
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Switch) SwitchBulk_PATCH(body *SwitchBulk_PATCH_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.SwitchBulkWithContext_PATCH(r.Untyped.GetCtx(), body, waitTimeout)
 }

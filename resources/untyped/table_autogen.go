@@ -79,6 +79,47 @@ func (t *Table) TableDelete_DELETE(body core.Params) error {
 	return t.TableDeleteWithContext_DELETE(t.Rest.GetCtx(), body)
 }
 
+// TableLoadFromFileWithContext_POST
+// method: POST
+// url: /tables/load_from_file/
+// summary: Create a Database Table from a File
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - name: Getting object by exact match
+//
+// Body:
+//
+//	< not declared in schema >
+func (t *Table) TableLoadFromFileWithContext_POST(ctx context.Context, params core.Params, body core.Params) (core.Record, error) {
+	resourcePath := "/tables/load_from_file/"
+	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, params, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TableLoadFromFile_POST
+// method: POST
+// url: /tables/load_from_file/
+// summary: Create a Database Table from a File
+//
+// Params:
+//   - tenant_id: Filter by tenant. Specify tenant ID.
+//   - database_name: Getting list of objects by database_name
+//   - schema_name: Getting list of objects by schema_name
+//   - name: Getting object by exact match
+//
+// Body:
+//
+//	< not declared in schema >
+func (t *Table) TableLoadFromFile_POST(params core.Params, body core.Params) (core.Record, error) {
+	return t.TableLoadFromFileWithContext_POST(t.Rest.GetCtx(), params, body)
+}
+
 // TableRenameWithContext_PATCH
 // method: PATCH
 // url: /tables/rename/

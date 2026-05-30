@@ -74,6 +74,15 @@ func main() {
 	configs := restParser.GetAllConfigs()
 	fmt.Printf("Found %d resource configurations\n", len(configs))
 
+	// Auto-discover extra methods from the OpenAPI schema for every resource.
+	// This finds all non-CRUD paths and adds them automatically, making
+	// +apiall:extraMethod: annotations unnecessary.
+	// Use +apiexclude:extraMethod:METHOD=/path/ to opt out a specific path.
+	fmt.Println("Auto-discovering extra methods from OpenAPI schema...")
+	if err := restParser.AutoDiscoverExtraMethods(); err != nil {
+		log.Fatalf("Failed to auto-discover extra methods: %v", err)
+	}
+
 	// Convert configs to UntypedResource format
 	var allResources []vastparser.UntypedResource
 	for _, config := range configs {

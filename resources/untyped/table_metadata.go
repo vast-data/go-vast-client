@@ -28,6 +28,14 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"Table",                               // resource type (Go struct name)
+		"TableLoadFromFile_POST",              // method name
+		"POST",                                // HTTP verb
+		"/tables/load_from_file/",             // URL path with placeholders
+		"Create a Database Table from a File", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"Table",                   // resource type (Go struct name)
 		"TableRename_PATCH",       // method name
 		"PATCH",                   // HTTP verb

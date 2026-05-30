@@ -5,17 +5,20 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"sort"
 	"strings"
 
 	"github.com/vast-data/go-vast-client/codegen/apibuilder"
+	api "github.com/vast-data/go-vast-client/openapi_schema"
 )
 
 // RestResourceConfig represents a resource configuration parsed from untyped_rest.go
 type RestResourceConfig struct {
-	Name         string                   // Type name (e.g., "Alarm")
-	ResourcePath string                   // API path (e.g., "alarms")
-	Operations   string                   // CRUD string (e.g., "RUD")
-	ExtraMethods []apibuilder.ExtraMethod // Extra methods from field comments
+	Name           string                   // Type name (e.g., "Alarm")
+	ResourcePath   string                   // API path (e.g., "alarms")
+	Operations     string                   // CRUD string (e.g., "RUD")
+	ExtraMethods   []apibuilder.ExtraMethod // Extra methods (manual +apiall: + auto-discovered)
+	ExcludeMethods []apibuilder.ExtraMethod // Exclusions from +apiexclude:extraMethod: annotations
 }
 
 // RestParser parses rest/untyped_rest.go to extract resource configurations
@@ -139,6 +142,110 @@ func (p *RestParser) ParseRestFile(filename string) error {
 	return nil
 }
 
+// AutoDiscoverExtraMethods queries the embedded OpenAPI schema and, for each resource,
+// automatically discovers all HTTP operations on paths that are not standard CRUD paths
+// (i.e. not "/{collection}/" or "/{collection}/{id}/").
+//
+// Discovered methods are merged with any manually specified extra methods (from
+// +apiall:extraMethod: annotations) and filtered against exclusions (from
+// +apiexclude:extraMethod: annotations). Duplicates are silently discarded.
+//
+// Call this after ParseRestFile.
+func (p *RestParser) AutoDiscoverExtraMethods() error {
+	allPaths, err := api.GetAllPaths()
+	if err != nil {
+		return fmt.Errorf("failed to load OpenAPI paths for extra-method auto-discovery: %w", err)
+	}
+
+	for _, config := range p.resourceConfigs {
+		if config.ResourcePath == "" {
+			continue
+		}
+
+		collectionPath := config.ResourcePath // e.g. "activedirectory"
+		prefix := "/" + collectionPath + "/"
+		prefixNoSlash := "/" + collectionPath
+
+		// Build lookup sets for dedup and exclusion, using normalized paths.
+		existingKeys := make(map[string]bool)
+		for _, em := range config.ExtraMethods {
+			existingKeys[em.Method+":"+normalizeAPIPath(em.Path)] = true
+		}
+
+		excludeKeys := make(map[string]bool)
+		for _, em := range config.ExcludeMethods {
+			excludeKeys[em.Method+":"+normalizeAPIPath(em.Path)] = true
+		}
+
+		var discovered []apibuilder.ExtraMethod
+
+		for rawPath, methods := range allPaths {
+			// Does this path belong to this resource?
+			if rawPath != prefix && rawPath != prefixNoSlash &&
+				!strings.HasPrefix(rawPath, prefix) {
+				continue
+			}
+
+			// Skip standard CRUD paths (/collection/ and /collection/{id}/).
+			if isStandardCRUDPath(rawPath, collectionPath) {
+				continue
+			}
+
+			normalizedP := normalizeAPIPath(rawPath)
+
+			for _, method := range methods {
+				key := method + ":" + normalizedP
+
+				if existingKeys[key] {
+					continue // already in manual list
+				}
+				if excludeKeys[key] {
+					continue // explicitly excluded
+				}
+
+				discovered = append(discovered, apibuilder.ExtraMethod{
+					Method: method,
+					Path:   normalizedP,
+				})
+				// Prevent duplicates within this resource pass.
+				existingKeys[key] = true
+			}
+		}
+
+		// Sort for deterministic generation order.
+		sort.Slice(discovered, func(i, j int) bool {
+			pi, pj := discovered[i].Path, discovered[j].Path
+			if pi != pj {
+				return pi < pj
+			}
+			return discovered[i].Method < discovered[j].Method
+		})
+
+		config.ExtraMethods = append(config.ExtraMethods, discovered...)
+	}
+
+	return nil
+}
+
+// isStandardCRUDPath returns true if the path is the standard collection list/create
+// path or the standard single-resource path (with {id}).
+func isStandardCRUDPath(path, collectionPath string) bool {
+	trimmed := strings.Trim(path, "/")
+	parts := strings.Split(trimmed, "/")
+	switch len(parts) {
+	case 1:
+		return parts[0] == collectionPath
+	case 2:
+		return parts[0] == collectionPath && parts[1] == "{id}"
+	}
+	return false
+}
+
+// normalizeAPIPath ensures the path has a leading "/" and a trailing "/".
+func normalizeAPIPath(path string) string {
+	return "/" + strings.Trim(path, "/") + "/"
+}
+
 // GetResourceConfig returns the configuration for a given resource type name
 func (p *RestParser) GetResourceConfig(resourceName string) (*RestResourceConfig, bool) {
 	config, exists := p.resourceConfigs[resourceName]
@@ -187,31 +294,43 @@ func (p *RestParser) parseFieldMarkers(file *ast.File) {
 			for _, comment := range field.Doc.List {
 				text := strings.TrimSpace(strings.TrimPrefix(comment.Text, "//"))
 
-				// Check for apiall:extraMethod markers
+				// +apiall:extraMethod:METHOD=/path/  – manually specified extra method
 				if strings.HasPrefix(text, "+apiall:extraMethod:") {
-					// Parse the marker (e.g., "GET=/hosts/discover/" or "GET|POST=/bigcatalogconfig/query_data/")
 					marker := strings.TrimPrefix(text, "+apiall:extraMethod:")
-
-					// Split by = to get methods and path
 					parts := strings.SplitN(marker, "=", 2)
 					if len(parts) != 2 {
 						continue
 					}
-
 					methodsStr := parts[0]
 					path := parts[1]
-
-					// Split methods by | (e.g., "GET|POST" -> ["GET", "POST"])
 					methods := strings.Split(methodsStr, "|")
-
-					// Find or create config for this resource using the actual type name
 					config := p.findOrCreateConfigByTypeName(typeName)
-
-					// Add extra method for each HTTP method
 					for _, method := range methods {
 						method = strings.TrimSpace(method)
 						if method != "" {
 							config.ExtraMethods = append(config.ExtraMethods, apibuilder.ExtraMethod{
+								Method: method,
+								Path:   path,
+							})
+						}
+					}
+				}
+
+				// +apiexclude:extraMethod:METHOD=/path/  – opt specific method out of auto-discovery
+				if strings.HasPrefix(text, "+apiexclude:extraMethod:") {
+					marker := strings.TrimPrefix(text, "+apiexclude:extraMethod:")
+					parts := strings.SplitN(marker, "=", 2)
+					if len(parts) != 2 {
+						continue
+					}
+					methodsStr := parts[0]
+					path := parts[1]
+					methods := strings.Split(methodsStr, "|")
+					config := p.findOrCreateConfigByTypeName(typeName)
+					for _, method := range methods {
+						method = strings.TrimSpace(method)
+						if method != "" {
+							config.ExcludeMethods = append(config.ExcludeMethods, apibuilder.ExtraMethod{
 								Method: method,
 								Path:   path,
 							})

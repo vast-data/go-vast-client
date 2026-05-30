@@ -108,6 +108,14 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"Cluster",                     // resource type (Go struct name)
+		"ClusterCloseOpenFiles_POST",  // method name
+		"POST",                        // HTTP verb
+		"/clusters/close_open_files/", // URL path with placeholders
+		"Close open files",            // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"Cluster",                           // resource type (Go struct name)
 		"ClusterCloseProtocolHandle_DELETE", // method name
 		"DELETE",                            // HTTP verb
@@ -269,6 +277,14 @@ func init() {
 
 	core.RegisterExtraMethod(
 		"Cluster",               // resource type (Go struct name)
+		"ClusterLocks_DELETE",   // method name
+		"DELETE",                // HTTP verb
+		"/clusters/{id}/locks/", // URL path with placeholders
+		"Deletes NLM Locks",     // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Cluster",               // resource type (Go struct name)
 		"ClusterLocks_POST",     // method name
 		"POST",                  // HTTP verb
 		"/clusters/{id}/locks/", // URL path with placeholders
@@ -364,6 +380,14 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"Cluster",                       // resource type (Go struct name)
+		"ClusterShouldUpload_POST",      // method name
+		"POST",                          // HTTP verb
+		"/clusters/{id}/should_upload/", // URL path with placeholders
+		"Detect Need for Bundle Upload", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"Cluster",                      // resource type (Go struct name)
 		"ClusterStopUpgrade_POST",      // method name
 		"POST",                         // HTTP verb
@@ -385,6 +409,14 @@ func init() {
 		"POST",                     // HTTP verb
 		"/clusters/{id}/unfreeze/", // URL path with placeholders
 		"Unfreeze Cluster",         // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Cluster",                            // resource type (Go struct name)
+		"ClusterUpdatePollingInterval_PATCH", // method name
+		"PATCH",                              // HTTP verb
+		"/clusters/{id}/update_polling_interval/", // URL path with placeholders
+		"Change interval for a polling task",      // summary from OpenAPI
 	)
 
 	core.RegisterExtraMethod(
@@ -417,6 +449,22 @@ func init() {
 		"PATCH",                   // HTTP verb
 		"/clusters/{id}/upgrade/", // URL path with placeholders
 		"Upgrade Cluster",         // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Cluster",                            // resource type (Go struct name)
+		"ClusterUploadBundle_DELETE",         // method name
+		"DELETE",                             // HTTP verb
+		"/clusters/{id}/upload_bundle/",      // URL path with placeholders
+		"Delete Upgrade Bundle from Cluster", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Cluster",                          // resource type (Go struct name)
+		"ClusterUploadBundle_POST",         // method name
+		"POST",                             // HTTP verb
+		"/clusters/{id}/upload_bundle/",    // URL path with placeholders
+		"Upload Upgrade Bundle to Cluster", // summary from OpenAPI
 	)
 
 	core.RegisterExtraMethod(

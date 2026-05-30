@@ -104,6 +104,73 @@ func (r *VastAuditLog) VastAuditLogQueryData_GET(params *VastAuditLogQueryData_G
 	return r.VastAuditLogQueryDataWithContext_GET(r.Untyped.GetCtx(), params)
 }
 
+// VastAuditLogQueryData_POST_Body represents the request body for VastAuditLogQueryData
+type VastAuditLogQueryData_POST_Body struct {
+	Fields *[]string `json:"fields,omitempty" yaml:"fields,omitempty" required:"false" doc:"Defines which fields should be displayed"`
+}
+
+// VastAuditLogQueryData_POST_Model represents the response model for VastAuditLogQueryData
+type VastAuditLogQueryData_POST_Model struct {
+	Count    int64     `json:"count,omitempty" yaml:"count,omitempty" required:"false" doc:"Number of rows in data"`
+	Next     string    `json:"next,omitempty" yaml:"next,omitempty" required:"false" doc:"Link to the next page"`
+	PropList *[]string `json:"prop_list,omitempty" yaml:"prop_list,omitempty" required:"false" doc:"List of column names"`
+	Results  *[]string `json:"results,omitempty" yaml:"results,omitempty" required:"false" doc:"List of query data rows"`
+}
+
+// VastAuditLogQueryDataWithContext_POST
+// method: POST
+// url: /vastauditlog/query_data/
+// summary: Queries the VAST Audit log.
+//
+// Parameters:
+//   - Page (query)
+//   - Limit (query)
+//   - Ordering (query)
+func (r *VastAuditLog) VastAuditLogQueryDataWithContext_POST(ctx context.Context, Page int64, Limit int64, Ordering string, body *VastAuditLogQueryData_POST_Body) (*VastAuditLogQueryData_POST_Model, error) {
+	resourcePath := "/vastauditlog/query_data/"
+
+	reqParams := core.Params{}
+	if Page != 0 {
+		reqParams["page"] = Page
+	}
+	if Limit != 0 {
+		reqParams["limit"] = Limit
+	}
+	if Ordering != "" {
+		reqParams["ordering"] = Ordering
+	}
+
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response VastAuditLogQueryData_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// VastAuditLogQueryData_POST
+// method: POST
+// url: /vastauditlog/query_data/
+// summary: Queries the VAST Audit log.
+//
+// Parameters:
+//   - Page (query)
+//   - Limit (query)
+//   - Ordering (query)
+func (r *VastAuditLog) VastAuditLogQueryData_POST(Page int64, Limit int64, Ordering string, body *VastAuditLogQueryData_POST_Body) (*VastAuditLogQueryData_POST_Model, error) {
+	return r.VastAuditLogQueryDataWithContext_POST(r.Untyped.GetCtx(), Page, Limit, Ordering, body)
+}
+
 // VastAuditLogStats_GET_Model represents the response model for VastAuditLogStats
 type VastAuditLogStats_GET_Model struct {
 	CountColumns int64 `json:"count_columns,omitempty" yaml:"count_columns,omitempty" required:"false" doc:""`

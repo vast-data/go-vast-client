@@ -30,356 +30,119 @@ type UntypedVMSRest struct {
 	Session     core.RESTSession
 	resourceMap map[string]core.VastResourceAPIWithContext // Map to store resources by resourceType
 
-	// +apiall:extraMethod:POST=/activedirectory/{id}/is_operation_healthy/
-	// +apiall:extraMethod:PATCH=/activedirectory/{id}/refresh/
-	// +apiall:extraMethod:GET=/activedirectory/{id}/domains/
-	// +apiall:extraMethod:GET=/activedirectory/{id}/dcs/
-	// +apiall:extraMethod:GET=/activedirectory/{id}/gcs/
-	// +apiall:extraMethod:GET=/activedirectory/{id}/current_gc/
-	// +apiall:extraMethod:POST=/activedirectory/{id}/change_machine_account_password/
 	ActiveDirectories *untyped.ActiveDirectory
-	// +apiall:extraMethod:PATCH=/alarms/clear/
 	Alarms    *untyped.Alarm
 	Analytics *untyped.Analytics
-	// +apiall:extraMethod:PATCH=/apitokens/{id}/revoke/
 	ApiTokens     *untyped.ApiToken
 	BasicSettings *untyped.BasicSettings
 	BGPConfigs    *untyped.BGPConfig
-	// +apiall:extraMethod:GET|POST=/bigcatalogconfig/query_data/
-	// +apiall:extraMethod:GET=/bigcatalogconfig/columns/
-	// +apiall:extraMethod:GET=/bigcatalogconfig/stats/
 	BigCatalogConfigs *untyped.BigCatalogConfig
-	// +apiall:extraMethod:PATCH=/bigcatalogindexedcolumns/add/
-	// +apiall:extraMethod:DELETE=/bigcatalogindexedcolumns/remove/
 	BigCatalogIndexedColumns *untyped.BigCatalogIndexedColumns
-	// +apiall:extraMethod:PATCH=/blockhosts/{id}/set_volumes/
-	// +apiall:extraMethod:PATCH=/blockhosts/{id}/update_volumes/
-	// +apiall:extraMethod:DELETE=/blockhosts/bulk/
 	BlockHosts *untyped.BlockHost
 	// +apiall:extraMethod:PATCH=/blockmappings/bulk/
 	BlockHostMappings *untyped.BlockHostMapping
-	// +apiall:extraMethod:PATCH=/callhomeconfigs/{id}/send/
-	// +apiall:extraMethod:PATCH=/callhomeconfigs/{id}/register-cluster/
 	CallhomeConfigs *untyped.CallhomeConfigs
 	Capacities      *untyped.Capacity
-	// +apiall:extraMethod:PATCH=/carriers/{id}/control_led/
-	// +apiall:extraMethod:PATCH=/carriers/{id}/highlight/
-	// +apiall:extraMethod:PATCH=/carriers/{id}/reset_pci/
 	Carriers *untyped.Carrier
-	// +apiall:extraMethod:PATCH=/cboxes/{id}/refresh_uid/
-	// +apiall:extraMethod:PATCH=/cboxes/{id}/control_led/
 	Cboxes          *untyped.Cbox
 	Certificates    *untyped.Certificate
 	ChallengeTokens *untyped.ChallengeTokens
-	// +apiall:extraMethod:PATCH=/clusters/{id}/resume_deploy/
-	// +apiall:extraMethod:PATCH=/clusters/{id}/set_password/
-	// +apiall:extraMethod:DELETE=/clusters/{id}/celery_remove_queued_task/
-	// +apiall:extraMethod:GET=/clusters/{id}/celery_queue/
-	// +apiall:extraMethod:GET=/clusters/{id}/celery_scheduled/
-	// +apiall:extraMethod:GET=/clusters/{id}/celery_reserved/
-	// +apiall:extraMethod:GET=/clusters/{id}/celery_status/
-	// +apiall:extraMethod:DELETE=/clusters/{id}/delete_folder/
-	// +apiall:extraMethod:PATCH=/clusters/{id}/system_settings/
-	// +apiall:extraMethod:PATCH=/clusters/{id}/rpc/
-	// +apiall:extraMethod:POST=/clusters/{id}/upload_from_s3/
-	// +apiall:extraMethod:POST=/clusters/{id}/upgrade_optane/
-	// +apiall:extraMethod:POST=/clusters/{id}/upgrade_ssd/
-	// +apiall:extraMethod:PATCH=/clusters/{id}/upgrade/
-	// +apiall:extraMethod:POST=/clusters/{id}/locks/
-	// +apiall:extraMethod:DELETE=/clusters/{id}/release_recursive_locks/
-	// +apiall:extraMethod:POST=/clusters/{id}/expand/
-	// +apiall:extraMethod:POST=/clusters/{id}/stop_upgrade/
-	// +apiall:extraMethod:GET=/clusters/{id}/pre_upgrade_validation_exceptions/
-	// +apiall:extraMethod:POST=/clusters/{id}/upgrade_without_file/
-	// +apiall:extraMethod:POST=/clusters/{id}/notify_new_version/
-	// +apiall:extraMethod:POST=/clusters/wipe/
-	// +apiall:extraMethod:PATCH=/clusters/run_hardware_check/
-	// +apiall:extraMethod:PATCH=/clusters/block_providers/
-	// +apiall:extraMethod:GET|PATCH|DELETE=/clusters/{id}/vsettings/
-	// +apiall:extraMethod:GET=/clusters/list_smb_client_connections/
-	// +apiall:extraMethod:GET=/clusters/list_smb_open_files/
-	// +apiall:extraMethod:GET=/clusters/list_open_protocol_handles/
-	// +apiall:extraMethod:GET=/clusters/{id}/advanced/
-	// +apiall:extraMethod:GET|PATCH=/clusters/{id}/auditing/
-	// +apiall:extraMethod:GET|PATCH=/clusters/{id}/vast_db/
-	// +apiall:extraMethod:GET=/clusters/get_snapshoted_paths/
-	// +apiall:extraMethod:DELETE=/clusters/close_protocol_handle/
-	// +apiall:extraMethod:POST=/clusters/shard_expand/
-	// +apiall:extraMethod:POST=/clusters/dbox_migration/
-	// +apiall:extraMethod:GET|PATCH=/clusters/dbox_migration_update_source_target/
-	// +apiall:extraMethod:GET=/clusters/dbox_migration_status/
-	// +apiall:extraMethod:GET=/clusters/dbox_migration_validate/
-	// +apiall:extraMethod:GET=/clusters/dbox_migration_validate_state/
-	// +apiall:extraMethod:GET=/clusters/dboxes_total_capacity/
-	// +apiall:extraMethod:GET=/clusters/list_tenants_remote/
-	// +apiall:extraMethod:GET=/clusters/list_snapshoted_paths_remote/
-	// +apiall:extraMethod:GET=/clusters/list_clone_snapshoted_paths_remote/
-	// +apiall:extraMethod:GET=/clusters/get_shard_expansion_status/
-	// +apiall:extraMethod:PATCH=/clusters/add_boxes/
-	// +apiall:extraMethod:POST=/clusters/rotate_master_encryption_group_key/
-	// +apiall:extraMethod:GET=/clusters/list_prefetch_paths_info/
-	// +apiall:extraMethod:POST=/clusters/{id}/set_certificates/
-	// +apiall:extraMethod:POST=/clusters/{id}/generate_unfreeze_token/
-	// +apiall:extraMethod:GET=/clusters/bgp_table/
-	// +apiall:extraMethod:POST=/clusters/{id}/unfreeze/
-	// +apiall:extraMethod:POST=/clusters/{id}/set_drive_fw_upgrade/
-	// +apiall:extraMethod:POST=/clusters/{id}/add_ekm/
 	Clusters *untyped.Cluster
-	// +apiall:extraMethod:POST=/cnodes/add_cnodes/
-	// +apiall:extraMethod:POST=/cnodes/set_tenants/
-	// +apiall:extraMethod:PATCH=/cnodes/{id}/control_led/
-	// +apiall:extraMethod:PATCH=/cnodes/{id}/highlight/
-	// +apiall:extraMethod:PATCH=/cnodes/{id}/rename/
 	// +apiall:extraMethod:GET|PATCH=/cnodes/{id}/bgpconfig
 	Cnodes      *untyped.Cnode
 	CnodeGroups *untyped.CnodeGroup
-	// +apiall:extraMethod:GET=/columns/show/
-	// +apiall:extraMethod:DELETE=/columns/delete/
-	// +apiall:extraMethod:PATCH=/columns/rename/
 	Columns *untyped.Column
-	// +apiall:extraMethod:POST=/config/reset/
+	// +apiexclude:extraMethod:GET|PATCH|DELETE=/config/{key}/
 	Configs *untyped.Config
-	// +apiall:extraMethod:POST=/dboxes/add/
-	// +apiall:extraMethod:PATCH=/dboxes/{id}/control_led/
-	// +apiall:extraMethod:PATCH=/dboxes/{id}/reset_dp_i2c/
 	Dboxes *untyped.Dbox
 	// +apiall:extraMethod:GET|PATCH=/delta/config/
 	Deltas *untyped.Delta
-	// +apiall:extraMethod:PATCH=/dnodes/{id}/control_led/
-	// +apiall:extraMethod:PATCH=/dnodes/{id}/highlight/
-	// +apiall:extraMethod:PATCH=/dnodes/{id}/rename/
 	Dnodes *untyped.Dnode
 	Dns    *untyped.Dns
-	// +apiall:extraMethod:PATCH=/dtrays/{id}/control_led/
-	// +apiall:extraMethod:PATCH=/dtrays/{id}/rename/
 	Dtrays *untyped.Dtray
-	// +apiall:extraMethod:POST=/eboxes/add/
-	// +apiall:extraMethod:PATCH=/eboxes/{id}/control_led/
 	Eboxes         *untyped.Ebox
 	EncryptedPaths *untyped.EncryptedPath
-	// +apiall:extraMethod:POST=/encryptiongroups/{id}/revoke_encryption_group/
-	// +apiall:extraMethod:POST=/encryptiongroups/{id}/deactivate_encryption_group/
-	// +apiall:extraMethod:POST=/encryptiongroups/{id}/reinstate_encryption_group/
-	// +apiall:extraMethod:POST=/encryptiongroups/{id}/rotate_encryption_group_key/
 	EncryptionGroups *untyped.EncryptionGroup
 	Envs             *untyped.Env
 	Events           *untyped.Event
-	// +apiall:extraMethod:PATCH=/eventdefinitions/{id}/test/
 	EventDefinitions *untyped.EventDefinition
-	// +apiall:extraMethod:PATCH=/eventdefinitionconfigs/{id}/test/
 	EventDefinitionConfigs *untyped.EventDefinitionConfig
 	Fans                   *untyped.Fan
-	// +apiall:extraMethod:POST=/folders/create_folder/
-	// +apiall:extraMethod:PATCH=/folders/modify_folder/
-	// +apiall:extraMethod:DELETE=/folders/delete_folder/
-	// +apiall:extraMethod:POST=/folders/stat_path/
-	// +apiall:extraMethod:POST|GET|DELETE=/folders/read_only/
 	Folders *untyped.Folder
-	// +apiall:extraMethod:POST=/filesystem/clone/
 	Filesystems *untyped.Filesystem
-	// +apiall:extraMethod:PATCH=/globalsnapstreams/{id}/pause/
-	// +apiall:extraMethod:PATCH=/globalsnapstreams/{id}/resume/
-	// +apiall:extraMethod:PATCH=/globalsnapstreams/{id}/stop/
 	GlobalSnapshotStreams *untyped.GlobalSnapshotStream
-	// +apiall:extraMethod:GET|PATCH=/groups/query/
-	// +apiall:extraMethod:GET=/groups/names/
 	Groups *untyped.Group
-	// +apiall:extraMethod:GET=/iamroles/{id}/credentials/
-	// +apiall:extraMethod:PATCH=/iamroles/{id}/revoke_access_keys/
 	IamRoles   *untyped.IamRole
 	Injections *untyped.Injections
-	// +apiall:extraMethod:PATCH=/indestructibility/{id}/generate_token/
-	// +apiall:extraMethod:PATCH=/indestructibility/{id}/unlock/
-	// +apiall:extraMethod:PATCH=/indestructibility/{id}/reset_passwd/
 	Indestructibility *untyped.Indestructibility
 	IoData            *untyped.IoData
-	// +apiall:extraMethod:GET=/kafkabrokers/{id}/list_topics/
 	KafkaBrokers *untyped.KafkaBroker
-	// +apiall:extraMethod:POST=/kerberos/{id}/keytab/
+	// +apiexclude:extraMethod:PUT=/kerberos/{id}/keytab/
 	Kerberos *untyped.Kerberos
-	// +apiall:extraMethod:PATCH=/ldaps/{id}/set_posix_primary/
 	Ldaps               *untyped.Ldap
 	Licenses            *untyped.License
 	LocalProviders      *untyped.LocalProvider
 	LocalS3Keys         *untyped.LocalS3Key
 	ManagedApplications *untyped.ManageApplications
-	// +apiall:extraMethod:PATCH=/managers/{id}/unlock/
-	// +apiall:extraMethod:PATCH=/managers/password/
-	// +apiall:extraMethod:GET=/managers/authorized_status/
 	Managers *untyped.Manager
 	Metrics  *untyped.Metrics
 	Modules  *untyped.Module
-	// +apiall:extraMethod:GET=/monitors/topn/
-	// +apiall:extraMethod:GET=/monitors/{id}/query/
+	// +apiexclude:extraMethod:GET=/monitors/ad_hoc_query/
 	Monitors *untyped.Monitor
 	Nics     *untyped.Nic
-	// +apiall:extraMethod:GET=/nicports/{id}/related_nicports/
 	NicPorts *untyped.NicPort
-	// +apiall:extraMethod:PATCH=/nis/{id}/set_posix_primary/
-	// +apiall:extraMethod:PATCH=/nis/refresh/
 	Nis *untyped.Nis
-	// +apiall:extraMethod:PATCH=/nvrams/{id}/format/
-	// +apiall:extraMethod:PATCH=/nvrams/{id}/control_led/
 	Nvrams *untyped.Nvram
-	// +apiall:extraMethod:PATCH=/oidcs/{id}/refresh_keys/
 	Oidcs *untyped.Oidc
-	// +apiall:extraMethod:GET=/permissions/objects/
 	Permissions *untyped.Permissions
 	Ports       *untyped.Port
-	// +apiall:extraMethod:GET=/projections/show/
-	// +apiall:extraMethod:PATCH=/projections/rename/
-	// +apiall:extraMethod:DELETE=/projections/delete/
 	Projections *untyped.Projection
-	// +apiall:extraMethod:GET=/projectioncolumns/show/
 	ProjectionColumns *untyped.ProjectionColumn
-	// +apiall:extraMethod:GET=/prometheusmetrics/users/
-	// +apiall:extraMethod:GET=/prometheusmetrics/defrag/
-	// +apiall:extraMethod:GET=/prometheusmetrics/views/
-	// +apiall:extraMethod:GET=/prometheusmetrics/devices/
-	// +apiall:extraMethod:GET=/prometheusmetrics/quotas/
-	// +apiall:extraMethod:GET=/prometheusmetrics/all/
-	// +apiall:extraMethod:GET=/prometheusmetrics/switches/
 	PrometheusMetrics *untyped.PrometheusMetrics
-	// +apiall:extraMethod:POST=/protectedpaths/{id}/restore/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/commit/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/pause/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/resume/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/stop/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/force_failover/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/add_stream/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/remove_stream/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/reattach_stream/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/modify_member/
-	// +apiall:extraMethod:GET=/protectedpaths/{id}/validate/
-	// +apiall:extraMethod:GET|POST|DELETE=/protectedpaths/{id}/prefetch_path/
-	// +apiall:extraMethod:PATCH=/protectedpaths/{id}/replicate_now/
 	ProtectedPaths     *untyped.ProtectedPath
 	ProtectionPolicies *untyped.ProtectionPolicy
 	Psus               *untyped.Psu
 	QosPolicies        *untyped.QosPolicy
-	// +apiall:extraMethod:PATCH=/quotas/{id}/refresh_user_quotas/
-	// +apiall:extraMethod:PATCH=/quotas/recalc/
-	// +apiall:extraMethod:PATCH=/quotas/recalc_stop/
-	// +apiall:extraMethod:PATCH=/quotas/{id}/reset_grace_period/
 	Quotas           *untyped.Quota
 	QuotaEntityInfos *untyped.QuotaEntityInfo
-	// +apiall:extraMethod:PATCH=/racks/{id}/rename/
-	// +apiall:extraMethod:POST=/racks/{id}/add_boxes/
-	// +apiall:extraMethod:PATCH=/racks/{id}/control_led/
-	// +apiall:extraMethod:POST=/racks/{id}/bgpconfig/
 	Racks *untyped.Rack
-	// +apiall:extraMethod:PATCH=/realms/{id}/assign/
-	// +apiall:extraMethod:PATCH=/realms/{id}/unassign/
 	Realms *untyped.Realm
-	// +apiall:extraMethod:GET=/nativereplicationremotetargets/get_remote_mapping/
 	ReplicationPeers         *untyped.ReplicationPeers
 	ReplicationPolicies      *untyped.ReplicationPolicy
 	ReplicationRestorePoints *untyped.ReplicationRestorePoint
 	ReplicationStreams       *untyped.ReplicationStream
 	Roles                    *untyped.Role
-	// +apiall:extraMethod:DELETE=/s3keys/{access_key}/
 	S3Keys *untyped.S3Keys
-	// +apiall:extraMethod:GET=/s3lifecyclerules/get_object_expiration/
 	S3LifeCycleRules   *untyped.S3LifeCycleRule
 	S3Policies         *untyped.S3Policy
 	S3replicationPeers *untyped.S3replicationPeers
-	// +apiall:extraMethod:GET=/schemas/show/
-	// +apiall:extraMethod:PATCH=/schemas/rename/
-	// +apiall:extraMethod:DELETE=/schemas/delete/
 	Schemas      *untyped.Schema
 	SettingDiffs *untyped.SettingDiff
-	// +apiall:extraMethod:POST=/snapshots/{id}/clone/
 	Snapshots        *untyped.Snapshot
 	SnapshotPolicies *untyped.SnapshotPolicy
-	// +apiall:extraMethod:PATCH=/ssds/{id}/format/
-	// +apiall:extraMethod:PATCH=/ssds/{id}/control_led/
 	Ssds           *untyped.Ssd
 	SubnetManagers *untyped.SubnetManager
-	// +apiall:extraMethod:PATCH=/supportbundles/{id}/upload/
-	// +apiall:extraMethod:GET=/supportbundles/{id}/download/
 	SupportBundles   *untyped.SupportBundles
 	SupportedDrivers *untyped.SupportedDrivers
 	Switches         *untyped.Switch
-	// +apiall:extraMethod:GET=/tables/show/
-	// +apiall:extraMethod:PATCH=/tables/rename/
-	// +apiall:extraMethod:DELETE=/tables/delete/
-	// +apiall:extraMethod:PATCH=/tables/add_columns/
 	Tables *untyped.Table
-	// +apiall:extraMethod:POST=/tenants/{id}/is_operation_healthy/
-	// +apiall:extraMethod:POST=/tenants/{id}/revoke_encryption_group/
-	// +apiall:extraMethod:POST=/tenants/{id}/deactivate_encryption_group/
-	// +apiall:extraMethod:POST=/tenants/{id}/reinstate_encryption_group/
-	// +apiall:extraMethod:POST=/tenants/{id}/rotate_encryption_group_key/
-	// +apiall:extraMethod:GET=/tenants/{id}/same_encryption_group_tenants/
-	// +apiall:extraMethod:GET=/tenants/configured_idp/
-	// +apiall:extraMethod:GET=/tenants/remote_objects/
-	// +apiall:extraMethod:GET=/tenants/{id}/vippool_ip_ranges/
-	// +apiall:extraMethod:PATCH=/tenants/{id}/client_ip_ranges/
-	// +apiall:extraMethod:GET|PATCH=/tenants/{id}/client_metrics/
-	// +apiall:extraMethod:GET=/tenants/{id}/nfs4_delegs/
-	// +apiall:extraMethod:DELETE=/tenants/{id}/nfs4_deleg/
 	Tenants *untyped.Tenant
 	// +apiall:extraMethod:GET|POST|PATCH=/topics/
-	// +apiall:extraMethod:GET=/topics/show/
-	// +apiall:extraMethod:DELETE=/topics/delete/
 	Topics *untyped.Topic
-	// +apiall:extraMethod:PATCH|GET=/users/{id}/tenant_data/
-	// +apiall:extraMethod:POST|PATCH|DELETE=/users/{id}/access_keys/
-	// +apiall:extraMethod:GET|PATCH=/users/query/
-	// +apiall:extraMethod:GET=/users/names/
-	// +apiall:extraMethod:PATCH=/users/refresh/
-	// +apiall:extraMethod:POST=/users/copy/
-	// +apiall:extraMethod:POST|PATCH|DELETE=/users/non_local_keys/
 	Users      *untyped.User
 	UserQuotas *untyped.UserQuota
-	// +apiall:extraMethod:GET=/vastauditlog/query_data/
-	// +apiall:extraMethod:GET=/vastauditlog/columns/
-	// +apiall:extraMethod:GET=/vastauditlog/stats/
 	VastAuditLogs *untyped.VastAuditLog
-	// +apiall:extraMethod:GET=/vastdb/vips/
 	VastDb   *untyped.VastDb
 	Versions *untyped.Version
-	// +apiall:extraMethod:GET=/views/list_open_smb_handles/
-	// +apiall:extraMethod:DELETE=/views/close_smb_handle/
-	// +apiall:extraMethod:GET=/views/list_seamless_peers/
-	// +apiall:extraMethod:DELETE|POST=/views/{id}/permissions_repair/
-	// +apiall:extraMethod:POST=/views/{id}/check_permissions_templates/
-	// +apiall:extraMethod:GET|PATCH=/views/{id}/legal_hold/
 	Views *untyped.View
-	// +apiall:extraMethod:PATCH=/viewpolicies/{id}/refresh_netgroups/
-	// +apiall:extraMethod:POST|DELETE=/viewpolicies/{id}/remote_mapping/
 	ViewPolicies *untyped.ViewPolicy
 	Vips         *untyped.Vip
 	VipPools     *untyped.VipPool
-	// +apiall:extraMethod:PATCH=/vms/{id}/set_certificate/
-	// +apiall:extraMethod:GET|PATCH=/vms/{id}/network_settings/
-	// +apiall:extraMethod:POST=/vms/{id}/network_settings_summary/
-	// +apiall:extraMethod:PATCH=/vms/{id}/set_client_certificate/
-	// +apiall:extraMethod:GET=/vms/{id}/configured_idps/
-	// +apiall:extraMethod:GET|PATCH|POST|DELETE=/vms/{id}/saml_config/
-	// +apiall:extraMethod:PATCH=/vms/{id}/reset_certificate/
-	// +apiall:extraMethod:PATCH=/vms/{id}/remove_client_certificate/
-	// +apiall:extraMethod:PATCH=/vms/{id}/set_ssl_ciphers/
-	// +apiall:extraMethod:PATCH=/vms/{id}/reset_ssl_ciphers/
-	// +apiall:extraMethod:PATCH=/vms/{id}/set_ssl_port/
-	// +apiall:extraMethod:GET=/vms/{id}/login_banner/
-	// +apiall:extraMethod:PATCH=/vms/{id}/toggle_maintenance_mode/
-	// +apiall:extraMethod:GET|PATCH=/vms/{id}/pwd_settings/
-	// +apiall:extraMethod:PATCH=/vms/{id}/set_max_api_tokens_per_user/
 	Vms *untyped.Vms
-	// +apiall:extraMethod:PATCH=/volumes/{id}/set_hosts/
-	// +apiall:extraMethod:PATCH=/volumes/{id}/update_hosts/
-	// +apiall:extraMethod:GET=/volumes/{id}/get_snapshots/
-	// +apiall:extraMethod:GET=/volumes/{id}/fetch_capacity/
-	// +apiall:extraMethod:DELETE=/volumes/bulk/
 	Volumes *untyped.Volume
-	// +apiall:extraMethod:DELETE=/vpntunnels/delete_all/
 	VpnTunnels *untyped.VpnTunnel
-	// +apiall:extraMethod:PATCH=/vtasks/{id}/retry/
 	VTasks   *untyped.VTask
 	WebHooks *untyped.WebHook
-	// +apiall:extraMethod:GET=/hosts/discovered_hosts/
-	// +apiall:extraMethod:GET=/hosts/discover/
 	Hosts           *untyped.Host
 	VirtualMachines *untyped.VirtualMachine
 }

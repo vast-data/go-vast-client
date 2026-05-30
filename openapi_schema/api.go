@@ -800,6 +800,48 @@ func GetOperationSummary(httpMethod, resourcePath string) (string, error) {
 	return operation.Summary, nil
 }
 
+// GetAllPaths returns every path defined in the OpenAPI document together with the
+// HTTP methods that are declared for it.
+//
+// The returned map key is the raw path string from the spec (e.g. "/activedirectory/{id}/refresh/").
+// The value is a sorted slice of uppercase HTTP method strings (e.g. ["GET", "PATCH"]).
+// This is used by the code generator to auto-discover extra (non-CRUD) methods.
+func GetAllPaths() (map[string][]string, error) {
+	doc, err := loadOpenAPIDocOnce()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load OpenAPI document: %w", err)
+	}
+
+	result := make(map[string][]string)
+	for path, item := range doc.Paths.Map() {
+		var methods []string
+		if item.Get != nil {
+			methods = append(methods, "GET")
+		}
+		if item.Post != nil {
+			methods = append(methods, "POST")
+		}
+		if item.Put != nil {
+			methods = append(methods, "PUT")
+		}
+		if item.Patch != nil {
+			methods = append(methods, "PATCH")
+		}
+		if item.Delete != nil {
+			methods = append(methods, "DELETE")
+		}
+		if item.Head != nil {
+			methods = append(methods, "HEAD")
+		}
+		if item.Options != nil {
+			methods = append(methods, "OPTIONS")
+		}
+		sort.Strings(methods)
+		result[path] = methods
+	}
+	return result, nil
+}
+
 // ValidateOperationExists checks if a specific HTTP method exists for a given path in the OpenAPI spec
 // Returns an error if the path or method doesn't exist
 func ValidateOperationExists(httpMethod, resourcePath string) error {

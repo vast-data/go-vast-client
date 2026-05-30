@@ -859,6 +859,52 @@ func (r *Cluster) ClusterCeleryRemoveQueuedTask_DELETE(id any, TaskName string) 
 	return r.ClusterCeleryRemoveQueuedTaskWithContext_DELETE(r.Untyped.GetCtx(), id, TaskName)
 }
 
+// ClusterCloseOpenFiles_POST_Model represents the response model for ClusterCloseOpenFiles
+type ClusterCloseOpenFiles_POST_Model struct {
+	AsyncTaskIds *[]int64 `json:"async_task_ids,omitempty" yaml:"async_task_ids,omitempty" required:"false" doc:""`
+}
+
+// ClusterCloseOpenFilesWithContext_POST
+// method: POST
+// url: /clusters/close_open_files/
+// summary: Close open files
+//
+// Parameters:
+//   - protocol (body): Protocol type
+//   - tenantId (body): Tenant ID
+func (r *Cluster) ClusterCloseOpenFilesWithContext_POST(ctx context.Context, protocol string, tenantId int64) (*ClusterCloseOpenFiles_POST_Model, error) {
+	resourcePath := "/clusters/close_open_files/"
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	reqBody["protocol"] = protocol
+	reqBody["tenant_id"] = tenantId
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response ClusterCloseOpenFiles_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// ClusterCloseOpenFiles_POST
+// method: POST
+// url: /clusters/close_open_files/
+// summary: Close open files
+//
+// Parameters:
+//   - protocol (body): Protocol type
+//   - tenantId (body): Tenant ID
+func (r *Cluster) ClusterCloseOpenFiles_POST(protocol string, tenantId int64) (*ClusterCloseOpenFiles_POST_Model, error) {
+	return r.ClusterCloseOpenFilesWithContext_POST(r.Untyped.GetCtx(), protocol, tenantId)
+}
+
 // ClusterCloseProtocolHandle_DELETE_Model represents the response model for ClusterCloseProtocolHandle
 type ClusterCloseProtocolHandle_DELETE_Model struct {
 	Error               string                                                     `json:"error,omitempty" yaml:"error,omitempty" required:"false" doc:""`
@@ -1213,6 +1259,41 @@ func (r *Cluster) ClusterListPrefetchPathsInfoWithContext_GET(ctx context.Contex
 // summary: List Prefetch Path Information
 func (r *Cluster) ClusterListPrefetchPathsInfo_GET() (*ClusterListPrefetchPathsInfo_GET_Model, error) {
 	return r.ClusterListPrefetchPathsInfoWithContext_GET(r.Untyped.GetCtx())
+}
+
+// ClusterLocks_DELETE_Body represents the request body for ClusterLocks
+type ClusterLocks_DELETE_Body struct {
+	LockType   string `json:"lock_type,omitempty" yaml:"lock_type,omitempty" required:"false" doc:"Lock type. Specify if unlock_type is SINGLE."`
+	Path       string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"The full path to a locked file, formed as: VIEW_PATH/FILE_PATH, where VIEW_PATH is the VAST Cluster view path, and FILE_PATH is the client path to a locked file, relative to the mount point."`
+	TenantId   int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
+	UnlockId   string `json:"unlock_id,omitempty" yaml:"unlock_id,omitempty" required:"false" doc:"Unlock ID. Specify if unlock_type is SINGLE."`
+	UnlockType string `json:"unlock_type,omitempty" yaml:"unlock_type,omitempty" required:"false" doc:"The type of unlock operation to perform. 'SINGLE' unlocks a single specified lock, 'ALL' unlocks all locks."`
+}
+
+// ClusterLocksWithContext_DELETE
+// method: DELETE
+// url: /clusters/{id}/locks/
+// summary: Deletes NLM Locks
+func (r *Cluster) ClusterLocksWithContext_DELETE(ctx context.Context, id any, body *ClusterLocks_DELETE_Body) error {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "locks")
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return err
+	}
+
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// ClusterLocks_DELETE
+// method: DELETE
+// url: /clusters/{id}/locks/
+// summary: Deletes NLM Locks
+func (r *Cluster) ClusterLocks_DELETE(id any, body *ClusterLocks_DELETE_Body) error {
+	return r.ClusterLocksWithContext_DELETE(r.Untyped.GetCtx(), id, body)
 }
 
 // ClusterReleaseRecursiveLocks_DELETE_Body represents the request body for ClusterReleaseRecursiveLocks
@@ -1677,6 +1758,62 @@ func (r *Cluster) ClusterUpgrade_PATCH(id any, body *ClusterUpgrade_PATCH_Body, 
 	return r.ClusterUpgradeWithContext_PATCH(r.Untyped.GetCtx(), id, body, waitTimeout)
 }
 
+// ClusterUploadBundleWithContext_DELETE
+// method: DELETE
+// url: /clusters/{id}/upload_bundle/
+// summary: Delete Upgrade Bundle from Cluster
+func (r *Cluster) ClusterUploadBundleWithContext_DELETE(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "upload_bundle")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// ClusterUploadBundle_DELETE
+// method: DELETE
+// url: /clusters/{id}/upload_bundle/
+// summary: Delete Upgrade Bundle from Cluster
+func (r *Cluster) ClusterUploadBundle_DELETE(id any) error {
+	return r.ClusterUploadBundleWithContext_DELETE(r.Untyped.GetCtx(), id)
+}
+
+// ClusterUploadBundleWithContext_POST
+// method: POST
+// url: /clusters/{id}/upload_bundle/
+// summary: Upload Upgrade Bundle to Cluster
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Cluster) ClusterUploadBundleWithContext_POST(ctx context.Context, id any, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "upload_bundle")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// ClusterUploadBundle_POST
+// method: POST
+// url: /clusters/{id}/upload_bundle/
+// summary: Upload Upgrade Bundle to Cluster
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Cluster) ClusterUploadBundle_POST(id any, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.ClusterUploadBundleWithContext_POST(r.Untyped.GetCtx(), id, waitTimeout)
+}
+
 // ClusterUploadFromS3_POST_Body represents the request body for ClusterUploadFromS3
 type ClusterUploadFromS3_POST_Body struct {
 	S3Url             string `json:"s3_url,omitempty" yaml:"s3_url,omitempty" required:"false" doc:"S3 URL to upgrade package. If not provided, will be taken from db"`
@@ -1940,8 +2077,10 @@ func (r *Cluster) ClusterWipe_POST(body *ClusterWipe_POST_Body, waitTimeout time
 //   - Extra method PATCH /clusters/{id}/auditing/ skipped: PATCH /clusters/{id}/auditing/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method PATCH /clusters/{id}/resume_deploy/ skipped: PATCH /clusters/{id}/resume_deploy/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method PATCH /clusters/{id}/rpc/ skipped: PATCH /clusters/{id}/rpc/ - Response schema contains ambiguous nested objects (objects with no properties)
+//   - Extra method PATCH /clusters/{id}/update_polling_interval/ skipped: PATCH /clusters/{id}/update_polling_interval/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /clusters/{id}/update_polling_interval/
 //   - Extra method POST /clusters/dbox_migration/ skipped: POST /clusters/dbox_migration/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method POST /clusters/shard_expand/ skipped: POST /clusters/shard_expand/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method POST /clusters/{id}/locks/ skipped: POST /clusters/{id}/locks/ - Array item schema is ambiguous or empty
 //   - Extra method POST /clusters/{id}/notify_new_version/ skipped: POST /clusters/{id}/notify_new_version/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /clusters/{id}/notify_new_version/
 //   - Extra method POST /clusters/{id}/set_drive_fw_upgrade/ skipped: POST /clusters/{id}/set_drive_fw_upgrade/ - No response schema defined in OpenAPI spec. Error: no valid schema found in POST response (200/201/202/204) for resource /clusters/{id}/set_drive_fw_upgrade/
+//   - Extra method POST /clusters/{id}/should_upload/ skipped: POST /clusters/{id}/should_upload/ - Response schema contains ambiguous nested objects (objects with no properties)
