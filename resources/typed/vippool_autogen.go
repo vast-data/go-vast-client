@@ -5,8 +5,11 @@ package typed
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
 // -----------------------------------------------------
@@ -341,3 +344,54 @@ func (r *VipPool) MustExistsWithContext(ctx context.Context, req *VipPoolSearchP
 	}
 	return r.Untyped.GetResourceMap()[r.GetResourceType()].MustExistsWithContext(ctx, params)
 }
+
+// -----------------------------------------------------
+// EXTRA METHODS
+// -----------------------------------------------------
+
+// VipPoolReallocate_PATCH_Body represents the request body for VipPoolReallocate
+type VipPoolReallocate_PATCH_Body struct {
+	IpRangesToRemove *[][]string `json:"ip_ranges_to_remove,omitempty" yaml:"ip_ranges_to_remove,omitempty" required:"false" doc:"An array of IP ranges to deallocate and remove from the vippool."`
+	IpsCountToAdd    int64       `json:"ips_count_to_add,omitempty" yaml:"ips_count_to_add,omitempty" required:"false" doc:"The number of new IPs to allocate."`
+}
+
+// VipPoolReallocateWithContext_PATCH
+// method: PATCH
+// url: /vippools/{id}/reallocate/
+// summary: Reallocate VIP Pool
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VipPool) VipPoolReallocateWithContext_PATCH(ctx context.Context, id any, body *VipPoolReallocate_PATCH_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := core.BuildResourcePathWithID("vippools", id, "reallocate")
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// VipPoolReallocate_PATCH
+// method: PATCH
+// url: /vippools/{id}/reallocate/
+// summary: Reallocate VIP Pool
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VipPool) VipPoolReallocate_PATCH(id any, body *VipPoolReallocate_PATCH_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.VipPoolReallocateWithContext_PATCH(r.Untyped.GetCtx(), id, body, waitTimeout)
+}
+
+// -----------------------------------------------------
+// GENERATION ISSUES
+// -----------------------------------------------------
+//   - Extra method POST /vippools/allocate/ skipped: POST /vippools/allocate/ - Response schema contains ambiguous nested objects (objects with no properties)

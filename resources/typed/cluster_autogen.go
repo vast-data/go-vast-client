@@ -464,6 +464,12 @@ type ClusterAddBoxesBody_RackPoolsValue struct {
 	DnodeIpmiPool *[]string `json:"dnode_ipmi_pool,omitempty" yaml:"dnode_ipmi_pool,omitempty" required:"false" doc:""`
 }
 
+// ClusterS3TrueIpConfigBody_IncludedAddressesItem represents a nested type for Cluster extra method body
+type ClusterS3TrueIpConfigBody_IncludedAddressesItem struct {
+	Range   int64  `json:"range,omitempty" yaml:"range,omitempty" required:"true" doc:"Number of addresses in the range"`
+	StartIp string `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"true" doc:"Starting IP address (must be IPv4)"`
+}
+
 // ClusterWipeBody_CnodeListItem represents a nested type for Cluster extra method body
 type ClusterWipeBody_CnodeListItem struct {
 	Name                       string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
@@ -641,6 +647,12 @@ type ClusterListPrefetchPathsInfoModel_PrefetchDataItem_PathsItem struct {
 // ClusterListPrefetchPathsInfoModel_PrefetchDataItem_Tenant represents a nested type for Cluster extra method response
 type ClusterListPrefetchPathsInfoModel_PrefetchDataItem_Tenant struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Tenant name"`
+}
+
+// ClusterS3TrueIpConfigModel_IncludedAddressesItem represents a nested type for Cluster extra method response
+type ClusterS3TrueIpConfigModel_IncludedAddressesItem struct {
+	Range   int64  `json:"range,omitempty" yaml:"range,omitempty" required:"false" doc:"Number of addresses in the range"`
+	StartIp string `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"false" doc:"Starting IP address"`
 }
 
 // ClusterAddBoxes_PATCH_Body represents the request body for ClusterAddBoxes
@@ -1407,6 +1419,75 @@ func (r *Cluster) ClusterRunHardwareCheckWithContext_PATCH(ctx context.Context, 
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (r *Cluster) ClusterRunHardwareCheck_PATCH(body *ClusterRunHardwareCheck_PATCH_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
 	return r.ClusterRunHardwareCheckWithContext_PATCH(r.Untyped.GetCtx(), body, waitTimeout)
+}
+
+// ClusterS3TrueIpConfig_GET_Model represents the response model for ClusterS3TrueIpConfig
+type ClusterS3TrueIpConfig_GET_Model struct {
+	IncludedAddresses  *[]ClusterS3TrueIpConfigModel_IncludedAddressesItem `json:"included_addresses,omitempty" yaml:"included_addresses,omitempty" required:"false" doc:"List of IP address ranges"`
+	TrueClientIpHeader string                                              `json:"true_client_ip_header,omitempty" yaml:"true_client_ip_header,omitempty" required:"false" doc:"True client IP value"`
+}
+
+// ClusterS3TrueIpConfigWithContext_GET
+// method: GET
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Get S3 True IP Configuration
+func (r *Cluster) ClusterS3TrueIpConfigWithContext_GET(ctx context.Context, id any) (*ClusterS3TrueIpConfig_GET_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "s3_true_ip_config")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response ClusterS3TrueIpConfig_GET_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// ClusterS3TrueIpConfig_GET
+// method: GET
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Get S3 True IP Configuration
+func (r *Cluster) ClusterS3TrueIpConfig_GET(id any) (*ClusterS3TrueIpConfig_GET_Model, error) {
+	return r.ClusterS3TrueIpConfigWithContext_GET(r.Untyped.GetCtx(), id)
+}
+
+// ClusterS3TrueIpConfig_PATCH_Body represents the request body for ClusterS3TrueIpConfig
+type ClusterS3TrueIpConfig_PATCH_Body struct {
+	IncludedAddresses  *[]ClusterS3TrueIpConfigBody_IncludedAddressesItem `json:"included_addresses,omitempty" yaml:"included_addresses,omitempty" required:"true" doc:"List of IP address ranges to include"`
+	TrueClientIpHeader string                                             `json:"true_client_ip_header,omitempty" yaml:"true_client_ip_header,omitempty" required:"true" doc:"True client IP value (must be IPv4)"`
+}
+
+// ClusterS3TrueIpConfigWithContext_PATCH
+// method: PATCH
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Set S3 True IP Configuration
+func (r *Cluster) ClusterS3TrueIpConfigWithContext_PATCH(ctx context.Context, id any, body *ClusterS3TrueIpConfig_PATCH_Body) error {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "s3_true_ip_config")
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return err
+	}
+
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// ClusterS3TrueIpConfig_PATCH
+// method: PATCH
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Set S3 True IP Configuration
+func (r *Cluster) ClusterS3TrueIpConfig_PATCH(id any, body *ClusterS3TrueIpConfig_PATCH_Body) error {
+	return r.ClusterS3TrueIpConfigWithContext_PATCH(r.Untyped.GetCtx(), id, body)
 }
 
 // ClusterSetCertificates_POST_Body represents the request body for ClusterSetCertificates

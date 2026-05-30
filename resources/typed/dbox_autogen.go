@@ -250,6 +250,94 @@ func (r *Dbox) DboxControlLed_PATCH(id any, control string, waitTimeout time.Dur
 	return r.DboxControlLedWithContext_PATCH(r.Untyped.GetCtx(), id, control, waitTimeout)
 }
 
+// DboxDecommission_POST_Body represents the request body for DboxDecommission
+type DboxDecommission_POST_Body struct {
+	Ids                  *[]int64 `json:"ids,omitempty" yaml:"ids,omitempty" required:"true" doc:"List of DBox IDs to remove"`
+	SkipRaidHealthChecks bool     `json:"skip_raid_health_checks,omitempty" yaml:"skip_raid_health_checks,omitempty" required:"false" doc:"Skip RAID health checks during removal"`
+}
+
+// DboxDecommissionWithContext_POST
+// method: POST
+// url: /dboxes/decommission/
+// summary: DBox Removal
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dbox) DboxDecommissionWithContext_POST(ctx context.Context, body *DboxDecommission_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/dboxes/decommission/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// DboxDecommission_POST
+// method: POST
+// url: /dboxes/decommission/
+// summary: DBox Removal
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dbox) DboxDecommission_POST(body *DboxDecommission_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.DboxDecommissionWithContext_POST(r.Untyped.GetCtx(), body, waitTimeout)
+}
+
+// DboxDryRun_POST_Body represents the request body for DboxDryRun
+type DboxDryRun_POST_Body struct {
+	Ids                  *[]int64 `json:"ids,omitempty" yaml:"ids,omitempty" required:"true" doc:"List of DBox IDs to remove"`
+	SkipRaidHealthChecks bool     `json:"skip_raid_health_checks,omitempty" yaml:"skip_raid_health_checks,omitempty" required:"false" doc:"Skip RAID health checks during removal"`
+}
+
+// DboxDryRun_POST_Model represents the response model for DboxDryRun
+type DboxDryRun_POST_Model struct {
+	Message string `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:"Success message"`
+	Success bool   `json:"success,omitempty" yaml:"success,omitempty" required:"false" doc:"Whether validation passed"`
+}
+
+// DboxDryRunWithContext_POST
+// method: POST
+// url: /dboxes/decommission/dry-run/
+// summary: Validate DBox Removal
+func (r *Dbox) DboxDryRunWithContext_POST(ctx context.Context, body *DboxDryRun_POST_Body) (*DboxDryRun_POST_Model, error) {
+	resourcePath := "/dboxes/decommission/dry-run/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response DboxDryRun_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// DboxDryRun_POST
+// method: POST
+// url: /dboxes/decommission/dry-run/
+// summary: Validate DBox Removal
+func (r *Dbox) DboxDryRun_POST(body *DboxDryRun_POST_Body) (*DboxDryRun_POST_Model, error) {
+	return r.DboxDryRunWithContext_POST(r.Untyped.GetCtx(), body)
+}
+
 // DboxResetDpI2cWithContext_PATCH
 // method: PATCH
 // url: /dboxes/{id}/reset_dp_i2c/
@@ -281,6 +369,39 @@ func (r *Dbox) DboxResetDpI2cWithContext_PATCH(ctx context.Context, id any, wait
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (r *Dbox) DboxResetDpI2c_PATCH(id any, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
 	return r.DboxResetDpI2cWithContext_PATCH(r.Untyped.GetCtx(), id, waitTimeout)
+}
+
+// DboxResumeWithContext_POST
+// method: POST
+// url: /dboxes/decommission/resume/
+// summary: Resume DBox Removal
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dbox) DboxResumeWithContext_POST(ctx context.Context, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/dboxes/decommission/resume/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// DboxResume_POST
+// method: POST
+// url: /dboxes/decommission/resume/
+// summary: Resume DBox Removal
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dbox) DboxResume_POST(waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.DboxResumeWithContext_POST(r.Untyped.GetCtx(), waitTimeout)
 }
 
 // -----------------------------------------------------

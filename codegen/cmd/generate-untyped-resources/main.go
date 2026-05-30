@@ -138,6 +138,8 @@ func main() {
 			fmt.Printf("  ✅ Generated method: %s\n", methodInfo.Name)
 		}
 
+		disambiguateMethodNames(resourceData.Methods)
+
 		// Sort methods by name+method for deterministic output
 		sort.Slice(resourceData.Methods, func(i, j int) bool {
 			iKey := resourceData.Methods[i].Name + "_" + resourceData.Methods[i].HTTPMethod
@@ -278,8 +280,8 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 		}
 	}
 
-	// Check if path contains {id} parameter
-	methodInfo.HasID = strings.Contains(extraMethod.Path, "{id}")
+	// True when path has a /{id}/ segment (exact match, not {tenant_id} etc.)
+	methodInfo.HasID = pathHasIDParam(extraMethod.Path)
 
 	// Parse the path to extract resource path and sub-path
 	// Example: /users/{id}/tenant_data/ -> resource: "users", subPath: "tenant_data"
@@ -310,8 +312,20 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 		lastPart = pathParts[len(pathParts)-2]
 	}
 
-	// Clean and capitalize the last part
+	// Clean and capitalize the last part.
+	// If it was a bare path parameter (e.g. {id}), walk backwards to find the
+	// last meaningful non-parameter segment, preventing duplicate method names.
 	lastPart = cleanPathPart(lastPart)
+	if lastPart == "" {
+		// Walk backwards but skip index 0 (the collection prefix, e.g. "s3keys")
+		// to avoid generating names like "S3KeysS3keys".
+		for i := len(pathParts) - 2; i > 0; i-- {
+			if c := cleanPathPart(pathParts[i]); c != "" {
+				lastPart = c
+				break
+			}
+		}
+	}
 	action := toCamelCase(lastPart)
 
 	// Store base name without HTTP method suffix
@@ -454,6 +468,42 @@ func httpMethodToGoConstant(method string) string {
 		}
 		return "Method"
 	}
+}
+
+// disambiguateMethodNames assigns List/ById suffixes when the same base name+verb
+// would produce colliding Go methods (Go allows arity overloading only with identical return types).
+func disambiguateMethodNames(methods []MethodInfo) {
+	groups := make(map[string][]int)
+	for i, m := range methods {
+		key := m.Name + "_" + m.HTTPMethod
+		groups[key] = append(groups[key], i)
+	}
+	for _, indices := range groups {
+		if len(indices) <= 1 {
+			continue
+		}
+		for _, i := range indices {
+			m := &methods[i]
+			switch {
+			case m.ReturnsArray && !m.HasID:
+				m.Name += "List"
+			case m.HasID:
+				m.Name += "ById"
+			default:
+				m.Name += "Alt"
+			}
+		}
+	}
+}
+
+// pathHasIDParam reports whether the path has a /{id}/ path parameter segment.
+func pathHasIDParam(path string) bool {
+	for _, part := range strings.Split(strings.Trim(path, "/"), "/") {
+		if part == "{id}" {
+			return true
+		}
+	}
+	return false
 }
 
 // cleanPathPart removes {id} and other template variables from path part

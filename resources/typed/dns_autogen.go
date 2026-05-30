@@ -305,4 +305,5 @@ func (r *Dns) MustExistsWithContext(ctx context.Context, req *DnsSearchParams) b
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
+//   - Extra method POST /dns/allocate/ skipped: POST /dns/allocate/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - UPDATE operation excluded: PATCH/PUT /dns/{id}/ has no response schema and doesn't return 204 NO CONTENT

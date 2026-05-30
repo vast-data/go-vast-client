@@ -60,6 +60,22 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"View",                       // resource type (Go struct name)
+		"ViewNfs4Triggers_GET",       // method name
+		"GET",                        // HTTP verb
+		"/views/{id}/nfs4_triggers/", // URL path with placeholders
+		"Get the current NFSv4 triggers state for a view", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"View",                       // resource type (Go struct name)
+		"ViewNfs4Triggers_POST",      // method name
+		"POST",                       // HTTP verb
+		"/views/{id}/nfs4_triggers/", // URL path with placeholders
+		"Register or unregister NFSv4 triggers for a view", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"View",                            // resource type (Go struct name)
 		"ViewPermissionsRepair_DELETE",    // method name
 		"DELETE",                          // HTTP verb
@@ -73,6 +89,30 @@ func init() {
 		"POST",                            // HTTP verb
 		"/views/{id}/permissions_repair/", // URL path with placeholders
 		"Start Bulk Permission Update",    // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"View",                              // resource type (Go struct name)
+		"ViewS3corsConfiguration_DELETE",    // method name
+		"DELETE",                            // HTTP verb
+		"/views/{id}/s3cors_configuration/", // URL path with placeholders
+		"Delete all S3 CORS rules for View", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"View",                               // resource type (Go struct name)
+		"ViewS3corsConfiguration_GET",        // method name
+		"GET",                                // HTTP verb
+		"/views/{id}/s3cors_configuration/",  // URL path with placeholders
+		"Get S3 CORS configuration for View", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"View",                                   // resource type (Go struct name)
+		"ViewS3corsConfiguration_POST",           // method name
+		"POST",                                   // HTTP verb
+		"/views/{id}/s3cors_configuration/",      // URL path with placeholders
+		"Create multiple S3 CORS rules for View", // summary from OpenAPI
 	)
 
 }

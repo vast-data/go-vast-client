@@ -5,6 +5,7 @@ package typed
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
 )
@@ -276,6 +277,59 @@ func (r *Certificate) MustExistsWithContext(ctx context.Context, req *Certificat
 		panic(err)
 	}
 	return r.Untyped.GetResourceMap()[r.GetResourceType()].MustExistsWithContext(ctx, params)
+}
+
+// -----------------------------------------------------
+// EXTRA METHODS
+// -----------------------------------------------------
+
+// CertificateValidateComputeClusterCertificates_POST_Model represents the response model for CertificateValidateComputeClusterCertificates
+type CertificateValidateComputeClusterCertificates_POST_Model struct {
+	Message string `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:""`
+}
+
+// CertificateValidateComputeClusterCertificatesWithContext_POST
+// method: POST
+// url: /certificates/validate_compute_cluster_certificates/
+// summary: Validate compute cluster RKE2 certificates
+//
+// Parameters:
+//   - intermediateCertificate (body): PEM-encoded intermediate CA certificate
+//   - intermediateKey (body): PEM-encoded intermediate private key
+//   - rootCertificate (body): PEM-encoded root CA certificate
+func (r *Certificate) CertificateValidateComputeClusterCertificatesWithContext_POST(ctx context.Context, intermediateCertificate string, intermediateKey string, rootCertificate string) (*CertificateValidateComputeClusterCertificates_POST_Model, error) {
+	resourcePath := "/certificates/validate_compute_cluster_certificates/"
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	reqBody["intermediate_certificate"] = intermediateCertificate
+	reqBody["intermediate_key"] = intermediateKey
+	reqBody["root_certificate"] = rootCertificate
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response CertificateValidateComputeClusterCertificates_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// CertificateValidateComputeClusterCertificates_POST
+// method: POST
+// url: /certificates/validate_compute_cluster_certificates/
+// summary: Validate compute cluster RKE2 certificates
+//
+// Parameters:
+//   - intermediateCertificate (body): PEM-encoded intermediate CA certificate
+//   - intermediateKey (body): PEM-encoded intermediate private key
+//   - rootCertificate (body): PEM-encoded root CA certificate
+func (r *Certificate) CertificateValidateComputeClusterCertificates_POST(intermediateCertificate string, intermediateKey string, rootCertificate string) (*CertificateValidateComputeClusterCertificates_POST_Model, error) {
+	return r.CertificateValidateComputeClusterCertificatesWithContext_POST(r.Untyped.GetCtx(), intermediateCertificate, intermediateKey, rootCertificate)
 }
 
 // -----------------------------------------------------

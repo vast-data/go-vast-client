@@ -201,9 +201,19 @@ func (s *Server) Start(ctx context.Context) error {
 		}()
 	}
 
-	s.logger.Info("VPN server started successfully",
-		slog.Int("pid", s.process.Process.Pid),
-		slog.String("serverIP", s.config.ServerIP.String()))
+	s.mu.Lock()
+	s.running = true
+	s.mu.Unlock()
+
+	if s.process != nil && s.process.Process != nil {
+		s.logger.Info("VPN server started successfully",
+			slog.Int("pid", s.process.Process.Pid),
+			slog.String("serverIP", s.config.ServerIP.String()))
+	} else {
+		s.logger.Info("VPN server started successfully",
+			slog.String("mode", "kernel"),
+			slog.String("serverIP", s.config.ServerIP.String()))
+	}
 
 	return nil
 }

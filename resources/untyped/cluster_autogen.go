@@ -1251,6 +1251,54 @@ func (c *Cluster) ClusterRunHardwareCheck_PATCH(body core.Params, waitTimeout ti
 	return c.ClusterRunHardwareCheckWithContext_PATCH(c.Rest.GetCtx(), body, waitTimeout)
 }
 
+// ClusterS3TrueIpConfigWithContext_GET
+// method: GET
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Get S3 True IP Configuration
+func (c *Cluster) ClusterS3TrueIpConfigWithContext_GET(ctx context.Context, id any) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "s3_true_ip_config")
+	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ClusterS3TrueIpConfig_GET
+// method: GET
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Get S3 True IP Configuration
+func (c *Cluster) ClusterS3TrueIpConfig_GET(id any) (core.Record, error) {
+	return c.ClusterS3TrueIpConfigWithContext_GET(c.Rest.GetCtx(), id)
+}
+
+// ClusterS3TrueIpConfigWithContext_PATCH
+// method: PATCH
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Set S3 True IP Configuration
+//
+// Body:
+//   - included_addresses: List of IP address ranges to include
+//   - true_client_ip_header: True client IP value (must be IPv4)
+func (c *Cluster) ClusterS3TrueIpConfigWithContext_PATCH(ctx context.Context, id any, body core.Params) error {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "s3_true_ip_config")
+	_, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
+	return err
+
+}
+
+// ClusterS3TrueIpConfig_PATCH
+// method: PATCH
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Set S3 True IP Configuration
+//
+// Body:
+//   - included_addresses: List of IP address ranges to include
+//   - true_client_ip_header: True client IP value (must be IPv4)
+func (c *Cluster) ClusterS3TrueIpConfig_PATCH(id any, body core.Params) error {
+	return c.ClusterS3TrueIpConfigWithContext_PATCH(c.Rest.GetCtx(), id, body)
+}
+
 // ClusterSetCertificatesWithContext_POST
 // method: POST
 // url: /clusters/{id}/set_certificates/

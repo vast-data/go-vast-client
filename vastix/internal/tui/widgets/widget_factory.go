@@ -231,11 +231,10 @@ func (f *WidgetFactory) createExtraWidget(parentResourceType string, method core
 
 	// Create form hints for the extra method
 	// Check if the operation has query parameters to determine the right schema reference
-	queryParams, queryErr := openapi_schema.GetQueryParameters(httpMethod, method.Path)
-	hasQueryParams := queryErr == nil && len(queryParams) > 0
+	hasQueryParams := common.HasUserFacingQueryParams(httpMethod, method.Path)
 
-	log.GetAuxLogger().Printf("[createExtraWidget] Method: %s %s, hasQueryParams=%v, paramCount=%d, err=%v",
-		httpMethod, method.Path, hasQueryParams, len(queryParams), queryErr)
+	log.GetAuxLogger().Printf("[createExtraWidget] Method: %s %s, hasUserFacingQueryParams=%v",
+		httpMethod, method.Path, hasQueryParams)
 
 	var formHints *common.FormHints
 	if hasQueryParams {
@@ -255,10 +254,9 @@ func (f *WidgetFactory) createExtraWidget(parentResourceType string, method core
 	// Determine list headers
 	listHeaders := []string{"id", "name"}
 
-	// Create display name in format: [method]path
-	// e.g., "[patch]apitokens/{id}/revoke"
+	// Create display name in format: verb:path (e.g. post:apitokens/{id}/revoke)
 	cleanPath := strings.Trim(method.Path, "/")
-	displayName := fmt.Sprintf("[%s]%s", strings.ToLower(method.HTTPVerb), cleanPath)
+	displayName := fmt.Sprintf("%s:%s", strings.ToLower(method.HTTPVerb), cleanPath)
 
 	// Fetch and cache summary from OpenAPI schema
 	summary, err := openapi_schema.GetOperationSummary(method.HTTPVerb, method.Path)
@@ -444,8 +442,7 @@ func (w *ExtraMethodWidget) GetInputs() (common.Inputs, error) {
 
 	// Determine if this operation uses query parameters or request body
 	// by checking what parameters actually exist in the OpenAPI schema
-	queryParams, queryErr := openapi_schema.GetQueryParameters(w.methodInfo.HTTPVerb, w.methodInfo.Path)
-	hasQueryParams := queryErr == nil && len(queryParams) > 0
+	hasQueryParams := common.HasUserFacingQueryParams(w.methodInfo.HTTPVerb, w.methodInfo.Path)
 
 	// For operations with query parameters (GET, DELETE with params, etc.), use query params
 	// For operations with body (POST, PATCH, PUT), use body schema
@@ -533,12 +530,9 @@ func (w *ExtraMethodWidget) InitialExtraMode() common.ExtraNavigatorMode {
 		hasInputs = len(schema.Value.Properties) > 0
 	}
 
-	// Check for query parameters (important for GET requests)
+	// Check for user-facing query parameters (excludes page/page_size)
 	if !hasInputs {
-		queryParams, err := openapi_schema.GetQueryParameters(w.methodInfo.HTTPVerb, w.methodInfo.Path)
-		if err == nil && len(queryParams) > 0 {
-			hasInputs = true
-		}
+		hasInputs = common.HasUserFacingQueryParams(w.methodInfo.HTTPVerb, w.methodInfo.Path)
 	}
 
 	// Debug logging

@@ -18,6 +18,31 @@ var (
 	InputDefinitionFromQueryParams InputDefinitionFrom = 3
 )
 
+// excludedInternalQueryParams are handled by the client/iterator, not the TUI form.
+var excludedInternalQueryParams = map[string]struct{}{
+	"page":      {},
+	"page_size": {},
+}
+
+func isExcludedInternalQueryParam(name string) bool {
+	_, ok := excludedInternalQueryParams[name]
+	return ok
+}
+
+// HasUserFacingQueryParams reports whether the operation has query params that belong in the TUI form.
+func HasUserFacingQueryParams(httpMethod, path string) bool {
+	params, err := openapi_schema.GetQueryParameters(httpMethod, path)
+	if err != nil {
+		return false
+	}
+	for _, p := range params {
+		if p != nil && !isExcludedInternalQueryParam(p.Name) {
+			return true
+		}
+	}
+	return false
+}
+
 // FormHints defines metadata and overrides for TUI form generation.
 // Contains schema reference for OpenAPI-based input generation and custom inputs
 // that should be appended to the schema-derived inputs.
@@ -197,6 +222,9 @@ func (sr *SchemaReference) getSchemaFromQueryParamsRef() (*openapi3.SchemaRef, e
 
 	for _, param := range queryParams {
 		if param == nil || param.Schema == nil || param.Schema.Value == nil {
+			continue
+		}
+		if isExcludedInternalQueryParam(param.Name) {
 			continue
 		}
 

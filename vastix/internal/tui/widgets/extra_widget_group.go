@@ -709,6 +709,10 @@ func (eg *ExtraWidgetGroup) Select(selectedRowData common.RowData) (tea.Cmd, err
 
 	currentWidget.SetSelectedRowData(eg.selectedRowData)
 
+	if resetter, ok := currentWidget.(interface{ ResetCreateForm() }); ok {
+		resetter.ResetCreateForm()
+	}
+
 	eg.SetExtraMode(initialMode) // Set mode on group, not individual widget
 
 	// If we just switched to create mode, initialize inputs now that activeExtraWidget is set
@@ -721,8 +725,7 @@ func (eg *ExtraWidgetGroup) Select(selectedRowData common.RowData) (tea.Cmd, err
 					eg.auxlog.Printf("Failed to get inputs after select: %v", err)
 				} else {
 					createWidget.SetInputs(inputs)
-					// Note: Don't reset the form here as it would clear pre-populated values from parent row data
-					eg.auxlog.Printf("Post-select: Extra create inputs initialized with pre-populated values")
+					eg.auxlog.Printf("Post-select: Extra create inputs initialized (%d fields)", len(inputs))
 				}
 			}
 		}

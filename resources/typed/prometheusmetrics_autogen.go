@@ -20,6 +20,39 @@ type PrometheusMetrics struct {
 // EXTRA METHODS
 // -----------------------------------------------------
 
+// PrometheusMetricsAlarmsWithContext_GET
+// method: GET
+// url: /prometheusmetrics/alarms/
+// summary: prometheus alarms metrics
+func (r *PrometheusMetrics) PrometheusMetricsAlarmsWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/alarms/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsAlarms_GET
+// method: GET
+// url: /prometheusmetrics/alarms/
+// summary: prometheus alarms metrics
+func (r *PrometheusMetrics) PrometheusMetricsAlarms_GET() (string, error) {
+	return r.PrometheusMetricsAlarmsWithContext_GET(r.Untyped.GetCtx())
+}
+
 // PrometheusMetricsAllWithContext_GET
 // method: GET
 // url: /prometheusmetrics/all/
@@ -119,6 +152,39 @@ func (r *PrometheusMetrics) PrometheusMetricsDevices_GET() (string, error) {
 	return r.PrometheusMetricsDevicesWithContext_GET(r.Untyped.GetCtx())
 }
 
+// PrometheusMetricsNicsWithContext_GET
+// method: GET
+// url: /prometheusmetrics/nics/
+// summary: prometheus nics metrics
+func (r *PrometheusMetrics) PrometheusMetricsNicsWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/nics/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsNics_GET
+// method: GET
+// url: /prometheusmetrics/nics/
+// summary: prometheus nics metrics
+func (r *PrometheusMetrics) PrometheusMetricsNics_GET() (string, error) {
+	return r.PrometheusMetricsNicsWithContext_GET(r.Untyped.GetCtx())
+}
+
 // PrometheusMetricsQuotasWithContext_GET
 // method: GET
 // url: /prometheusmetrics/quotas/
@@ -152,6 +218,39 @@ func (r *PrometheusMetrics) PrometheusMetricsQuotas_GET() (string, error) {
 	return r.PrometheusMetricsQuotasWithContext_GET(r.Untyped.GetCtx())
 }
 
+// PrometheusMetricsReplicationsWithContext_GET
+// method: GET
+// url: /prometheusmetrics/replications/
+// summary: prometheus replications metrics
+func (r *PrometheusMetrics) PrometheusMetricsReplicationsWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/replications/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsReplications_GET
+// method: GET
+// url: /prometheusmetrics/replications/
+// summary: prometheus replications metrics
+func (r *PrometheusMetrics) PrometheusMetricsReplications_GET() (string, error) {
+	return r.PrometheusMetricsReplicationsWithContext_GET(r.Untyped.GetCtx())
+}
+
 // PrometheusMetricsSwitchesWithContext_GET
 // method: GET
 // url: /prometheusmetrics/switches/
@@ -183,6 +282,105 @@ func (r *PrometheusMetrics) PrometheusMetricsSwitchesWithContext_GET(ctx context
 // summary: prometheus switches metrics
 func (r *PrometheusMetrics) PrometheusMetricsSwitches_GET() (string, error) {
 	return r.PrometheusMetricsSwitchesWithContext_GET(r.Untyped.GetCtx())
+}
+
+// PrometheusMetricsTenantsWithContext_GET
+// method: GET
+// url: /prometheusmetrics/tenants/
+// summary: prometheus tenants metrics
+func (r *PrometheusMetrics) PrometheusMetricsTenantsWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/tenants/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsTenants_GET
+// method: GET
+// url: /prometheusmetrics/tenants/
+// summary: prometheus tenants metrics
+func (r *PrometheusMetrics) PrometheusMetricsTenants_GET() (string, error) {
+	return r.PrometheusMetricsTenantsWithContext_GET(r.Untyped.GetCtx())
+}
+
+// PrometheusMetricsUserConnectionsWithContext_GET
+// method: GET
+// url: /prometheusmetrics/user_connections/
+// summary: prometheus user connections metrics
+func (r *PrometheusMetrics) PrometheusMetricsUserConnectionsWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/user_connections/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsUserConnections_GET
+// method: GET
+// url: /prometheusmetrics/user_connections/
+// summary: prometheus user connections metrics
+func (r *PrometheusMetrics) PrometheusMetricsUserConnections_GET() (string, error) {
+	return r.PrometheusMetricsUserConnectionsWithContext_GET(r.Untyped.GetCtx())
+}
+
+// PrometheusMetricsUserViewWithContext_GET
+// method: GET
+// url: /prometheusmetrics/user_view/
+// summary: prometheus user view metrics
+func (r *PrometheusMetrics) PrometheusMetricsUserViewWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/user_view/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsUserView_GET
+// method: GET
+// url: /prometheusmetrics/user_view/
+// summary: prometheus user view metrics
+func (r *PrometheusMetrics) PrometheusMetricsUserView_GET() (string, error) {
+	return r.PrometheusMetricsUserViewWithContext_GET(r.Untyped.GetCtx())
 }
 
 // PrometheusMetricsUsersWithContext_GET
@@ -249,4 +447,103 @@ func (r *PrometheusMetrics) PrometheusMetricsViewsWithContext_GET(ctx context.Co
 // summary: prometheus views metrics
 func (r *PrometheusMetrics) PrometheusMetricsViews_GET() (string, error) {
 	return r.PrometheusMetricsViewsWithContext_GET(r.Untyped.GetCtx())
+}
+
+// PrometheusMetricsVipsWithContext_GET
+// method: GET
+// url: /prometheusmetrics/vips/
+// summary: prometheus vips metrics
+func (r *PrometheusMetrics) PrometheusMetricsVipsWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/vips/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsVips_GET
+// method: GET
+// url: /prometheusmetrics/vips/
+// summary: prometheus vips metrics
+func (r *PrometheusMetrics) PrometheusMetricsVips_GET() (string, error) {
+	return r.PrometheusMetricsVipsWithContext_GET(r.Untyped.GetCtx())
+}
+
+// PrometheusMetricsVmsStateWithContext_GET
+// method: GET
+// url: /prometheusmetrics/vms_state/
+// summary: prometheus vms state metrics
+func (r *PrometheusMetrics) PrometheusMetricsVmsStateWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/vms_state/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsVmsState_GET
+// method: GET
+// url: /prometheusmetrics/vms_state/
+// summary: prometheus vms state metrics
+func (r *PrometheusMetrics) PrometheusMetricsVmsState_GET() (string, error) {
+	return r.PrometheusMetricsVmsStateWithContext_GET(r.Untyped.GetCtx())
+}
+
+// PrometheusMetricsVolumesWithContext_GET
+// method: GET
+// url: /prometheusmetrics/volumes/
+// summary: prometheus volumes metrics
+func (r *PrometheusMetrics) PrometheusMetricsVolumesWithContext_GET(ctx context.Context) (string, error) {
+	resourcePath := "/prometheusmetrics/volumes/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return "", err
+	}
+	// Extract text/plain response from @raw key
+	if rawVal, ok := record["@raw"]; ok {
+		if rawBytes, ok := rawVal.([]byte); ok {
+			return string(rawBytes), nil
+		}
+		return fmt.Sprintf("%v", rawVal), nil
+	}
+	return "", fmt.Errorf("@raw key not found in response")
+
+}
+
+// PrometheusMetricsVolumes_GET
+// method: GET
+// url: /prometheusmetrics/volumes/
+// summary: prometheus volumes metrics
+func (r *PrometheusMetrics) PrometheusMetricsVolumes_GET() (string, error) {
+	return r.PrometheusMetricsVolumesWithContext_GET(r.Untyped.GetCtx())
 }
