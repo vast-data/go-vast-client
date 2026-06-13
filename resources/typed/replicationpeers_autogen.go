@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,18 +25,18 @@ type ReplicationPeers struct {
 
 // ReplicationPeersSearchParams represents the search parameters for ReplicationPeers operations
 type ReplicationPeersSearchParams struct {
-	Guid          string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	LastHeartBeat string `json:"last_heart_beat,omitempty" yaml:"last_heart_beat,omitempty" required:"false" doc:"Filter by last heartbeat, the time of the last successful message sent, arrived and acknowledged by the peer."`
-	LeadingVip    string `json:"leading_vip,omitempty" yaml:"leading_vip,omitempty" required:"false" doc:"Filter by leading remote VIP, a VIP that is specified when creating the peer. It is one of the VIPs in the remote peer's replication VIP Pool."`
-	Name          string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by name"`
-	Pool          string `json:"pool,omitempty" yaml:"pool,omitempty" required:"false" doc:"Filter by the name of the local cluster's replication VIP pool"`
-	RemoteVersion string `json:"remote_version,omitempty" yaml:"remote_version,omitempty" required:"false" doc:"Filter by remote peer's software version"`
-	RemoteVips    string `json:"remote_vips,omitempty" yaml:"remote_vips,omitempty" required:"false" doc:"remote vips"`
-	SecureMode    string `json:"secure_mode,omitempty" yaml:"secure_mode,omitempty" required:"false" doc:"Filter by secure_mode"`
-	SpaceLeft     string `json:"space_left,omitempty" yaml:"space_left,omitempty" required:"false" doc:"Filter by logical capacity remaining available on the remote peer."`
-	State         string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by state"`
-	TransportMode string `json:"transport_mode,omitempty" yaml:"transport_mode,omitempty" required:"false" doc:"Filter by transport_mode"`
-	Version       string `json:"version,omitempty" yaml:"version,omitempty" required:"false" doc:"Filter by local cluster's software version"`
+	Guid          expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	LastHeartBeat expr.StrField `json:"last_heart_beat,omitempty" yaml:"last_heart_beat,omitempty" required:"false" doc:"Filter by last heartbeat, the time of the last successful message sent, arrived and acknowledged by the peer."`
+	LeadingVip    expr.StrField `json:"leading_vip,omitempty" yaml:"leading_vip,omitempty" required:"false" doc:"Filter by leading remote VIP, a VIP that is specified when creating the peer. It is one of the VIPs in the remote peer's replication VIP Pool."`
+	Name          expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by name"`
+	Pool          expr.StrField `json:"pool,omitempty" yaml:"pool,omitempty" required:"false" doc:"Filter by the name of the local cluster's replication VIP pool"`
+	RemoteVersion expr.StrField `json:"remote_version,omitempty" yaml:"remote_version,omitempty" required:"false" doc:"Filter by remote peer's software version"`
+	RemoteVips    expr.StrField `json:"remote_vips,omitempty" yaml:"remote_vips,omitempty" required:"false" doc:"remote vips"`
+	SecureMode    expr.StrField `json:"secure_mode,omitempty" yaml:"secure_mode,omitempty" required:"false" doc:"Filter by secure_mode"`
+	SpaceLeft     expr.StrField `json:"space_left,omitempty" yaml:"space_left,omitempty" required:"false" doc:"Filter by logical capacity remaining available on the remote peer."`
+	State         expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by state"`
+	TransportMode expr.StrField `json:"transport_mode,omitempty" yaml:"transport_mode,omitempty" required:"false" doc:"Filter by transport_mode"`
+	Version       expr.StrField `json:"version,omitempty" yaml:"version,omitempty" required:"false" doc:"Filter by local cluster's software version"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

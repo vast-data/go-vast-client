@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,8 +25,8 @@ type ReplicationRestorePoint struct {
 
 // ReplicationRestorePointSearchParams represents the search parameters for ReplicationRestorePoint operations
 type ReplicationRestorePointSearchParams struct {
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"guid"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"guid"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

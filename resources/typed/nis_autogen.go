@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,9 +26,9 @@ type Nis struct {
 
 // NisSearchParams represents the search parameters for Nis operations
 type NisSearchParams struct {
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the NIS configuration"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
+	Guid     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the NIS configuration"`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

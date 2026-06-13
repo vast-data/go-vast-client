@@ -5,6 +5,7 @@ import (
 
 	client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -38,21 +39,28 @@ func main() {
 	}
 	fmt.Printf("Found %d snapshot(s)\n", len(snapshots))
 
-	// --- GET ---
+	// --- GET (exact match) ---
 	fetchedSnapshot, err := rest.Snapshots.Get(&typed.SnapshotSearchParams{
-		Name: "go-client-test-snapshot",
+		Name: expr.S("go-client-test-snapshot"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get snapshot: %w", err))
 	}
 	fmt.Printf("Fetched snapshot: %s (Path: %s)\n", fetchedSnapshot.Name, fetchedSnapshot.Path)
 
-	// --- DELETE ---
-	searchParams := &typed.SnapshotSearchParams{
-		Name: "go-client-test-snapshot",
+	// --- GET (expression: name starts with prefix) ---
+	filtered, err := rest.Snapshots.List(&typed.SnapshotSearchParams{
+		Name: expr.Str.StartsWith("go-client"),
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to list filtered snapshots: %w", err))
 	}
+	fmt.Printf("Snapshots starting with 'go-client': %d\n", len(filtered))
 
-	err = rest.Snapshots.Delete(searchParams)
+	// --- DELETE ---
+	err = rest.Snapshots.Delete(&typed.SnapshotSearchParams{
+		Name: expr.S("go-client-test-snapshot"),
+	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete snapshot: %w", err))
 	}

@@ -10,7 +10,7 @@ The VAST Go client provides an interface to the VAST Data REST API. It wraps low
 
 ---
 
-> **NOTE:** Since version 0.100.0, the REST client has been split into two distinct client types:
+> **NOTE:** Since version 0.100.0, the REST client has been split into two distinct client types. String and integer fields in `SearchParams` structs use **typed expressions** from `github.com/vast-data/go-vast-client/resources/typed/expr` — see [Typed Search Expressions](typed-expressions.md) for the full reference.
 >
 > - **Typed Client** (`NewTypedVMSRest`): Provides strongly-typed structs for requests and responses. Offers compile-time type safety, IDE auto-completion, and clear API contracts. Recommended for most use cases.
 > - **Untyped Client** (`NewVMSRest`): Uses flexible `map[string]any` for data handling. Useful for dynamic scenarios and prototyping. This is the default recommended client.
@@ -18,7 +18,7 @@ The VAST Go client provides an interface to the VAST Data REST API. It wraps low
 ## Installation
 
 ```bash
-go get github.com/vast-data/go-vast-client@v0.137.0  # Replace with the latest available tag
+go get github.com/vast-data/go-vast-client@v0.144.0  # Replace with the latest available tag
 ```
 
 Import it in your Go code:
@@ -36,6 +36,7 @@ import (
     "fmt"
     client "github.com/vast-data/go-vast-client"
     "github.com/vast-data/go-vast-client/resources/typed"
+    "github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -50,10 +51,11 @@ func main() {
         panic(err)
     }
 
+    // expr.S() creates an exact-match StrField — see docs/typed-expressions.md
     searchParams := &typed.ViewSearchParams{
-        Path: "/myview",
+        Path: expr.S("/myview"),
     }
-    
+
     body := &typed.ViewRequestBody{
         Name:      "myview",
         Path:      "/myview",
@@ -68,6 +70,15 @@ func main() {
     }
 
     fmt.Printf("View: %s (ID: %d)\n", view.Name, view.Id)
+
+    // Expression-based search: name starts with "my"
+    views, err := rest.Views.List(&typed.ViewSearchParams{
+        Name: expr.Str.StartsWith("my"),
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("Found %d views starting with 'my'\n", len(views))
 }
 ```
 

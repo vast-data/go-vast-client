@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -28,8 +29,8 @@ type Tenant struct {
 
 // TenantSearchParams represents the search parameters for Tenant operations
 type TenantSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Tenant guid"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Tenant guid"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

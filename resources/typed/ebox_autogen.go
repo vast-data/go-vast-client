@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,9 +28,9 @@ type Ebox struct {
 
 // EboxSearchParams represents the search parameters for Ebox operations
 type EboxSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name"`
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Globally unique identifier"`
-	Uid  string `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"Unique h/w identifier"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name"`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Globally unique identifier"`
+	Uid  expr.StrField `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"Unique h/w identifier"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

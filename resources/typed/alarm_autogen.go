@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,11 +25,11 @@ type Alarm struct {
 
 // AlarmSearchParams represents the search parameters for Alarm operations
 type AlarmSearchParams struct {
-	ObjectGuid          string `json:"object_guid,omitempty" yaml:"object_guid,omitempty" required:"false" doc:""`
-	ObjectId            string `json:"object_id,omitempty" yaml:"object_id,omitempty" required:"false" doc:"The ID of the affected object"`
-	ObjectType          string `json:"object_type,omitempty" yaml:"object_type,omitempty" required:"false" doc:"Filter the list by object type"`
-	OnlyDiscoveredHosts string `json:"only_discovered_hosts,omitempty" yaml:"only_discovered_hosts,omitempty" required:"false" doc:"get only discovery related hosts"`
-	Severity            string `json:"severity,omitempty" yaml:"severity,omitempty" required:"false" doc:"Filter by severity"`
+	ObjectGuid          expr.StrField `json:"object_guid,omitempty" yaml:"object_guid,omitempty" required:"false" doc:""`
+	ObjectId            expr.StrField `json:"object_id,omitempty" yaml:"object_id,omitempty" required:"false" doc:"The ID of the affected object"`
+	ObjectType          expr.StrField `json:"object_type,omitempty" yaml:"object_type,omitempty" required:"false" doc:"Filter the list by object type"`
+	OnlyDiscoveredHosts expr.StrField `json:"only_discovered_hosts,omitempty" yaml:"only_discovered_hosts,omitempty" required:"false" doc:"get only discovery related hosts"`
+	Severity            expr.StrField `json:"severity,omitempty" yaml:"severity,omitempty" required:"false" doc:"Filter by severity"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

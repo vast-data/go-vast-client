@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,14 +25,14 @@ type UserQuota struct {
 
 // UserQuotaSearchParams represents the search parameters for UserQuota operations
 type UserQuotaSearchParams struct {
-	Guid          string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
-	IsAccountable bool   `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:"Set to true to list only user and group quotas for users and groups that have defined user quotas. Set to false to list only user quotas for users and groups that wrote to the directory but have no defined user/group quota rules."`
-	Name          string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
-	Path          string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:""`
-	QuotaGroupId  int64  `json:"quota_group_id,omitempty" yaml:"quota_group_id,omitempty" required:"false" doc:"Quota Group ID"`
-	QuotaId       int64  `json:"quota_id,omitempty" yaml:"quota_id,omitempty" required:"false" doc:"Filter by specific directory quota"`
-	QuotaSystemId int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:"Filters the list to show only user quotas that belong to a quota with a specified system_id number. This is different to quota ID"`
-	RefreshData   bool   `json:"refresh_data,omitempty" yaml:"refresh_data,omitempty" required:"false" doc:"Set to true to refresh data before returning a response, hence guaranteeing fresh data. If false, the data is fetched from the VMS database without refreshing. Response may be quicker with this parameter set to false."`
+	Guid          expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
+	IsAccountable bool          `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:"Set to true to list only user and group quotas for users and groups that have defined user quotas. Set to false to list only user quotas for users and groups that wrote to the directory but have no defined user/group quota rules."`
+	Name          expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
+	Path          expr.StrField `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:""`
+	QuotaGroupId  expr.IntField `json:"quota_group_id,omitempty" yaml:"quota_group_id,omitempty" required:"false" doc:"Quota Group ID"`
+	QuotaId       expr.IntField `json:"quota_id,omitempty" yaml:"quota_id,omitempty" required:"false" doc:"Filter by specific directory quota"`
+	QuotaSystemId expr.IntField `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:"Filters the list to show only user quotas that belong to a quota with a specified system_id number. This is different to quota ID"`
+	RefreshData   bool          `json:"refresh_data,omitempty" yaml:"refresh_data,omitempty" required:"false" doc:"Set to true to refresh data before returning a response, hence guaranteeing fresh data. If false, the data is fetched from the VMS database without refreshing. Response may be quicker with this parameter set to false."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

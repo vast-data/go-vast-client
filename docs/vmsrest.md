@@ -12,6 +12,7 @@ The typed client provides strongly-typed structs for all requests and responses:
 import (
     client "github.com/vast-data/go-vast-client"
     "github.com/vast-data/go-vast-client/resources/typed"
+    "github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // Initialize typed client
@@ -20,9 +21,9 @@ if err != nil {
     log.Fatal(err)
 }
 
-// Use typed structs for requests and responses
+// client.S() creates an exact-match string field
 searchParams := &typed.QuotaSearchParams{
-    Name: "my-quota",
+    Name: client.S("my-quota"),
 }
 
 body := &typed.QuotaRequestBody{
@@ -157,10 +158,50 @@ result, err := rest.Views.Create(client.Params{
 
 **Typed Client:**
 ```go
-user, err := rest.Users.Get(&typed.UserSearchParams{Name: "admin"})
+// Exact match
+user, err := rest.Users.Get(&typed.UserSearchParams{Name: client.S("admin")})
+
+// Expression: name starts with "svc-"
+users, err := rest.Users.List(&typed.UserSearchParams{Name: client.Str.StartsWith("svc-")})
+
+// Expression: uid greater than 1000
+users, err := rest.Users.List(&typed.UserSearchParams{Uid: client.Int.GT(1000)})
 ```
 
 **Untyped Client:**
 ```go
 user, err := rest.Users.Get(client.Params{"name": "admin"})
 ```
+
+---
+
+## Typed Search Expressions
+
+`SearchParams` string and integer fields are typed as `expr.StrField` / `expr.IntField`.
+This lets you pass Django-style lookup expressions directly — no `RawData` needed for common
+filters:
+
+```go
+// ?name__startswith=prod
+rest.Views.List(&typed.ViewSearchParams{
+    Name: client.Str.StartsWith("prod"),
+})
+
+// ?name__in=alice,bob
+rest.Users.List(&typed.UserSearchParams{
+    Name: client.Str.In("alice", "bob"),
+})
+
+// ?uid__gte=500
+rest.Users.List(&typed.UserSearchParams{
+    Uid: client.Int.GTE(500),
+})
+
+// ?name__not_contains=test&tenant_id__gt=0
+rest.Snapshots.List(&typed.SnapshotSearchParams{
+    Name:     client.Str.NotContains("test"),
+    TenantId: client.Int.GT(0),
+})
+```
+
+See [Typed Search Expressions](typed-expressions.md) for the full reference.

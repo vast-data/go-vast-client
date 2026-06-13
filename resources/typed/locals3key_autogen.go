@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,8 +25,8 @@ type LocalS3Key struct {
 
 // LocalS3KeySearchParams represents the search parameters for LocalS3Key operations
 type LocalS3KeySearchParams struct {
-	TenantId int64 `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
-	UserId   int64 `json:"user_id,omitempty" yaml:"user_id,omitempty" required:"false" doc:"User id to filter by."`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	UserId   expr.IntField `json:"user_id,omitempty" yaml:"user_id,omitempty" required:"false" doc:"User id to filter by."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

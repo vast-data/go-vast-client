@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,8 +25,8 @@ type VTask struct {
 
 // VTaskSearchParams represents the search parameters for VTask operations
 type VTaskSearchParams struct {
-	Name  string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Task name"`
-	State string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
+	Name  expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Task name"`
+	State expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

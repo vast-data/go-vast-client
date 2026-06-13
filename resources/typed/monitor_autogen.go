@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,7 +25,7 @@ type Monitor struct {
 
 // MonitorSearchParams represents the search parameters for Monitor operations
 type MonitorSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Monitor name"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Monitor name"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

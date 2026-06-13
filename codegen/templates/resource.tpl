@@ -11,7 +11,8 @@ import (
 {{end}}
 {{if or .HasAsyncMethods .ExtraMethods .HasTextPlainMethods .ReturnsTextPlain .HasArrayMethods}}
 {{end}}	"github.com/vast-data/go-vast-client/core"
-{{if .HasAsyncMethods}}	"github.com/vast-data/go-vast-client/resources/untyped"
+{{if .HasExprSearchParams}}	"github.com/vast-data/go-vast-client/resources/typed/expr"
+{{end}}{{if .HasAsyncMethods}}	"github.com/vast-data/go-vast-client/resources/untyped"
 {{end}}
 )
 

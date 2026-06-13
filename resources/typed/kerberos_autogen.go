@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,7 +26,7 @@ type Kerberos struct {
 
 // KerberosSearchParams represents the search parameters for Kerberos operations
 type KerberosSearchParams struct {
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

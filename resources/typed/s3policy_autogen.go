@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,9 +25,9 @@ type S3Policy struct {
 
 // S3PolicySearchParams represents the search parameters for S3Policy operations
 type S3PolicySearchParams struct {
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the S3 identity policy."`
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the S3 identity policy."`
+	Guid     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

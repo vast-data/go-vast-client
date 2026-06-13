@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,8 +25,8 @@ type ReplicationPolicy struct {
 
 // ReplicationPolicySearchParams represents the search parameters for ReplicationPolicy operations
 type ReplicationPolicySearchParams struct {
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by replication policy name"`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by replication policy name"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

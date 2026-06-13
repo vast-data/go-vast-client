@@ -535,13 +535,13 @@ func TestFlexibleUnmarshal_FloatToInt(t *testing.T) {
 
 func TestFlexibleUnmarshal_FloatToAllIntKinds(t *testing.T) {
 	type AllInts struct {
-		I   int   `json:"i"`
-		I8  int8  `json:"i8"`
-		I16 int16 `json:"i16"`
-		I32 int32 `json:"i32"`
-		I64 int64 `json:"i64"`
-		U   uint  `json:"u"`
-		U8  uint8 `json:"u8"`
+		I   int    `json:"i"`
+		I8  int8   `json:"i8"`
+		I16 int16  `json:"i16"`
+		I32 int32  `json:"i32"`
+		I64 int64  `json:"i64"`
+		U   uint   `json:"u"`
+		U8  uint8  `json:"u8"`
 		U16 uint16 `json:"u16"`
 		U32 uint32 `json:"u32"`
 		U64 uint64 `json:"u64"`
@@ -601,10 +601,10 @@ func TestFlexibleUnmarshal_FloatToAllIntKinds(t *testing.T) {
 func TestFlexibleUnmarshal_ProtectedPathExample(t *testing.T) {
 	// Simulate the real-world ProtectedPath case from the issue
 	type ProtectedPath struct {
-		ID                   int     `json:"id"`
-		Name                 string  `json:"name"`
+		ID                    int     `json:"id"`
+		Name                  string  `json:"name"`
 		EstimatedReadOnlyTime float32 `json:"estimated_read_only_time"`
-		State                string  `json:"state"`
+		State                 string  `json:"state"`
 	}
 
 	jsonData := []byte(`{

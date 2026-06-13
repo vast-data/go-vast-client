@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,10 +25,10 @@ type Port struct {
 
 // PortSearchParams represents the search parameters for Port operations
 type PortSearchParams struct {
-	Guid  string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Model string `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:"Filter by port model"`
-	Name  string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	State string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by port state"`
+	Guid  expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Model expr.StrField `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:"Filter by port model"`
+	Name  expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	State expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by port state"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

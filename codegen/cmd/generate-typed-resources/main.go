@@ -944,6 +944,7 @@ type ResourceData struct {
 	NestedTypes         []*NestedType
 	Resource            *vastparser.VastResource
 	HasSearchParams     bool // True if SearchParamsFields is not empty
+	HasExprSearchParams bool // True if any SearchParamsFields use expr.StrField / expr.IntField
 	HasAsyncMethods     bool // True if any extra method is an async task
 	ReturnsTextPlain    bool // True if GET operation returns text/plain instead of JSON
 	HasTextPlainMethods bool // True if any method (main or extra) returns text/plain
@@ -1369,6 +1370,12 @@ func main() {
 
 		resourceData.SearchParamsFields = searchFields
 		resourceData.HasSearchParams = len(searchFields) > 0
+		for _, f := range resourceData.SearchParamsFields {
+			if f.Type == "expr.StrField" || f.Type == "expr.IntField" {
+				resourceData.HasExprSearchParams = true
+				break
+			}
+		}
 
 		// Declare createURL/createMethod outside the block so we can use it for summaries
 		var createMethod string
@@ -2465,6 +2472,23 @@ func IsEmptySchema(ref *openapi3.SchemaRef) bool {
 }
 
 // getGoTypeFromOpenAPI converts OpenAPI schema type to Go type
+// searchParamGoType maps OpenAPI types to expr.StrField / expr.IntField for SearchParams structs.
+// String and integer fields become typed expression fields that support Django-style query lookups.
+// All other types fall back to the regular Go type mapping.
+func searchParamGoType(schema *openapi3.Schema) string {
+	if schema == nil || schema.Type == nil || len(*schema.Type) == 0 {
+		return "expr.StrField" // default fallback to string expression
+	}
+	switch (*schema.Type)[0] {
+	case "string":
+		return "expr.StrField"
+	case "integer":
+		return "expr.IntField"
+	default:
+		return getGoTypeFromOpenAPI(schema, false)
+	}
+}
+
 func getGoTypeFromOpenAPI(schema *openapi3.Schema, usePointers bool) string {
 	if schema == nil || schema.Type == nil || len(*schema.Type) == 0 {
 		if usePointers {
@@ -2534,14 +2558,17 @@ func generateSearchParamsFields(resourcePath, method string, registry *TypeRegis
 			return nil, fmt.Errorf("failed to get GET query params for resource %q: %w", resourcePath, err)
 		}
 
-		return generateSearchParamsFromParameters(params, resourcePath, registry)
+		return generateSearchParamsFromParameters(params, resourcePath, registry, true)
 	default:
 		return nil, fmt.Errorf("unsupported method %q for search params generation", method)
 	}
 }
 
-// generateSearchParamsFromParameters generates search params fields from individual parameters
-func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePath string, registry *TypeRegistry) ([]Field, error) {
+// generateSearchParamsFromParameters generates search params fields from individual parameters.
+// Set useExprTypes=true for SearchParams structs (uses expr.StrField/expr.IntField),
+// false for extra-method body/query params (uses plain Go types).
+func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePath string, registry *TypeRegistry, useExprTypes ...bool) ([]Field, error) {
+	exprTypes := len(useExprTypes) > 0 && useExprTypes[0]
 	var fields []Field
 
 	for _, p := range params {
@@ -2582,9 +2609,11 @@ func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePa
 			DocTag:      escapeQuotes(p.Description),
 		}
 
-		// Convert OpenAPI type to Go type (no pointers for search params - omitempty works with zero values)
-		goType := getGoTypeFromOpenAPI(p.Schema.Value, false)
-		field.Type = goType
+		if exprTypes {
+			field.Type = searchParamGoType(p.Schema.Value)
+		} else {
+			field.Type = getGoTypeFromOpenAPI(p.Schema.Value, false)
+		}
 
 		fields = append(fields, field)
 	}
@@ -2742,12 +2771,9 @@ func extractCommonSearchableFields(resource *vastparser.VastResource, registry *
 				}
 			}
 
-			// Get Go type for the field
-			goType := getGoTypeFromOpenAPI(propRef.Value, false)
-
-			field := Field{
-				Name:        toCamelCase(fieldName),
-				Type:        goType,
+		field := Field{
+			Name:        toCamelCase(fieldName),
+			Type:        searchParamGoType(propRef.Value),
 				JSONTag:     fieldName,
 				YAMLTag:     fieldName,
 				RequiredTag: isRequired,

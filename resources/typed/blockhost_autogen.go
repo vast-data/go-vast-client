@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,9 +28,9 @@ type BlockHost struct {
 
 // BlockHostSearchParams represents the search parameters for BlockHost operations
 type BlockHostSearchParams struct {
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"name of the blockhost"`
-	Nqn      string `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"false" doc:"NQN of the blockhost"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"name of the blockhost"`
+	Nqn      expr.StrField `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"false" doc:"NQN of the blockhost"`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

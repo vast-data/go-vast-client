@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,9 +28,9 @@ type User struct {
 
 // UserSearchParams represents the search parameters for User operations
 type UserSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the user"`
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
-	Uid  int64  `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"UID"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the user"`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
+	Uid  expr.IntField `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"UID"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

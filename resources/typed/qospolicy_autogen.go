@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,9 +26,9 @@ type QosPolicy struct {
 
 // QosPolicySearchParams represents the search parameters for QosPolicy operations
 type QosPolicySearchParams struct {
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"QoS Policy guid"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Guid     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"QoS Policy guid"`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

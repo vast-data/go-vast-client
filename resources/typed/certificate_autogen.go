@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,7 +26,7 @@ type Certificate struct {
 
 // CertificateSearchParams represents the search parameters for Certificate operations
 type CertificateSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

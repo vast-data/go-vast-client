@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,7 +25,7 @@ type WebHook struct {
 
 // WebHookSearchParams represents the search parameters for WebHook operations
 type WebHookSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the webhook"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the webhook"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

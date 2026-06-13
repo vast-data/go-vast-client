@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,9 +25,9 @@ type ProtectionPolicy struct {
 
 // ProtectionPolicySearchParams represents the search parameters for ProtectionPolicy operations
 type ProtectionPolicySearchParams struct {
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by protection policy name"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
+	Guid     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by protection policy name"`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

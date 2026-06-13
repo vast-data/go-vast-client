@@ -5,6 +5,7 @@ import (
 
 	client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -42,7 +43,7 @@ func main() {
 
 	// --- GET ---
 	fetchedQuota, err := rest.Quotas.Get(&typed.QuotaSearchParams{
-		Path: "/go-client-test-quota",
+		Path: expr.S("/go-client-test-quota"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get quota: %w", err))
@@ -50,11 +51,9 @@ func main() {
 	fmt.Printf("Fetched quota: %s (Hard Limit: %d)\n", fetchedQuota.Path, fetchedQuota.HardLimit)
 
 	// --- DELETE ---
-	searchParams := &typed.QuotaSearchParams{
-		Path: "/go-client-test-quota",
-	}
-
-	err = rest.Quotas.Delete(searchParams)
+	err = rest.Quotas.Delete(&typed.QuotaSearchParams{
+		Path: expr.S("/go-client-test-quota"),
+	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete quota: %w", err))
 	}

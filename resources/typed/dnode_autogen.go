@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,11 +28,11 @@ type Dnode struct {
 
 // DnodeSearchParams represents the search parameters for Dnode operations
 type DnodeSearchParams struct {
-	Enabled bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"List only enabled DNodes"`
-	Guid    string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Ip      string `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"Filter by DNode IP"`
-	Name    string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by DNode name"`
-	State   string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by DNode state"`
+	Enabled bool          `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"List only enabled DNodes"`
+	Guid    expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Ip      expr.StrField `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"Filter by DNode IP"`
+	Name    expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by DNode name"`
+	State   expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by DNode state"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

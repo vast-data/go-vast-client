@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,9 +26,9 @@ type Manager struct {
 
 // ManagerSearchParams represents the search parameters for Manager operations
 type ManagerSearchParams struct {
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
-	Username string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:"Filter by username"`
+	Guid     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	Username expr.StrField `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:"Filter by username"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

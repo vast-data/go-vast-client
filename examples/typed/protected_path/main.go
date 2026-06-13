@@ -5,6 +5,7 @@ import (
 
 	client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -19,11 +20,10 @@ func main() {
 		panic(err)
 	}
 
-	req := typed.ProtectedPathSearchParams{
-		RawData: client.Params{"name__endswith": "b816a408a6"},
-	}
-
-	resp, err := rest.ProtectedPaths.Get(&req)
+	// Search using a typed expression (name ends with a suffix)
+	resp, err := rest.ProtectedPaths.Get(&typed.ProtectedPathSearchParams{
+		Name: expr.Str.EndsWith("b816a408a6"),
+	})
 	if err != nil {
 		panic(err)
 	}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -28,15 +29,15 @@ type View struct {
 
 // ViewSearchParams represents the search parameters for View operations
 type ViewSearchParams struct {
-	Alias              string `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Filter by NFS export alias"`
-	Bucket             string `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"Limit response by S3 bucket name"`
-	Guid               string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	IsDefaultSubsystem bool   `json:"is_default_subsystem,omitempty" yaml:"is_default_subsystem,omitempty" required:"false" doc:"Filter by whether View is a default Subsystem."`
-	Name               string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by View name"`
-	Nqn                string `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"false" doc:"NVMe Qualified Name to filter by."`
-	Path               string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by Element Store path"`
-	Share              string `json:"share,omitempty" yaml:"share,omitempty" required:"false" doc:"Filter by share name"`
-	TenantId           int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	Alias              expr.StrField `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Filter by NFS export alias"`
+	Bucket             expr.StrField `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"Limit response by S3 bucket name"`
+	Guid               expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	IsDefaultSubsystem bool          `json:"is_default_subsystem,omitempty" yaml:"is_default_subsystem,omitempty" required:"false" doc:"Filter by whether View is a default Subsystem."`
+	Name               expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by View name"`
+	Nqn                expr.StrField `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"false" doc:"NVMe Qualified Name to filter by."`
+	Path               expr.StrField `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by Element Store path"`
+	Share              expr.StrField `json:"share,omitempty" yaml:"share,omitempty" required:"false" doc:"Filter by share name"`
+	TenantId           expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

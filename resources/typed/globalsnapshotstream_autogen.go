@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,8 +28,8 @@ type GlobalSnapshotStream struct {
 
 // GlobalSnapshotStreamSearchParams represents the search parameters for GlobalSnapshotStream operations
 type GlobalSnapshotStreamSearchParams struct {
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by Global Snaphot Stream name"`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by Global Snaphot Stream name"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

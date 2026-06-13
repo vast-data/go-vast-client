@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -26,9 +27,9 @@ type EventBroker struct {
 
 // EventBrokerSearchParams represents the search parameters for EventBroker operations
 type EventBrokerSearchParams struct {
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the Kafka broker configuration"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID. If missing, accessed by all tenants"`
+	Guid     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the Kafka broker configuration"`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID. If missing, accessed by all tenants"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

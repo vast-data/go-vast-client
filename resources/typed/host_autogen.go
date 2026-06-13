@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -28,17 +29,17 @@ type Host struct {
 
 // HostSearchParams represents the search parameters for Host operations
 type HostSearchParams struct {
-	Auto         bool   `json:"auto,omitempty" yaml:"auto,omitempty" required:"false" doc:"Specify auto or manually hosts"`
-	Build        string `json:"build,omitempty" yaml:"build,omitempty" required:"false" doc:""`
-	Guid         string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Globally unique identifier"`
-	InstallState string `json:"install_state,omitempty" yaml:"install_state,omitempty" required:"false" doc:""`
-	Ip           string `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:""`
-	IpList       string `json:"ip_list,omitempty" yaml:"ip_list,omitempty" required:"false" doc:"Comma-separated list of nodes IPs"`
-	Loopback     bool   `json:"loopback,omitempty" yaml:"loopback,omitempty" required:"false" doc:"Loopback nodes"`
-	Name         string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of host"`
-	NodeType     string `json:"node_type,omitempty" yaml:"node_type,omitempty" required:"false" doc:""`
-	State        string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
-	SwVersion    string `json:"sw_version,omitempty" yaml:"sw_version,omitempty" required:"false" doc:""`
+	Auto         bool          `json:"auto,omitempty" yaml:"auto,omitempty" required:"false" doc:"Specify auto or manually hosts"`
+	Build        expr.StrField `json:"build,omitempty" yaml:"build,omitempty" required:"false" doc:""`
+	Guid         expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Globally unique identifier"`
+	InstallState expr.StrField `json:"install_state,omitempty" yaml:"install_state,omitempty" required:"false" doc:""`
+	Ip           expr.StrField `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:""`
+	IpList       expr.StrField `json:"ip_list,omitempty" yaml:"ip_list,omitempty" required:"false" doc:"Comma-separated list of nodes IPs"`
+	Loopback     bool          `json:"loopback,omitempty" yaml:"loopback,omitempty" required:"false" doc:"Loopback nodes"`
+	Name         expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of host"`
+	NodeType     expr.StrField `json:"node_type,omitempty" yaml:"node_type,omitempty" required:"false" doc:""`
+	State        expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
+	SwVersion    expr.StrField `json:"sw_version,omitempty" yaml:"sw_version,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

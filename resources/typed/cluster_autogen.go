@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,8 +28,8 @@ type Cluster struct {
 
 // ClusterSearchParams represents the search parameters for Cluster operations
 type ClusterSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name"`
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"globally unique identifier"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name"`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"globally unique identifier"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

@@ -5,6 +5,7 @@ import (
 
 	client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -40,7 +41,7 @@ func main() {
 
 	// --- GET ---
 	fetchedGroup, err := rest.Groups.Get(&typed.GroupSearchParams{
-		Name: "go-client-test-group",
+		Name: expr.S("go-client-test-group"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get group: %w", err))
@@ -59,11 +60,9 @@ func main() {
 	fmt.Println("Group updated successfully.")
 
 	// --- DELETE ---
-	searchParams := &typed.GroupSearchParams{
-		Name: "go-client-test-group",
-	}
-
-	err = rest.Groups.Delete(searchParams)
+	err = rest.Groups.Delete(&typed.GroupSearchParams{
+		Name: expr.S("go-client-test-group"),
+	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete group: %w", err))
 	}

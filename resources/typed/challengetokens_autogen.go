@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,8 +25,8 @@ type ChallengeTokens struct {
 
 // ChallengeTokensSearchParams represents the search parameters for ChallengeTokens operations
 type ChallengeTokensSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Token name"`
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Token name"`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

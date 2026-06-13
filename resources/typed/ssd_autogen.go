@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,12 +28,12 @@ type Ssd struct {
 
 // SsdSearchParams represents the search parameters for Ssd operations
 type SsdSearchParams struct {
-	FwVersion string `json:"fw_version,omitempty" yaml:"fw_version,omitempty" required:"false" doc:"Filter by SSD firmware version"`
-	Guid      string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
-	Model     string `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:"Filter by SSD model"`
-	Name      string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	Sn        string `json:"sn,omitempty" yaml:"sn,omitempty" required:"false" doc:"Filter by SSD serial number"`
-	State     string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by SSD state"`
+	FwVersion expr.StrField `json:"fw_version,omitempty" yaml:"fw_version,omitempty" required:"false" doc:"Filter by SSD firmware version"`
+	Guid      expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
+	Model     expr.StrField `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:"Filter by SSD model"`
+	Name      expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Sn        expr.StrField `json:"sn,omitempty" yaml:"sn,omitempty" required:"false" doc:"Filter by SSD serial number"`
+	State     expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by SSD state"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

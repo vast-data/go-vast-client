@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,13 +25,13 @@ type Event struct {
 
 // EventSearchParams represents the search parameters for Event operations
 type EventSearchParams struct {
-	EventOrigin string `json:"event_origin,omitempty" yaml:"event_origin,omitempty" required:"false" doc:""`
-	EventType   string `json:"event_type,omitempty" yaml:"event_type,omitempty" required:"false" doc:""`
-	Guid        string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	ObjectGuid  string `json:"object_guid,omitempty" yaml:"object_guid,omitempty" required:"false" doc:""`
-	ObjectId    string `json:"object_id,omitempty" yaml:"object_id,omitempty" required:"false" doc:""`
-	ObjectType  string `json:"object_type,omitempty" yaml:"object_type,omitempty" required:"false" doc:""`
-	Severity    string `json:"severity,omitempty" yaml:"severity,omitempty" required:"false" doc:""`
+	EventOrigin expr.StrField `json:"event_origin,omitempty" yaml:"event_origin,omitempty" required:"false" doc:""`
+	EventType   expr.StrField `json:"event_type,omitempty" yaml:"event_type,omitempty" required:"false" doc:""`
+	Guid        expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	ObjectGuid  expr.StrField `json:"object_guid,omitempty" yaml:"object_guid,omitempty" required:"false" doc:""`
+	ObjectId    expr.StrField `json:"object_id,omitempty" yaml:"object_id,omitempty" required:"false" doc:""`
+	ObjectType  expr.StrField `json:"object_type,omitempty" yaml:"object_type,omitempty" required:"false" doc:""`
+	Severity    expr.StrField `json:"severity,omitempty" yaml:"severity,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

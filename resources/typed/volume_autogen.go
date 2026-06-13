@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -28,14 +29,14 @@ type Volume struct {
 
 // VolumeSearchParams represents the search parameters for Volume operations
 type VolumeSearchParams struct {
-	IsMonitored      bool   `json:"is_monitored,omitempty" yaml:"is_monitored,omitempty" required:"false" doc:"Filter by whether Volume is monitored."`
-	MappedSnapshotId int64  `json:"mapped_snapshot_id,omitempty" yaml:"mapped_snapshot_id,omitempty" required:"false" doc:"Volumes explicitly mapped to the snapshot."`
-	Name             string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Volume name to filter by."`
-	NamespaceId      int64  `json:"namespace_id,omitempty" yaml:"namespace_id,omitempty" required:"false" doc:"Volume namespace ID to filter by."`
-	Nguid            string `json:"nguid,omitempty" yaml:"nguid,omitempty" required:"false" doc:"volume nguid to filter by."`
-	SnapshotId       int64  `json:"snapshot_id,omitempty" yaml:"snapshot_id,omitempty" required:"false" doc:"Unmapped Volumes captured by snapshot — under snapshot’s path, created before the snapshot time."`
-	TenantId         int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
-	Uuid             string `json:"uuid,omitempty" yaml:"uuid,omitempty" required:"false" doc:"volume uuid to filter by."`
+	IsMonitored      bool          `json:"is_monitored,omitempty" yaml:"is_monitored,omitempty" required:"false" doc:"Filter by whether Volume is monitored."`
+	MappedSnapshotId expr.IntField `json:"mapped_snapshot_id,omitempty" yaml:"mapped_snapshot_id,omitempty" required:"false" doc:"Volumes explicitly mapped to the snapshot."`
+	Name             expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Volume name to filter by."`
+	NamespaceId      expr.IntField `json:"namespace_id,omitempty" yaml:"namespace_id,omitempty" required:"false" doc:"Volume namespace ID to filter by."`
+	Nguid            expr.StrField `json:"nguid,omitempty" yaml:"nguid,omitempty" required:"false" doc:"volume nguid to filter by."`
+	SnapshotId       expr.IntField `json:"snapshot_id,omitempty" yaml:"snapshot_id,omitempty" required:"false" doc:"Unmapped Volumes captured by snapshot — under snapshot’s path, created before the snapshot time."`
+	TenantId         expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	Uuid             expr.StrField `json:"uuid,omitempty" yaml:"uuid,omitempty" required:"false" doc:"volume uuid to filter by."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

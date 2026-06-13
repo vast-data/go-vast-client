@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,8 +28,8 @@ type Dns struct {
 
 // DnsSearchParams represents the search parameters for Dns operations
 type DnsSearchParams struct {
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Specifies a name for the VAST DNS server configuration"`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Specifies a name for the VAST DNS server configuration"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//
