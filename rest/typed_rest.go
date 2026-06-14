@@ -127,6 +127,16 @@ type TypedVMSRest struct {
 	WebHooks                 *typed.WebHook
 	Hosts                    *typed.Host
 	VirtualMachines          *typed.VirtualMachine
+	BlobExpansions           *typed.BlobExpansion
+	ComputeClusters          *typed.ComputeCluster
+	EventBrokers             *typed.EventBroker
+	OpenFiles                *typed.OpenFile
+	OpenFileHandles          *typed.OpenFileHandle
+	OpenFilesQueries         *typed.OpenFilesQuery
+	QuotaGroups              *typed.QuotaGroup
+	SupportBundlesQueue      *typed.SupportBundlesQueue
+	TlsCertificates          *typed.TlsCertificate
+	VastdbTables             *typed.VastdbTable
 }
 
 func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
@@ -254,6 +264,16 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 	rest.WebHooks = newTypedResource[typed.WebHook](rest)
 	rest.Hosts = newTypedResource[typed.Host](rest)
 	rest.VirtualMachines = newTypedResource[typed.VirtualMachine](rest)
+	rest.BlobExpansions = newTypedResource[typed.BlobExpansion](rest)
+	rest.ComputeClusters = newTypedResource[typed.ComputeCluster](rest)
+	rest.EventBrokers = newTypedResource[typed.EventBroker](rest)
+	rest.OpenFiles = newTypedResource[typed.OpenFile](rest)
+	rest.OpenFileHandles = newTypedResource[typed.OpenFileHandle](rest)
+	rest.OpenFilesQueries = newTypedResource[typed.OpenFilesQuery](rest)
+	rest.QuotaGroups = newTypedResource[typed.QuotaGroup](rest)
+	rest.SupportBundlesQueue = newTypedResource[typed.SupportBundlesQueue](rest)
+	rest.TlsCertificates = newTypedResource[typed.TlsCertificate](rest)
+	rest.VastdbTables = newTypedResource[typed.VastdbTable](rest)
 
 	return rest, nil
 }

@@ -313,16 +313,22 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	}
 
 	// Clean and capitalize the last part.
-	// If it was a bare path parameter (e.g. {id}), walk backwards to find the
-	// last meaningful non-parameter segment, preventing duplicate method names.
-	lastPart = cleanPathPart(lastPart)
-	if lastPart == "" {
-		// Walk backwards but skip index 0 (the collection prefix, e.g. "s3keys")
-		// to avoid generating names like "S3KeysS3keys".
-		for i := len(pathParts) - 2; i > 0; i-- {
-			if c := cleanPathPart(pathParts[i]); c != "" {
-				lastPart = c
-				break
+	// If it was a non-{id} path parameter (e.g. {tenant_id}), use the param
+	// name itself as the action to avoid colliding with the collection path.
+	// If it was {id}, walk backwards to find the last meaningful segment.
+	if isNonIDPathParam(lastPart) {
+		// Strip braces and use param name: {tenant_id} -> TenantId
+		lastPart = strings.Trim(lastPart, "{}")
+	} else {
+		lastPart = cleanPathPart(lastPart)
+		if lastPart == "" {
+			// Walk backwards but skip index 0 (the collection prefix, e.g. "s3keys")
+			// to avoid generating names like "S3KeysS3keys".
+			for i := len(pathParts) - 2; i > 0; i-- {
+				if c := cleanPathPart(pathParts[i]); c != "" {
+					lastPart = c
+					break
+				}
 			}
 		}
 	}
@@ -504,6 +510,13 @@ func pathHasIDParam(path string) bool {
 		}
 	}
 	return false
+}
+
+// isNonIDPathParam reports whether a path segment is a path parameter other
+// than {id} (e.g. {tenant_id}, {key}). Used to preserve secondary param names
+// in generated method names, preventing collisions with collection-level paths.
+func isNonIDPathParam(part string) bool {
+	return len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' && part != "{id}"
 }
 
 // cleanPathPart removes {id} and other template variables from path part

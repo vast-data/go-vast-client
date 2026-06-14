@@ -13,7 +13,7 @@ func init() {
 
 	core.RegisterExtraMethod(
 		"S3Keys",                           // resource type (Go struct name)
-		"S3Keys_DELETE",                    // method name
+		"S3KeysAccessKey_DELETE",           // method name
 		"DELETE",                           // HTTP verb
 		"/s3keys/{access_key}/",            // URL path with placeholders
 		"Delete User's S3 Access Key Pair", // summary from OpenAPI

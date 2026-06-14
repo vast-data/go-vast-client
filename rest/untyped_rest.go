@@ -30,121 +30,131 @@ type UntypedVMSRest struct {
 	Session     core.RESTSession
 	resourceMap map[string]core.VastResourceAPIWithContext // Map to store resources by resourceType
 
-	ActiveDirectories *untyped.ActiveDirectory
-	Alarms    *untyped.Alarm
-	Analytics *untyped.Analytics
-	ApiTokens     *untyped.ApiToken
-	BasicSettings *untyped.BasicSettings
-	BGPConfigs    *untyped.BGPConfig
-	BigCatalogConfigs *untyped.BigCatalogConfig
+	ActiveDirectories        *untyped.ActiveDirectory
+	Alarms                   *untyped.Alarm
+	Analytics                *untyped.Analytics
+	ApiTokens                *untyped.ApiToken
+	BasicSettings            *untyped.BasicSettings
+	BGPConfigs               *untyped.BGPConfig
+	BigCatalogConfigs        *untyped.BigCatalogConfig
 	BigCatalogIndexedColumns *untyped.BigCatalogIndexedColumns
-	BlockHosts *untyped.BlockHost
+	BlockHosts               *untyped.BlockHost
 	// +apiall:extraMethod:PATCH=/blockmappings/bulk/
 	BlockHostMappings *untyped.BlockHostMapping
-	CallhomeConfigs *untyped.CallhomeConfigs
-	Capacities      *untyped.Capacity
-	Carriers *untyped.Carrier
-	Cboxes          *untyped.Cbox
-	Certificates    *untyped.Certificate
-	ChallengeTokens *untyped.ChallengeTokens
-	Clusters *untyped.Cluster
+	CallhomeConfigs   *untyped.CallhomeConfigs
+	Capacities        *untyped.Capacity
+	Carriers          *untyped.Carrier
+	Cboxes            *untyped.Cbox
+	Certificates      *untyped.Certificate
+	ChallengeTokens   *untyped.ChallengeTokens
+	Clusters          *untyped.Cluster
 	// +apiall:extraMethod:GET|PATCH=/cnodes/{id}/bgpconfig
 	Cnodes      *untyped.Cnode
 	CnodeGroups *untyped.CnodeGroup
-	Columns *untyped.Column
+	Columns     *untyped.Column
 	// +apiexclude:extraMethod:GET|PATCH|DELETE=/config/{key}/
 	Configs *untyped.Config
-	Dboxes *untyped.Dbox
+	Dboxes  *untyped.Dbox
 	// +apiall:extraMethod:GET|PATCH=/delta/config/
-	Deltas *untyped.Delta
-	Dnodes *untyped.Dnode
-	Dns    *untyped.Dns
-	Dtrays *untyped.Dtray
-	Eboxes         *untyped.Ebox
-	EncryptedPaths *untyped.EncryptedPath
-	EncryptionGroups *untyped.EncryptionGroup
-	Envs             *untyped.Env
-	Events           *untyped.Event
-	EventDefinitions *untyped.EventDefinition
+	Deltas                 *untyped.Delta
+	Dnodes                 *untyped.Dnode
+	Dns                    *untyped.Dns
+	Dtrays                 *untyped.Dtray
+	Eboxes                 *untyped.Ebox
+	EncryptedPaths         *untyped.EncryptedPath
+	EncryptionGroups       *untyped.EncryptionGroup
+	Envs                   *untyped.Env
+	Events                 *untyped.Event
+	EventDefinitions       *untyped.EventDefinition
 	EventDefinitionConfigs *untyped.EventDefinitionConfig
 	Fans                   *untyped.Fan
-	Folders *untyped.Folder
-	Filesystems *untyped.Filesystem
-	GlobalSnapshotStreams *untyped.GlobalSnapshotStream
-	Groups *untyped.Group
-	IamRoles   *untyped.IamRole
-	Injections *untyped.Injections
-	Indestructibility *untyped.Indestructibility
-	IoData            *untyped.IoData
-	KafkaBrokers *untyped.KafkaBroker
+	Folders                *untyped.Folder
+	Filesystems            *untyped.Filesystem
+	GlobalSnapshotStreams  *untyped.GlobalSnapshotStream
+	Groups                 *untyped.Group
+	IamRoles               *untyped.IamRole
+	Injections             *untyped.Injections
+	Indestructibility      *untyped.Indestructibility
+	IoData                 *untyped.IoData
+	KafkaBrokers           *untyped.KafkaBroker
 	// +apiexclude:extraMethod:PUT=/kerberos/{id}/keytab/
-	Kerberos *untyped.Kerberos
+	Kerberos            *untyped.Kerberos
 	Ldaps               *untyped.Ldap
 	Licenses            *untyped.License
 	LocalProviders      *untyped.LocalProvider
 	LocalS3Keys         *untyped.LocalS3Key
 	ManagedApplications *untyped.ManageApplications
-	Managers *untyped.Manager
-	Metrics  *untyped.Metrics
-	Modules  *untyped.Module
+	Managers            *untyped.Manager
+	Metrics             *untyped.Metrics
+	Modules             *untyped.Module
 	// +apiexclude:extraMethod:GET=/monitors/ad_hoc_query/
-	Monitors *untyped.Monitor
-	Nics     *untyped.Nic
-	NicPorts *untyped.NicPort
-	Nis *untyped.Nis
-	Nvrams *untyped.Nvram
-	Oidcs *untyped.Oidc
-	Permissions *untyped.Permissions
-	Ports       *untyped.Port
-	Projections *untyped.Projection
-	ProjectionColumns *untyped.ProjectionColumn
-	PrometheusMetrics *untyped.PrometheusMetrics
-	ProtectedPaths     *untyped.ProtectedPath
-	ProtectionPolicies *untyped.ProtectionPolicy
-	Psus               *untyped.Psu
-	QosPolicies        *untyped.QosPolicy
-	Quotas           *untyped.Quota
-	QuotaEntityInfos *untyped.QuotaEntityInfo
-	Racks *untyped.Rack
-	Realms *untyped.Realm
+	Monitors                 *untyped.Monitor
+	Nics                     *untyped.Nic
+	NicPorts                 *untyped.NicPort
+	Nis                      *untyped.Nis
+	Nvrams                   *untyped.Nvram
+	Oidcs                    *untyped.Oidc
+	Permissions              *untyped.Permissions
+	Ports                    *untyped.Port
+	Projections              *untyped.Projection
+	ProjectionColumns        *untyped.ProjectionColumn
+	PrometheusMetrics        *untyped.PrometheusMetrics
+	ProtectedPaths           *untyped.ProtectedPath
+	ProtectionPolicies       *untyped.ProtectionPolicy
+	Psus                     *untyped.Psu
+	QosPolicies              *untyped.QosPolicy
+	Quotas                   *untyped.Quota
+	QuotaEntityInfos         *untyped.QuotaEntityInfo
+	Racks                    *untyped.Rack
+	Realms                   *untyped.Realm
 	ReplicationPeers         *untyped.ReplicationPeers
 	ReplicationPolicies      *untyped.ReplicationPolicy
 	ReplicationRestorePoints *untyped.ReplicationRestorePoint
 	ReplicationStreams       *untyped.ReplicationStream
 	Roles                    *untyped.Role
-	S3Keys *untyped.S3Keys
-	S3LifeCycleRules   *untyped.S3LifeCycleRule
-	S3Policies         *untyped.S3Policy
-	S3replicationPeers *untyped.S3replicationPeers
-	Schemas      *untyped.Schema
-	SettingDiffs *untyped.SettingDiff
-	Snapshots        *untyped.Snapshot
-	SnapshotPolicies *untyped.SnapshotPolicy
-	Ssds           *untyped.Ssd
-	SubnetManagers *untyped.SubnetManager
-	SupportBundles   *untyped.SupportBundles
-	SupportedDrivers *untyped.SupportedDrivers
-	Switches         *untyped.Switch
-	Tables *untyped.Table
-	Tenants *untyped.Tenant
+	S3Keys                   *untyped.S3Keys
+	S3LifeCycleRules         *untyped.S3LifeCycleRule
+	S3Policies               *untyped.S3Policy
+	S3replicationPeers       *untyped.S3replicationPeers
+	Schemas                  *untyped.Schema
+	SettingDiffs             *untyped.SettingDiff
+	Snapshots                *untyped.Snapshot
+	SnapshotPolicies         *untyped.SnapshotPolicy
+	Ssds                     *untyped.Ssd
+	SubnetManagers           *untyped.SubnetManager
+	SupportBundles           *untyped.SupportBundles
+	SupportedDrivers         *untyped.SupportedDrivers
+	Switches                 *untyped.Switch
+	Tables                   *untyped.Table
+	Tenants                  *untyped.Tenant
 	// +apiall:extraMethod:GET|POST|PATCH=/topics/
-	Topics *untyped.Topic
-	Users      *untyped.User
-	UserQuotas *untyped.UserQuota
-	VastAuditLogs *untyped.VastAuditLog
-	VastDb   *untyped.VastDb
-	Versions *untyped.Version
-	Views *untyped.View
-	ViewPolicies *untyped.ViewPolicy
-	Vips         *untyped.Vip
-	VipPools     *untyped.VipPool
-	Vms *untyped.Vms
-	Volumes *untyped.Volume
-	VpnTunnels *untyped.VpnTunnel
-	VTasks   *untyped.VTask
-	WebHooks *untyped.WebHook
-	Hosts           *untyped.Host
-	VirtualMachines *untyped.VirtualMachine
+	Topics              *untyped.Topic
+	Users               *untyped.User
+	UserQuotas          *untyped.UserQuota
+	VastAuditLogs       *untyped.VastAuditLog
+	VastDb              *untyped.VastDb
+	Versions            *untyped.Version
+	Views               *untyped.View
+	ViewPolicies        *untyped.ViewPolicy
+	Vips                *untyped.Vip
+	VipPools            *untyped.VipPool
+	Vms                 *untyped.Vms
+	Volumes             *untyped.Volume
+	VpnTunnels          *untyped.VpnTunnel
+	VTasks              *untyped.VTask
+	WebHooks            *untyped.WebHook
+	Hosts               *untyped.Host
+	VirtualMachines     *untyped.VirtualMachine
+	BlobExpansions      *untyped.BlobExpansion
+	ComputeClusters     *untyped.ComputeCluster
+	EventBrokers        *untyped.EventBroker
+	OpenFiles           *untyped.OpenFile
+	OpenFileHandles     *untyped.OpenFileHandle
+	OpenFilesQueries    *untyped.OpenFilesQuery
+	QuotaGroups         *untyped.QuotaGroup
+	SupportBundlesQueue *untyped.SupportBundlesQueue
+	TlsCertificates     *untyped.TlsCertificate
+	VastdbTables        *untyped.VastdbTable
 }
 
 func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
@@ -285,6 +295,16 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	rest.WebHooks = newUntypedResource[untyped.WebHook](rest, "webhooks", C, L, R, U, D)
 	rest.VirtualMachines = newUntypedResource[untyped.VirtualMachine](rest, "virtual-machines", L, R)
 	rest.Hosts = newUntypedResource[untyped.Host](rest, "hosts", L, R)
+	rest.BlobExpansions = newUntypedResource[untyped.BlobExpansion](rest, "blobexpansions", C)
+	rest.ComputeClusters = newUntypedResource[untyped.ComputeCluster](rest, "computeclusters", C, L, R, U, D)
+	rest.EventBrokers = newUntypedResource[untyped.EventBroker](rest, "eventbrokers", C, L, R, U, D)
+	rest.OpenFiles = newUntypedResource[untyped.OpenFile](rest, "openfiles", L, R)
+	rest.OpenFileHandles = newUntypedResource[untyped.OpenFileHandle](rest, "openfilehandles", L, R)
+	rest.OpenFilesQueries = newUntypedResource[untyped.OpenFilesQuery](rest, "openfilesqueries", C, L, R, D)
+	rest.QuotaGroups = newUntypedResource[untyped.QuotaGroup](rest, "quotagroups", C, L, R, U, D)
+	rest.SupportBundlesQueue = newUntypedResource[untyped.SupportBundlesQueue](rest, "supportbundlesqueue", L)
+	rest.TlsCertificates = newUntypedResource[untyped.TlsCertificate](rest, "tlscertificates", C, L, R, U, D)
+	rest.VastdbTables = newUntypedResource[untyped.VastdbTable](rest, "vastdbtable")
 
 	return rest, nil
 }

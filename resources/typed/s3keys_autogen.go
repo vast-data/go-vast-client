@@ -19,11 +19,11 @@ type S3Keys struct {
 // EXTRA METHODS
 // -----------------------------------------------------
 
-// S3KeysWithContext_DELETE
+// S3KeysAccessKeyWithContext_DELETE
 // method: DELETE
 // url: /s3keys/{access_key}/
 // summary: Delete User's S3 Access Key Pair
-func (r *S3Keys) S3KeysWithContext_DELETE(ctx context.Context) error {
+func (r *S3Keys) S3KeysAccessKeyWithContext_DELETE(ctx context.Context) error {
 	resourcePath := "/s3keys/{access_key}/"
 
 	var reqParams core.Params
@@ -34,12 +34,12 @@ func (r *S3Keys) S3KeysWithContext_DELETE(ctx context.Context) error {
 
 }
 
-// S3Keys_DELETE
+// S3KeysAccessKey_DELETE
 // method: DELETE
 // url: /s3keys/{access_key}/
 // summary: Delete User's S3 Access Key Pair
-func (r *S3Keys) S3Keys_DELETE() error {
-	return r.S3KeysWithContext_DELETE(r.Untyped.GetCtx())
+func (r *S3Keys) S3KeysAccessKey_DELETE() error {
+	return r.S3KeysAccessKeyWithContext_DELETE(r.Untyped.GetCtx())
 }
 
 // -----------------------------------------------------

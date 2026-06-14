@@ -178,19 +178,22 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	if lastPart == "" && len(pathParts) > 1 {
 		lastPart = pathParts[len(pathParts)-2]
 	}
-	lastPart = cleanPathPart(lastPart)
-	// If the last segment was a bare path parameter (e.g. {id}), cleanPathPart
-	// strips it to "". Walk backwards to find the last meaningful segment so
-	// that /tenants/metric_labels/{id}/ → "MetricLabels" and
-	// /tenants/{tenant_id}/metric_label_values/{id}/ → "MetricLabelValues",
-	// avoiding duplicate type/method names.
-	if lastPart == "" {
-		// Walk backwards but skip index 0 (the collection prefix, e.g. "s3keys")
-		// to avoid generating names like "S3KeysS3keys".
-		for i := len(pathParts) - 2; i > 0; i-- {
-			if c := cleanPathPart(pathParts[i]); c != "" {
-				lastPart = c
-				break
+	// If last segment is a non-{id} path param (e.g. {tenant_id}), use the
+	// param name directly to avoid colliding with the collection-level path.
+	if isNonIDPathParam(lastPart) {
+		lastPart = strings.Trim(lastPart, "{}")
+	} else {
+		lastPart = cleanPathPart(lastPart)
+		// If the last segment was {id}, cleanPathPart strips it to "".
+		// Walk backwards to find the last meaningful segment.
+		if lastPart == "" {
+			// Walk backwards but skip index 0 (the collection prefix, e.g. "s3keys")
+			// to avoid generating names like "S3KeysS3keys".
+			for i := len(pathParts) - 2; i > 0; i-- {
+				if c := cleanPathPart(pathParts[i]); c != "" {
+					lastPart = c
+					break
+				}
 			}
 		}
 	}
@@ -746,6 +749,13 @@ func pathHasIDParam(path string) bool {
 		}
 	}
 	return false
+}
+
+// isNonIDPathParam reports whether a path segment is a path parameter other
+// than {id} (e.g. {tenant_id}, {key}). Used to preserve secondary param names
+// in generated method names, preventing collisions with collection-level paths.
+func isNonIDPathParam(part string) bool {
+	return len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' && part != "{id}"
 }
 
 // cleanPathPart removes {id} and other template variables from path part
