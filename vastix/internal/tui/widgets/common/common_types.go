@@ -172,6 +172,14 @@ type ViewPortAdapter interface {
 	UpdateViewPort(tea.Msg) tea.Cmd
 }
 
+// ApiDocsAdapter is implemented by widgets that support the API Docs view.
+type ApiDocsAdapter interface {
+	InitApiDocs()
+	ViewApiDocs(width, height int) string
+	ToggleApiDocsPopup()
+	UpdateApiDocsViewPort(tea.Msg) tea.Cmd
+}
+
 type CopyToClipboardAdapter interface {
 	CopyToClipboard() tea.Msg // Copies the currently selected content to the clipboard
 }

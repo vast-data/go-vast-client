@@ -59,10 +59,16 @@ type SupportBundlesRequestBody struct {
 	BucketName      string  `json:"bucket_name,omitempty" yaml:"bucket_name,omitempty" required:"false" doc:"S3 Bucket for upload"`
 	BucketSubdir    string  `json:"bucket_subdir,omitempty" yaml:"bucket_subdir,omitempty" required:"false" doc:"Sub-Directory in support bucket"`
 	CnodeIds        string  `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Collect from specific CNodes. Specify as a comma separated array of CNode IDs. If not specified, logs are collected from all CNodes."`
+	CnodeNames      string  `json:"cnode_names,omitempty" yaml:"cnode_names,omitempty" required:"false" doc:"Collect from CNodes specified by name."`
 	CnodesOnly      bool    `json:"cnodes_only,omitempty" yaml:"cnodes_only,omitempty" required:"false" doc:"Collect logs from CNodes only"`
+	DboxIds         string  `json:"dbox_ids,omitempty" yaml:"dbox_ids,omitempty" required:"false" doc:"Collect from specific DBoxes."`
+	DboxNames       string  `json:"dbox_names,omitempty" yaml:"dbox_names,omitempty" required:"false" doc:"Colect from DBoxes specified by name."`
 	DeleteAfterSend bool    `json:"delete_after_send,omitempty" yaml:"delete_after_send,omitempty" required:"false" doc:"Delete bundle immediately after successfully uploading"`
 	DnodeIds        string  `json:"dnode_ids,omitempty" yaml:"dnode_ids,omitempty" required:"false" doc:"Collect from specific DNodes. Specify as a comma separated array of DNode IDs. If not specified, logs are collected from all DNodes."`
+	DnodeNames      string  `json:"dnode_names,omitempty" yaml:"dnode_names,omitempty" required:"false" doc:"Collect from DNodes specified by name."`
 	DnodesOnly      bool    `json:"dnodes_only,omitempty" yaml:"dnodes_only,omitempty" required:"false" doc:"Collect logs from DNodes only"`
+	DtrayIds        string  `json:"dtray_ids,omitempty" yaml:"dtray_ids,omitempty" required:"false" doc:"Collect from specific DTrays."`
+	DtrayNames      string  `json:"dtray_names,omitempty" yaml:"dtray_names,omitempty" required:"false" doc:"Collect from Dtrays specified by name."`
 	EndTime         string  `json:"end_time,omitempty" yaml:"end_time,omitempty" required:"false" doc:"End time of logs in UTC+3"`
 	HubbleArgs      string  `json:"hubble_args,omitempty" yaml:"hubble_args,omitempty" required:"false" doc:"Arguments for the hubble command. Note: times should be in UTC (Use with caution)"`
 	Level           string  `json:"level,omitempty" yaml:"level,omitempty" required:"false" doc:"Bundle level e.g. small, medium, large"`
@@ -76,10 +82,12 @@ type SupportBundlesRequestBody struct {
 	Preset          string  `json:"preset,omitempty" yaml:"preset,omitempty" required:"false" doc:"A predefined preset bundle"`
 	SecretKey       string  `json:"secret_key,omitempty" yaml:"secret_key,omitempty" required:"false" doc:"S3 Bucket secret key"`
 	SendNow         bool    `json:"send_now,omitempty" yaml:"send_now,omitempty" required:"false" doc:"Upload Support Bundle immediately after creation"`
+	SplitTime       int64   `json:"split_time,omitempty" yaml:"split_time,omitempty" required:"false" doc:"Time interval in seconds for splitting large bundles when uploading. Used with --send-now and --delete-after-send to create multiple smaller bundles instead of one large bundle."`
 	StartTime       string  `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Start time of logs in UTC+3"`
 	TcpdumpArgs     string  `json:"tcpdump_args,omitempty" yaml:"tcpdump_args,omitempty" required:"false" doc:"Additional arguments for running tcpdump"`
 	Text            bool    `json:"text,omitempty" yaml:"text,omitempty" required:"false" doc:"Convert all bundled objects to a textual format. Any data that cannot be converted to text is not included in the bundle."`
 	UploadViaVms    bool    `json:"upload_via_vms,omitempty" yaml:"upload_via_vms,omitempty" required:"false" doc:"If true, upload non-aggregated Support Bundle via VMS. Otherwise, upload from each node."`
+	VipIds          string  `json:"vip_ids,omitempty" yaml:"vip_ids,omitempty" required:"false" doc:"Collect support bundle from CNodes hosting specified VIPs. Includes historical CNodes that hosted these VIPs during the time range. Specify as a comma separated array of VIP IDs."`
 	VippoolIds      string  `json:"vippool_ids,omitempty" yaml:"vippool_ids,omitempty" required:"false" doc:"Collect support bundle from CNodes in these vip-pools IDs"`
 	VolumeSize      float64 `json:"volume_size,omitempty" yaml:"volume_size,omitempty" required:"false" doc:"Enables streaming. Maximum size of slice of support data of category that supports slicing, GiB."`
 }

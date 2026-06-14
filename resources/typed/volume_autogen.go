@@ -28,10 +28,14 @@ type Volume struct {
 
 // VolumeSearchParams represents the search parameters for Volume operations
 type VolumeSearchParams struct {
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Volume name to filter by."`
-	Nguid    string `json:"nguid,omitempty" yaml:"nguid,omitempty" required:"false" doc:"volume nguid to filter by."`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
-	Uuid     string `json:"uuid,omitempty" yaml:"uuid,omitempty" required:"false" doc:"volume uuid to filter by."`
+	IsMonitored      bool   `json:"is_monitored,omitempty" yaml:"is_monitored,omitempty" required:"false" doc:"Filter by whether Volume is monitored."`
+	MappedSnapshotId int64  `json:"mapped_snapshot_id,omitempty" yaml:"mapped_snapshot_id,omitempty" required:"false" doc:"Volumes explicitly mapped to the snapshot."`
+	Name             string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Volume name to filter by."`
+	NamespaceId      int64  `json:"namespace_id,omitempty" yaml:"namespace_id,omitempty" required:"false" doc:"Volume namespace ID to filter by."`
+	Nguid            string `json:"nguid,omitempty" yaml:"nguid,omitempty" required:"false" doc:"volume nguid to filter by."`
+	SnapshotId       int64  `json:"snapshot_id,omitempty" yaml:"snapshot_id,omitempty" required:"false" doc:"Unmapped Volumes captured by snapshot — under snapshot’s path, created before the snapshot time."`
+	TenantId         int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	Uuid             string `json:"uuid,omitempty" yaml:"uuid,omitempty" required:"false" doc:"volume uuid to filter by."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//
@@ -59,6 +63,7 @@ type VolumeRequestBody struct {
 	Name        string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The path to the volume relative to the subsystem directory. The path should not begin with a slash (/). You can include slashes inside the path to indicate a hierarchy of directories. The path will be created under the subsystem path for the volume. Any directory hierarchy indicated by slashes will be created accordingly. For example, if you specify b/c/d the directories <subsystem_path>/b and <subsystem_path>b/c will be created if they do not yet exist, as well as the new directory <subsystem_path>/b/c/d."`
 	Size        int64             `json:"size,omitempty" yaml:"size,omitempty" required:"true" doc:"The volume size, in bytes."`
 	ViewId      int64             `json:"view_id,omitempty" yaml:"view_id,omitempty" required:"true" doc:"The ID of the subsystem view on which to create the volume."`
+	IsMonitored bool              `json:"is_monitored,omitempty" yaml:"is_monitored,omitempty" required:"false" doc:"Enables live monitoring on the volume."`
 	QosPolicyId int64             `json:"qos_policy_id,omitempty" yaml:"qos_policy_id,omitempty" required:"false" doc:"QOS Policy ID"`
 	Tags        map[string]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:""`
 }

@@ -26,6 +26,7 @@ type OpenFilesQuery struct {
 type OpenFilesQuerySearchParams struct {
 	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	State    string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by query state"`
 	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.

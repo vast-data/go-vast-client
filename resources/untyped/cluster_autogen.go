@@ -646,6 +646,7 @@ func (c *Cluster) ClusterDeleteFolder_DELETE(id any, body core.Params) error {
 // Body:
 //   - devices_mock: Devices Mock for NVRAM section layout (only for loopback)
 //   - nvram_section_layout: NVRAM section layout
+//   - skip_everything: Skip hardware validations before expansion
 //   - skip_layout_validation: skip layout validation
 //
 // Parameters:
@@ -669,6 +670,7 @@ func (c *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, bod
 // Body:
 //   - devices_mock: Devices Mock for NVRAM section layout (only for loopback)
 //   - nvram_section_layout: NVRAM section layout
+//   - skip_everything: Skip hardware validations before expansion
 //   - skip_layout_validation: skip layout validation
 //
 // Parameters:
@@ -1559,13 +1561,18 @@ func (c *Cluster) ClusterUnfreeze_POST(id any, body core.Params) error {
 // Body:
 //   - interval: New interval for polling task
 //   - task_name: Name of polling task
-func (c *Cluster) ClusterUpdatePollingIntervalWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (c *Cluster) ClusterUpdatePollingIntervalWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "update_polling_interval")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+
 }
 
 // ClusterUpdatePollingInterval_PATCH
@@ -1576,8 +1583,11 @@ func (c *Cluster) ClusterUpdatePollingIntervalWithContext_PATCH(ctx context.Cont
 // Body:
 //   - interval: New interval for polling task
 //   - task_name: Name of polling task
-func (c *Cluster) ClusterUpdatePollingInterval_PATCH(id any, body core.Params) (core.Record, error) {
-	return c.ClusterUpdatePollingIntervalWithContext_PATCH(c.Rest.GetCtx(), id, body)
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (c *Cluster) ClusterUpdatePollingInterval_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.ClusterUpdatePollingIntervalWithContext_PATCH(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // ClusterUpgradeOptaneWithContext_POST

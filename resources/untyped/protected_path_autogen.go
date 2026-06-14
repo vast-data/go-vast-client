@@ -26,6 +26,7 @@ import (
 //   - sync_disconnect_time: For a synchronous replication, a period of time, in seconds, without communication between sync replication peers, after which the peers are disconnected.
 //   - sync_interval: Minimal duration, in seconds, since the last snapshot shared between all destination peers in the replication group.
 //   - target_exported_dir: The directory to which to replicate the local path on the remote peer
+//   - view_replication_enabled: Manages view replication
 func (p *ProtectedPath) ProtectedPathAddStreamWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("protectedpaths", id, "add_stream")
 	result, err := core.Request[core.Record](ctx, p, http.MethodPatch, resourcePath, nil, body)
@@ -52,6 +53,7 @@ func (p *ProtectedPath) ProtectedPathAddStreamWithContext_PATCH(ctx context.Cont
 //   - sync_disconnect_time: For a synchronous replication, a period of time, in seconds, without communication between sync replication peers, after which the peers are disconnected.
 //   - sync_interval: Minimal duration, in seconds, since the last snapshot shared between all destination peers in the replication group.
 //   - target_exported_dir: The directory to which to replicate the local path on the remote peer
+//   - view_replication_enabled: Manages view replication
 func (p *ProtectedPath) ProtectedPathAddStream_PATCH(id any, body core.Params) (core.Record, error) {
 	return p.ProtectedPathAddStreamWithContext_PATCH(p.Rest.GetCtx(), id, body)
 }

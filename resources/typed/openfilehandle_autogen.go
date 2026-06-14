@@ -24,7 +24,11 @@ type OpenFileHandle struct {
 
 // OpenFileHandleSearchParams represents the search parameters for OpenFileHandle operations
 type OpenFileHandleSearchParams struct {
-	TenantId int64 `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	ClientIpSubnet string `json:"client_ip_subnet,omitempty" yaml:"client_ip_subnet,omitempty" required:"false" doc:"Filter by CIDR subnet"`
+	HasLease       bool   `json:"has_lease,omitempty" yaml:"has_lease,omitempty" required:"false" doc:"Filter by lease status"`
+	HasLocks       bool   `json:"has_locks,omitempty" yaml:"has_locks,omitempty" required:"false" doc:"Filter by lock status"`
+	Protocol       string `json:"protocol,omitempty" yaml:"protocol,omitempty" required:"false" doc:"Filter by protocol"`
+	TenantId       int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

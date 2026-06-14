@@ -27,6 +27,7 @@ type OpenFile struct {
 
 // OpenFileSearchParams represents the search parameters for OpenFile operations
 type OpenFileSearchParams struct {
+	HasLocks bool   `json:"has_locks,omitempty" yaml:"has_locks,omitempty" required:"false" doc:"Filter by lock status"`
 	Path     string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Open file's path"`
 	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 

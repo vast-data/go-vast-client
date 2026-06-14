@@ -256,7 +256,7 @@ func (t *Tenant) TenantIsOperationHealthy_POST(id any, params core.Params, body 
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Get Tenant Metric Label Value
 func (t *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context, id any) (core.Record, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
@@ -307,7 +307,7 @@ func (t *Tenant) TenantMetricLabelValuesList_GET(params core.Params) (core.Recor
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Delete Tenant Metric Label Value
 func (t *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, id any) error {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
 	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
 	return err
 
@@ -329,7 +329,7 @@ func (t *Tenant) TenantMetricLabelValues_DELETE(id any) error {
 // Body:
 //   - value: The new value for this metric label.
 func (t *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
 	result, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -382,7 +382,7 @@ func (t *Tenant) TenantMetricLabelValues_POST(body core.Params) (core.Record, er
 // url: /tenants/metric_labels/{id}/
 // summary: Get Tenant Metric Label
 func (t *Tenant) TenantMetricLabelsByIdWithContext_GET(ctx context.Context, id any) (core.Record, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/metric_labels", id)
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
@@ -433,7 +433,7 @@ func (t *Tenant) TenantMetricLabelsList_GET(params core.Params) (core.RecordSet,
 // url: /tenants/metric_labels/{id}/
 // summary: Delete Tenant Metric Label
 func (t *Tenant) TenantMetricLabelsWithContext_DELETE(ctx context.Context, id any) error {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/metric_labels", id)
 	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
 	return err
 

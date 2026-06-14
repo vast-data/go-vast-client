@@ -107,6 +107,7 @@ type TenantRequestBody struct {
 	LocalProviderId                      int64                           `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"The ID of a local provider configured on the cluster. Connects the specified provider to the tenant."`
 	LoginNamePrimaryProvider             string                          `json:"login_name_primary_provider,omitempty" yaml:"login_name_primary_provider,omitempty" required:"false" doc:"Login name primary provider type"`
 	MaxViews                             int64                           `json:"max_views,omitempty" yaml:"max_views,omitempty" required:"false" doc:"Max views we can create on this tenant (0:unlimted as default)"`
+	MtlsIdentifier                       string                          `json:"mtls_identifier,omitempty" yaml:"mtls_identifier,omitempty" required:"false" doc:"The mTLS identifier of the tenant"`
 	NisProviderId                        int64                           `json:"nis_provider_id,omitempty" yaml:"nis_provider_id,omitempty" required:"false" doc:"The ID of a NIS provider configured on the cluster. Enables the specified provider for the tenant."`
 	OidcProviderId                       int64                           `json:"oidc_provider_id,omitempty" yaml:"oidc_provider_id,omitempty" required:"false" doc:"OIDC provider ID"`
 	PosixPrimaryProvider                 string                          `json:"posix_primary_provider,omitempty" yaml:"posix_primary_provider,omitempty" required:"false" doc:"Specifies which provider takes precedence over other providers in case of any conflicts between attribute values when user information is retrieved from the providers. Relevant only if more than one provider is enabled for the tenant."`
@@ -556,6 +557,7 @@ type TenantClientIpRanges_PATCH_Model struct {
 	LocalProviderTitle                   string                                    `json:"local_provider_title,omitempty" yaml:"local_provider_title,omitempty" required:"false" doc:"The local provider associated with the tenant"`
 	LoginNamePrimaryProvider             string                                    `json:"login_name_primary_provider,omitempty" yaml:"login_name_primary_provider,omitempty" required:"false" doc:"Primary provider for the user's login name"`
 	MaxViews                             int64                                     `json:"max_views,omitempty" yaml:"max_views,omitempty" required:"false" doc:"Max views we can create on this tenant (0:unlimted as default)"`
+	MtlsIdentifier                       string                                    `json:"mtls_identifier,omitempty" yaml:"mtls_identifier,omitempty" required:"false" doc:"The mTLS identifier of the tenant"`
 	NisProviderId                        int64                                     `json:"nis_provider_id,omitempty" yaml:"nis_provider_id,omitempty" required:"false" doc:"NIS provider ID"`
 	NisTitle                             string                                    `json:"nis_title,omitempty" yaml:"nis_title,omitempty" required:"false" doc:""`
 	OidcProviderId                       int64                                     `json:"oidc_provider_id,omitempty" yaml:"oidc_provider_id,omitempty" required:"false" doc:"OIDC provider ID"`
@@ -764,7 +766,7 @@ type TenantMetricLabelValuesById_GET_Model struct {
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Get Tenant Metric Label Value
 func (r *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context, id any) (*TenantMetricLabelValuesById_GET_Model, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
 
 	var reqParams core.Params
 	var reqBody core.Params
@@ -828,7 +830,7 @@ func (r *Tenant) TenantMetricLabelValuesList_GET() ([]TenantMetricLabelValuesLis
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Delete Tenant Metric Label Value
 func (r *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, id any) error {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
 
 	var reqParams core.Params
 	var reqBody core.Params
@@ -862,7 +864,7 @@ type TenantMetricLabelValues_PATCH_Model struct {
 // Parameters:
 //   - value (body): The new value for this metric label.
 func (r *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, id any, value string) (*TenantMetricLabelValues_PATCH_Model, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
 
 	var reqParams core.Params
 	reqBody := core.Params{}
@@ -957,7 +959,7 @@ type TenantMetricLabelsById_GET_Model struct {
 // url: /tenants/metric_labels/{id}/
 // summary: Get Tenant Metric Label
 func (r *Tenant) TenantMetricLabelsByIdWithContext_GET(ctx context.Context, id any) (*TenantMetricLabelsById_GET_Model, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/metric_labels", id)
 
 	var reqParams core.Params
 	var reqBody core.Params
@@ -1021,7 +1023,7 @@ func (r *Tenant) TenantMetricLabelsList_GET() ([]TenantMetricLabelsListItem, err
 // url: /tenants/metric_labels/{id}/
 // summary: Delete Tenant Metric Label
 func (r *Tenant) TenantMetricLabelsWithContext_DELETE(ctx context.Context, id any) error {
-	resourcePath := core.BuildResourcePathWithID("tenants", id)
+	resourcePath := core.BuildResourcePathWithID("tenants/metric_labels", id)
 
 	var reqParams core.Params
 	var reqBody core.Params

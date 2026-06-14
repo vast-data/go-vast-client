@@ -257,6 +257,7 @@ type VmsLoginBanner_GET_Model struct {
 	DegradedReason               string  `json:"degraded_reason,omitempty" yaml:"degraded_reason,omitempty" required:"false" doc:"The reason for VMS degraded state"`
 	DisableMgmtHa                bool    `json:"disable_mgmt_ha,omitempty" yaml:"disable_mgmt_ha,omitempty" required:"false" doc:"True if management HA is disabled"`
 	DisableVmsMetrics            bool    `json:"disable_vms_metrics,omitempty" yaml:"disable_vms_metrics,omitempty" required:"false" doc:"True if VMS metrics collection is disabled"`
+	EnableIdleTimeout            bool    `json:"enable_idle_timeout,omitempty" yaml:"enable_idle_timeout,omitempty" required:"false" doc:"Enable GUI timeout based on inactivity"`
 	Guid                         string  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 	Id                           int64   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"The ID of the VMS object."`
 	Ip                           string  `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"The bond interface IP for the cluster's internal data network, on the current management CNode, the CNode hosting VMS"`

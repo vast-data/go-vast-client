@@ -152,13 +152,13 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 
 	methodInfo.HasID = pathHasIDParam(extraMethod.Path)
 
-	// Parse path to extract resource path and sub-path
+	// Parse path to extract resource path and sub-path.
+	// ResourcePath is all segments before {id} (joined with "/").
+	// Example: /users/{id}/tenant_data/          -> resource: "users",                subPath: "tenant_data"
+	// Example: /tenants/metric_labels/{id}/      -> resource: "tenants/metric_labels", subPath: ""
+	// Example: /tenants/{id}/client_metrics/     -> resource: "tenants",              subPath: "client_metrics"
 	pathParts := strings.Split(strings.Trim(extraMethod.Path, "/"), "/")
-	if len(pathParts) > 0 {
-		methodInfo.ResourcePath = pathParts[0]
-	}
 
-	// Extract sub-path (everything after {id})
 	if methodInfo.HasID {
 		idIndex := -1
 		for i, part := range pathParts {
@@ -167,10 +167,17 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 				break
 			}
 		}
+		if idIndex > 0 {
+			methodInfo.ResourcePath = strings.Join(pathParts[:idIndex], "/")
+		} else if len(pathParts) > 0 {
+			methodInfo.ResourcePath = pathParts[0]
+		}
 		if idIndex >= 0 && idIndex < len(pathParts)-1 {
 			methodInfo.SubPath = strings.Join(pathParts[idIndex+1:], "/")
 			methodInfo.SubPath = strings.TrimSuffix(methodInfo.SubPath, "/")
 		}
+	} else if len(pathParts) > 0 {
+		methodInfo.ResourcePath = pathParts[0]
 	}
 
 	// Generate method name from path

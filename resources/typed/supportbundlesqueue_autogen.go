@@ -143,43 +143,54 @@ func (r *SupportBundlesQueue) MustExistsWithContext(ctx context.Context, req *Su
 
 // SupportBundlesQueueMove_PATCH_Model represents the response model for SupportBundlesQueueMove
 type SupportBundlesQueueMove_PATCH_Model struct {
-	Aggregated      bool    `json:"aggregated,omitempty" yaml:"aggregated,omitempty" required:"false" doc:"Aggregate harvests into final bundle (deprecated)"`
-	AstronArgs      string  `json:"astron_args,omitempty" yaml:"astron_args,omitempty" required:"false" doc:""`
-	BundleFile      string  `json:"bundle_file,omitempty" yaml:"bundle_file,omitempty" required:"false" doc:""`
-	BundleSize      string  `json:"bundle_size,omitempty" yaml:"bundle_size,omitempty" required:"false" doc:""`
-	BundleUrl       string  `json:"bundle_url,omitempty" yaml:"bundle_url,omitempty" required:"false" doc:"URL to access/download support bundle file"`
-	Callhome        bool    `json:"callhome,omitempty" yaml:"callhome,omitempty" required:"false" doc:""`
-	Cluster         string  `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
-	ClusterId       int64   `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
-	CnodeIds        string  `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Array of IDs of specific CNodes from which logs are collected. If not specified, logs are collected from all CNodes."`
-	CnodesOnly      bool    `json:"cnodes_only,omitempty" yaml:"cnodes_only,omitempty" required:"false" doc:""`
-	Core            string  `json:"core,omitempty" yaml:"core,omitempty" required:"false" doc:""`
-	CreateDatetime  string  `json:"create_datetime,omitempty" yaml:"create_datetime,omitempty" required:"false" doc:""`
-	Created         string  `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:"Bundle creation time"`
-	DeleteAfterSend bool    `json:"delete_after_send,omitempty" yaml:"delete_after_send,omitempty" required:"false" doc:"Delete the bundle immediately after successfully uploading"`
-	DnodeIds        string  `json:"dnode_ids,omitempty" yaml:"dnode_ids,omitempty" required:"false" doc:"Array of IDs of specific DNodes from which logs are collected. If not specified, logs are collected from all DNodes."`
-	DnodesOnly      bool    `json:"dnodes_only,omitempty" yaml:"dnodes_only,omitempty" required:"false" doc:""`
-	EndTime         string  `json:"end_time,omitempty" yaml:"end_time,omitempty" required:"false" doc:"End time of logs in UTC+3"`
-	Guid            string  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	HubbleArgs      string  `json:"hubble_args,omitempty" yaml:"hubble_args,omitempty" required:"false" doc:""`
-	Id              int64   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	Level           string  `json:"level,omitempty" yaml:"level,omitempty" required:"false" doc:"Bundle level e.g. small, medium, large"`
-	LunaArgs        string  `json:"luna_args,omitempty" yaml:"luna_args,omitempty" required:"false" doc:""`
-	Management      bool    `json:"management,omitempty" yaml:"management,omitempty" required:"false" doc:""`
-	MaxSize         float32 `json:"max_size,omitempty" yaml:"max_size,omitempty" required:"false" doc:"Trace files bundle size limit in GB for each node"`
-	MemTraces       bool    `json:"mem_traces,omitempty" yaml:"mem_traces,omitempty" required:"false" doc:""`
-	Metrics         bool    `json:"metrics,omitempty" yaml:"metrics,omitempty" required:"false" doc:""`
-	Name            string  `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	Obfuscated      bool    `json:"obfuscated,omitempty" yaml:"obfuscated,omitempty" required:"false" doc:"True if the bundle is obfuscated. If obfuscated, all bundled objects are converted to text and obfuscated. Any data that cannot be converted to text is not included in the bundle. The following types of information are replaced with a non-reversible hash: file and directory names, IP addresses, host names, user names, passwords, MAC addresses."`
-	Performance     bool    `json:"performance,omitempty" yaml:"performance,omitempty" required:"false" doc:""`
-	Platform        bool    `json:"platform,omitempty" yaml:"platform,omitempty" required:"false" doc:""`
-	Prefix          string  `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Identifying label included in the bundle file name as a prefix"`
-	Preset          string  `json:"preset,omitempty" yaml:"preset,omitempty" required:"false" doc:"Type of predefined preset bundle"`
-	StartTime       string  `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Start time of logs in UTC+3"`
-	State           string  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"State of the bundle"`
-	Text            bool    `json:"text,omitempty" yaml:"text,omitempty" required:"false" doc:"Include only textual logs in bundle"`
-	Traces          bool    `json:"traces,omitempty" yaml:"traces,omitempty" required:"false" doc:""`
-	Url             string  `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+	AccessKey       string   `json:"access_key,omitempty" yaml:"access_key,omitempty" required:"false" doc:"S3 Bucket access key"`
+	Aggregated      bool     `json:"aggregated,omitempty" yaml:"aggregated,omitempty" required:"false" doc:"Aggregate harvests into final bundle (deprecated)"`
+	AstronArgs      string   `json:"astron_args,omitempty" yaml:"astron_args,omitempty" required:"false" doc:""`
+	BucketName      string   `json:"bucket_name,omitempty" yaml:"bucket_name,omitempty" required:"false" doc:"S3 Bucket for upload"`
+	BucketSubdir    string   `json:"bucket_subdir,omitempty" yaml:"bucket_subdir,omitempty" required:"false" doc:"Sub-directory in support bucket"`
+	BundleFile      string   `json:"bundle_file,omitempty" yaml:"bundle_file,omitempty" required:"false" doc:""`
+	BundleSize      int64    `json:"bundle_size,omitempty" yaml:"bundle_size,omitempty" required:"false" doc:"Bundle size in bytes"`
+	BundleUrl       string   `json:"bundle_url,omitempty" yaml:"bundle_url,omitempty" required:"false" doc:"URL to access/download support bundle file"`
+	Callhome        bool     `json:"callhome,omitempty" yaml:"callhome,omitempty" required:"false" doc:""`
+	Cluster         string   `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
+	ClusterId       int64    `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	CnodeIds        *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Array of IDs of specific CNodes from which logs are collected. If not specified, logs are collected from all CNodes."`
+	CnodeIdsArray   *[]int64 `json:"cnode_ids_array,omitempty" yaml:"cnode_ids_array,omitempty" required:"false" doc:"Resolved CNode IDs included in the bundle harvest"`
+	CnodesOnly      bool     `json:"cnodes_only,omitempty" yaml:"cnodes_only,omitempty" required:"false" doc:""`
+	Core            bool     `json:"core,omitempty" yaml:"core,omitempty" required:"false" doc:""`
+	CreateDatetime  string   `json:"create_datetime,omitempty" yaml:"create_datetime,omitempty" required:"false" doc:""`
+	Created         string   `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:"Bundle creation time"`
+	DeleteAfterSend bool     `json:"delete_after_send,omitempty" yaml:"delete_after_send,omitempty" required:"false" doc:"Delete the bundle immediately after successfully uploading"`
+	DnodeIds        *[]int64 `json:"dnode_ids,omitempty" yaml:"dnode_ids,omitempty" required:"false" doc:"Array of IDs of specific DNodes from which logs are collected. If not specified, logs are collected from all DNodes."`
+	DnodeIdsArray   *[]int64 `json:"dnode_ids_array,omitempty" yaml:"dnode_ids_array,omitempty" required:"false" doc:"Resolved DNode IDs included in the bundle harvest"`
+	DnodesOnly      bool     `json:"dnodes_only,omitempty" yaml:"dnodes_only,omitempty" required:"false" doc:""`
+	EndTime         string   `json:"end_time,omitempty" yaml:"end_time,omitempty" required:"false" doc:"End time of logs in UTC+3"`
+	Guid            string   `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	HubbleArgs      string   `json:"hubble_args,omitempty" yaml:"hubble_args,omitempty" required:"false" doc:""`
+	Id              int64    `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Level           string   `json:"level,omitempty" yaml:"level,omitempty" required:"false" doc:"Bundle level e.g. small, medium, large"`
+	LunaArgs        string   `json:"luna_args,omitempty" yaml:"luna_args,omitempty" required:"false" doc:""`
+	Management      bool     `json:"management,omitempty" yaml:"management,omitempty" required:"false" doc:""`
+	MaxSize         float32  `json:"max_size,omitempty" yaml:"max_size,omitempty" required:"false" doc:"Trace files bundle size limit in GB for each node"`
+	MemTraces       bool     `json:"mem_traces,omitempty" yaml:"mem_traces,omitempty" required:"false" doc:""`
+	Metrics         bool     `json:"metrics,omitempty" yaml:"metrics,omitempty" required:"false" doc:""`
+	Name            string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Obfuscated      bool     `json:"obfuscated,omitempty" yaml:"obfuscated,omitempty" required:"false" doc:"True if the bundle is obfuscated. If obfuscated, all bundled objects are converted to text and obfuscated. Any data that cannot be converted to text is not included in the bundle. The following types of information are replaced with a non-reversible hash: file and directory names, IP addresses, host names, user names, passwords, MAC addresses."`
+	OnNfs           bool     `json:"on_nfs,omitempty" yaml:"on_nfs,omitempty" required:"false" doc:"True if the bundle is stored on NFS"`
+	Performance     bool     `json:"performance,omitempty" yaml:"performance,omitempty" required:"false" doc:""`
+	Platform        bool     `json:"platform,omitempty" yaml:"platform,omitempty" required:"false" doc:""`
+	PositionInQueue int64    `json:"position_in_queue,omitempty" yaml:"position_in_queue,omitempty" required:"false" doc:"Position of the support bundle in the queue"`
+	Prefix          string   `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Identifying label included in the bundle file name as a prefix"`
+	Preset          string   `json:"preset,omitempty" yaml:"preset,omitempty" required:"false" doc:"Type of predefined preset bundle"`
+	SecretKey       string   `json:"secret_key,omitempty" yaml:"secret_key,omitempty" required:"false" doc:"S3 Bucket secret key"`
+	SendNow         bool     `json:"send_now,omitempty" yaml:"send_now,omitempty" required:"false" doc:"Upload support bundle after creation"`
+	StartTime       string   `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Start time of logs in UTC+3"`
+	State           string   `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"State of the bundle"`
+	Text            bool     `json:"text,omitempty" yaml:"text,omitempty" required:"false" doc:"True if only textual logs are included in the bundle"`
+	Traces          bool     `json:"traces,omitempty" yaml:"traces,omitempty" required:"false" doc:""`
+	UploadViaVms    bool     `json:"upload_via_vms,omitempty" yaml:"upload_via_vms,omitempty" required:"false" doc:""`
+	Url             string   `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+	VolumeSize      int64    `json:"volume_size,omitempty" yaml:"volume_size,omitempty" required:"false" doc:""`
 }
 
 // SupportBundlesQueueMoveWithContext_PATCH

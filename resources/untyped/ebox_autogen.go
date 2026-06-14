@@ -18,6 +18,9 @@ import (
 // Body:
 //   - cluster_id: The cluster ID
 //   - enode_ip: Specify the internal bond IP of ENode.
+//   - rack_name: Rack name
+//   - rack_unit: Rack unit name
+//   - skip_everything: skip discovery and os upgrade
 func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/eboxes/add/"
 	result, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
@@ -35,6 +38,9 @@ func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, body core.Params) (c
 // Body:
 //   - cluster_id: The cluster ID
 //   - enode_ip: Specify the internal bond IP of ENode.
+//   - rack_name: Rack name
+//   - rack_unit: Rack unit name
+//   - skip_everything: skip discovery and os upgrade
 func (e *Ebox) EboxAdd_POST(body core.Params) (core.Record, error) {
 	return e.EboxAddWithContext_POST(e.Rest.GetCtx(), body)
 }

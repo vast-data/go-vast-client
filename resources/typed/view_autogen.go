@@ -28,14 +28,15 @@ type View struct {
 
 // ViewSearchParams represents the search parameters for View operations
 type ViewSearchParams struct {
-	Alias    string `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Filter by NFS export alias"`
-	Bucket   string `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"Limit response by S3 bucket name"`
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by View name"`
-	Nqn      string `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"false" doc:"NVMe Qualified Name to filter by."`
-	Path     string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by Element Store path"`
-	Share    string `json:"share,omitempty" yaml:"share,omitempty" required:"false" doc:"Filter by share name"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	Alias              string `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Filter by NFS export alias"`
+	Bucket             string `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"Limit response by S3 bucket name"`
+	Guid               string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	IsDefaultSubsystem bool   `json:"is_default_subsystem,omitempty" yaml:"is_default_subsystem,omitempty" required:"false" doc:"Filter by whether View is a default Subsystem."`
+	Name               string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by View name"`
+	Nqn                string `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"false" doc:"NVMe Qualified Name to filter by."`
+	Path               string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by Element Store path"`
+	Share              string `json:"share,omitempty" yaml:"share,omitempty" required:"false" doc:"Filter by share name"`
+	TenantId           int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//
@@ -120,6 +121,7 @@ type ViewRequestBody struct {
 	Alias                         string                                    `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Relevant if NFS is included in the protocols array. An alias for the mount path of an NFSv3 export. The alias must begin with a forward slash ('/') and must consist of only ASCII characters. If specified, the alias that can be used by NFSv3 clients to mount the view."`
 	AllowAnonymousAccess          bool                                      `json:"allow_anonymous_access,omitempty" yaml:"allow_anonymous_access,omitempty" required:"false" doc:"not in use"`
 	AllowS3AnonymousAccess        bool                                      `json:"allow_s3_anonymous_access,omitempty" yaml:"allow_s3_anonymous_access,omitempty" required:"false" doc:"Allow S3 anonymous access to S3 bucket. If true, anonymous requests are granted provided that the object ACL grants access to the All Users group (in S3 Native security flavor) or the permission mode bits on the requested file and directory path grant access permission to 'others' (in NFS security flavor)."`
+	AllowedDelegations            string                                    `json:"allowed_delegations,omitempty" yaml:"allowed_delegations,omitempty" required:"false" doc:"Defines which types of NFSv4 file delegations are enabled for this view. - 'NONE' means NFSv4 file delegations are disabled. - 'READ' means read type NFSv4 file delegations can be granted to a client opening a file. - 'WRITE' means write type NFSv4 file delegations can be granted to a client opening a file. - 'READ_WRITE' means both read and write type NFSv4 file delegations can be granted to a client opening a file. - 'USE_TENANT_ALLOWED_DELEG' (default) means the view inherits the tenant’s 'allowed_delegations'. **Important:** If the tenant has 'DISABLED' delegations, this overrides the view entirely. The effective delegations value for this view is forced to 'NONE', regardless of the view’s setting."`
 	AutoCommit                    string                                    `json:"auto_commit,omitempty" yaml:"auto_commit,omitempty" required:"false" doc:"Applicable if locking is enabled. Sets the auto-commit time for files that are locked automatically. These files are locked automatically after the auto-commit period elapses from the time the file is saved. Files locked automatically are locked for the default-retention-period, after which they are unlocked. Specify as an integer value followed by a letter for the unit (h - hours, d - days, y - years). Example: 2h (2 hours)."`
 	Bucket                        string                                    `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"A name for the S3 bucket name. Must be specified if S3 bucket is specified in protocols."`
 	BucketCreators                *[]string                                 `json:"bucket_creators,omitempty" yaml:"bucket_creators,omitempty" required:"false" doc:"For S3 endpoint views, specify a list of users, by user name, whose bucket create requests use this view. Any request to create an S3 bucket that is sent by S3 API by a specified user will use this S3 Endpoint view. Users should not be specified as bucket creators in more than one S3 Endpoint view. Naming a user as a bucket creator in two S3 Endpoint views will fail the creation of the view with an error."`

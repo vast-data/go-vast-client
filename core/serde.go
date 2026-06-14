@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"reflect"
 	"sort"
 	"strings"
@@ -61,10 +62,13 @@ var fillFunc FillFunc = func(r Record, container any) error {
 // used for constructing query strings or request bodies.
 type Params map[string]any
 
-// FileData represents a file to be uploaded in multipart form data
+// FileData represents a file to be uploaded in multipart form data.
+// ContentType is optional; when set it is used as the part's Content-Type
+// header instead of the default "application/octet-stream".
 type FileData struct {
-	Filename string
-	Content  []byte
+	Filename    string
+	Content     []byte
+	ContentType string
 }
 
 // ToQuery serializes the Params into a URL-encoded query string.
@@ -96,11 +100,25 @@ func (pr *Params) ToMultipartFormData() (*MultipartFormData, error) {
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
 
+	writeField := func(key, val string) error {
+		return writer.WriteField(key, val)
+	}
+
 	for key, value := range *pr {
 		switch v := value.(type) {
 		case FileData:
-			// Handle file uploads
-			fileWriter, err := writer.CreateFormFile(key, v.Filename)
+			var fileWriter io.Writer
+			var err error
+			if v.ContentType != "" {
+				// Use CreatePart so we can set a custom Content-Type for the file part.
+				h := textproto.MIMEHeader{}
+				h.Set("Content-Disposition",
+					fmt.Sprintf(`form-data; name="%s"; filename="%s"`, key, v.Filename))
+				h.Set("Content-Type", v.ContentType)
+				fileWriter, err = writer.CreatePart(h)
+			} else {
+				fileWriter, err = writer.CreateFormFile(key, v.Filename)
+			}
 			if err != nil {
 				return nil, fmt.Errorf("failed to create form file for %s: %w", key, err)
 			}
@@ -116,9 +134,23 @@ func (pr *Params) ToMultipartFormData() (*MultipartFormData, error) {
 			if _, err := fileWriter.Write(v); err != nil {
 				return nil, fmt.Errorf("failed to write byte content for %s: %w", key, err)
 			}
+		case []string:
+			// Write each element as a separate field with the same key.
+			for _, elem := range v {
+				if err := writeField(key, elem); err != nil {
+					return nil, fmt.Errorf("failed to write field %s: %w", key, err)
+				}
+			}
+		case []any:
+			// Write each element as a separate field with the same key.
+			for _, elem := range v {
+				if err := writeField(key, fmt.Sprintf("%v", elem)); err != nil {
+					return nil, fmt.Errorf("failed to write field %s: %w", key, err)
+				}
+			}
 		default:
 			// Handle regular form fields
-			if err := writer.WriteField(key, fmt.Sprintf("%v", value)); err != nil {
+			if err := writeField(key, fmt.Sprintf("%v", value)); err != nil {
 				return nil, fmt.Errorf("failed to write field %s: %w", key, err)
 			}
 		}

@@ -262,6 +262,14 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 				} else {
 					panic("WidgetNavigator: widget does not implement ExtraWidget interface")
 				}
+			case "i":
+				// Switch to API docs view
+				wn.setModeIfSupported(NavigatorModeApiDocs)
+				if adapter, ok := any(wn.widget).(ApiDocsAdapter); ok {
+					adapter.InitApiDocs()
+				}
+				return nil
+
 			default:
 
 				// Check for extra widget shortcuts
@@ -486,6 +494,25 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 				return adapter.UpdateViewPort(msg)
 			} else {
 				panic("WidgetNavigator: widget does not implement ViewPortAdapter interface")
+			}
+		}
+
+	case NavigatorModeApiDocs:
+		if adapter, ok := any(wn.widget).(ApiDocsAdapter); ok {
+			switch msg := msg.(type) {
+			case tea.KeyMsg:
+				switch msg.String() {
+				case "esc":
+					wn.setModeIfSupported(NavigatorModeList)
+					return func() tea.Msg { return msg_types.SetDataMsg{} }
+				case "enter":
+					adapter.ToggleApiDocsPopup()
+					return nil
+				default:
+					return adapter.UpdateApiDocsViewPort(msg)
+				}
+			default:
+				return adapter.UpdateApiDocsViewPort(msg)
 			}
 		}
 

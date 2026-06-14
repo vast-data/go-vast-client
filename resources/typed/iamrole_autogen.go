@@ -51,11 +51,12 @@ type IamRoleSearchParams struct {
 
 // IamRoleRequestBody represents the request body for IamRole operations
 type IamRoleRequestBody struct {
-	Name        string   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	TrustPolicy string   `json:"trust_policy,omitempty" yaml:"trust_policy,omitempty" required:"true" doc:"JSON Policy"`
-	Description string   `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:""`
-	S3Policies  *[]int64 `json:"s3_policies,omitempty" yaml:"s3_policies,omitempty" required:"false" doc:"List of Identity Policy IDs"`
-	TenantId    int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
+	Name               string   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	TrustPolicy        string   `json:"trust_policy,omitempty" yaml:"trust_policy,omitempty" required:"true" doc:"JSON Policy"`
+	Description        string   `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:""`
+	MaxSessionDuration int64    `json:"max_session_duration,omitempty" yaml:"max_session_duration,omitempty" required:"false" doc:"Maximum session duration for temporary access keys (seconds). Default - 129600 (36 hours)."`
+	S3Policies         *[]int64 `json:"s3_policies,omitempty" yaml:"s3_policies,omitempty" required:"false" doc:"List of Identity Policy IDs"`
+	TenantId           int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
 }
 
 // -----------------------------------------------------

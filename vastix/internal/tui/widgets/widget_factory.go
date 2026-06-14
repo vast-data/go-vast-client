@@ -140,6 +140,9 @@ func (f *WidgetFactory) CreateWidgetWithExclusions(resource core.VastResourceAPI
 			zap.Int("extra_widget_count", len(extraNav)))
 	}
 
+	// ApiDocs mode is always available
+	widget.allowedModes = append(widget.allowedModes, common.NavigatorModeApiDocs)
+
 	return widget, nil
 }
 

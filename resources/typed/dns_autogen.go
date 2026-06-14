@@ -5,8 +5,10 @@ package typed
 
 import (
 	"context"
+	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
 // -----------------------------------------------------
@@ -50,7 +52,6 @@ type DnsSearchParams struct {
 
 // DnsRequestBody represents the request body for Dns operations
 type DnsRequestBody struct {
-	Vip                 string   `json:"vip,omitempty" yaml:"vip,omitempty" required:"true" doc:"A virtual IP to assign to the DNS service. DNS requests from your external DNS server must be delegated to this IP."`
 	BgpConfigId         int64    `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"The ID of the BGP configuration to use for layer 3 connectivity configuration"`
 	CnodeIds            *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"To dedicate a specific group of CNodes to the DNS, list the IDs of the CNodes."`
 	DomainSuffix        string   `json:"domain_suffix,omitempty" yaml:"domain_suffix,omitempty" required:"false" doc:"A suffix for domain names. Requests for domain names with this suffix are resolved to the VIPs configured on the cluster."`
@@ -62,6 +63,7 @@ type DnsRequestBody struct {
 	NetType             string   `json:"net_type,omitempty" yaml:"net_type,omitempty" required:"false" doc:""`
 	Port                int64    `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Specifies a port for the DNS"`
 	Ttl                 int64    `json:"ttl,omitempty" yaml:"ttl,omitempty" required:"false" doc:"Specifies the TTL value for the DNS."`
+	Vip                 string   `json:"vip,omitempty" yaml:"vip,omitempty" required:"false" doc:"A virtual IP to assign to the DNS service. DNS requests from your external DNS server must be delegated to this IP."`
 	VipGateway          string   `json:"vip_gateway,omitempty" yaml:"vip_gateway,omitempty" required:"false" doc:"If the external DNS server doesn't reside on the same subnet as the DNS VIP, enter the IP of a gateway through which to connect to the DNS server."`
 	VipIpv6             string   `json:"vip_ipv6,omitempty" yaml:"vip_ipv6,omitempty" required:"false" doc:"Assigns an IPv6 to the DNS service."`
 	VipIpv6Gateway      string   `json:"vip_ipv6_gateway,omitempty" yaml:"vip_ipv6_gateway,omitempty" required:"false" doc:"Specifies a gateway IPv6 to external DNS server if on different subnet."`
@@ -219,26 +221,31 @@ func (r *Dns) DeleteWithContext(ctx context.Context, req *DnsSearchParams) error
 	return nil
 }
 
-// DeleteById deletes a dns by ID
+// DeleteById deletes a dns by ID and returns an async task
 // summary: Delete VAST-DNS Server Configuration.
 //
 // Parameters:
 //   - id: DNS ID
-func (r *Dns) DeleteById(id any) error {
-	return r.DeleteByIdWithContext(r.Untyped.GetCtx(), id)
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dns) DeleteById(id any, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.DeleteByIdWithContext(r.Untyped.GetCtx(), id, waitTimeout)
 }
 
-// DeleteByIdWithContext deletes a dns by ID using provided context
+// DeleteByIdWithContext deletes a dns by ID and returns an async task using provided context
 // summary: Delete VAST-DNS Server Configuration.
 //
 // Parameters:
 //   - id: DNS ID
-func (r *Dns) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dns) DeleteByIdWithContext(ctx context.Context, id any, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	// For async DELETE, call core.Request directly to get the task response
+	path := core.BuildResourcePathWithID(r.Untyped.GetResourceMap()[r.GetResourceType()].GetResourcePath(), id)
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, path, nil, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, record, r.Untyped, waitTimeout)
 }
 
 // -----------------------------------------------------
