@@ -4,7 +4,13 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	_ "unsafe"
 )
+
+// exprSerializeField is set by resources/typed/expr when that package is imported.
+// Handles Field[T], StringFilter, IntFilter — emits expression-aware query params
+// (e.g. name__contains=foo) without core needing to import the expr package.
+var exprSerializeField func(v any, key string) (map[string]any, bool)
 
 func toInt(val any) (int64, error) {
 	var idInt int64
@@ -153,6 +159,18 @@ func structToMap(item interface{}) map[string]interface{} {
 		}
 
 		fieldValue := field.Interface()
+
+		// expr hook: delegates to resources/typed/expr when that package is imported.
+		// Handles Field[T], StringFilter, IntFilter — emits expression-aware keys
+		// (e.g. name__contains=foo) and skips generic struct recursion.
+		if exprSerializeField != nil {
+			if params, ok := exprSerializeField(fieldValue, tagName); ok {
+				for k, v := range params {
+					res[k] = v
+				}
+				continue
+			}
+		}
 
 		// Handle different field types
 		switch {
