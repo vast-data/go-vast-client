@@ -46,6 +46,7 @@ type BaseWidget struct {
 	*adapters.DetailsAdapter
 	*adapters.PromptAdapter
 	*adapters.SearchAdapter
+	*adapters.ApiDocsAdapter
 
 	// Parent widget
 	parent  common.Widget
@@ -137,6 +138,7 @@ func NewBaseWidget(db *database.Service, listHeaders []string, formHints *common
 		DimensionAdapter: &adapters.DimensionAdapter{},
 		PromptAdapter:    adapters.NewPromptAdapter(db, resourceType),
 		SearchAdapter:    adapters.NewSearchAdapter(db, resourceType),
+		ApiDocsAdapter:   adapters.NewApiDocsAdapter(db),
 
 		// Database
 		db: db,
@@ -212,6 +214,8 @@ func (bw *BaseWidget) View() string {
 		return bw.ViewPrompt()
 	case common.NavigatorModeExtra:
 		return bw.ViewExtra()
+	case common.NavigatorModeApiDocs:
+		return bw.ApiDocsAdapter.ViewApiDocs(bw.GetWidth(), bw.GetHeight())
 	default:
 		panic("invalid view mode")
 	}
@@ -362,6 +366,7 @@ func (bw *BaseWidget) SetSize(width, height int) {
 	bw.DimensionAdapter.SetSize(width, height)
 	// Propagate size changes to DetailsAdapter for proper viewport sizing
 	bw.DetailsAdapter.SetSize(width, height)
+	bw.ApiDocsAdapter.SetDocSize(width, height)
 	// Propagate size changes to ExtraWidget for proper viewport sizing (only if ExtraWidgetNavigator is available)
 	if bw.ExtraWidgetNavigator != nil {
 		bw.GetExtraWidget().SetSize(width, height)
@@ -1383,6 +1388,25 @@ func (bw *BaseWidget) SetExtraMode(mode common.ExtraNavigatorMode) {
 	}
 }
 
+// ----------------------------
+// ApiDocs methods (common.ApiDocsAdapter interface)
+// ----------------------------
+
+// InitApiDocs loads swagger docs for this resource's path.
+func (bw *BaseWidget) InitApiDocs() {
+	bw.ApiDocsAdapter.Load(bw.resourceType)
+}
+
+// ToggleApiDocsPopup toggles the param detail popup.
+func (bw *BaseWidget) ToggleApiDocsPopup() {
+	bw.ApiDocsAdapter.TogglePopup()
+}
+
+// UpdateApiDocsViewPort handles scroll/cursor keys in API docs mode.
+func (bw *BaseWidget) UpdateApiDocsViewPort(msg tea.Msg) tea.Cmd {
+	return bw.ApiDocsAdapter.UpdateApiDocsPort(msg)
+}
+
 // UpdateViewPort delegates to the DetailsAdapter for viewport navigation (scrolling)
 func (bw *BaseWidget) UpdateViewPort(msg tea.Msg) tea.Cmd {
 
@@ -1443,9 +1467,19 @@ func (bw *BaseWidget) GetKeyBindings() []common.KeyBinding {
 		// Delegate to the extra widget group
 		extraWidget := bw.GetExtraWidget()
 		keyBindings = extraWidget.GetKeyBindings()
+	case common.NavigatorModeApiDocs:
+		keyBindings = bw.GetApiDocsKeyBindings()
 	}
 
 	return keyBindings
+}
+
+func (bw *BaseWidget) GetApiDocsKeyBindings() []common.KeyBinding {
+	return []common.KeyBinding{
+		{Key: "<↑/↓>", Desc: "navigate"},
+		{Key: "<enter>", Desc: "expand"},
+		{Key: "<esc>", Desc: "back"},
+	}
 }
 
 func (bw *BaseWidget) GetListKeyBindings() []common.KeyBinding {
@@ -1453,6 +1487,7 @@ func (bw *BaseWidget) GetListKeyBindings() []common.KeyBinding {
 		{Key: "<:>", Desc: "resources", Generic: true},
 		{Key: "</>", Desc: "search", Generic: true},
 		{Key: "<?>", Desc: "query params", Generic: true},
+		{Key: "<i>", Desc: "api docs"},
 	}
 
 	// Only add navigation and select keys if the widget supports list operations

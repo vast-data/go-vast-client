@@ -27,4 +27,28 @@ func init() {
 		"Control EBox LEDs",         // summary from OpenAPI
 	)
 
+	core.RegisterExtraMethod(
+		"Ebox",                  // resource type (Go struct name)
+		"EboxDecommission_POST", // method name
+		"POST",                  // HTTP verb
+		"/eboxes/decommission/", // URL path with placeholders
+		"EBox Removal",          // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Ebox",                          // resource type (Go struct name)
+		"EboxDryRun_POST",               // method name
+		"POST",                          // HTTP verb
+		"/eboxes/decommission/dry-run/", // URL path with placeholders
+		"Validate EBox Removal",         // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Ebox",                         // resource type (Go struct name)
+		"EboxResume_POST",              // method name
+		"POST",                         // HTTP verb
+		"/eboxes/decommission/resume/", // URL path with placeholders
+		"Resume EBox Removal",          // summary from OpenAPI
+	)
+
 }

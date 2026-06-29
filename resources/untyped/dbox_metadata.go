@@ -28,11 +28,35 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"Dbox",                  // resource type (Go struct name)
+		"DboxDecommission_POST", // method name
+		"POST",                  // HTTP verb
+		"/dboxes/decommission/", // URL path with placeholders
+		"DBox Removal",          // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Dbox",                          // resource type (Go struct name)
+		"DboxDryRun_POST",               // method name
+		"POST",                          // HTTP verb
+		"/dboxes/decommission/dry-run/", // URL path with placeholders
+		"Validate DBox Removal",         // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"Dbox",                       // resource type (Go struct name)
 		"DboxResetDpI2c_PATCH",       // method name
 		"PATCH",                      // HTTP verb
 		"/dboxes/{id}/reset_dp_i2c/", // URL path with placeholders
 		"Reset dp i2c",               // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Dbox",                         // resource type (Go struct name)
+		"DboxResume_POST",              // method name
+		"POST",                         // HTTP verb
+		"/dboxes/decommission/resume/", // URL path with placeholders
+		"Resume DBox Removal",          // summary from OpenAPI
 	)
 
 }

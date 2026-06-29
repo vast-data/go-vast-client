@@ -18,6 +18,9 @@ import (
 // Body:
 //   - cluster_id: The cluster ID
 //   - enode_ip: Specify the internal bond IP of ENode.
+//   - rack_name: Rack name
+//   - rack_unit: Rack unit name
+//   - skip_everything: skip discovery and os upgrade
 func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
 	resourcePath := "/eboxes/add/"
 	result, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
@@ -35,6 +38,9 @@ func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, body core.Params) (c
 // Body:
 //   - cluster_id: The cluster ID
 //   - enode_ip: Specify the internal bond IP of ENode.
+//   - rack_name: Rack name
+//   - rack_unit: Rack unit name
+//   - skip_everything: skip discovery and os upgrade
 func (e *Ebox) EboxAdd_POST(body core.Params) (core.Record, error) {
 	return e.EboxAddWithContext_POST(e.Rest.GetCtx(), body)
 }
@@ -72,4 +78,107 @@ func (e *Ebox) EboxControlLedWithContext_PATCH(ctx context.Context, id any, body
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (e *Ebox) EboxControlLed_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	return e.EboxControlLedWithContext_PATCH(e.Rest.GetCtx(), id, body, waitTimeout)
+}
+
+// EboxDecommissionWithContext_POST
+// method: POST
+// url: /eboxes/decommission/
+// summary: EBox Removal
+//
+// Body:
+//   - ids: List of EBox IDs to remove
+//   - skip_raid_health_checks: Skip RAID health checks during removal
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (e *Ebox) EboxDecommissionWithContext_POST(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	resourcePath := "/eboxes/decommission/"
+	result, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, e.Rest, waitTimeout)
+
+}
+
+// EboxDecommission_POST
+// method: POST
+// url: /eboxes/decommission/
+// summary: EBox Removal
+//
+// Body:
+//   - ids: List of EBox IDs to remove
+//   - skip_raid_health_checks: Skip RAID health checks during removal
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (e *Ebox) EboxDecommission_POST(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return e.EboxDecommissionWithContext_POST(e.Rest.GetCtx(), body, waitTimeout)
+}
+
+// EboxDryRunWithContext_POST
+// method: POST
+// url: /eboxes/decommission/dry-run/
+// summary: Validate EBox Removal
+//
+// Body:
+//   - ids: List of EBox IDs to remove
+//   - skip_raid_health_checks: Skip RAID health checks during removal
+func (e *Ebox) EboxDryRunWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+	resourcePath := "/eboxes/decommission/dry-run/"
+	result, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// EboxDryRun_POST
+// method: POST
+// url: /eboxes/decommission/dry-run/
+// summary: Validate EBox Removal
+//
+// Body:
+//   - ids: List of EBox IDs to remove
+//   - skip_raid_health_checks: Skip RAID health checks during removal
+func (e *Ebox) EboxDryRun_POST(body core.Params) (core.Record, error) {
+	return e.EboxDryRunWithContext_POST(e.Rest.GetCtx(), body)
+}
+
+// EboxResumeWithContext_POST
+// method: POST
+// url: /eboxes/decommission/resume/
+// summary: Resume EBox Removal
+//
+// Body:
+//
+//	< not declared in schema >
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (e *Ebox) EboxResumeWithContext_POST(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	resourcePath := "/eboxes/decommission/resume/"
+	result, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, e.Rest, waitTimeout)
+
+}
+
+// EboxResume_POST
+// method: POST
+// url: /eboxes/decommission/resume/
+// summary: Resume EBox Removal
+//
+// Body:
+//
+//	< not declared in schema >
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (e *Ebox) EboxResume_POST(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return e.EboxResumeWithContext_POST(e.Rest.GetCtx(), body, waitTimeout)
 }

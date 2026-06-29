@@ -71,6 +71,7 @@ type ClusterRequestBody struct {
 	CnodeCores                                     int64                                        `json:"cnode_cores,omitempty" yaml:"cnode_cores,omitempty" required:"false" doc:"Number of cnode cores"`
 	CnodeIps                                       *[]string                                    `json:"cnode_ips,omitempty" yaml:"cnode_ips,omitempty" required:"false" doc:"The list of cnode ips, optional"`
 	CnodeIpv6Pool                                  *[]string                                    `json:"cnode_ipv6_pool,omitempty" yaml:"cnode_ipv6_pool,omitempty" required:"false" doc:"The list of cnode ipv6 addresses, optional"`
+	CompositeTableEnable                           bool                                         `json:"composite_table_enable,omitempty" yaml:"composite_table_enable,omitempty" required:"false" doc:"Enable composite table configuration during system format"`
 	DboxHaSupport                                  bool                                         `json:"dbox_ha_support,omitempty" yaml:"dbox_ha_support,omitempty" required:"false" doc:"DBox HA support"`
 	DeepStripe                                     bool                                         `json:"deep_stripe,omitempty" yaml:"deep_stripe,omitempty" required:"false" doc:"Is deep stripe system"`
 	DefaultOthersShareLevelPerm                    string                                       `json:"default_others_share_level_perm,omitempty" yaml:"default_others_share_level_perm,omitempty" required:"false" doc:"Default Share level permissions for Others. (deprecated since 4.6)"`
@@ -84,6 +85,7 @@ type ClusterRequestBody struct {
 	DisableMgmtHa                                  bool                                         `json:"disable_mgmt_ha,omitempty" yaml:"disable_mgmt_ha,omitempty" required:"false" doc:"Disable management HA"`
 	DisableRestrictUser                            bool                                         `json:"disable_restrict_user,omitempty" yaml:"disable_restrict_user,omitempty" required:"false" doc:"Ignore user restriction on raider clusters"`
 	Dmsetup                                        bool                                         `json:"dmsetup,omitempty" yaml:"dmsetup,omitempty" required:"false" doc:"Mock NVMeoF devices with dmsetup devices"`
+	DnodeCores                                     int64                                        `json:"dnode_cores,omitempty" yaml:"dnode_cores,omitempty" required:"false" doc:"Number of dnode cores"`
 	DnodeIps                                       *[]string                                    `json:"dnode_ips,omitempty" yaml:"dnode_ips,omitempty" required:"false" doc:"The list of D-Boxes"`
 	DnodeIpv6Pool                                  *[]string                                    `json:"dnode_ipv6_pool,omitempty" yaml:"dnode_ipv6_pool,omitempty" required:"false" doc:"The list of dnode ipv6 addresses, optional"`
 	DoubleValueMicroShards                         bool                                         `json:"double_value_micro_shards,omitempty" yaml:"double_value_micro_shards,omitempty" required:"false" doc:"Set the micro shards values to double the mega shards values"`
@@ -107,6 +109,7 @@ type ClusterRequestBody struct {
 	EnableSimilarity                               bool                                         `json:"enable_similarity,omitempty" yaml:"enable_similarity,omitempty" required:"false" doc:"Enable similarity"`
 	EnableSmb                                      bool                                         `json:"enable_smb,omitempty" yaml:"enable_smb,omitempty" required:"false" doc:"Enable support for SMB"`
 	EncryptionType                                 string                                       `json:"encryption_type,omitempty" yaml:"encryption_type,omitempty" required:"false" doc:"Encryption type. INTERNAL = keys are managed internally. CIPHER_TRUST_KMIP=Keys are stored and managed on Thales Group CipherTrust Data Security Platform, FORTANIX_KMIP=Keys are stored and managed on Fortanix DSM, HASHICORP_KMIP=Keys are stored and managed on HashiCorp Vault Enterprise."`
+	ExternalManagedDpu                             bool                                         `json:"external_managed_dpu,omitempty" yaml:"external_managed_dpu,omitempty" required:"false" doc:"Cluster has externally managed DPUs. Default: False"`
 	FailingComponentsCnodesFailureToFailPercentage int64                                        `json:"failing_components_cnodes_failure_to_fail_percentage,omitempty" yaml:"failing_components_cnodes_failure_to_fail_percentage,omitempty" required:"false" doc:"Percentage of all CNodes that are allowed to fail"`
 	FailingComponentsEnabled                       bool                                         `json:"failing_components_enabled,omitempty" yaml:"failing_components_enabled,omitempty" required:"false" doc:"Enable failing components feature"`
 	FailureDomainsSupport                          bool                                         `json:"failure_domains_support,omitempty" yaml:"failure_domains_support,omitempty" required:"false" doc:"Failure domains support"`
@@ -134,6 +137,7 @@ type ClusterRequestBody struct {
 	MicroDrWbShards                                int64                                        `json:"micro_dr_wb_shards,omitempty" yaml:"micro_dr_wb_shards,omitempty" required:"false" doc:"Number of DR write buffer shards"`
 	MicroShards                                    int64                                        `json:"micro_shards,omitempty" yaml:"micro_shards,omitempty" required:"false" doc:"Number of shards"`
 	MicroStripeGroups                              int64                                        `json:"micro_stripe_groups,omitempty" yaml:"micro_stripe_groups,omitempty" required:"false" doc:"Number of stripe groups"`
+	MixedMedia                                     bool                                         `json:"mixed_media,omitempty" yaml:"mixed_media,omitempty" required:"false" doc:"Flag for mixed media systems (NVRAMs and SSDs on same device), default: False"`
 	MockRaiderGuiAvailability                      bool                                         `json:"mock_raider_gui_availability,omitempty" yaml:"mock_raider_gui_availability,omitempty" required:"false" doc:"Creates mock for HPE Raider GUI availability, default is False"`
 	NbEthMtu                                       int64                                        `json:"nb_eth_mtu,omitempty" yaml:"nb_eth_mtu,omitempty" required:"false" doc:"Ethernet Northbound MTU, optional"`
 	NbIbMtu                                        int64                                        `json:"nb_ib_mtu,omitempty" yaml:"nb_ib_mtu,omitempty" required:"false" doc:"Infiniband Northbound MTU, optional"`
@@ -464,6 +468,12 @@ type ClusterAddBoxesBody_RackPoolsValue struct {
 	DnodeIpmiPool *[]string `json:"dnode_ipmi_pool,omitempty" yaml:"dnode_ipmi_pool,omitempty" required:"false" doc:""`
 }
 
+// ClusterS3TrueIpConfigBody_IncludedAddressesItem represents a nested type for Cluster extra method body
+type ClusterS3TrueIpConfigBody_IncludedAddressesItem struct {
+	Range   int64  `json:"range,omitempty" yaml:"range,omitempty" required:"true" doc:"Number of addresses in the range"`
+	StartIp string `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"true" doc:"Starting IP address (must be IPv4)"`
+}
+
 // ClusterWipeBody_CnodeListItem represents a nested type for Cluster extra method body
 type ClusterWipeBody_CnodeListItem struct {
 	Name                       string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
@@ -641,6 +651,12 @@ type ClusterListPrefetchPathsInfoModel_PrefetchDataItem_PathsItem struct {
 // ClusterListPrefetchPathsInfoModel_PrefetchDataItem_Tenant represents a nested type for Cluster extra method response
 type ClusterListPrefetchPathsInfoModel_PrefetchDataItem_Tenant struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Tenant name"`
+}
+
+// ClusterS3TrueIpConfigModel_IncludedAddressesItem represents a nested type for Cluster extra method response
+type ClusterS3TrueIpConfigModel_IncludedAddressesItem struct {
+	Range   int64  `json:"range,omitempty" yaml:"range,omitempty" required:"false" doc:"Number of addresses in the range"`
+	StartIp string `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"false" doc:"Starting IP address"`
 }
 
 // ClusterAddBoxes_PATCH_Body represents the request body for ClusterAddBoxes
@@ -1081,29 +1097,28 @@ func (r *Cluster) ClusterDeleteFolder_DELETE(id any, path string, tenantId int64
 	return r.ClusterDeleteFolderWithContext_DELETE(r.Untyped.GetCtx(), id, path, tenantId)
 }
 
+// ClusterExpand_POST_Body represents the request body for ClusterExpand
+type ClusterExpand_POST_Body struct {
+	DevicesMock          string `json:"devices_mock,omitempty" yaml:"devices_mock,omitempty" required:"false" doc:"Devices Mock for NVRAM section layout (only for loopback)"`
+	NvramSectionLayout   string `json:"nvram_section_layout,omitempty" yaml:"nvram_section_layout,omitempty" required:"false" doc:"NVRAM section layout"`
+	SkipEverything       bool   `json:"skip_everything,omitempty" yaml:"skip_everything,omitempty" required:"false" doc:"Skip hardware validations before expansion"`
+	SkipLayoutValidation string `json:"skip_layout_validation,omitempty" yaml:"skip_layout_validation,omitempty" required:"false" doc:"skip layout validation"`
+}
+
 // ClusterExpandWithContext_POST
 // method: POST
 // url: /clusters/{id}/expand/
 // summary: Expand Cluster
 //
 // Parameters:
-//   - devicesMock (body): Devices Mock for NVRAM section layout (only for loopback)
-//   - nvramSectionLayout (body): NVRAM section layout
-//   - skipLayoutValidation (body): skip layout validation
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (r *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, devicesMock string, nvramSectionLayout string, skipLayoutValidation string, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+func (r *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, body *ClusterExpand_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("clusters", id, "expand")
 
 	var reqParams core.Params
-	reqBody := core.Params{}
-	if devicesMock != "" {
-		reqBody["devices_mock"] = devicesMock
-	}
-	if nvramSectionLayout != "" {
-		reqBody["nvram_section_layout"] = nvramSectionLayout
-	}
-	if skipLayoutValidation != "" {
-		reqBody["skip_layout_validation"] = skipLayoutValidation
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
 	}
 
 	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
@@ -1121,12 +1136,9 @@ func (r *Cluster) ClusterExpandWithContext_POST(ctx context.Context, id any, dev
 // summary: Expand Cluster
 //
 // Parameters:
-//   - devicesMock (body): Devices Mock for NVRAM section layout (only for loopback)
-//   - nvramSectionLayout (body): NVRAM section layout
-//   - skipLayoutValidation (body): skip layout validation
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
-func (r *Cluster) ClusterExpand_POST(id any, devicesMock string, nvramSectionLayout string, skipLayoutValidation string, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
-	return r.ClusterExpandWithContext_POST(r.Untyped.GetCtx(), id, devicesMock, nvramSectionLayout, skipLayoutValidation, waitTimeout)
+func (r *Cluster) ClusterExpand_POST(id any, body *ClusterExpand_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.ClusterExpandWithContext_POST(r.Untyped.GetCtx(), id, body, waitTimeout)
 }
 
 // ClusterGenerateUnfreezeToken_POST_Model represents the response model for ClusterGenerateUnfreezeToken
@@ -1409,6 +1421,75 @@ func (r *Cluster) ClusterRunHardwareCheck_PATCH(body *ClusterRunHardwareCheck_PA
 	return r.ClusterRunHardwareCheckWithContext_PATCH(r.Untyped.GetCtx(), body, waitTimeout)
 }
 
+// ClusterS3TrueIpConfig_GET_Model represents the response model for ClusterS3TrueIpConfig
+type ClusterS3TrueIpConfig_GET_Model struct {
+	IncludedAddresses  *[]ClusterS3TrueIpConfigModel_IncludedAddressesItem `json:"included_addresses,omitempty" yaml:"included_addresses,omitempty" required:"false" doc:"List of IP address ranges"`
+	TrueClientIpHeader string                                              `json:"true_client_ip_header,omitempty" yaml:"true_client_ip_header,omitempty" required:"false" doc:"True client IP value"`
+}
+
+// ClusterS3TrueIpConfigWithContext_GET
+// method: GET
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Get S3 True IP Configuration
+func (r *Cluster) ClusterS3TrueIpConfigWithContext_GET(ctx context.Context, id any) (*ClusterS3TrueIpConfig_GET_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "s3_true_ip_config")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response ClusterS3TrueIpConfig_GET_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// ClusterS3TrueIpConfig_GET
+// method: GET
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Get S3 True IP Configuration
+func (r *Cluster) ClusterS3TrueIpConfig_GET(id any) (*ClusterS3TrueIpConfig_GET_Model, error) {
+	return r.ClusterS3TrueIpConfigWithContext_GET(r.Untyped.GetCtx(), id)
+}
+
+// ClusterS3TrueIpConfig_PATCH_Body represents the request body for ClusterS3TrueIpConfig
+type ClusterS3TrueIpConfig_PATCH_Body struct {
+	IncludedAddresses  *[]ClusterS3TrueIpConfigBody_IncludedAddressesItem `json:"included_addresses,omitempty" yaml:"included_addresses,omitempty" required:"true" doc:"List of IP address ranges to include"`
+	TrueClientIpHeader string                                             `json:"true_client_ip_header,omitempty" yaml:"true_client_ip_header,omitempty" required:"true" doc:"True client IP value (must be IPv4)"`
+}
+
+// ClusterS3TrueIpConfigWithContext_PATCH
+// method: PATCH
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Set S3 True IP Configuration
+func (r *Cluster) ClusterS3TrueIpConfigWithContext_PATCH(ctx context.Context, id any, body *ClusterS3TrueIpConfig_PATCH_Body) error {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "s3_true_ip_config")
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return err
+	}
+
+	_, err = core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// ClusterS3TrueIpConfig_PATCH
+// method: PATCH
+// url: /clusters/{id}/s3_true_ip_config/
+// summary: Set S3 True IP Configuration
+func (r *Cluster) ClusterS3TrueIpConfig_PATCH(id any, body *ClusterS3TrueIpConfig_PATCH_Body) error {
+	return r.ClusterS3TrueIpConfigWithContext_PATCH(r.Untyped.GetCtx(), id, body)
+}
+
 // ClusterSetCertificates_POST_Body represents the request body for ClusterSetCertificates
 type ClusterSetCertificates_POST_Body struct {
 	EkmAuthDomain       string `json:"ekm_auth_domain,omitempty" yaml:"ekm_auth_domain,omitempty" required:"false" doc:"Auth domain (Thales)"`
@@ -1578,6 +1659,49 @@ func (r *Cluster) ClusterUnfreezeWithContext_POST(ctx context.Context, id any, t
 //   - token (body): Token
 func (r *Cluster) ClusterUnfreeze_POST(id any, token string) error {
 	return r.ClusterUnfreezeWithContext_POST(r.Untyped.GetCtx(), id, token)
+}
+
+// ClusterUpdatePollingIntervalWithContext_PATCH
+// method: PATCH
+// url: /clusters/{id}/update_polling_interval/
+// summary: Change interval for a polling task
+//
+// Parameters:
+//   - interval (body): New interval for polling task
+//   - taskName (body): Name of polling task
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Cluster) ClusterUpdatePollingIntervalWithContext_PATCH(ctx context.Context, id any, interval int64, taskName string, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := core.BuildResourcePathWithID("clusters", id, "update_polling_interval")
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	if interval != 0 {
+		reqBody["interval"] = interval
+	}
+	if taskName != "" {
+		reqBody["task_name"] = taskName
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// ClusterUpdatePollingInterval_PATCH
+// method: PATCH
+// url: /clusters/{id}/update_polling_interval/
+// summary: Change interval for a polling task
+//
+// Parameters:
+//   - interval (body): New interval for polling task
+//   - taskName (body): Name of polling task
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Cluster) ClusterUpdatePollingInterval_PATCH(id any, interval int64, taskName string, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.ClusterUpdatePollingIntervalWithContext_PATCH(r.Untyped.GetCtx(), id, interval, taskName, waitTimeout)
 }
 
 // ClusterUpgradeOptaneWithContext_POST
@@ -2077,7 +2201,6 @@ func (r *Cluster) ClusterWipe_POST(body *ClusterWipe_POST_Body, waitTimeout time
 //   - Extra method PATCH /clusters/{id}/auditing/ skipped: PATCH /clusters/{id}/auditing/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method PATCH /clusters/{id}/resume_deploy/ skipped: PATCH /clusters/{id}/resume_deploy/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method PATCH /clusters/{id}/rpc/ skipped: PATCH /clusters/{id}/rpc/ - Response schema contains ambiguous nested objects (objects with no properties)
-//   - Extra method PATCH /clusters/{id}/update_polling_interval/ skipped: PATCH /clusters/{id}/update_polling_interval/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /clusters/{id}/update_polling_interval/
 //   - Extra method POST /clusters/dbox_migration/ skipped: POST /clusters/dbox_migration/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method POST /clusters/shard_expand/ skipped: POST /clusters/shard_expand/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - Extra method POST /clusters/{id}/locks/ skipped: POST /clusters/{id}/locks/ - Array item schema is ambiguous or empty

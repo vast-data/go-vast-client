@@ -107,6 +107,7 @@ type TenantRequestBody struct {
 	LocalProviderId                      int64                           `json:"local_provider_id,omitempty" yaml:"local_provider_id,omitempty" required:"false" doc:"The ID of a local provider configured on the cluster. Connects the specified provider to the tenant."`
 	LoginNamePrimaryProvider             string                          `json:"login_name_primary_provider,omitempty" yaml:"login_name_primary_provider,omitempty" required:"false" doc:"Login name primary provider type"`
 	MaxViews                             int64                           `json:"max_views,omitempty" yaml:"max_views,omitempty" required:"false" doc:"Max views we can create on this tenant (0:unlimted as default)"`
+	MtlsIdentifier                       string                          `json:"mtls_identifier,omitempty" yaml:"mtls_identifier,omitempty" required:"false" doc:"The mTLS identifier of the tenant"`
 	NisProviderId                        int64                           `json:"nis_provider_id,omitempty" yaml:"nis_provider_id,omitempty" required:"false" doc:"The ID of a NIS provider configured on the cluster. Enables the specified provider for the tenant."`
 	OidcProviderId                       int64                           `json:"oidc_provider_id,omitempty" yaml:"oidc_provider_id,omitempty" required:"false" doc:"OIDC provider ID"`
 	PosixPrimaryProvider                 string                          `json:"posix_primary_provider,omitempty" yaml:"posix_primary_provider,omitempty" required:"false" doc:"Specifies which provider takes precedence over other providers in case of any conflicts between attribute values when user information is retrieved from the providers. Relevant only if more than one provider is enabled for the tenant."`
@@ -457,6 +458,41 @@ type TenantClientIpRangesModel_VippoolsItem struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
 }
 
+// TenantMetricLabelValuesByIdModel_Label represents a nested type for Tenant extra method response
+type TenantMetricLabelValuesByIdModel_Label struct {
+	Id  int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Key string `json:"key,omitempty" yaml:"key,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelValuesListItem represents a nested type for Tenant extra method response
+type TenantMetricLabelValuesListItem struct {
+	Value     string                                `json:"value,omitempty" yaml:"value,omitempty" required:"true" doc:"The value for this metric label for the tenant."`
+	CreatedAt string                                `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label value was created."`
+	Id        int64                                 `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Label     TenantMetricLabelValuesListItem_Label `json:"label,omitempty" yaml:"label,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelValuesListItem_Label represents a nested type for Tenant extra method response
+type TenantMetricLabelValuesListItem_Label struct {
+	Id  int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Key string `json:"key,omitempty" yaml:"key,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelValuesModel_Label represents a nested type for Tenant extra method response
+type TenantMetricLabelValuesModel_Label struct {
+	Id  int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Key string `json:"key,omitempty" yaml:"key,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelsListItem represents a nested type for Tenant extra method response
+type TenantMetricLabelsListItem struct {
+	DefaultValue string `json:"default_value,omitempty" yaml:"default_value,omitempty" required:"true" doc:"The default value for this metric label."`
+	Description  string `json:"description,omitempty" yaml:"description,omitempty" required:"true" doc:"Description of the metric label purpose."`
+	Key          string `json:"key,omitempty" yaml:"key,omitempty" required:"true" doc:"The unique key for the metric label."`
+	CreatedAt    string `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label was created."`
+	Id           int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+}
+
 // TenantNfs4DelegsModel_DelegateInfoItem represents a nested type for Tenant extra method response
 type TenantNfs4DelegsModel_DelegateInfoItem struct {
 	ClientId            int64                                                      `json:"client_id,omitempty" yaml:"client_id,omitempty" required:"false" doc:"Tenant ID"`
@@ -521,6 +557,7 @@ type TenantClientIpRanges_PATCH_Model struct {
 	LocalProviderTitle                   string                                    `json:"local_provider_title,omitempty" yaml:"local_provider_title,omitempty" required:"false" doc:"The local provider associated with the tenant"`
 	LoginNamePrimaryProvider             string                                    `json:"login_name_primary_provider,omitempty" yaml:"login_name_primary_provider,omitempty" required:"false" doc:"Primary provider for the user's login name"`
 	MaxViews                             int64                                     `json:"max_views,omitempty" yaml:"max_views,omitempty" required:"false" doc:"Max views we can create on this tenant (0:unlimted as default)"`
+	MtlsIdentifier                       string                                    `json:"mtls_identifier,omitempty" yaml:"mtls_identifier,omitempty" required:"false" doc:"The mTLS identifier of the tenant"`
 	NisProviderId                        int64                                     `json:"nis_provider_id,omitempty" yaml:"nis_provider_id,omitempty" required:"false" doc:"NIS provider ID"`
 	NisTitle                             string                                    `json:"nis_title,omitempty" yaml:"nis_title,omitempty" required:"false" doc:""`
 	OidcProviderId                       int64                                     `json:"oidc_provider_id,omitempty" yaml:"oidc_provider_id,omitempty" required:"false" doc:"OIDC provider ID"`
@@ -714,6 +751,351 @@ func (r *Tenant) TenantIsOperationHealthyWithContext_POST(ctx context.Context, i
 //   - Operation (query)
 func (r *Tenant) TenantIsOperationHealthy_POST(id any, Operation string, body *TenantIsOperationHealthy_POST_Body) (*TenantIsOperationHealthy_POST_Model, error) {
 	return r.TenantIsOperationHealthyWithContext_POST(r.Untyped.GetCtx(), id, Operation, body)
+}
+
+// TenantMetricLabelValuesById_GET_Model represents the response model for TenantMetricLabelValuesById
+type TenantMetricLabelValuesById_GET_Model struct {
+	Value     string                                 `json:"value,omitempty" yaml:"value,omitempty" required:"true" doc:"The value for this metric label for the tenant."`
+	CreatedAt string                                 `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label value was created."`
+	Id        int64                                  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Label     TenantMetricLabelValuesByIdModel_Label `json:"label,omitempty" yaml:"label,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelValuesByIdWithContext_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Get Tenant Metric Label Value
+func (r *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context, id any) (*TenantMetricLabelValuesById_GET_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response TenantMetricLabelValuesById_GET_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// TenantMetricLabelValuesById_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Get Tenant Metric Label Value
+func (r *Tenant) TenantMetricLabelValuesById_GET(id any) (*TenantMetricLabelValuesById_GET_Model, error) {
+	return r.TenantMetricLabelValuesByIdWithContext_GET(r.Untyped.GetCtx(), id)
+}
+
+// TenantMetricLabelValuesListWithContext_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/
+// summary: List Tenant Metric Label Values
+func (r *Tenant) TenantMetricLabelValuesListWithContext_GET(ctx context.Context) ([]TenantMetricLabelValuesListItem, error) {
+	resourcePath := "/tenants/{tenant_id}/metric_label_values/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.RecordSet](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+	// Convert RecordSet ([]core.Record) to typed array ([]TenantMetricLabelValuesListItem)
+	result := make([]TenantMetricLabelValuesListItem, len(record))
+	for i, item := range record {
+		if err := item.Fill(&result[i]); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal array item %d: %w", i, err)
+		}
+	}
+	return result, nil
+
+}
+
+// TenantMetricLabelValuesList_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/
+// summary: List Tenant Metric Label Values
+func (r *Tenant) TenantMetricLabelValuesList_GET() ([]TenantMetricLabelValuesListItem, error) {
+	return r.TenantMetricLabelValuesListWithContext_GET(r.Untyped.GetCtx())
+}
+
+// TenantMetricLabelValuesWithContext_DELETE
+// method: DELETE
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Delete Tenant Metric Label Value
+func (r *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// TenantMetricLabelValues_DELETE
+// method: DELETE
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Delete Tenant Metric Label Value
+func (r *Tenant) TenantMetricLabelValues_DELETE(id any) error {
+	return r.TenantMetricLabelValuesWithContext_DELETE(r.Untyped.GetCtx(), id)
+}
+
+// TenantMetricLabelValues_PATCH_Model represents the response model for TenantMetricLabelValues
+type TenantMetricLabelValues_PATCH_Model struct {
+	Value     string                             `json:"value,omitempty" yaml:"value,omitempty" required:"true" doc:"The value for this metric label for the tenant."`
+	CreatedAt string                             `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label value was created."`
+	Id        int64                              `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Label     TenantMetricLabelValuesModel_Label `json:"label,omitempty" yaml:"label,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelValuesWithContext_PATCH
+// method: PATCH
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Update Tenant Metric Label Value
+//
+// Parameters:
+//   - value (body): The new value for this metric label.
+func (r *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, id any, value string) (*TenantMetricLabelValues_PATCH_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	if value != "" {
+		reqBody["value"] = value
+	}
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response TenantMetricLabelValues_PATCH_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// TenantMetricLabelValues_PATCH
+// method: PATCH
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Update Tenant Metric Label Value
+//
+// Parameters:
+//   - value (body): The new value for this metric label.
+func (r *Tenant) TenantMetricLabelValues_PATCH(id any, value string) (*TenantMetricLabelValues_PATCH_Model, error) {
+	return r.TenantMetricLabelValuesWithContext_PATCH(r.Untyped.GetCtx(), id, value)
+}
+
+// TenantMetricLabelValues_POST_Model represents the response model for TenantMetricLabelValues
+type TenantMetricLabelValues_POST_Model struct {
+	Value     string                             `json:"value,omitempty" yaml:"value,omitempty" required:"true" doc:"The value for this metric label for the tenant."`
+	CreatedAt string                             `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label value was created."`
+	Id        int64                              `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Label     TenantMetricLabelValuesModel_Label `json:"label,omitempty" yaml:"label,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelValuesWithContext_POST
+// method: POST
+// url: /tenants/{tenant_id}/metric_label_values/
+// summary: Create Tenant Metric Label Value
+//
+// Parameters:
+//   - labelId (body): The ID of the metric label.
+//   - value (body): The value for this metric label.
+func (r *Tenant) TenantMetricLabelValuesWithContext_POST(ctx context.Context, labelId int64, value string) (*TenantMetricLabelValues_POST_Model, error) {
+	resourcePath := "/tenants/{tenant_id}/metric_label_values/"
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	reqBody["label_id"] = labelId
+	reqBody["value"] = value
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response TenantMetricLabelValues_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// TenantMetricLabelValues_POST
+// method: POST
+// url: /tenants/{tenant_id}/metric_label_values/
+// summary: Create Tenant Metric Label Value
+//
+// Parameters:
+//   - labelId (body): The ID of the metric label.
+//   - value (body): The value for this metric label.
+func (r *Tenant) TenantMetricLabelValues_POST(labelId int64, value string) (*TenantMetricLabelValues_POST_Model, error) {
+	return r.TenantMetricLabelValuesWithContext_POST(r.Untyped.GetCtx(), labelId, value)
+}
+
+// TenantMetricLabelsById_GET_Model represents the response model for TenantMetricLabelsById
+type TenantMetricLabelsById_GET_Model struct {
+	DefaultValue string `json:"default_value,omitempty" yaml:"default_value,omitempty" required:"true" doc:"The default value for this metric label."`
+	Description  string `json:"description,omitempty" yaml:"description,omitempty" required:"true" doc:"Description of the metric label purpose."`
+	Key          string `json:"key,omitempty" yaml:"key,omitempty" required:"true" doc:"The unique key for the metric label."`
+	CreatedAt    string `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label was created."`
+	Id           int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelsByIdWithContext_GET
+// method: GET
+// url: /tenants/metric_labels/{id}/
+// summary: Get Tenant Metric Label
+func (r *Tenant) TenantMetricLabelsByIdWithContext_GET(ctx context.Context, id any) (*TenantMetricLabelsById_GET_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants/metric_labels", id)
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response TenantMetricLabelsById_GET_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// TenantMetricLabelsById_GET
+// method: GET
+// url: /tenants/metric_labels/{id}/
+// summary: Get Tenant Metric Label
+func (r *Tenant) TenantMetricLabelsById_GET(id any) (*TenantMetricLabelsById_GET_Model, error) {
+	return r.TenantMetricLabelsByIdWithContext_GET(r.Untyped.GetCtx(), id)
+}
+
+// TenantMetricLabelsListWithContext_GET
+// method: GET
+// url: /tenants/metric_labels/
+// summary: List Tenant Metric Labels
+func (r *Tenant) TenantMetricLabelsListWithContext_GET(ctx context.Context) ([]TenantMetricLabelsListItem, error) {
+	resourcePath := "/tenants/metric_labels/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.RecordSet](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+	// Convert RecordSet ([]core.Record) to typed array ([]TenantMetricLabelsListItem)
+	result := make([]TenantMetricLabelsListItem, len(record))
+	for i, item := range record {
+		if err := item.Fill(&result[i]); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal array item %d: %w", i, err)
+		}
+	}
+	return result, nil
+
+}
+
+// TenantMetricLabelsList_GET
+// method: GET
+// url: /tenants/metric_labels/
+// summary: List Tenant Metric Labels
+func (r *Tenant) TenantMetricLabelsList_GET() ([]TenantMetricLabelsListItem, error) {
+	return r.TenantMetricLabelsListWithContext_GET(r.Untyped.GetCtx())
+}
+
+// TenantMetricLabelsWithContext_DELETE
+// method: DELETE
+// url: /tenants/metric_labels/{id}/
+// summary: Delete Tenant Metric Label
+func (r *Tenant) TenantMetricLabelsWithContext_DELETE(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("tenants/metric_labels", id)
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// TenantMetricLabels_DELETE
+// method: DELETE
+// url: /tenants/metric_labels/{id}/
+// summary: Delete Tenant Metric Label
+func (r *Tenant) TenantMetricLabels_DELETE(id any) error {
+	return r.TenantMetricLabelsWithContext_DELETE(r.Untyped.GetCtx(), id)
+}
+
+// TenantMetricLabels_POST_Model represents the response model for TenantMetricLabels
+type TenantMetricLabels_POST_Model struct {
+	DefaultValue string `json:"default_value,omitempty" yaml:"default_value,omitempty" required:"true" doc:"The default value for this metric label."`
+	Description  string `json:"description,omitempty" yaml:"description,omitempty" required:"true" doc:"Description of the metric label purpose."`
+	Key          string `json:"key,omitempty" yaml:"key,omitempty" required:"true" doc:"The unique key for the metric label."`
+	CreatedAt    string `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label was created."`
+	Id           int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+}
+
+// TenantMetricLabelsWithContext_POST
+// method: POST
+// url: /tenants/metric_labels/
+// summary: Create Tenant Metric Label
+//
+// Parameters:
+//   - key (body): The unique key for the metric label.
+//   - defaultValue (body): The default value for this metric label.
+//   - description (body): Description of the metric label purpose.
+func (r *Tenant) TenantMetricLabelsWithContext_POST(ctx context.Context, key string, defaultValue string, description string) (*TenantMetricLabels_POST_Model, error) {
+	resourcePath := "/tenants/metric_labels/"
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	reqBody["key"] = key
+	if defaultValue != "" {
+		reqBody["default_value"] = defaultValue
+	}
+	if description != "" {
+		reqBody["description"] = description
+	}
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response TenantMetricLabels_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// TenantMetricLabels_POST
+// method: POST
+// url: /tenants/metric_labels/
+// summary: Create Tenant Metric Label
+//
+// Parameters:
+//   - key (body): The unique key for the metric label.
+//   - defaultValue (body): The default value for this metric label.
+//   - description (body): Description of the metric label purpose.
+func (r *Tenant) TenantMetricLabels_POST(key string, defaultValue string, description string) (*TenantMetricLabels_POST_Model, error) {
+	return r.TenantMetricLabelsWithContext_POST(r.Untyped.GetCtx(), key, defaultValue, description)
 }
 
 // TenantNfs4DelegWithContext_DELETE
@@ -945,6 +1327,43 @@ func (r *Tenant) TenantSameEncryptionGroupTenants_GET(id any) ([]string, error) 
 	return r.TenantSameEncryptionGroupTenantsWithContext_GET(r.Untyped.GetCtx(), id)
 }
 
+// TenantViewsCount_GET_Model represents the response model for TenantViewsCount
+type TenantViewsCount_GET_Model struct {
+	CurrentViewsCount int64 `json:"current_views_count,omitempty" yaml:"current_views_count,omitempty" required:"false" doc:"The number of views in this tenant"`
+	MaxViews          int64 `json:"max_views,omitempty" yaml:"max_views,omitempty" required:"false" doc:"Maximum views allowed in this tenant"`
+}
+
+// TenantViewsCountWithContext_GET
+// method: GET
+// url: /tenants/{id}/views_count/
+// summary: Get the number of views in the tenant
+func (r *Tenant) TenantViewsCountWithContext_GET(ctx context.Context, id any) (*TenantViewsCount_GET_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants", id, "views_count")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response TenantViewsCount_GET_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// TenantViewsCount_GET
+// method: GET
+// url: /tenants/{id}/views_count/
+// summary: Get the number of views in the tenant
+func (r *Tenant) TenantViewsCount_GET(id any) (*TenantViewsCount_GET_Model, error) {
+	return r.TenantViewsCountWithContext_GET(r.Untyped.GetCtx(), id)
+}
+
 // TenantVippoolIpRanges_GET_Model represents the response model for TenantVippoolIpRanges
 type TenantVippoolIpRanges_GET_Model struct {
 	VippoolIpRanges *[]string `json:"vippool_ip_ranges,omitempty" yaml:"vippool_ip_ranges,omitempty" required:"false" doc:""`
@@ -985,4 +1404,6 @@ func (r *Tenant) TenantVippoolIpRanges_GET(id any) (*TenantVippoolIpRanges_GET_M
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - Extra method GET /tenants/{id}/client_metrics/ skipped: GET /tenants/{id}/client_metrics/ - Response schema contains ambiguous nested objects (objects with no properties)
+//   - Extra method GET /tenants/{tenant_id}/metric_label_values/bulk/ skipped: GET /tenants/{tenant_id}/metric_label_values/bulk/ - Response is a map-like object (additionalProperties: string). Typed methods do not support map return types
 //   - Extra method PATCH /tenants/{id}/client_metrics/ skipped: PATCH /tenants/{id}/client_metrics/ - Response schema contains ambiguous nested objects (objects with no properties)
+//   - Extra method POST /tenants/{tenant_id}/metric_label_values/bulk/ skipped: POST /tenants/{tenant_id}/metric_label_values/bulk/ - Response is a map-like object (additionalProperties: string). Typed methods do not support map return types

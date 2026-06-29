@@ -28,14 +28,15 @@ type View struct {
 
 // ViewSearchParams represents the search parameters for View operations
 type ViewSearchParams struct {
-	Alias    string `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Filter by NFS export alias"`
-	Bucket   string `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"Limit response by S3 bucket name"`
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by View name"`
-	Nqn      string `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"false" doc:"NVMe Qualified Name to filter by."`
-	Path     string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by Element Store path"`
-	Share    string `json:"share,omitempty" yaml:"share,omitempty" required:"false" doc:"Filter by share name"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	Alias              string `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Filter by NFS export alias"`
+	Bucket             string `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"Limit response by S3 bucket name"`
+	Guid               string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	IsDefaultSubsystem bool   `json:"is_default_subsystem,omitempty" yaml:"is_default_subsystem,omitempty" required:"false" doc:"Filter by whether View is a default Subsystem."`
+	Name               string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by View name"`
+	Nqn                string `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"false" doc:"NVMe Qualified Name to filter by."`
+	Path               string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by Element Store path"`
+	Share              string `json:"share,omitempty" yaml:"share,omitempty" required:"false" doc:"Filter by share name"`
+	TenantId           int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//
@@ -120,6 +121,7 @@ type ViewRequestBody struct {
 	Alias                         string                                    `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Relevant if NFS is included in the protocols array. An alias for the mount path of an NFSv3 export. The alias must begin with a forward slash ('/') and must consist of only ASCII characters. If specified, the alias that can be used by NFSv3 clients to mount the view."`
 	AllowAnonymousAccess          bool                                      `json:"allow_anonymous_access,omitempty" yaml:"allow_anonymous_access,omitempty" required:"false" doc:"not in use"`
 	AllowS3AnonymousAccess        bool                                      `json:"allow_s3_anonymous_access,omitempty" yaml:"allow_s3_anonymous_access,omitempty" required:"false" doc:"Allow S3 anonymous access to S3 bucket. If true, anonymous requests are granted provided that the object ACL grants access to the All Users group (in S3 Native security flavor) or the permission mode bits on the requested file and directory path grant access permission to 'others' (in NFS security flavor)."`
+	AllowedDelegations            string                                    `json:"allowed_delegations,omitempty" yaml:"allowed_delegations,omitempty" required:"false" doc:"Defines which types of NFSv4 file delegations are enabled for this view. - 'NONE' means NFSv4 file delegations are disabled. - 'READ' means read type NFSv4 file delegations can be granted to a client opening a file. - 'WRITE' means write type NFSv4 file delegations can be granted to a client opening a file. - 'READ_WRITE' means both read and write type NFSv4 file delegations can be granted to a client opening a file. - 'USE_TENANT_ALLOWED_DELEG' (default) means the view inherits the tenant’s 'allowed_delegations'. **Important:** If the tenant has 'DISABLED' delegations, this overrides the view entirely. The effective delegations value for this view is forced to 'NONE', regardless of the view’s setting."`
 	AutoCommit                    string                                    `json:"auto_commit,omitempty" yaml:"auto_commit,omitempty" required:"false" doc:"Applicable if locking is enabled. Sets the auto-commit time for files that are locked automatically. These files are locked automatically after the auto-commit period elapses from the time the file is saved. Files locked automatically are locked for the default-retention-period, after which they are unlocked. Specify as an integer value followed by a letter for the unit (h - hours, d - days, y - years). Example: 2h (2 hours)."`
 	Bucket                        string                                    `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"A name for the S3 bucket name. Must be specified if S3 bucket is specified in protocols."`
 	BucketCreators                *[]string                                 `json:"bucket_creators,omitempty" yaml:"bucket_creators,omitempty" required:"false" doc:"For S3 endpoint views, specify a list of users, by user name, whose bucket create requests use this view. Any request to create an S3 bucket that is sent by S3 API by a specified user will use this S3 Endpoint view. Users should not be specified as bucket creators in more than one S3 Endpoint view. Naming a user as a bucket creator in two S3 Endpoint views will fail the creation of the view with an error."`
@@ -528,6 +530,24 @@ type ViewListSeamlessPeersItem struct {
 	ViewPath       string `json:"view_path,omitempty" yaml:"view_path,omitempty" required:"false" doc:"Remote view path"`
 }
 
+// ViewS3corsConfigurationModel_AwsCorsRulesItem represents a nested type for View extra method response
+type ViewS3corsConfigurationModel_AwsCorsRulesItem struct {
+	AllowedMethods *[]string `json:"AllowedMethods,omitempty" yaml:"AllowedMethods,omitempty" required:"true" doc:"CORS allowed methods"`
+	AllowedOrigins *[]string `json:"AllowedOrigins,omitempty" yaml:"AllowedOrigins,omitempty" required:"true" doc:"CORS allowed origins"`
+	AllowedHeaders *[]string `json:"AllowedHeaders,omitempty" yaml:"AllowedHeaders,omitempty" required:"false" doc:"CORS allowed headers"`
+	ExposeHeaders  *[]string `json:"ExposeHeaders,omitempty" yaml:"ExposeHeaders,omitempty" required:"false" doc:"Headers the browser can expose to client-side"`
+	MaxAgeSeconds  int64     `json:"MaxAgeSeconds,omitempty" yaml:"MaxAgeSeconds,omitempty" required:"false" doc:"Time in seconds to cache the preflight response"`
+}
+
+// ViewS3corsConfigurationModel_CorsRulesItem represents a nested type for View extra method response
+type ViewS3corsConfigurationModel_CorsRulesItem struct {
+	AllowedMethods *[]string `json:"allowed_methods,omitempty" yaml:"allowed_methods,omitempty" required:"true" doc:"CORS allowed methods"`
+	AllowedOrigins *[]string `json:"allowed_origins,omitempty" yaml:"allowed_origins,omitempty" required:"true" doc:"CORS allowed origins"`
+	AllowedHeaders *[]string `json:"allowed_headers,omitempty" yaml:"allowed_headers,omitempty" required:"false" doc:"CORS allowed headers"`
+	ExposeHeaders  *[]string `json:"expose_headers,omitempty" yaml:"expose_headers,omitempty" required:"false" doc:"Headers the browser can expose to client-side"`
+	MaxAgeSeconds  int64     `json:"max_age_seconds,omitempty" yaml:"max_age_seconds,omitempty" required:"false" doc:"Time in seconds to cache the preflight response"`
+}
+
 // ViewCheckPermissionsTemplates_POST_Body represents the request body for ViewCheckPermissionsTemplates
 type ViewCheckPermissionsTemplates_POST_Body struct {
 	TargetPath       string `json:"target_path,omitempty" yaml:"target_path,omitempty" required:"true" doc:"Target dir path"`
@@ -766,6 +786,72 @@ func (r *View) ViewListSeamlessPeers_GET(params *ViewListSeamlessPeers_GET_Body)
 	return r.ViewListSeamlessPeersWithContext_GET(r.Untyped.GetCtx(), params)
 }
 
+// ViewNfs4Triggers_GET_Model represents the response model for ViewNfs4Triggers
+type ViewNfs4Triggers_GET_Model struct {
+	Enabled bool `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Whether NFSv4 triggers are currently enabled for this view"`
+}
+
+// ViewNfs4TriggersWithContext_GET
+// method: GET
+// url: /views/{id}/nfs4_triggers/
+// summary: Get the current NFSv4 triggers state for a view
+func (r *View) ViewNfs4TriggersWithContext_GET(ctx context.Context, id any) (*ViewNfs4Triggers_GET_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("views", id, "nfs4_triggers")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response ViewNfs4Triggers_GET_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// ViewNfs4Triggers_GET
+// method: GET
+// url: /views/{id}/nfs4_triggers/
+// summary: Get the current NFSv4 triggers state for a view
+func (r *View) ViewNfs4Triggers_GET(id any) (*ViewNfs4Triggers_GET_Model, error) {
+	return r.ViewNfs4TriggersWithContext_GET(r.Untyped.GetCtx(), id)
+}
+
+// ViewNfs4TriggersWithContext_POST
+// method: POST
+// url: /views/{id}/nfs4_triggers/
+// summary: Register or unregister NFSv4 triggers for a view
+//
+// Parameters:
+//   - enabled (body): Whether to enable ('true') or disable ('false') NFSv4 triggers
+func (r *View) ViewNfs4TriggersWithContext_POST(ctx context.Context, id any, enabled bool) error {
+	resourcePath := core.BuildResourcePathWithID("views", id, "nfs4_triggers")
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	reqBody["enabled"] = enabled
+
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// ViewNfs4Triggers_POST
+// method: POST
+// url: /views/{id}/nfs4_triggers/
+// summary: Register or unregister NFSv4 triggers for a view
+//
+// Parameters:
+//   - enabled (body): Whether to enable ('true') or disable ('false') NFSv4 triggers
+func (r *View) ViewNfs4Triggers_POST(id any, enabled bool) error {
+	return r.ViewNfs4TriggersWithContext_POST(r.Untyped.GetCtx(), id, enabled)
+}
+
 // ViewPermissionsRepairWithContext_DELETE
 // method: DELETE
 // url: /views/{id}/permissions_repair/
@@ -833,8 +919,77 @@ func (r *View) ViewPermissionsRepair_POST(id any, body *ViewPermissionsRepair_PO
 	return r.ViewPermissionsRepairWithContext_POST(r.Untyped.GetCtx(), id, body, waitTimeout)
 }
 
+// ViewS3corsConfigurationWithContext_DELETE
+// method: DELETE
+// url: /views/{id}/s3cors_configuration/
+// summary: Delete all S3 CORS rules for View
+func (r *View) ViewS3corsConfigurationWithContext_DELETE(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("views", id, "s3cors_configuration")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	return err
+
+}
+
+// ViewS3corsConfiguration_DELETE
+// method: DELETE
+// url: /views/{id}/s3cors_configuration/
+// summary: Delete all S3 CORS rules for View
+func (r *View) ViewS3corsConfiguration_DELETE(id any) error {
+	return r.ViewS3corsConfigurationWithContext_DELETE(r.Untyped.GetCtx(), id)
+}
+
+// ViewS3corsConfiguration_GET_Body represents the request body for ViewS3corsConfiguration
+type ViewS3corsConfiguration_GET_Body struct {
+	AwsFormat bool `json:"aws_format,omitempty" yaml:"aws_format,omitempty" required:"false" doc:"If true, return CORS rules in AWS camelCase format (aws_cors_rules). Default is false (cors_rules in snake_case)."`
+}
+
+// ViewS3corsConfiguration_GET_Model represents the response model for ViewS3corsConfiguration
+type ViewS3corsConfiguration_GET_Model struct {
+	AwsCorsRules *[]ViewS3corsConfigurationModel_AwsCorsRulesItem `json:"aws_cors_rules,omitempty" yaml:"aws_cors_rules,omitempty" required:"false" doc:"List of S3 CORS rules in AWS camelCase format (when aws_format=true)"`
+	CorsRules    *[]ViewS3corsConfigurationModel_CorsRulesItem    `json:"cors_rules,omitempty" yaml:"cors_rules,omitempty" required:"false" doc:"List of S3 CORS rules in snake_case format (default)"`
+}
+
+// ViewS3corsConfigurationWithContext_GET
+// method: GET
+// url: /views/{id}/s3cors_configuration/
+// summary: Get S3 CORS configuration for View
+func (r *View) ViewS3corsConfigurationWithContext_GET(ctx context.Context, id any, params *ViewS3corsConfiguration_GET_Body) (*ViewS3corsConfiguration_GET_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("views", id, "s3cors_configuration")
+
+	reqParams, err := core.NewParamsFromStruct(params)
+	if err != nil {
+		return nil, err
+	}
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response ViewS3corsConfiguration_GET_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// ViewS3corsConfiguration_GET
+// method: GET
+// url: /views/{id}/s3cors_configuration/
+// summary: Get S3 CORS configuration for View
+func (r *View) ViewS3corsConfiguration_GET(id any, params *ViewS3corsConfiguration_GET_Body) (*ViewS3corsConfiguration_GET_Model, error) {
+	return r.ViewS3corsConfigurationWithContext_GET(r.Untyped.GetCtx(), id, params)
+}
+
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - Extra method PATCH /views/{id}/legal_hold/ skipped: PATCH /views/{id}/legal_hold/ - No response schema defined in OpenAPI spec. Error: no valid schema found in PATCH response (200/201/202/204) for resource /views/{id}/legal_hold/
+//   - Extra method POST /views/{id}/s3cors_configuration/ skipped: POST /views/{id}/s3cors_configuration/ - Array item schema is ambiguous or empty
 //   - UPDATE operation excluded: PATCH/PUT /views/{id}/ has no response schema and doesn't return 204 NO CONTENT

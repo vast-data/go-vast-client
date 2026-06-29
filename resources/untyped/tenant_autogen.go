@@ -9,6 +9,56 @@ import (
 	"github.com/vast-data/go-vast-client/core"
 )
 
+// TenantBulkWithContext_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/bulk/
+// summary: Get All Tenant Metric Label Values
+func (t *Tenant) TenantBulkWithContext_GET(ctx context.Context) (core.Record, error) {
+	resourcePath := "/tenants/{tenant_id}/metric_label_values/bulk/"
+	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TenantBulk_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/bulk/
+// summary: Get All Tenant Metric Label Values
+func (t *Tenant) TenantBulk_GET() (core.Record, error) {
+	return t.TenantBulkWithContext_GET(t.Rest.GetCtx())
+}
+
+// TenantBulkWithContext_POST
+// method: POST
+// url: /tenants/{tenant_id}/metric_label_values/bulk/
+// summary: Bulk Update Tenant Metric Label Values
+//
+// Body:
+//
+//	< not declared in schema >
+func (t *Tenant) TenantBulkWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+	resourcePath := "/tenants/{tenant_id}/metric_label_values/bulk/"
+	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TenantBulk_POST
+// method: POST
+// url: /tenants/{tenant_id}/metric_label_values/bulk/
+// summary: Bulk Update Tenant Metric Label Values
+//
+// Body:
+//
+//	< not declared in schema >
+func (t *Tenant) TenantBulk_POST(body core.Params) (core.Record, error) {
+	return t.TenantBulkWithContext_POST(t.Rest.GetCtx(), body)
+}
+
 // TenantClientIpRangesWithContext_PATCH
 // method: PATCH
 // url: /tenants/{id}/client_ip_ranges/
@@ -201,6 +251,233 @@ func (t *Tenant) TenantIsOperationHealthy_POST(id any, params core.Params, body 
 	return t.TenantIsOperationHealthyWithContext_POST(t.Rest.GetCtx(), id, params, body)
 }
 
+// TenantMetricLabelValuesByIdWithContext_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Get Tenant Metric Label Value
+func (t *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context, id any) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TenantMetricLabelValuesById_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Get Tenant Metric Label Value
+func (t *Tenant) TenantMetricLabelValuesById_GET(id any) (core.Record, error) {
+	return t.TenantMetricLabelValuesByIdWithContext_GET(t.Rest.GetCtx(), id)
+}
+
+// TenantMetricLabelValuesListWithContext_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/
+// summary: List Tenant Metric Label Values
+//
+// Params:
+//   - page
+//   - page_size
+func (t *Tenant) TenantMetricLabelValuesListWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+	resourcePath := "/tenants/{tenant_id}/metric_label_values/"
+	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+
+}
+
+// TenantMetricLabelValuesList_GET
+// method: GET
+// url: /tenants/{tenant_id}/metric_label_values/
+// summary: List Tenant Metric Label Values
+//
+// Params:
+//   - page
+//   - page_size
+func (t *Tenant) TenantMetricLabelValuesList_GET(params core.Params) (core.RecordSet, error) {
+	return t.TenantMetricLabelValuesListWithContext_GET(t.Rest.GetCtx(), params)
+}
+
+// TenantMetricLabelValuesWithContext_DELETE
+// method: DELETE
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Delete Tenant Metric Label Value
+func (t *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
+	return err
+
+}
+
+// TenantMetricLabelValues_DELETE
+// method: DELETE
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Delete Tenant Metric Label Value
+func (t *Tenant) TenantMetricLabelValues_DELETE(id any) error {
+	return t.TenantMetricLabelValuesWithContext_DELETE(t.Rest.GetCtx(), id)
+}
+
+// TenantMetricLabelValuesWithContext_PATCH
+// method: PATCH
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Update Tenant Metric Label Value
+//
+// Body:
+//   - value: The new value for this metric label.
+func (t *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+	result, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TenantMetricLabelValues_PATCH
+// method: PATCH
+// url: /tenants/{tenant_id}/metric_label_values/{id}/
+// summary: Update Tenant Metric Label Value
+//
+// Body:
+//   - value: The new value for this metric label.
+func (t *Tenant) TenantMetricLabelValues_PATCH(id any, body core.Params) (core.Record, error) {
+	return t.TenantMetricLabelValuesWithContext_PATCH(t.Rest.GetCtx(), id, body)
+}
+
+// TenantMetricLabelValuesWithContext_POST
+// method: POST
+// url: /tenants/{tenant_id}/metric_label_values/
+// summary: Create Tenant Metric Label Value
+//
+// Body:
+//   - label_id: The ID of the metric label.
+//   - value: The value for this metric label.
+func (t *Tenant) TenantMetricLabelValuesWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+	resourcePath := "/tenants/{tenant_id}/metric_label_values/"
+	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TenantMetricLabelValues_POST
+// method: POST
+// url: /tenants/{tenant_id}/metric_label_values/
+// summary: Create Tenant Metric Label Value
+//
+// Body:
+//   - label_id: The ID of the metric label.
+//   - value: The value for this metric label.
+func (t *Tenant) TenantMetricLabelValues_POST(body core.Params) (core.Record, error) {
+	return t.TenantMetricLabelValuesWithContext_POST(t.Rest.GetCtx(), body)
+}
+
+// TenantMetricLabelsByIdWithContext_GET
+// method: GET
+// url: /tenants/metric_labels/{id}/
+// summary: Get Tenant Metric Label
+func (t *Tenant) TenantMetricLabelsByIdWithContext_GET(ctx context.Context, id any) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants/metric_labels", id)
+	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TenantMetricLabelsById_GET
+// method: GET
+// url: /tenants/metric_labels/{id}/
+// summary: Get Tenant Metric Label
+func (t *Tenant) TenantMetricLabelsById_GET(id any) (core.Record, error) {
+	return t.TenantMetricLabelsByIdWithContext_GET(t.Rest.GetCtx(), id)
+}
+
+// TenantMetricLabelsListWithContext_GET
+// method: GET
+// url: /tenants/metric_labels/
+// summary: List Tenant Metric Labels
+//
+// Params:
+//   - page
+//   - page_size
+func (t *Tenant) TenantMetricLabelsListWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+	resourcePath := "/tenants/metric_labels/"
+	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+
+}
+
+// TenantMetricLabelsList_GET
+// method: GET
+// url: /tenants/metric_labels/
+// summary: List Tenant Metric Labels
+//
+// Params:
+//   - page
+//   - page_size
+func (t *Tenant) TenantMetricLabelsList_GET(params core.Params) (core.RecordSet, error) {
+	return t.TenantMetricLabelsListWithContext_GET(t.Rest.GetCtx(), params)
+}
+
+// TenantMetricLabelsWithContext_DELETE
+// method: DELETE
+// url: /tenants/metric_labels/{id}/
+// summary: Delete Tenant Metric Label
+func (t *Tenant) TenantMetricLabelsWithContext_DELETE(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("tenants/metric_labels", id)
+	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
+	return err
+
+}
+
+// TenantMetricLabels_DELETE
+// method: DELETE
+// url: /tenants/metric_labels/{id}/
+// summary: Delete Tenant Metric Label
+func (t *Tenant) TenantMetricLabels_DELETE(id any) error {
+	return t.TenantMetricLabelsWithContext_DELETE(t.Rest.GetCtx(), id)
+}
+
+// TenantMetricLabelsWithContext_POST
+// method: POST
+// url: /tenants/metric_labels/
+// summary: Create Tenant Metric Label
+//
+// Body:
+//   - default_value: The default value for this metric label.
+//   - description: Description of the metric label purpose.
+//   - key: The unique key for the metric label.
+func (t *Tenant) TenantMetricLabelsWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+	resourcePath := "/tenants/metric_labels/"
+	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TenantMetricLabels_POST
+// method: POST
+// url: /tenants/metric_labels/
+// summary: Create Tenant Metric Label
+//
+// Body:
+//   - default_value: The default value for this metric label.
+//   - description: Description of the metric label purpose.
+//   - key: The unique key for the metric label.
+func (t *Tenant) TenantMetricLabels_POST(body core.Params) (core.Record, error) {
+	return t.TenantMetricLabelsWithContext_POST(t.Rest.GetCtx(), body)
+}
+
 // TenantNfs4DelegWithContext_DELETE
 // method: DELETE
 // url: /tenants/{id}/nfs4_deleg/
@@ -389,6 +666,27 @@ func (t *Tenant) TenantSameEncryptionGroupTenantsWithContext_GET(ctx context.Con
 // summary: Get tenants with the same encryption group
 func (t *Tenant) TenantSameEncryptionGroupTenants_GET(id any) (core.Record, error) {
 	return t.TenantSameEncryptionGroupTenantsWithContext_GET(t.Rest.GetCtx(), id)
+}
+
+// TenantViewsCountWithContext_GET
+// method: GET
+// url: /tenants/{id}/views_count/
+// summary: Get the number of views in the tenant
+func (t *Tenant) TenantViewsCountWithContext_GET(ctx context.Context, id any) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants", id, "views_count")
+	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// TenantViewsCount_GET
+// method: GET
+// url: /tenants/{id}/views_count/
+// summary: Get the number of views in the tenant
+func (t *Tenant) TenantViewsCount_GET(id any) (core.Record, error) {
+	return t.TenantViewsCountWithContext_GET(t.Rest.GetCtx(), id)
 }
 
 // TenantVippoolIpRangesWithContext_GET

@@ -12,6 +12,22 @@ func init() {
 	// Resource path: tenants
 
 	core.RegisterExtraMethod(
+		"Tenant",         // resource type (Go struct name)
+		"TenantBulk_GET", // method name
+		"GET",            // HTTP verb
+		"/tenants/{tenant_id}/metric_label_values/bulk/", // URL path with placeholders
+		"Get All Tenant Metric Label Values",             // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",          // resource type (Go struct name)
+		"TenantBulk_POST", // method name
+		"POST",            // HTTP verb
+		"/tenants/{tenant_id}/metric_label_values/bulk/", // URL path with placeholders
+		"Bulk Update Tenant Metric Label Values",         // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"Tenant",                          // resource type (Go struct name)
 		"TenantClientIpRanges_PATCH",      // method name
 		"PATCH",                           // HTTP verb
@@ -57,6 +73,78 @@ func init() {
 		"POST",                                // HTTP verb
 		"/tenants/{id}/is_operation_healthy/", // URL path with placeholders
 		"Check whether an operation may be successfully performed", // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                          // resource type (Go struct name)
+		"TenantMetricLabelValuesById_GET", // method name
+		"GET",                             // HTTP verb
+		"/tenants/{tenant_id}/metric_label_values/{id}/", // URL path with placeholders
+		"Get Tenant Metric Label Value",                  // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                          // resource type (Go struct name)
+		"TenantMetricLabelValuesList_GET", // method name
+		"GET",                             // HTTP verb
+		"/tenants/{tenant_id}/metric_label_values/", // URL path with placeholders
+		"List Tenant Metric Label Values",           // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                         // resource type (Go struct name)
+		"TenantMetricLabelValues_DELETE", // method name
+		"DELETE",                         // HTTP verb
+		"/tenants/{tenant_id}/metric_label_values/{id}/", // URL path with placeholders
+		"Delete Tenant Metric Label Value",               // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                        // resource type (Go struct name)
+		"TenantMetricLabelValues_PATCH", // method name
+		"PATCH",                         // HTTP verb
+		"/tenants/{tenant_id}/metric_label_values/{id}/", // URL path with placeholders
+		"Update Tenant Metric Label Value",               // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                       // resource type (Go struct name)
+		"TenantMetricLabelValues_POST", // method name
+		"POST",                         // HTTP verb
+		"/tenants/{tenant_id}/metric_label_values/", // URL path with placeholders
+		"Create Tenant Metric Label Value",          // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                       // resource type (Go struct name)
+		"TenantMetricLabelsById_GET",   // method name
+		"GET",                          // HTTP verb
+		"/tenants/metric_labels/{id}/", // URL path with placeholders
+		"Get Tenant Metric Label",      // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                     // resource type (Go struct name)
+		"TenantMetricLabelsList_GET", // method name
+		"GET",                        // HTTP verb
+		"/tenants/metric_labels/",    // URL path with placeholders
+		"List Tenant Metric Labels",  // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                       // resource type (Go struct name)
+		"TenantMetricLabels_DELETE",    // method name
+		"DELETE",                       // HTTP verb
+		"/tenants/metric_labels/{id}/", // URL path with placeholders
+		"Delete Tenant Metric Label",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                     // resource type (Go struct name)
+		"TenantMetricLabels_POST",    // method name
+		"POST",                       // HTTP verb
+		"/tenants/metric_labels/",    // URL path with placeholders
+		"Create Tenant Metric Label", // summary from OpenAPI
 	)
 
 	core.RegisterExtraMethod(
@@ -113,6 +201,14 @@ func init() {
 		"GET",                                  // HTTP verb
 		"/tenants/{id}/same_encryption_group_tenants/", // URL path with placeholders
 		"Get tenants with the same encryption group",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Tenant",                                // resource type (Go struct name)
+		"TenantViewsCount_GET",                  // method name
+		"GET",                                   // HTTP verb
+		"/tenants/{id}/views_count/",            // URL path with placeholders
+		"Get the number of views in the tenant", // summary from OpenAPI
 	)
 
 	core.RegisterExtraMethod(

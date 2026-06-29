@@ -150,16 +150,15 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 		methodInfo.Summary = summary
 	}
 
-	// Check if path contains {id}
-	methodInfo.HasID = strings.Contains(extraMethod.Path, "{id}")
+	methodInfo.HasID = pathHasIDParam(extraMethod.Path)
 
-	// Parse path to extract resource path and sub-path
+	// Parse path to extract resource path and sub-path.
+	// ResourcePath is all segments before {id} (joined with "/").
+	// Example: /users/{id}/tenant_data/          -> resource: "users",                subPath: "tenant_data"
+	// Example: /tenants/metric_labels/{id}/      -> resource: "tenants/metric_labels", subPath: ""
+	// Example: /tenants/{id}/client_metrics/     -> resource: "tenants",              subPath: "client_metrics"
 	pathParts := strings.Split(strings.Trim(extraMethod.Path, "/"), "/")
-	if len(pathParts) > 0 {
-		methodInfo.ResourcePath = pathParts[0]
-	}
 
-	// Extract sub-path (everything after {id})
 	if methodInfo.HasID {
 		idIndex := -1
 		for i, part := range pathParts {
@@ -168,10 +167,17 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 				break
 			}
 		}
+		if idIndex > 0 {
+			methodInfo.ResourcePath = strings.Join(pathParts[:idIndex], "/")
+		} else if len(pathParts) > 0 {
+			methodInfo.ResourcePath = pathParts[0]
+		}
 		if idIndex >= 0 && idIndex < len(pathParts)-1 {
 			methodInfo.SubPath = strings.Join(pathParts[idIndex+1:], "/")
 			methodInfo.SubPath = strings.TrimSuffix(methodInfo.SubPath, "/")
 		}
+	} else if len(pathParts) > 0 {
+		methodInfo.ResourcePath = pathParts[0]
 	}
 
 	// Generate method name from path
@@ -179,7 +185,25 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	if lastPart == "" && len(pathParts) > 1 {
 		lastPart = pathParts[len(pathParts)-2]
 	}
-	lastPart = cleanPathPart(lastPart)
+	// If last segment is a non-{id} path param (e.g. {tenant_id}), use the
+	// param name directly to avoid colliding with the collection-level path.
+	if isNonIDPathParam(lastPart) {
+		lastPart = strings.Trim(lastPart, "{}")
+	} else {
+		lastPart = cleanPathPart(lastPart)
+		// If the last segment was {id}, cleanPathPart strips it to "".
+		// Walk backwards to find the last meaningful segment.
+		if lastPart == "" {
+			// Walk backwards but skip index 0 (the collection prefix, e.g. "s3keys")
+			// to avoid generating names like "S3KeysS3keys".
+			for i := len(pathParts) - 2; i > 0; i-- {
+				if c := cleanPathPart(pathParts[i]); c != "" {
+					lastPart = c
+					break
+				}
+			}
+		}
+	}
 	action := toCamelCase(lastPart)
 
 	// Store base name without HTTP method suffix
@@ -667,6 +691,78 @@ func httpMethodToGoConstant(method string) string {
 		}
 		return "Method"
 	}
+}
+
+// disambiguateExtraMethodNames assigns List/ById suffixes when the same base name+verb
+// would produce colliding Go methods (Go allows arity overloading only with identical return types).
+func disambiguateExtraMethodNames(methods []ExtraMethodInfo) {
+	groups := make(map[string][]int)
+	for i, m := range methods {
+		key := m.Name + "_" + m.HTTPMethod
+		groups[key] = append(groups[key], i)
+	}
+	for _, indices := range groups {
+		if len(indices) <= 1 {
+			continue
+		}
+		for _, i := range indices {
+			m := &methods[i]
+			oldName := m.Name
+			switch {
+			case m.ReturnsArray && !m.HasID:
+				m.Name += "List"
+			case m.HasID:
+				m.Name += "ById"
+			default:
+				m.Name += "Alt"
+			}
+			applyExtraMethodRename(m, oldName, m.Name)
+		}
+	}
+}
+
+func applyExtraMethodRename(m *ExtraMethodInfo, oldName, newName string) {
+	if oldName == newName {
+		return
+	}
+	m.BaseName = newName
+	m.BodyTypeName = strings.Replace(m.BodyTypeName, oldName, newName, 1)
+	m.ResponseTypeName = strings.Replace(m.ResponseTypeName, oldName, newName, 1)
+	if m.ArrayItemType == oldName+"Item" {
+		m.ArrayItemType = newName + "Item"
+	}
+	renameTypeRefs := func(typ string) string {
+		return strings.ReplaceAll(typ, oldName, newName)
+	}
+	for i := range m.BodyFields {
+		m.BodyFields[i].Type = renameTypeRefs(m.BodyFields[i].Type)
+	}
+	for i := range m.ResponseFields {
+		m.ResponseFields[i].Type = renameTypeRefs(m.ResponseFields[i].Type)
+	}
+	for _, nt := range m.NestedTypes {
+		nt.Name = strings.Replace(nt.Name, oldName, newName, 1)
+		for i := range nt.Fields {
+			nt.Fields[i].Type = renameTypeRefs(nt.Fields[i].Type)
+		}
+	}
+}
+
+// pathHasIDParam reports whether the path has a /{id}/ path parameter segment.
+func pathHasIDParam(path string) bool {
+	for _, part := range strings.Split(strings.Trim(path, "/"), "/") {
+		if part == "{id}" {
+			return true
+		}
+	}
+	return false
+}
+
+// isNonIDPathParam reports whether a path segment is a path parameter other
+// than {id} (e.g. {tenant_id}, {key}). Used to preserve secondary param names
+// in generated method names, preventing collisions with collection-level paths.
+func isNonIDPathParam(part string) bool {
+	return len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' && part != "{id}"
 }
 
 // cleanPathPart removes {id} and other template variables from path part
@@ -1518,6 +1614,8 @@ func main() {
 
 			fmt.Printf("  ✅ Generated extra method: %s\n", extraMethodInfo.Name)
 		}
+
+		disambiguateExtraMethodNames(resourceData.ExtraMethods)
 
 		// Sort extra methods by name+method for deterministic output
 		sort.Slice(resourceData.ExtraMethods, func(i, j int) bool {

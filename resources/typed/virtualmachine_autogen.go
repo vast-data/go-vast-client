@@ -5,8 +5,11 @@ package typed
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
 // -----------------------------------------------------
@@ -163,4 +166,169 @@ func (r *VirtualMachine) MustExistsWithContext(ctx context.Context, req *Virtual
 		panic(err)
 	}
 	return r.Untyped.GetResourceMap()[r.GetResourceType()].MustExistsWithContext(ctx, params)
+}
+
+// -----------------------------------------------------
+// EXTRA METHODS
+// -----------------------------------------------------
+
+// VirtualMachineDecommissionWithContext_POST
+// method: POST
+// url: /virtual-machines/decommission/
+// summary: Decommission ENODE VMs
+//
+// Parameters:
+//   - count (body): Number of ENODE VMs to decommission
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VirtualMachine) VirtualMachineDecommissionWithContext_POST(ctx context.Context, count int64, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/virtual-machines/decommission/"
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	if count != 0 {
+		reqBody["count"] = count
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// VirtualMachineDecommission_POST
+// method: POST
+// url: /virtual-machines/decommission/
+// summary: Decommission ENODE VMs
+//
+// Parameters:
+//   - count (body): Number of ENODE VMs to decommission
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VirtualMachine) VirtualMachineDecommission_POST(count int64, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.VirtualMachineDecommissionWithContext_POST(r.Untyped.GetCtx(), count, waitTimeout)
+}
+
+// VirtualMachineExpandWithContext_PATCH
+// method: PATCH
+// url: /virtual-machines/expand/
+// summary: Add Virtual Machines to the cluster.
+//
+// Parameters:
+//   - totalCnodeMachines (body): Total amount CNode VMs for the cluster
+//   - totalEnodeMachines (body): Total amount ENode VMs for the cluster
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VirtualMachine) VirtualMachineExpandWithContext_PATCH(ctx context.Context, totalCnodeMachines int64, totalEnodeMachines int64, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/virtual-machines/expand/"
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	if totalCnodeMachines != 0 {
+		reqBody["total_cnode_machines"] = totalCnodeMachines
+	}
+	if totalEnodeMachines != 0 {
+		reqBody["total_enode_machines"] = totalEnodeMachines
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// VirtualMachineExpand_PATCH
+// method: PATCH
+// url: /virtual-machines/expand/
+// summary: Add Virtual Machines to the cluster.
+//
+// Parameters:
+//   - totalCnodeMachines (body): Total amount CNode VMs for the cluster
+//   - totalEnodeMachines (body): Total amount ENode VMs for the cluster
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VirtualMachine) VirtualMachineExpand_PATCH(totalCnodeMachines int64, totalEnodeMachines int64, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.VirtualMachineExpandWithContext_PATCH(r.Untyped.GetCtx(), totalCnodeMachines, totalEnodeMachines, waitTimeout)
+}
+
+// VirtualMachineRemoveWithContext_DELETE
+// method: DELETE
+// url: /virtual-machines/remove/
+// summary: Remove Virtual Machine
+//
+// Parameters:
+//   - vmExternalId (body): VM external id (external_machine_id)
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VirtualMachine) VirtualMachineRemoveWithContext_DELETE(ctx context.Context, vmExternalId string, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/virtual-machines/remove/"
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	if vmExternalId != "" {
+		reqBody["vm_external_id"] = vmExternalId
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodDelete, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// VirtualMachineRemove_DELETE
+// method: DELETE
+// url: /virtual-machines/remove/
+// summary: Remove Virtual Machine
+//
+// Parameters:
+//   - vmExternalId (body): VM external id (external_machine_id)
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VirtualMachine) VirtualMachineRemove_DELETE(vmExternalId string, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.VirtualMachineRemoveWithContext_DELETE(r.Untyped.GetCtx(), vmExternalId, waitTimeout)
+}
+
+// VirtualMachineReplace_PATCH_Body represents the request body for VirtualMachineReplace
+type VirtualMachineReplace_PATCH_Body struct {
+	VmExternalIds *[]string `json:"vm_external_ids,omitempty" yaml:"vm_external_ids,omitempty" required:"true" doc:"The list of VM external ids (external_machine_id)"`
+	InPlace       bool      `json:"in_place,omitempty" yaml:"in_place,omitempty" required:"false" doc:"Perform in-place replacement"`
+}
+
+// VirtualMachineReplaceWithContext_PATCH
+// method: PATCH
+// url: /virtual-machines/replace/
+// summary: Replace Virtual Machines.
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VirtualMachine) VirtualMachineReplaceWithContext_PATCH(ctx context.Context, body *VirtualMachineReplace_PATCH_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/virtual-machines/replace/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// VirtualMachineReplace_PATCH
+// method: PATCH
+// url: /virtual-machines/replace/
+// summary: Replace Virtual Machines.
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VirtualMachine) VirtualMachineReplace_PATCH(body *VirtualMachineReplace_PATCH_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.VirtualMachineReplaceWithContext_PATCH(r.Untyped.GetCtx(), body, waitTimeout)
 }

@@ -87,6 +87,9 @@ func (k *KeybindingsZone) View() string {
 	widgetDescStyle := lipgloss.NewStyle().
 		Foreground(colors.LightGrey)
 
+	extraActionVerbStyle := lipgloss.NewStyle().
+		Foreground(colors.VeryLightGrey)
+
 	// Get current keybindings dynamically using getter function if available
 	currentKeyBindings := k.keyBindings
 	if k.getKeyBindings != nil {
@@ -147,7 +150,7 @@ func (k *KeybindingsZone) View() string {
 				// Extra action shortcuts (numbered 1-6) get distinctive color
 				item = lipgloss.JoinHorizontal(lipgloss.Left,
 					extraActionKeyStyle.Render(keyText),
-					widgetDescStyle.Render(" "+kb.Desc),
+					renderExtraActionDesc(kb.Desc, widgetDescStyle, extraActionVerbStyle),
 				)
 			} else if kb.Generic {
 				// Generic keybindings
@@ -181,6 +184,19 @@ func (k *KeybindingsZone) View() string {
 		}
 		return result
 	}
+}
+
+// renderExtraActionDesc styles extra-action hints as "verb:path" with a lighter verb prefix.
+func renderExtraActionDesc(desc string, pathStyle, verbStyle lipgloss.Style) string {
+	idx := strings.Index(desc, ":")
+	if idx < 0 {
+		return pathStyle.Render(" " + desc)
+	}
+	return lipgloss.JoinHorizontal(lipgloss.Left,
+		pathStyle.Render(" "),
+		verbStyle.Render(desc[:idx+1]),
+		pathStyle.Render(desc[idx+1:]),
+	)
 }
 
 // Ready returns whether the keybindings zone is ready to be displayed

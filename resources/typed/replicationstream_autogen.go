@@ -54,17 +54,18 @@ type ReplicationStreamSearchParams struct {
 
 // ReplicationStreamRequestBody represents the request body for ReplicationStream operations
 type ReplicationStreamRequestBody struct {
-	Name                  string  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	Enabled               bool    `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enable/pause replication stream"`
-	IsManualPriorityScore bool    `json:"is_manual_priority_score,omitempty" yaml:"is_manual_priority_score,omitempty" required:"false" doc:"Indicates whether the priority score is set manually by a user."`
-	PriorityScore         float64 `json:"priority_score,omitempty" yaml:"priority_score,omitempty" required:"false" doc:"Indicates how close replication is to missing its RPO in relation to their current interval. A lower score means a higher priority."`
-	ProtectedPathId       string  `json:"protected_path_id,omitempty" yaml:"protected_path_id,omitempty" required:"false" doc:"protected path id"`
-	ProtectionPolicyId    string  `json:"protection_policy_id,omitempty" yaml:"protection_policy_id,omitempty" required:"false" doc:"Protection policy id"`
-	RemoteTenantGuid      string  `json:"remote_tenant_guid,omitempty" yaml:"remote_tenant_guid,omitempty" required:"false" doc:"Remote tenant GUID of the remote path. If none given, the default tenant will be set"`
-	RemoteTenantName      string  `json:"remote_tenant_name,omitempty" yaml:"remote_tenant_name,omitempty" required:"false" doc:"remote tenant name"`
-	SourceDir             string  `json:"source_dir,omitempty" yaml:"source_dir,omitempty" required:"false" doc:"Path to replicate"`
-	TargetExportedDir     string  `json:"target_exported_dir,omitempty" yaml:"target_exported_dir,omitempty" required:"false" doc:"path to replicate to"`
-	TenantId              float64 `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Local tenant ID of the local path. If none given, the default tenant will be set"`
+	Name                   string  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Enabled                bool    `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enable/pause replication stream"`
+	IsManualPriorityScore  bool    `json:"is_manual_priority_score,omitempty" yaml:"is_manual_priority_score,omitempty" required:"false" doc:"Indicates whether the priority score is set manually by a user."`
+	PriorityScore          float64 `json:"priority_score,omitempty" yaml:"priority_score,omitempty" required:"false" doc:"Indicates how close replication is to missing its RPO in relation to their current interval. A lower score means a higher priority."`
+	ProtectedPathId        string  `json:"protected_path_id,omitempty" yaml:"protected_path_id,omitempty" required:"false" doc:"protected path id"`
+	ProtectionPolicyId     string  `json:"protection_policy_id,omitempty" yaml:"protection_policy_id,omitempty" required:"false" doc:"Protection policy id"`
+	RemoteTenantGuid       string  `json:"remote_tenant_guid,omitempty" yaml:"remote_tenant_guid,omitempty" required:"false" doc:"Remote tenant GUID of the remote path. If none given, the default tenant will be set"`
+	RemoteTenantName       string  `json:"remote_tenant_name,omitempty" yaml:"remote_tenant_name,omitempty" required:"false" doc:"remote tenant name"`
+	SourceDir              string  `json:"source_dir,omitempty" yaml:"source_dir,omitempty" required:"false" doc:"Path to replicate"`
+	TargetExportedDir      string  `json:"target_exported_dir,omitempty" yaml:"target_exported_dir,omitempty" required:"false" doc:"path to replicate to"`
+	TenantId               float64 `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Local tenant ID of the local path. If none given, the default tenant will be set"`
+	ViewReplicationEnabled bool    `json:"view_replication_enabled,omitempty" yaml:"view_replication_enabled,omitempty" required:"false" doc:"Manages view replication"`
 }
 
 // -----------------------------------------------------

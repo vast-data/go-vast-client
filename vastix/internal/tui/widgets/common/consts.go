@@ -7,7 +7,8 @@ const (
 	NavigatorModeCreate
 	NavigatorModeDelete
 	NavigatorModeDetails
-	NavigatorModeExtra // This is for extra navigators that don't fit the standard modes
+	NavigatorModeExtra   // This is for extra navigators that don't fit the standard modes
+	NavigatorModeApiDocs // Shows the OpenAPI/swagger docs for the current resource
 )
 
 func (n NavigatorMode) String() string {
@@ -22,6 +23,8 @@ func (n NavigatorMode) String() string {
 		return "details"
 	case NavigatorModeExtra:
 		return "extra"
+	case NavigatorModeApiDocs:
+		return "api_docs"
 	default:
 		return "unknown"
 	}

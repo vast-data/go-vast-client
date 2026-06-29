@@ -190,6 +190,16 @@ func InitializeWidgets(db *database.Service, restClient *rest.UntypedVMSRest) (*
 	factory.CreateAndRegisterWidgetMust(restClient.Vms, []string{"id", "name", "mgmt_vip", "sw_version", "build"})
 	factory.CreateAndRegisterWidgetMust(restClient.Volumes, []string{"id", "name", "size", "tenant_name", "subsystem_name", "qos_policy"})
 	factory.CreateAndRegisterWidgetMust(restClient.VpnTunnels, []string{"id", "name", "state"})
+	factory.CreateAndRegisterWidgetMust(restClient.BlobExpansions, []string{"id"})
+	factory.CreateAndRegisterWidgetMust(restClient.ComputeClusters, []string{"id", "name", "state"})
+	factory.CreateAndRegisterWidgetMust(restClient.EventBrokers, []string{"id", "name"})
+	factory.CreateAndRegisterWidgetMust(restClient.OpenFiles, []string{"id", "path"})
+	factory.CreateAndRegisterWidgetMust(restClient.OpenFileHandles, []string{"id"})
+	factory.CreateAndRegisterWidgetMust(restClient.OpenFilesQueries, []string{"id"})
+	factory.CreateAndRegisterWidgetMust(restClient.QuotaGroups, []string{"id", "name"})
+	factory.CreateAndRegisterWidgetMust(restClient.SupportBundlesQueue, []string{"id"})
+	factory.CreateAndRegisterWidgetMust(restClient.TlsCertificates, []string{"id", "name"})
+	factory.CreateAndRegisterWidgetMust(restClient.VastdbTables, []string{"id"})
 
 	// Store globally for Resources widget to access
 	globalFactory = factory

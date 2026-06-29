@@ -5,6 +5,7 @@ package typed
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
 )
@@ -356,4 +357,115 @@ func (r *QosPolicy) MustExistsWithContext(ctx context.Context, req *QosPolicySea
 		panic(err)
 	}
 	return r.Untyped.GetResourceMap()[r.GetResourceType()].MustExistsWithContext(ctx, params)
+}
+
+// -----------------------------------------------------
+// EXTRA METHODS
+// -----------------------------------------------------
+
+// QosPolicyIsOperationHealthyBody_AttachedUsersItem represents a nested type for QosPolicy extra method body
+type QosPolicyIsOperationHealthyBody_AttachedUsersItem struct {
+	Fqdn            string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"true" doc:"The Fully Qualified Domain Name (FQDN) of the user's domain."`
+	IdentifierType  string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"true" doc:"The attribute used to identify the user."`
+	IdentifierValue string `json:"identifier_value,omitempty" yaml:"identifier_value,omitempty" required:"true" doc:"The value of the identifying attribute for the user. Must be of the attribute specified as identifier_type."`
+	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"User's name"`
+	Label           string `json:"label,omitempty" yaml:"label,omitempty" required:"false" doc:"A label for the user"`
+}
+
+// QosPolicyIsOperationHealthyBody_CapacityLimits represents a nested type for QosPolicy extra method body
+type QosPolicyIsOperationHealthyBody_CapacityLimits struct {
+	MaxReadsBwMbpsPerGbCapacity  int64 `json:"max_reads_bw_mbps_per_gb_capacity,omitempty" yaml:"max_reads_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxReadsIopsPerGbCapacity    int64 `json:"max_reads_iops_per_gb_capacity,omitempty" yaml:"max_reads_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxWritesBwMbpsPerGbCapacity int64 `json:"max_writes_bw_mbps_per_gb_capacity,omitempty" yaml:"max_writes_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxWritesIopsPerGbCapacity   int64 `json:"max_writes_iops_per_gb_capacity,omitempty" yaml:"max_writes_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+}
+
+// QosPolicyIsOperationHealthyBody_CapacityTotalLimits represents a nested type for QosPolicy extra method body
+type QosPolicyIsOperationHealthyBody_CapacityTotalLimits struct {
+	MaxBwMbpsPerGbCapacity int64 `json:"max_bw_mbps_per_gb_capacity,omitempty" yaml:"max_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxIopsPerGbCapacity   int64 `json:"max_iops_per_gb_capacity,omitempty" yaml:"max_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+}
+
+// QosPolicyIsOperationHealthyBody_StaticTotalLimits represents a nested type for QosPolicy extra method body
+type QosPolicyIsOperationHealthyBody_StaticTotalLimits struct {
+	BurstBwMb     int64 `json:"burst_bw_mb,omitempty" yaml:"burst_bw_mb,omitempty" required:"false" doc:"Burst BW Mb"`
+	BurstIops     int64 `json:"burst_iops,omitempty" yaml:"burst_iops,omitempty" required:"false" doc:"Burst IOPS"`
+	BurstLoanIops int64 `json:"burst_loan_iops,omitempty" yaml:"burst_loan_iops,omitempty" required:"false" doc:"Burst loan IOPS"`
+	BurstLoanMb   int64 `json:"burst_loan_mb,omitempty" yaml:"burst_loan_mb,omitempty" required:"false" doc:"Burst loan Mb"`
+	MaxBwMbps     int64 `json:"max_bw_mbps,omitempty" yaml:"max_bw_mbps,omitempty" required:"false" doc:"Maximal BW Mb/s"`
+	MaxIops       int64 `json:"max_iops,omitempty" yaml:"max_iops,omitempty" required:"false" doc:"Maximal IOPS"`
+	MinBwMbps     int64 `json:"min_bw_mbps,omitempty" yaml:"min_bw_mbps,omitempty" required:"false" doc:"Minimal BW Mb/s"`
+	MinIops       int64 `json:"min_iops,omitempty" yaml:"min_iops,omitempty" required:"false" doc:"Minimal IOPS"`
+}
+
+// QosPolicyIsOperationHealthy_POST_Body represents the request body for QosPolicyIsOperationHealthy
+type QosPolicyIsOperationHealthy_POST_Body struct {
+	Name                string                                               `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	AttachedUsers       *[]QosPolicyIsOperationHealthyBody_AttachedUsersItem `json:"attached_users,omitempty" yaml:"attached_users,omitempty" required:"false" doc:"The users to which to attach the policy, for a user QOS policy"`
+	CapacityLimits      QosPolicyIsOperationHealthyBody_CapacityLimits       `json:"capacity_limits,omitempty" yaml:"capacity_limits,omitempty" required:"false" doc:"Performance limits per unit of either used logical capacity or provisioned capacity, depending on the mode. Units are stated per limit. Valid values: 0-4294967296. 0 means unlimited."`
+	CapacityTotalLimits QosPolicyIsOperationHealthyBody_CapacityTotalLimits  `json:"capacity_total_limits,omitempty" yaml:"capacity_total_limits,omitempty" required:"false" doc:""`
+	IsDefault           bool                                                 `json:"is_default,omitempty" yaml:"is_default,omitempty" required:"false" doc:"Is default User QOS Policy"`
+	IsGold              bool                                                 `json:"is_gold,omitempty" yaml:"is_gold,omitempty" required:"false" doc:"Grants priority QoS over views that do not have this setting enabled. Can only be set or modified by a Cluster Admin, not supported for Volume QoS Policies"`
+	LimitBy             string                                               `json:"limit_by,omitempty" yaml:"limit_by,omitempty" required:"false" doc:"Specifies which performance parameter(s) are limited by the policy. BW_IOPS=The policy limits service according to bandwidth (BW) and IO per second (IOPS). BW=The policy limits service according to BW only. IOPS=The policy limits service according to IOPS only."`
+	Mode                string                                               `json:"mode,omitempty" yaml:"mode,omitempty" required:"false" doc:"QoS provisioning mode"`
+	PolicyType          string                                               `json:"policy_type,omitempty" yaml:"policy_type,omitempty" required:"false" doc:"QOS Policy type"`
+	S3ConnectionsLimit  int64                                                `json:"s3_connections_limit,omitempty" yaml:"s3_connections_limit,omitempty" required:"false" doc:"Maximum number of allowed S3 connections, 0 means unlimited"`
+	StaticLimits        string                                               `json:"static_limits,omitempty" yaml:"static_limits,omitempty" required:"false" doc:""`
+	StaticTotalLimits   QosPolicyIsOperationHealthyBody_StaticTotalLimits    `json:"static_total_limits,omitempty" yaml:"static_total_limits,omitempty" required:"false" doc:""`
+	TenantId            int64                                                `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	UseTotalLimits      bool                                                 `json:"use_total_limits,omitempty" yaml:"use_total_limits,omitempty" required:"false" doc:""`
+}
+
+// QosPolicyIsOperationHealthy_POST_Model represents the response model for QosPolicyIsOperationHealthy
+type QosPolicyIsOperationHealthy_POST_Model struct {
+	Warnings *[]string `json:"warnings,omitempty" yaml:"warnings,omitempty" required:"true" doc:""`
+}
+
+// QosPolicyIsOperationHealthyWithContext_POST
+// method: POST
+// url: /qospolicies/is_operation_healthy/
+// summary: Check whether an operation may be successfully performed
+//
+// Parameters:
+//   - Id (query): QOS Policy id on is operation healthy for update requests
+//   - Operation (query)
+func (r *QosPolicy) QosPolicyIsOperationHealthyWithContext_POST(ctx context.Context, Id string, Operation string, body *QosPolicyIsOperationHealthy_POST_Body) (*QosPolicyIsOperationHealthy_POST_Model, error) {
+	resourcePath := "/qospolicies/is_operation_healthy/"
+
+	reqParams := core.Params{}
+	if Id != "" {
+		reqParams["id"] = Id
+	}
+	if Operation != "" {
+		reqParams["operation"] = Operation
+	}
+
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response QosPolicyIsOperationHealthy_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// QosPolicyIsOperationHealthy_POST
+// method: POST
+// url: /qospolicies/is_operation_healthy/
+// summary: Check whether an operation may be successfully performed
+//
+// Parameters:
+//   - Id (query): QOS Policy id on is operation healthy for update requests
+//   - Operation (query)
+func (r *QosPolicy) QosPolicyIsOperationHealthy_POST(Id string, Operation string, body *QosPolicyIsOperationHealthy_POST_Body) (*QosPolicyIsOperationHealthy_POST_Model, error) {
+	return r.QosPolicyIsOperationHealthyWithContext_POST(r.Untyped.GetCtx(), Id, Operation, body)
 }

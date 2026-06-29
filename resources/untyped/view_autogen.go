@@ -191,6 +191,52 @@ func (v *View) ViewListSeamlessPeers_GET(params core.Params) (core.RecordSet, er
 	return v.ViewListSeamlessPeersWithContext_GET(v.Rest.GetCtx(), params)
 }
 
+// ViewNfs4TriggersWithContext_GET
+// method: GET
+// url: /views/{id}/nfs4_triggers/
+// summary: Get the current NFSv4 triggers state for a view
+func (v *View) ViewNfs4TriggersWithContext_GET(ctx context.Context, id any) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("views", id, "nfs4_triggers")
+	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ViewNfs4Triggers_GET
+// method: GET
+// url: /views/{id}/nfs4_triggers/
+// summary: Get the current NFSv4 triggers state for a view
+func (v *View) ViewNfs4Triggers_GET(id any) (core.Record, error) {
+	return v.ViewNfs4TriggersWithContext_GET(v.Rest.GetCtx(), id)
+}
+
+// ViewNfs4TriggersWithContext_POST
+// method: POST
+// url: /views/{id}/nfs4_triggers/
+// summary: Register or unregister NFSv4 triggers for a view
+//
+// Body:
+//   - enabled: Whether to enable (`true`) or disable (`false`) NFSv4 triggers
+func (v *View) ViewNfs4TriggersWithContext_POST(ctx context.Context, id any, body core.Params) error {
+	resourcePath := core.BuildResourcePathWithID("views", id, "nfs4_triggers")
+	_, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, nil, body)
+	return err
+
+}
+
+// ViewNfs4Triggers_POST
+// method: POST
+// url: /views/{id}/nfs4_triggers/
+// summary: Register or unregister NFSv4 triggers for a view
+//
+// Body:
+//   - enabled: Whether to enable (`true`) or disable (`false`) NFSv4 triggers
+func (v *View) ViewNfs4Triggers_POST(id any, body core.Params) error {
+	return v.ViewNfs4TriggersWithContext_POST(v.Rest.GetCtx(), id, body)
+}
+
 // ViewPermissionsRepairWithContext_DELETE
 // method: DELETE
 // url: /views/{id}/permissions_repair/
@@ -251,4 +297,79 @@ func (v *View) ViewPermissionsRepairWithContext_POST(ctx context.Context, id any
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (v *View) ViewPermissionsRepair_POST(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	return v.ViewPermissionsRepairWithContext_POST(v.Rest.GetCtx(), id, body, waitTimeout)
+}
+
+// ViewS3corsConfigurationWithContext_DELETE
+// method: DELETE
+// url: /views/{id}/s3cors_configuration/
+// summary: Delete all S3 CORS rules for View
+func (v *View) ViewS3corsConfigurationWithContext_DELETE(ctx context.Context, id any) error {
+	resourcePath := core.BuildResourcePathWithID("views", id, "s3cors_configuration")
+	_, err := core.Request[core.Record](ctx, v, http.MethodDelete, resourcePath, nil, nil)
+	return err
+
+}
+
+// ViewS3corsConfiguration_DELETE
+// method: DELETE
+// url: /views/{id}/s3cors_configuration/
+// summary: Delete all S3 CORS rules for View
+func (v *View) ViewS3corsConfiguration_DELETE(id any) error {
+	return v.ViewS3corsConfigurationWithContext_DELETE(v.Rest.GetCtx(), id)
+}
+
+// ViewS3corsConfigurationWithContext_GET
+// method: GET
+// url: /views/{id}/s3cors_configuration/
+// summary: Get S3 CORS configuration for View
+//
+// Params:
+//   - aws_format: If true, return CORS rules in AWS camelCase format (aws_cors_rules). Default is false (cors_rules in snake_case).
+func (v *View) ViewS3corsConfigurationWithContext_GET(ctx context.Context, id any, params core.Params) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("views", id, "s3cors_configuration")
+	result, err := core.Request[core.Record](ctx, v, http.MethodGet, resourcePath, params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ViewS3corsConfiguration_GET
+// method: GET
+// url: /views/{id}/s3cors_configuration/
+// summary: Get S3 CORS configuration for View
+//
+// Params:
+//   - aws_format: If true, return CORS rules in AWS camelCase format (aws_cors_rules). Default is false (cors_rules in snake_case).
+func (v *View) ViewS3corsConfiguration_GET(id any, params core.Params) (core.Record, error) {
+	return v.ViewS3corsConfigurationWithContext_GET(v.Rest.GetCtx(), id, params)
+}
+
+// ViewS3corsConfigurationWithContext_POST
+// method: POST
+// url: /views/{id}/s3cors_configuration/
+// summary: Create multiple S3 CORS rules for View
+//
+// Body:
+//   - aws_cors_rules: AWS format CORS rules array in camelCase (mutually exclusive with cors_rules)
+//   - cors_rules: List of S3 CORS rules in snake_case format (mutually exclusive with aws_cors_rules)
+func (v *View) ViewS3corsConfigurationWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("views", id, "s3cors_configuration")
+	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ViewS3corsConfiguration_POST
+// method: POST
+// url: /views/{id}/s3cors_configuration/
+// summary: Create multiple S3 CORS rules for View
+//
+// Body:
+//   - aws_cors_rules: AWS format CORS rules array in camelCase (mutually exclusive with cors_rules)
+//   - cors_rules: List of S3 CORS rules in snake_case format (mutually exclusive with aws_cors_rules)
+func (v *View) ViewS3corsConfiguration_POST(id any, body core.Params) (core.Record, error) {
+	return v.ViewS3corsConfigurationWithContext_POST(v.Rest.GetCtx(), id, body)
 }

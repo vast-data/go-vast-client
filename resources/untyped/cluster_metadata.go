@@ -348,6 +348,22 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"Cluster",                           // resource type (Go struct name)
+		"ClusterS3TrueIpConfig_GET",         // method name
+		"GET",                               // HTTP verb
+		"/clusters/{id}/s3_true_ip_config/", // URL path with placeholders
+		"Get S3 True IP Configuration",      // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"Cluster",                           // resource type (Go struct name)
+		"ClusterS3TrueIpConfig_PATCH",       // method name
+		"PATCH",                             // HTTP verb
+		"/clusters/{id}/s3_true_ip_config/", // URL path with placeholders
+		"Set S3 True IP Configuration",      // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"Cluster",                          // resource type (Go struct name)
 		"ClusterSetCertificates_POST",      // method name
 		"POST",                             // HTTP verb

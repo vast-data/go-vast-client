@@ -59,9 +59,11 @@ type KafkabrokerRequestBody_AddressesItem struct {
 
 // KafkaBrokerRequestBody represents the request body for KafkaBroker operations
 type KafkaBrokerRequestBody struct {
-	Addresses *[]KafkabrokerRequestBody_AddressesItem `json:"addresses,omitempty" yaml:"addresses,omitempty" required:"true" doc:"List of Kafka server addresses"`
-	Name      string                                  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the Kafka broker configuration"`
-	TenantId  int64                                   `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID. If missing, accessed by all tenants"`
+	Addresses                   *[]KafkabrokerRequestBody_AddressesItem `json:"addresses,omitempty" yaml:"addresses,omitempty" required:"true" doc:"List of Kafka server addresses"`
+	Name                        string                                  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the Kafka broker configuration"`
+	CertificateSetId            int64                                   `json:"certificate_set_id,omitempty" yaml:"certificate_set_id,omitempty" required:"false" doc:"Certificate Set ID"`
+	HostnameVerificationEnabled bool                                    `json:"hostname_verification_enabled,omitempty" yaml:"hostname_verification_enabled,omitempty" required:"false" doc:"Hostname verification is enabled when mTLS certificate is used"`
+	TenantId                    int64                                   `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID. If missing, accessed by all tenants"`
 }
 
 // -----------------------------------------------------

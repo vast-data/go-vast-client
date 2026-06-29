@@ -12,6 +12,14 @@ func init() {
 	// Resource path: prometheusmetrics
 
 	core.RegisterExtraMethod(
+		"PrometheusMetrics",           // resource type (Go struct name)
+		"PrometheusMetricsAlarms_GET", // method name
+		"GET",                         // HTTP verb
+		"/prometheusmetrics/alarms/",  // URL path with placeholders
+		"prometheus alarms metrics",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"PrometheusMetrics",        // resource type (Go struct name)
 		"PrometheusMetricsAll_GET", // method name
 		"GET",                      // HTTP verb
@@ -36,6 +44,14 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"PrometheusMetrics",         // resource type (Go struct name)
+		"PrometheusMetricsNics_GET", // method name
+		"GET",                       // HTTP verb
+		"/prometheusmetrics/nics/",  // URL path with placeholders
+		"prometheus nics metrics",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"PrometheusMetrics",           // resource type (Go struct name)
 		"PrometheusMetricsQuotas_GET", // method name
 		"GET",                         // HTTP verb
@@ -44,11 +60,43 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
+		"PrometheusMetrics",                 // resource type (Go struct name)
+		"PrometheusMetricsReplications_GET", // method name
+		"GET",                               // HTTP verb
+		"/prometheusmetrics/replications/",  // URL path with placeholders
+		"prometheus replications metrics",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
 		"PrometheusMetrics",             // resource type (Go struct name)
 		"PrometheusMetricsSwitches_GET", // method name
 		"GET",                           // HTTP verb
 		"/prometheusmetrics/switches/",  // URL path with placeholders
 		"prometheus switches metrics",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"PrometheusMetrics",            // resource type (Go struct name)
+		"PrometheusMetricsTenants_GET", // method name
+		"GET",                          // HTTP verb
+		"/prometheusmetrics/tenants/",  // URL path with placeholders
+		"prometheus tenants metrics",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"PrometheusMetrics",                    // resource type (Go struct name)
+		"PrometheusMetricsUserConnections_GET", // method name
+		"GET",                                  // HTTP verb
+		"/prometheusmetrics/user_connections/", // URL path with placeholders
+		"prometheus user connections metrics",  // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"PrometheusMetrics",             // resource type (Go struct name)
+		"PrometheusMetricsUserView_GET", // method name
+		"GET",                           // HTTP verb
+		"/prometheusmetrics/user_view/", // URL path with placeholders
+		"prometheus user view metrics",  // summary from OpenAPI
 	)
 
 	core.RegisterExtraMethod(
@@ -65,6 +113,30 @@ func init() {
 		"GET",                        // HTTP verb
 		"/prometheusmetrics/views/",  // URL path with placeholders
 		"prometheus views metrics",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"PrometheusMetrics",         // resource type (Go struct name)
+		"PrometheusMetricsVips_GET", // method name
+		"GET",                       // HTTP verb
+		"/prometheusmetrics/vips/",  // URL path with placeholders
+		"prometheus vips metrics",   // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"PrometheusMetrics",             // resource type (Go struct name)
+		"PrometheusMetricsVmsState_GET", // method name
+		"GET",                           // HTTP verb
+		"/prometheusmetrics/vms_state/", // URL path with placeholders
+		"prometheus vms state metrics",  // summary from OpenAPI
+	)
+
+	core.RegisterExtraMethod(
+		"PrometheusMetrics",            // resource type (Go struct name)
+		"PrometheusMetricsVolumes_GET", // method name
+		"GET",                          // HTTP verb
+		"/prometheusmetrics/volumes/",  // URL path with placeholders
+		"prometheus volumes metrics",   // summary from OpenAPI
 	)
 
 }

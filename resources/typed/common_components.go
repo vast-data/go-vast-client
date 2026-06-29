@@ -3,6 +3,16 @@
 
 package typed
 
+// Component_AWSS3CORSRuleData represents the OpenAPI component schema
+// Component: #/components/schemas/AWSS3CORSRuleData
+type Component_AWSS3CORSRuleData struct {
+	AllowedMethods *[]string `json:"AllowedMethods,omitempty" yaml:"AllowedMethods,omitempty" required:"true" doc:"CORS allowed methods"`
+	AllowedOrigins *[]string `json:"AllowedOrigins,omitempty" yaml:"AllowedOrigins,omitempty" required:"true" doc:"CORS allowed origins"`
+	AllowedHeaders *[]string `json:"AllowedHeaders,omitempty" yaml:"AllowedHeaders,omitempty" required:"false" doc:"CORS allowed headers"`
+	ExposeHeaders  *[]string `json:"ExposeHeaders,omitempty" yaml:"ExposeHeaders,omitempty" required:"false" doc:"Headers the browser can expose to client-side"`
+	MaxAgeSeconds  int64     `json:"MaxAgeSeconds,omitempty" yaml:"MaxAgeSeconds,omitempty" required:"false" doc:"Time in seconds to cache the preflight response"`
+}
+
 // Component_ActiveDirectory represents the OpenAPI component schema
 // Component: #/components/schemas/ActiveDirectory
 type Component_ActiveDirectory struct {
@@ -99,6 +109,12 @@ type Component_ArbitraryFloatsObject struct{}
 // Component_ArbitraryStringsObject represents the OpenAPI component schema
 // Component: #/components/schemas/ArbitraryStringsObject
 type Component_ArbitraryStringsObject struct{}
+
+// Component_ArgNode represents the OpenAPI component schema
+// Component: #/components/schemas/ArgNode
+type Component_ArgNode struct {
+	Type string `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
+}
 
 // Component_AsyncCNode represents the OpenAPI component schema
 // Component: #/components/schemas/AsyncCNode
@@ -221,10 +237,12 @@ type Component_AsyncCluster struct {
 	AuxiliarySpaceInUse              float32                              `json:"auxiliary_space_in_use,omitempty" yaml:"auxiliary_space_in_use,omitempty" required:"false" doc:"Physical Snapshot Space In Use"`
 	AuxiliarySpaceInUseTb            float32                              `json:"auxiliary_space_in_use_tb,omitempty" yaml:"auxiliary_space_in_use_tb,omitempty" required:"false" doc:"Physical Snapshot Space In Use (TB)"`
 	AvailableUpgradeVersion          AsyncCluster_AvailableUpgradeVersion `json:"available_upgrade_version,omitempty" yaml:"available_upgrade_version,omitempty" required:"false" doc:"Details of an upgrade package that has been uploaded and is available. Empty if there is no upgrade package uploaded."`
+	BlockIpmi                        bool                                 `json:"block_ipmi,omitempty" yaml:"block_ipmi,omitempty" required:"false" doc:"IPMI/BMC access is blocked on this system"`
 	Build                            string                               `json:"build,omitempty" yaml:"build,omitempty" required:"false" doc:"Cluster build"`
 	Bw                               int64                                `json:"bw,omitempty" yaml:"bw,omitempty" required:"false" doc:"Bandwidth"`
 	BwMb                             int64                                `json:"bw_mb,omitempty" yaml:"bw_mb,omitempty" required:"false" doc:"Bandwidth"`
 	CertPass                         string                               `json:"cert_pass,omitempty" yaml:"cert_pass,omitempty" required:"false" doc:"Provides the password that protects the private key of the replication certificate uploaded as cluster_private_key, if password protected. The password must be supplied when uploading cluster_private_key and must be re-entered when modifying the certificate."`
+	CloudProvider                    string                               `json:"cloud_provider,omitempty" yaml:"cloud_provider,omitempty" required:"false" doc:"Cloud provider for VOC system, null for on-prem systems."`
 	ClusterCertificate               string                               `json:"cluster_certificate,omitempty" yaml:"cluster_certificate,omitempty" required:"false" doc:"Certificate (public key) file content of a CA signed certificate for mTLS encryption of replication peer connections where secure mode is enabled in the replication peer configuration. A certificate and private key must be installed on each participating replication peer cluster, and the CA's root certificate must be installed on each peer."`
 	ClusterPrivateKey                string                               `json:"cluster_private_key,omitempty" yaml:"cluster_private_key,omitempty" required:"false" doc:"Private Key file content of a CA signed certificate, used for mTLS encryption of replication peer connections where secure mode is enabled in the replication peer configuration. A certificate and private key must be installed on each participating replication peer cluster, and the CA's root certificate must be installed on each peer."`
 	CnodeCores                       int64                                `json:"cnode_cores,omitempty" yaml:"cnode_cores,omitempty" required:"false" doc:"Number of cnode cores"`
@@ -306,9 +324,11 @@ type Component_AsyncCluster struct {
 	LogicalSpaceTb                   float32                              `json:"logical_space_tb,omitempty" yaml:"logical_space_tb,omitempty" required:"false" doc:"Total Estimated Logical Space"`
 	Loopback                         bool                                 `json:"loopback,omitempty" yaml:"loopback,omitempty" required:"false" doc:"Loopback (single node) installation"`
 	MaxAuditDirSize                  string                               `json:"max_audit_dir_size,omitempty" yaml:"max_audit_dir_size,omitempty" required:"false" doc:"Maximum size of the audit directory. Specify the value with units of MB, GB, TB and so on. No default."`
+	MaxClusterReadBwMb               int64                                `json:"max_cluster_read_bw_mb,omitempty" yaml:"max_cluster_read_bw_mb,omitempty" required:"false" doc:"Maximum cluster read bandwidth in MB/s"`
 	MaxClusterWriteBwMb              int64                                `json:"max_cluster_write_bw_mb,omitempty" yaml:"max_cluster_write_bw_mb,omitempty" required:"false" doc:"Maximum cluster write bandwidth in MB/s"`
 	MaxFileSize                      int64                                `json:"max_file_size,omitempty" yaml:"max_file_size,omitempty" required:"false" doc:"Maximum audit file size for each CNode core"`
 	MaxHandlesCount                  int64                                `json:"max_handles_count,omitempty" yaml:"max_handles_count,omitempty" required:"false" doc:"Maximum supported number of handles"`
+	MaxNumberMtlsCertsPerCa          int64                                `json:"max_number_mtls_certs_per_ca,omitempty" yaml:"max_number_mtls_certs_per_ca,omitempty" required:"false" doc:"The maximum number of mTLS certificates per CA"`
 	MaxNvramCapacityPercent          int64                                `json:"max_nvram_capacity_percent,omitempty" yaml:"max_nvram_capacity_percent,omitempty" required:"false" doc:"Max NVRM capacity percent"`
 	MaxNvramReplicationFactor        int64                                `json:"max_nvram_replication_factor,omitempty" yaml:"max_nvram_replication_factor,omitempty" required:"false" doc:"Max NVRAM replication factor"`
 	MaxPerformance                   AsyncCluster_MaxPerformance          `json:"max_performance,omitempty" yaml:"max_performance,omitempty" required:"false" doc:""`
@@ -431,6 +451,7 @@ type Component_AsyncCluster struct {
 	UseSmbPrivilegedGroup            bool                                 `json:"use_smb_privileged_group,omitempty" yaml:"use_smb_privileged_group,omitempty" required:"false" doc:"If true, the privileged group is enabled. (deprecated since 4.6)"`
 	UseSmbPrivilegedUser             bool                                 `json:"use_smb_privileged_user,omitempty" yaml:"use_smb_privileged_user,omitempty" required:"false" doc:"If true, the privileged user is enabled. (deprecated since 4.6)"`
 	UseSpdk                          bool                                 `json:"use_spdk,omitempty" yaml:"use_spdk,omitempty" required:"false" doc:"Should install spdk"`
+	UseTenantAllSnapshots            bool                                 `json:"use_tenant_all_snapshots,omitempty" yaml:"use_tenant_all_snapshots,omitempty" required:"false" doc:"Whether to use tenant all snapshots"`
 	UsedHandlesCount                 int64                                `json:"used_handles_count,omitempty" yaml:"used_handles_count,omitempty" required:"false" doc:""`
 	UsedHandlesPercent               float32                              `json:"used_handles_percent,omitempty" yaml:"used_handles_percent,omitempty" required:"false" doc:""`
 	VastAuditLogState                string                               `json:"vast_audit_log_state,omitempty" yaml:"vast_audit_log_state,omitempty" required:"false" doc:"State of Vast Audit Log table"`
@@ -444,32 +465,61 @@ type Component_AsyncCluster struct {
 	WrMdIops                         int64                                `json:"wr_md_iops,omitempty" yaml:"wr_md_iops,omitempty" required:"false" doc:"Write Meta-data IOPS"`
 }
 
+// Component_AsyncComputeCluster represents the OpenAPI component schema
+// Component: #/components/schemas/AsyncComputeCluster
+type Component_AsyncComputeCluster struct {
+	AllTenants              bool                               `json:"all_tenants,omitempty" yaml:"all_tenants,omitempty" required:"false" doc:"When true, all existing and newly created tenants are automatically assigned to this compute cluster"`
+	BackupFrequency         int64                              `json:"backup_frequency,omitempty" yaml:"backup_frequency,omitempty" required:"false" doc:"Backup frequency in minutes"`
+	Certificate             string                             `json:"certificate,omitempty" yaml:"certificate,omitempty" required:"false" doc:"Cluster CA certificate for kubeconfig authentication"`
+	ClientCertificate       string                             `json:"client_certificate,omitempty" yaml:"client_certificate,omitempty" required:"false" doc:"Client certificate for kubeconfig authentication"`
+	ClientKey               string                             `json:"client_key,omitempty" yaml:"client_key,omitempty" required:"false" doc:"Client private key for kubeconfig authentication"`
+	ClusterCidr             string                             `json:"cluster_cidr,omitempty" yaml:"cluster_cidr,omitempty" required:"false" doc:"Kubernetes cluster CIDR for pod networking (default is \"10.64.0.0/12\")"`
+	Cnodes                  *[]AsyncComputeCluster_CnodesItem  `json:"cnodes,omitempty" yaml:"cnodes,omitempty" required:"false" doc:"List of CNodes assigned to this compute cluster with their static IPs and stats"`
+	DefaultGateway          string                             `json:"default_gateway,omitempty" yaml:"default_gateway,omitempty" required:"false" doc:"Default gateway IP address for the compute cluster network (e.g., \"10.0.0.1\"). Optional."`
+	Description             string                             `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"User-defined description for the compute cluster"`
+	Guid                    string                             `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Id                      int64                              `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	IntermediateCertificate string                             `json:"intermediate_certificate,omitempty" yaml:"intermediate_certificate,omitempty" required:"false" doc:"RKE2 intermediate certificate. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_key."`
+	IntermediateKey         string                             `json:"intermediate_key,omitempty" yaml:"intermediate_key,omitempty" required:"false" doc:"RKE2 intermediate private key. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_certificate."`
+	Name                    string                             `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Compute Cluster name"`
+	Netmask                 string                             `json:"netmask,omitempty" yaml:"netmask,omitempty" required:"false" doc:"Network mask for the compute cluster network (e.g., \"255.255.255.0\" or \"24\")"`
+	ResourceCounts          AsyncComputeCluster_ResourceCounts `json:"resource_counts,omitempty" yaml:"resource_counts,omitempty" required:"false" doc:"Resource counts with state-based breakdowns for this cluster"`
+	RootCertificate         string                             `json:"root_certificate,omitempty" yaml:"root_certificate,omitempty" required:"false" doc:"RKE2 root certificate. If omitted, certificates will be generated automatically. Must be provided together with intermediate_certificate and intermediate_key."`
+	ServerKubeVipAddress    string                             `json:"server_kube_vip_address,omitempty" yaml:"server_kube_vip_address,omitempty" required:"false" doc:"Kubernetes VIP address for the API server"`
+	ServiceCidr             string                             `json:"service_cidr,omitempty" yaml:"service_cidr,omitempty" required:"false" doc:"Kubernetes service CIDR for service networking (default is \"10.80.0.0/12\")"`
+	State                   string                             `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Current state of the compute cluster"`
+	StaticIpRanges          *[][]string                        `json:"static_ip_ranges,omitempty" yaml:"static_ip_ranges,omitempty" required:"false" doc:"List of IP range pairs [[start1, end1], [start2, end2]] for static IP assignment to CNodes. Must provide enough IPs for all CNodes."`
+	Tags                    *[]string                          `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"User-defined tags for the compute cluster"`
+	Vlan                    int64                              `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:"VLAN ID for the compute cluster network (1-4095). Optional; omit or set to null to disable."`
+}
+
 // Component_AsyncGlobalSnapStream represents the OpenAPI component schema
 // Component: #/components/schemas/AsyncGlobalSnapStream
 type Component_AsyncGlobalSnapStream struct {
-	Bw               int64                              `json:"bw,omitempty" yaml:"bw,omitempty" required:"false" doc:"BW"`
-	Direction        string                             `json:"direction,omitempty" yaml:"direction,omitempty" required:"false" doc:""`
-	Enabled          bool                               `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enabled"`
-	Eta              string                             `json:"eta,omitempty" yaml:"eta,omitempty" required:"false" doc:"ETA"`
-	ExternalState    string                             `json:"external_state,omitempty" yaml:"external_state,omitempty" required:"false" doc:"Global Snapshot Clone state"`
-	Guid             string                             `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	Health           string                             `json:"health,omitempty" yaml:"health,omitempty" required:"false" doc:""`
-	Id               int64                              `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	LoaneeRootPath   string                             `json:"loanee_root_path,omitempty" yaml:"loanee_root_path,omitempty" required:"false" doc:"Target path"`
-	LoaneeSnapshot   string                             `json:"loanee_snapshot,omitempty" yaml:"loanee_snapshot,omitempty" required:"false" doc:"Loanee snapshot name"`
-	LoaneeSnapshotId int64                              `json:"loanee_snapshot_id,omitempty" yaml:"loanee_snapshot_id,omitempty" required:"false" doc:""`
-	LoaneeTenant     AsyncGlobalSnapStream_LoaneeTenant `json:"loanee_tenant,omitempty" yaml:"loanee_tenant,omitempty" required:"false" doc:""`
-	Name             string                             `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	OwnerTenant      AsyncGlobalSnapStream_OwnerTenant  `json:"owner_tenant,omitempty" yaml:"owner_tenant,omitempty" required:"false" doc:""`
-	RemoteTarget     string                             `json:"remote_target,omitempty" yaml:"remote_target,omitempty" required:"false" doc:"Remote cluster name"`
-	RemoteTargetId   int64                              `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:""`
-	RestoreTask      int64                              `json:"restore_task,omitempty" yaml:"restore_task,omitempty" required:"false" doc:""`
-	SourceCluster    string                             `json:"source_cluster,omitempty" yaml:"source_cluster,omitempty" required:"false" doc:"Source cluster"`
-	SourcePath       string                             `json:"source_path,omitempty" yaml:"source_path,omitempty" required:"false" doc:"Source path"`
-	SourceSnapshot   string                             `json:"source_snapshot,omitempty" yaml:"source_snapshot,omitempty" required:"false" doc:"Source snapshot"`
-	State            string                             `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
-	SyncProgress     int64                              `json:"sync_progress,omitempty" yaml:"sync_progress,omitempty" required:"false" doc:""`
-	TargetCluster    string                             `json:"target_cluster,omitempty" yaml:"target_cluster,omitempty" required:"false" doc:"Target cluster"`
+	Bw                     int64                              `json:"bw,omitempty" yaml:"bw,omitempty" required:"false" doc:"BW"`
+	Direction              string                             `json:"direction,omitempty" yaml:"direction,omitempty" required:"false" doc:""`
+	Enabled                bool                               `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enabled"`
+	Eta                    string                             `json:"eta,omitempty" yaml:"eta,omitempty" required:"false" doc:"ETA"`
+	ExternalState          string                             `json:"external_state,omitempty" yaml:"external_state,omitempty" required:"false" doc:"Global Snapshot Clone state"`
+	Guid                   string                             `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	Health                 string                             `json:"health,omitempty" yaml:"health,omitempty" required:"false" doc:""`
+	Id                     int64                              `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	LoaneeRootPath         string                             `json:"loanee_root_path,omitempty" yaml:"loanee_root_path,omitempty" required:"false" doc:"Target path"`
+	LoaneeSnapshot         string                             `json:"loanee_snapshot,omitempty" yaml:"loanee_snapshot,omitempty" required:"false" doc:"Loanee snapshot name"`
+	LoaneeSnapshotId       int64                              `json:"loanee_snapshot_id,omitempty" yaml:"loanee_snapshot_id,omitempty" required:"false" doc:""`
+	LoaneeTenant           AsyncGlobalSnapStream_LoaneeTenant `json:"loanee_tenant,omitempty" yaml:"loanee_tenant,omitempty" required:"false" doc:""`
+	Name                   string                             `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	OwnerTenant            AsyncGlobalSnapStream_OwnerTenant  `json:"owner_tenant,omitempty" yaml:"owner_tenant,omitempty" required:"false" doc:""`
+	RemoteTarget           string                             `json:"remote_target,omitempty" yaml:"remote_target,omitempty" required:"false" doc:"Remote cluster name"`
+	RemoteTargetId         int64                              `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:""`
+	RestoreTask            int64                              `json:"restore_task,omitempty" yaml:"restore_task,omitempty" required:"false" doc:""`
+	SourceCluster          string                             `json:"source_cluster,omitempty" yaml:"source_cluster,omitempty" required:"false" doc:"Source cluster"`
+	SourcePath             string                             `json:"source_path,omitempty" yaml:"source_path,omitempty" required:"false" doc:"Source path"`
+	SourceSnapshot         string                             `json:"source_snapshot,omitempty" yaml:"source_snapshot,omitempty" required:"false" doc:"Source snapshot"`
+	State                  string                             `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
+	SyncProgress           int64                              `json:"sync_progress,omitempty" yaml:"sync_progress,omitempty" required:"false" doc:""`
+	TargetCluster          string                             `json:"target_cluster,omitempty" yaml:"target_cluster,omitempty" required:"false" doc:"Target cluster"`
+	ViewReplicationEnabled bool                               `json:"view_replication_enabled,omitempty" yaml:"view_replication_enabled,omitempty" required:"false" doc:"Whether view replication is enabled"`
 }
 
 // Component_AsyncManagedApplication represents the OpenAPI component schema
@@ -503,43 +553,54 @@ type Component_AsyncRack struct {
 // Component_AsyncSupportBundle represents the OpenAPI component schema
 // Component: #/components/schemas/AsyncSupportBundle
 type Component_AsyncSupportBundle struct {
-	Aggregated      bool    `json:"aggregated,omitempty" yaml:"aggregated,omitempty" required:"false" doc:"Aggregate harvests into final bundle (deprecated)"`
-	AstronArgs      string  `json:"astron_args,omitempty" yaml:"astron_args,omitempty" required:"false" doc:""`
-	BundleFile      string  `json:"bundle_file,omitempty" yaml:"bundle_file,omitempty" required:"false" doc:""`
-	BundleSize      string  `json:"bundle_size,omitempty" yaml:"bundle_size,omitempty" required:"false" doc:""`
-	BundleUrl       string  `json:"bundle_url,omitempty" yaml:"bundle_url,omitempty" required:"false" doc:"URL to access/download support bundle file"`
-	Callhome        bool    `json:"callhome,omitempty" yaml:"callhome,omitempty" required:"false" doc:""`
-	Cluster         string  `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
-	ClusterId       int64   `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
-	CnodeIds        string  `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Array of IDs of specific CNodes from which logs are collected. If not specified, logs are collected from all CNodes."`
-	CnodesOnly      bool    `json:"cnodes_only,omitempty" yaml:"cnodes_only,omitempty" required:"false" doc:""`
-	Core            string  `json:"core,omitempty" yaml:"core,omitempty" required:"false" doc:""`
-	CreateDatetime  string  `json:"create_datetime,omitempty" yaml:"create_datetime,omitempty" required:"false" doc:""`
-	Created         string  `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:"Bundle creation time"`
-	DeleteAfterSend bool    `json:"delete_after_send,omitempty" yaml:"delete_after_send,omitempty" required:"false" doc:"Delete the bundle immediately after successfully uploading"`
-	DnodeIds        string  `json:"dnode_ids,omitempty" yaml:"dnode_ids,omitempty" required:"false" doc:"Array of IDs of specific DNodes from which logs are collected. If not specified, logs are collected from all DNodes."`
-	DnodesOnly      bool    `json:"dnodes_only,omitempty" yaml:"dnodes_only,omitempty" required:"false" doc:""`
-	EndTime         string  `json:"end_time,omitempty" yaml:"end_time,omitempty" required:"false" doc:"End time of logs in UTC+3"`
-	Guid            string  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	HubbleArgs      string  `json:"hubble_args,omitempty" yaml:"hubble_args,omitempty" required:"false" doc:""`
-	Id              int64   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	Level           string  `json:"level,omitempty" yaml:"level,omitempty" required:"false" doc:"Bundle level e.g. small, medium, large"`
-	LunaArgs        string  `json:"luna_args,omitempty" yaml:"luna_args,omitempty" required:"false" doc:""`
-	Management      bool    `json:"management,omitempty" yaml:"management,omitempty" required:"false" doc:""`
-	MaxSize         float32 `json:"max_size,omitempty" yaml:"max_size,omitempty" required:"false" doc:"Trace files bundle size limit in GB for each node"`
-	MemTraces       bool    `json:"mem_traces,omitempty" yaml:"mem_traces,omitempty" required:"false" doc:""`
-	Metrics         bool    `json:"metrics,omitempty" yaml:"metrics,omitempty" required:"false" doc:""`
-	Name            string  `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	Obfuscated      bool    `json:"obfuscated,omitempty" yaml:"obfuscated,omitempty" required:"false" doc:"True if the bundle is obfuscated. If obfuscated, all bundled objects are converted to text and obfuscated. Any data that cannot be converted to text is not included in the bundle. The following types of information are replaced with a non-reversible hash: file and directory names, IP addresses, host names, user names, passwords, MAC addresses."`
-	Performance     bool    `json:"performance,omitempty" yaml:"performance,omitempty" required:"false" doc:""`
-	Platform        bool    `json:"platform,omitempty" yaml:"platform,omitempty" required:"false" doc:""`
-	Prefix          string  `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Identifying label included in the bundle file name as a prefix"`
-	Preset          string  `json:"preset,omitempty" yaml:"preset,omitempty" required:"false" doc:"Type of predefined preset bundle"`
-	StartTime       string  `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Start time of logs in UTC+3"`
-	State           string  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"State of the bundle"`
-	Text            bool    `json:"text,omitempty" yaml:"text,omitempty" required:"false" doc:"Include only textual logs in bundle"`
-	Traces          bool    `json:"traces,omitempty" yaml:"traces,omitempty" required:"false" doc:""`
-	Url             string  `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+	AccessKey       string   `json:"access_key,omitempty" yaml:"access_key,omitempty" required:"false" doc:"S3 Bucket access key"`
+	Aggregated      bool     `json:"aggregated,omitempty" yaml:"aggregated,omitempty" required:"false" doc:"Aggregate harvests into final bundle (deprecated)"`
+	AstronArgs      string   `json:"astron_args,omitempty" yaml:"astron_args,omitempty" required:"false" doc:""`
+	BucketName      string   `json:"bucket_name,omitempty" yaml:"bucket_name,omitempty" required:"false" doc:"S3 Bucket for upload"`
+	BucketSubdir    string   `json:"bucket_subdir,omitempty" yaml:"bucket_subdir,omitempty" required:"false" doc:"Sub-directory in support bucket"`
+	BundleFile      string   `json:"bundle_file,omitempty" yaml:"bundle_file,omitempty" required:"false" doc:""`
+	BundleSize      int64    `json:"bundle_size,omitempty" yaml:"bundle_size,omitempty" required:"false" doc:"Bundle size in bytes"`
+	BundleUrl       string   `json:"bundle_url,omitempty" yaml:"bundle_url,omitempty" required:"false" doc:"URL to access/download support bundle file"`
+	Callhome        bool     `json:"callhome,omitempty" yaml:"callhome,omitempty" required:"false" doc:""`
+	Cluster         string   `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
+	ClusterId       int64    `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	CnodeIds        *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Array of IDs of specific CNodes from which logs are collected. If not specified, logs are collected from all CNodes."`
+	CnodeIdsArray   *[]int64 `json:"cnode_ids_array,omitempty" yaml:"cnode_ids_array,omitempty" required:"false" doc:"Resolved CNode IDs included in the bundle harvest"`
+	CnodesOnly      bool     `json:"cnodes_only,omitempty" yaml:"cnodes_only,omitempty" required:"false" doc:""`
+	Core            bool     `json:"core,omitempty" yaml:"core,omitempty" required:"false" doc:""`
+	CreateDatetime  string   `json:"create_datetime,omitempty" yaml:"create_datetime,omitempty" required:"false" doc:""`
+	Created         string   `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:"Bundle creation time"`
+	DeleteAfterSend bool     `json:"delete_after_send,omitempty" yaml:"delete_after_send,omitempty" required:"false" doc:"Delete the bundle immediately after successfully uploading"`
+	DnodeIds        *[]int64 `json:"dnode_ids,omitempty" yaml:"dnode_ids,omitempty" required:"false" doc:"Array of IDs of specific DNodes from which logs are collected. If not specified, logs are collected from all DNodes."`
+	DnodeIdsArray   *[]int64 `json:"dnode_ids_array,omitempty" yaml:"dnode_ids_array,omitempty" required:"false" doc:"Resolved DNode IDs included in the bundle harvest"`
+	DnodesOnly      bool     `json:"dnodes_only,omitempty" yaml:"dnodes_only,omitempty" required:"false" doc:""`
+	EndTime         string   `json:"end_time,omitempty" yaml:"end_time,omitempty" required:"false" doc:"End time of logs in UTC+3"`
+	Guid            string   `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	HubbleArgs      string   `json:"hubble_args,omitempty" yaml:"hubble_args,omitempty" required:"false" doc:""`
+	Id              int64    `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Level           string   `json:"level,omitempty" yaml:"level,omitempty" required:"false" doc:"Bundle level e.g. small, medium, large"`
+	LunaArgs        string   `json:"luna_args,omitempty" yaml:"luna_args,omitempty" required:"false" doc:""`
+	Management      bool     `json:"management,omitempty" yaml:"management,omitempty" required:"false" doc:""`
+	MaxSize         float32  `json:"max_size,omitempty" yaml:"max_size,omitempty" required:"false" doc:"Trace files bundle size limit in GB for each node"`
+	MemTraces       bool     `json:"mem_traces,omitempty" yaml:"mem_traces,omitempty" required:"false" doc:""`
+	Metrics         bool     `json:"metrics,omitempty" yaml:"metrics,omitempty" required:"false" doc:""`
+	Name            string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Obfuscated      bool     `json:"obfuscated,omitempty" yaml:"obfuscated,omitempty" required:"false" doc:"True if the bundle is obfuscated. If obfuscated, all bundled objects are converted to text and obfuscated. Any data that cannot be converted to text is not included in the bundle. The following types of information are replaced with a non-reversible hash: file and directory names, IP addresses, host names, user names, passwords, MAC addresses."`
+	OnNfs           bool     `json:"on_nfs,omitempty" yaml:"on_nfs,omitempty" required:"false" doc:"True if the bundle is stored on NFS"`
+	Performance     bool     `json:"performance,omitempty" yaml:"performance,omitempty" required:"false" doc:""`
+	Platform        bool     `json:"platform,omitempty" yaml:"platform,omitempty" required:"false" doc:""`
+	PositionInQueue int64    `json:"position_in_queue,omitempty" yaml:"position_in_queue,omitempty" required:"false" doc:"Position of the support bundle in the queue"`
+	Prefix          string   `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Identifying label included in the bundle file name as a prefix"`
+	Preset          string   `json:"preset,omitempty" yaml:"preset,omitempty" required:"false" doc:"Type of predefined preset bundle"`
+	SecretKey       string   `json:"secret_key,omitempty" yaml:"secret_key,omitempty" required:"false" doc:"S3 Bucket secret key"`
+	SendNow         bool     `json:"send_now,omitempty" yaml:"send_now,omitempty" required:"false" doc:"Upload support bundle after creation"`
+	StartTime       string   `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Start time of logs in UTC+3"`
+	State           string   `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"State of the bundle"`
+	Text            bool     `json:"text,omitempty" yaml:"text,omitempty" required:"false" doc:"True if only textual logs are included in the bundle"`
+	Traces          bool     `json:"traces,omitempty" yaml:"traces,omitempty" required:"false" doc:""`
+	UploadViaVms    bool     `json:"upload_via_vms,omitempty" yaml:"upload_via_vms,omitempty" required:"false" doc:""`
+	Url             string   `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+	VolumeSize      int64    `json:"volume_size,omitempty" yaml:"volume_size,omitempty" required:"false" doc:""`
 }
 
 // Component_AsyncTaskInResponse represents the OpenAPI component schema
@@ -608,23 +669,175 @@ type Component_BGPTableItem struct {
 	State       string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
 }
 
+// Component_BaseDNSCreateParams represents the OpenAPI component schema
+// Component: #/components/schemas/BaseDNSCreateParams
+type Component_BaseDNSCreateParams struct {
+	CnodeIds            *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"To dedicate a specific group of CNodes to the DNS, list the IDs of the CNodes."`
+	DomainSuffix        string   `json:"domain_suffix,omitempty" yaml:"domain_suffix,omitempty" required:"false" doc:"A suffix for domain names. Requests for domain names with this suffix are resolved to the VIPs configured on the cluster."`
+	Enabled             bool     `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to true to enable the DNS service"`
+	InvalidNameResponse string   `json:"invalid_name_response,omitempty" yaml:"invalid_name_response,omitempty" required:"false" doc:""`
+	InvalidTypeResponse string   `json:"invalid_type_response,omitempty" yaml:"invalid_type_response,omitempty" required:"false" doc:""`
+	Name                string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the DNS server configuration"`
+	NetType             string   `json:"net_type,omitempty" yaml:"net_type,omitempty" required:"false" doc:""`
+	Port                int64    `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Specifies a port for the DNS"`
+	Ttl                 int64    `json:"ttl,omitempty" yaml:"ttl,omitempty" required:"false" doc:"Specifies the TTL value for the DNS."`
+}
+
 // Component_BaseQueryDataInputSchema represents the OpenAPI component schema
 // Component: #/components/schemas/BaseQueryDataInputSchema
 type Component_BaseQueryDataInputSchema struct {
 	Fields *[]string `json:"fields,omitempty" yaml:"fields,omitempty" required:"false" doc:"Defines which fields should be displayed"`
 }
 
+// Component_BaseQuota represents the OpenAPI component schema
+// Component: #/components/schemas/BaseQuota
+type Component_BaseQuota struct {
+	Cluster                     string                      `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
+	ClusterId                   int64                       `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"Parent Cluster ID"`
+	DefaultEmail                string                      `json:"default_email,omitempty" yaml:"default_email,omitempty" required:"false" doc:"The default email for sending user quota alert emails. This is used if no suffix is set and no address is found on providers."`
+	DefaultGroupQuota           BaseQuota_DefaultGroupQuota `json:"default_group_quota,omitempty" yaml:"default_group_quota,omitempty" required:"false" doc:""`
+	DefaultUserQuota            BaseQuota_DefaultUserQuota  `json:"default_user_quota,omitempty" yaml:"default_user_quota,omitempty" required:"false" doc:""`
+	EnableAlarms                bool                        `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enable alarms when users or groups are exceeding their limit"`
+	EnableEmailProviders        bool                        `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Enable this setting to query Active Directory and LDAP services for user emails when sending userquota alert emails. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global email suffix is used if configured in cluster settings. If no suffix is set, default_email is used."`
+	GracePeriod                 string                      `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	GroupQuotas                 *[]string                   `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:""`
+	Guid                        string                      `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
+	HardLimit                   int64                       `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage space usage limit beyond which no writes are allowed."`
+	HardLimitInodes             int64                       `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
+	Id                          int64                       `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Internal                    bool                        `json:"internal,omitempty" yaml:"internal,omitempty" required:"false" doc:""`
+	IsPhysicalQuota             bool                        `json:"is_physical_quota,omitempty" yaml:"is_physical_quota,omitempty" required:"false" doc:"Set to true to Limit by Physical Capacity. Cannot be updated."`
+	IsUserQuota                 bool                        `json:"is_user_quota,omitempty" yaml:"is_user_quota,omitempty" required:"false" doc:"Set to true to enable user and group quotas. False by default."`
+	LastUserQuotasUpdate        string                      `json:"last_user_quotas_update,omitempty" yaml:"last_user_quotas_update,omitempty" required:"false" doc:"Time of last user quota update"`
+	Name                        string                      `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The name"`
+	NumBlockedUsers             int64                       `json:"num_blocked_users,omitempty" yaml:"num_blocked_users,omitempty" required:"false" doc:"The number of users that are blocked from writing to the quota path due to exceeding a hard user/group quota limit."`
+	NumExceededUsers            int64                       `json:"num_exceeded_users,omitempty" yaml:"num_exceeded_users,omitempty" required:"false" doc:"The number of users that have exceeded a user quota"`
+	PercentCapacity             int64                       `json:"percent_capacity,omitempty" yaml:"percent_capacity,omitempty" required:"false" doc:"Percentage in use of the capacity hard limit"`
+	PercentInodes               int64                       `json:"percent_inodes,omitempty" yaml:"percent_inodes,omitempty" required:"false" doc:"Percentage in use of the hard limit on directories and unique files"`
+	PrettyGracePeriod           string                      `json:"pretty_grace_period,omitempty" yaml:"pretty_grace_period,omitempty" required:"false" doc:"Quota enforcement grace period expressed in human readable format as seconds, minutes, hours or days. Example: 12 days 43 minutes 43 seconds"`
+	PrettyGracePeriodExpiration string                      `json:"pretty_grace_period_expiration,omitempty" yaml:"pretty_grace_period_expiration,omitempty" required:"false" doc:"The time remaining until the end of the grace period, in human readable format. Displayed when soft limit is exceeded."`
+	PrettyState                 string                      `json:"pretty_state,omitempty" yaml:"pretty_state,omitempty" required:"false" doc:""`
+	SoftLimit                   int64                       `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Storage usage limit at which warnings of exceeding the quota are issued."`
+	SoftLimitInodes             int64                       `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path at which warnings of exceeding the quota will be issued. A file with multiple hardlinks is counted only once."`
+	State                       string                      `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Quota state"`
+	SyncState                   string                      `json:"sync_state,omitempty" yaml:"sync_state,omitempty" required:"false" doc:""`
+	SystemId                    int64                       `json:"system_id,omitempty" yaml:"system_id,omitempty" required:"false" doc:""`
+	TenantId                    int64                       `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	TenantName                  string                      `json:"tenant_name,omitempty" yaml:"tenant_name,omitempty" required:"false" doc:"Tenant Name"`
+	TimeToBlock                 string                      `json:"time_to_block,omitempty" yaml:"time_to_block,omitempty" required:"false" doc:"The time remaining until the end of the grace period. Displayed when soft limit is exceeded."`
+	Title                       string                      `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:"Quota name"`
+	Url                         string                      `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Endpoint URL for API operations on the quota"`
+	UsedCapacity                int64                       `json:"used_capacity,omitempty" yaml:"used_capacity,omitempty" required:"false" doc:"Used capacity in bytes"`
+	UsedCapacityTb              float32                     `json:"used_capacity_tb,omitempty" yaml:"used_capacity_tb,omitempty" required:"false" doc:"Used capacity in TB"`
+	UsedEffectiveCapacity       int64                       `json:"used_effective_capacity,omitempty" yaml:"used_effective_capacity,omitempty" required:"false" doc:"Used effective capacity in bytes"`
+	UsedEffectiveCapacityTb     float32                     `json:"used_effective_capacity_tb,omitempty" yaml:"used_effective_capacity_tb,omitempty" required:"false" doc:"Used effective capacity in TB"`
+	UsedInodes                  int64                       `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path"`
+	UsedLimitedCapacity         int64                       `json:"used_limited_capacity,omitempty" yaml:"used_limited_capacity,omitempty" required:"false" doc:""`
+	UserQuotas                  *[]string                   `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
+}
+
+// Component_BaseVippoolCreateParams represents the OpenAPI component schema
+// Component: #/components/schemas/BaseVippoolCreateParams
+type Component_BaseVippoolCreateParams struct {
+	ClusterId               int64    `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	CnodeIds                *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the IDs of the CNodes. Separate IDs by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overridden if cnode_names is passed."`
+	CnodeNames              string   `json:"cnode_names,omitempty" yaml:"cnode_names,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the names of the CNodes. Separate names by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overrides cnode_ids."`
+	DomainName              string   `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"Domain name for the VAST DNS server. If a DNS configuration exists, the domain suffix defined in the DNS server configuration is appended to this domain name to form a FQDN which the DNS server resolves to this VIP pool."`
+	EnableWeightedBalancing bool     `json:"enable_weighted_balancing,omitempty" yaml:"enable_weighted_balancing,omitempty" required:"false" doc:"Enable weighted balancing"`
+	Enabled                 bool     `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to false to disable the pool"`
+	Name                    string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Role                    string   `json:"role,omitempty" yaml:"role,omitempty" required:"false" doc:"'PROTOCOLS' dedicates the VIP pool to client traffic from all of the supported access protocols (NFSv3, NFSv4.2, SMBv2, S3, Database). At least one VIP pool must be created to enable client access. 'REPLICATION' dedicates the VIP pool for connectivity with an async replication peer cluster. This is needed for async replication. 'BIG_CATALOG' dedicates the VIP pool to VAST Catalog query access from the client network."`
+	TenantId                int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	VmsPreferred            bool     `json:"vms_preferred,omitempty" yaml:"vms_preferred,omitempty" required:"false" doc:"If true, CNodes participating in the vip pool are preferred in VMS host election"`
+}
+
+// Component_BlobExpansionAddColumnsParams represents the OpenAPI component schema
+// Component: #/components/schemas/BlobExpansionAddColumnsParams
+type Component_BlobExpansionAddColumnsParams struct {
+	ArrowSchema              *[]BlobExpansionAddColumnsParams_ArrowSchemaItem `json:"arrow_schema,omitempty" yaml:"arrow_schema,omitempty" required:"true" doc:"Schema of the columns to add"`
+	DatabaseName             string                                           `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"true" doc:"Kafka bucket name containing the source topic"`
+	TableName                string                                           `json:"table_name,omitempty" yaml:"table_name,omitempty" required:"true" doc:"Source Kafka topic name"`
+	AddCopySourceColumn      bool                                             `json:"add_copy_source_column,omitempty" yaml:"add_copy_source_column,omitempty" required:"false" doc:"Add copy of the raw source column to target table"`
+	AddExcessiveValuesOutput bool                                             `json:"add_excessive_values_output,omitempty" yaml:"add_excessive_values_output,omitempty" required:"false" doc:"Add an output column tracking source-blob fields not declared in the schema"`
+	AddMissingValuesOutput   bool                                             `json:"add_missing_values_output,omitempty" yaml:"add_missing_values_output,omitempty" required:"false" doc:"Add an output column tracking schema fields missing from the source blob"`
+	SourceColumnName         string                                           `json:"source_column_name,omitempty" yaml:"source_column_name,omitempty" required:"false" doc:"Source column name (defaults to \"value\" for Kafka topics)"`
+	TenantId                 int64                                            `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+}
+
+// Component_BlobExpansionCreateParams represents the OpenAPI component schema
+// Component: #/components/schemas/BlobExpansionCreateParams
+type Component_BlobExpansionCreateParams struct {
+	ArrowSchema              *[]BlobExpansionCreateParams_ArrowSchemaItem `json:"arrow_schema,omitempty" yaml:"arrow_schema,omitempty" required:"true" doc:"Schema of the columns to parse from the blob"`
+	DatabaseName             string                                       `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"true" doc:"Kafka bucket name containing the source topic"`
+	ExpansionFormat          string                                       `json:"expansion_format,omitempty" yaml:"expansion_format,omitempty" required:"true" doc:"Expansion format"`
+	TableName                string                                       `json:"table_name,omitempty" yaml:"table_name,omitempty" required:"true" doc:"Source Kafka topic name"`
+	TargetTableName          string                                       `json:"target_table_name,omitempty" yaml:"target_table_name,omitempty" required:"true" doc:"Target table name for expanded data"`
+	AddExcessiveValuesOutput bool                                         `json:"add_excessive_values_output,omitempty" yaml:"add_excessive_values_output,omitempty" required:"false" doc:"Add an output column tracking source-blob fields not declared in the schema (defaults to false)"`
+	AddMissingValuesOutput   bool                                         `json:"add_missing_values_output,omitempty" yaml:"add_missing_values_output,omitempty" required:"false" doc:"Add an output column tracking schema fields missing from the source blob (defaults to false)"`
+	CopySourceColumn         bool                                         `json:"copy_source_column,omitempty" yaml:"copy_source_column,omitempty" required:"false" doc:"Whether to copy the raw source column to the target table"`
+	FlattenDelimiter         string                                       `json:"flatten_delimiter,omitempty" yaml:"flatten_delimiter,omitempty" required:"false" doc:"Delimiter for flattened path column names (default \"__\")"`
+	FlattenPath              bool                                         `json:"flatten_path,omitempty" yaml:"flatten_path,omitempty" required:"false" doc:"Whether to flatten nested struct columns"`
+	SourceColumnName         string                                       `json:"source_column_name,omitempty" yaml:"source_column_name,omitempty" required:"false" doc:"Source column name (defaults to \"value\" for Kafka topics)"`
+	TargetTableSchema        string                                       `json:"target_table_schema,omitempty" yaml:"target_table_schema,omitempty" required:"false" doc:"Target table schema (defaults to source table's schema)"`
+	TenantId                 int64                                        `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+}
+
+// Component_BlobExpansionDeleteParams represents the OpenAPI component schema
+// Component: #/components/schemas/BlobExpansionDeleteParams
+type Component_BlobExpansionDeleteParams struct {
+	DatabaseName     string `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"true" doc:"Kafka bucket name containing the source topic"`
+	TableName        string `json:"table_name,omitempty" yaml:"table_name,omitempty" required:"true" doc:"Source Kafka topic name"`
+	SourceColumnName string `json:"source_column_name,omitempty" yaml:"source_column_name,omitempty" required:"false" doc:"Source column name (defaults to \"value\" for Kafka topics)"`
+	TenantId         int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+}
+
+// Component_BlobExpansionDropColumnsParams represents the OpenAPI component schema
+// Component: #/components/schemas/BlobExpansionDropColumnsParams
+type Component_BlobExpansionDropColumnsParams struct {
+	ArrowSchema                 *[]BlobExpansionDropColumnsParams_ArrowSchemaItem `json:"arrow_schema,omitempty" yaml:"arrow_schema,omitempty" required:"true" doc:"Schema of the columns to drop"`
+	DatabaseName                string                                            `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"true" doc:"Kafka bucket name containing the source topic"`
+	TableName                   string                                            `json:"table_name,omitempty" yaml:"table_name,omitempty" required:"true" doc:"Source Kafka topic name"`
+	RemoveCopySourceColumn      bool                                              `json:"remove_copy_source_column,omitempty" yaml:"remove_copy_source_column,omitempty" required:"false" doc:"Remove copy of the raw source column from target table"`
+	RemoveExcessiveValuesOutput bool                                              `json:"remove_excessive_values_output,omitempty" yaml:"remove_excessive_values_output,omitempty" required:"false" doc:"Remove the excessive-values output column from the target table"`
+	RemoveMissingValuesOutput   bool                                              `json:"remove_missing_values_output,omitempty" yaml:"remove_missing_values_output,omitempty" required:"false" doc:"Remove the missing-values output column from the target table"`
+	SourceColumnName            string                                            `json:"source_column_name,omitempty" yaml:"source_column_name,omitempty" required:"false" doc:"Source column name (defaults to \"value\" for Kafka topics)"`
+	TenantId                    int64                                             `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+}
+
+// Component_BlobExpansionHierarchy represents the OpenAPI component schema
+// Component: #/components/schemas/BlobExpansionHierarchy
+type Component_BlobExpansionHierarchy struct {
+	DatabaseName     string `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"true" doc:"Kafka bucket name containing the source topic"`
+	TableName        string `json:"table_name,omitempty" yaml:"table_name,omitempty" required:"true" doc:"Source Kafka topic name"`
+	SourceColumnName string `json:"source_column_name,omitempty" yaml:"source_column_name,omitempty" required:"false" doc:"Source column name (defaults to \"value\" for Kafka topics)"`
+	TenantId         int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+}
+
+// Component_BlobExpansionOutput represents the OpenAPI component schema
+// Component: #/components/schemas/BlobExpansionOutput
+type Component_BlobExpansionOutput struct {
+	AddExcessiveValuesOutput bool      `json:"add_excessive_values_output,omitempty" yaml:"add_excessive_values_output,omitempty" required:"false" doc:"Whether the excessive-values output column is present in the target table"`
+	AddMissingValuesOutput   bool      `json:"add_missing_values_output,omitempty" yaml:"add_missing_values_output,omitempty" required:"false" doc:"Whether the missing-values output column is present in the target table"`
+	Columns                  *[]string `json:"columns,omitempty" yaml:"columns,omitempty" required:"false" doc:"List of expanded columns"`
+	CopySourceColumn         bool      `json:"copy_source_column,omitempty" yaml:"copy_source_column,omitempty" required:"false" doc:"Whether the source column is copied to the target table"`
+	ExpansionFormat          string    `json:"expansion_format,omitempty" yaml:"expansion_format,omitempty" required:"false" doc:"Expansion format"`
+	SourceColumnName         string    `json:"source_column_name,omitempty" yaml:"source_column_name,omitempty" required:"false" doc:"Source column name"`
+	TargetTableName          string    `json:"target_table_name,omitempty" yaml:"target_table_name,omitempty" required:"false" doc:"Target table name for expanded data"`
+}
+
 // Component_BlockHost represents the OpenAPI component schema
 // Component: #/components/schemas/BlockHost
 type Component_BlockHost struct {
-	Id                   int64             `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:""`
-	Name                 string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the block host, which is unique per tenant."`
-	Nqn                  string            `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"true" doc:"The NVMe Qualified Name of the host."`
-	Tags                 map[string]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"true" doc:""`
-	TenantId             int64             `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"true" doc:"ID of the tenant to which the block host belongs."`
-	MappedVolumeCount    int64             `json:"mapped_volume_count,omitempty" yaml:"mapped_volume_count,omitempty" required:"false" doc:"How many Volumes are mapped to this block host."`
-	MappedVolumesPreview string            `json:"mapped_volumes_preview,omitempty" yaml:"mapped_volumes_preview,omitempty" required:"false" doc:"Mapped volumes preview."`
-	TenantName           string            `json:"tenant_name,omitempty" yaml:"tenant_name,omitempty" required:"false" doc:"The name of the tenant to which the block host belongs."`
+	Id                      int64             `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:""`
+	Name                    string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the block host, which is unique per tenant."`
+	Nqn                     string            `json:"nqn,omitempty" yaml:"nqn,omitempty" required:"true" doc:"The NVMe Qualified Name of the host."`
+	Tags                    map[string]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"true" doc:""`
+	TenantId                int64             `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"true" doc:"ID of the tenant to which the block host belongs."`
+	MappedBlockHostCount    int64             `json:"mapped_block_host_count,omitempty" yaml:"mapped_block_host_count,omitempty" required:"false" doc:"The number of block hosts mapped to the volume."`
+	MappedBlockHostsPreview string            `json:"mapped_block_hosts_preview,omitempty" yaml:"mapped_block_hosts_preview,omitempty" required:"false" doc:"Mapped block hosts preview."`
+	MappedVolumeCount       int64             `json:"mapped_volume_count,omitempty" yaml:"mapped_volume_count,omitempty" required:"false" doc:"How many Volumes are mapped to this block host."`
+	MappedVolumesPreview    string            `json:"mapped_volumes_preview,omitempty" yaml:"mapped_volumes_preview,omitempty" required:"false" doc:"Mapped volumes preview."`
+	TenantName              string            `json:"tenant_name,omitempty" yaml:"tenant_name,omitempty" required:"false" doc:"The name of the tenant to which the block host belongs."`
 }
 
 // Component_BlockMapping represents the OpenAPI component schema
@@ -872,10 +1085,12 @@ type Component_Cluster struct {
 	AuxiliarySpaceInUse              float32                         `json:"auxiliary_space_in_use,omitempty" yaml:"auxiliary_space_in_use,omitempty" required:"false" doc:"Physical Snapshot Space In Use"`
 	AuxiliarySpaceInUseTb            float32                         `json:"auxiliary_space_in_use_tb,omitempty" yaml:"auxiliary_space_in_use_tb,omitempty" required:"false" doc:"Physical Snapshot Space In Use (TB)"`
 	AvailableUpgradeVersion          Cluster_AvailableUpgradeVersion `json:"available_upgrade_version,omitempty" yaml:"available_upgrade_version,omitempty" required:"false" doc:"Details of an upgrade package that has been uploaded and is available. Empty if there is no upgrade package uploaded."`
+	BlockIpmi                        bool                            `json:"block_ipmi,omitempty" yaml:"block_ipmi,omitempty" required:"false" doc:"IPMI/BMC access is blocked on this system"`
 	Build                            string                          `json:"build,omitempty" yaml:"build,omitempty" required:"false" doc:"Cluster build"`
 	Bw                               int64                           `json:"bw,omitempty" yaml:"bw,omitempty" required:"false" doc:"Bandwidth"`
 	BwMb                             int64                           `json:"bw_mb,omitempty" yaml:"bw_mb,omitempty" required:"false" doc:"Bandwidth"`
 	CertPass                         string                          `json:"cert_pass,omitempty" yaml:"cert_pass,omitempty" required:"false" doc:"Provides the password that protects the private key of the replication certificate uploaded as cluster_private_key, if password protected. The password must be supplied when uploading cluster_private_key and must be re-entered when modifying the certificate."`
+	CloudProvider                    string                          `json:"cloud_provider,omitempty" yaml:"cloud_provider,omitempty" required:"false" doc:"Cloud provider for VOC system, null for on-prem systems."`
 	ClusterCertificate               string                          `json:"cluster_certificate,omitempty" yaml:"cluster_certificate,omitempty" required:"false" doc:"Certificate (public key) file content of a CA signed certificate for mTLS encryption of replication peer connections where secure mode is enabled in the replication peer configuration. A certificate and private key must be installed on each participating replication peer cluster, and the CA's root certificate must be installed on each peer."`
 	ClusterPrivateKey                string                          `json:"cluster_private_key,omitempty" yaml:"cluster_private_key,omitempty" required:"false" doc:"Private Key file content of a CA signed certificate, used for mTLS encryption of replication peer connections where secure mode is enabled in the replication peer configuration. A certificate and private key must be installed on each participating replication peer cluster, and the CA's root certificate must be installed on each peer."`
 	CnodeCores                       int64                           `json:"cnode_cores,omitempty" yaml:"cnode_cores,omitempty" required:"false" doc:"Number of cnode cores"`
@@ -957,9 +1172,11 @@ type Component_Cluster struct {
 	LogicalSpaceTb                   float32                         `json:"logical_space_tb,omitempty" yaml:"logical_space_tb,omitempty" required:"false" doc:"Total Estimated Logical Space"`
 	Loopback                         bool                            `json:"loopback,omitempty" yaml:"loopback,omitempty" required:"false" doc:"Loopback (single node) installation"`
 	MaxAuditDirSize                  string                          `json:"max_audit_dir_size,omitempty" yaml:"max_audit_dir_size,omitempty" required:"false" doc:"Maximum size of the audit directory. Specify the value with units of MB, GB, TB and so on. No default."`
+	MaxClusterReadBwMb               int64                           `json:"max_cluster_read_bw_mb,omitempty" yaml:"max_cluster_read_bw_mb,omitempty" required:"false" doc:"Maximum cluster read bandwidth in MB/s"`
 	MaxClusterWriteBwMb              int64                           `json:"max_cluster_write_bw_mb,omitempty" yaml:"max_cluster_write_bw_mb,omitempty" required:"false" doc:"Maximum cluster write bandwidth in MB/s"`
 	MaxFileSize                      int64                           `json:"max_file_size,omitempty" yaml:"max_file_size,omitempty" required:"false" doc:"Maximum audit file size for each CNode core"`
 	MaxHandlesCount                  int64                           `json:"max_handles_count,omitempty" yaml:"max_handles_count,omitempty" required:"false" doc:"Maximum supported number of handles"`
+	MaxNumberMtlsCertsPerCa          int64                           `json:"max_number_mtls_certs_per_ca,omitempty" yaml:"max_number_mtls_certs_per_ca,omitempty" required:"false" doc:"The maximum number of mTLS certificates per CA"`
 	MaxNvramCapacityPercent          int64                           `json:"max_nvram_capacity_percent,omitempty" yaml:"max_nvram_capacity_percent,omitempty" required:"false" doc:"Max NVRM capacity percent"`
 	MaxNvramReplicationFactor        int64                           `json:"max_nvram_replication_factor,omitempty" yaml:"max_nvram_replication_factor,omitempty" required:"false" doc:"Max NVRAM replication factor"`
 	MaxPerformance                   Cluster_MaxPerformance          `json:"max_performance,omitempty" yaml:"max_performance,omitempty" required:"false" doc:""`
@@ -1082,6 +1299,7 @@ type Component_Cluster struct {
 	UseSmbPrivilegedGroup            bool                            `json:"use_smb_privileged_group,omitempty" yaml:"use_smb_privileged_group,omitempty" required:"false" doc:"If true, the privileged group is enabled. (deprecated since 4.6)"`
 	UseSmbPrivilegedUser             bool                            `json:"use_smb_privileged_user,omitempty" yaml:"use_smb_privileged_user,omitempty" required:"false" doc:"If true, the privileged user is enabled. (deprecated since 4.6)"`
 	UseSpdk                          bool                            `json:"use_spdk,omitempty" yaml:"use_spdk,omitempty" required:"false" doc:"Should install spdk"`
+	UseTenantAllSnapshots            bool                            `json:"use_tenant_all_snapshots,omitempty" yaml:"use_tenant_all_snapshots,omitempty" required:"false" doc:"Whether to use tenant all snapshots"`
 	UsedHandlesCount                 int64                           `json:"used_handles_count,omitempty" yaml:"used_handles_count,omitempty" required:"false" doc:""`
 	UsedHandlesPercent               float32                         `json:"used_handles_percent,omitempty" yaml:"used_handles_percent,omitempty" required:"false" doc:""`
 	VastAuditLogState                string                          `json:"vast_audit_log_state,omitempty" yaml:"vast_audit_log_state,omitempty" required:"false" doc:"State of Vast Audit Log table"`
@@ -1247,6 +1465,207 @@ type Component_ColumnRenameParams struct {
 	TenantId      int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 }
 
+// Component_ComputeCluster represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeCluster
+type Component_ComputeCluster struct {
+	AllTenants              bool                          `json:"all_tenants,omitempty" yaml:"all_tenants,omitempty" required:"false" doc:"When true, all existing and newly created tenants are automatically assigned to this compute cluster"`
+	BackupFrequency         int64                         `json:"backup_frequency,omitempty" yaml:"backup_frequency,omitempty" required:"false" doc:"Backup frequency in minutes"`
+	Certificate             string                        `json:"certificate,omitempty" yaml:"certificate,omitempty" required:"false" doc:"Cluster CA certificate for kubeconfig authentication"`
+	ClientCertificate       string                        `json:"client_certificate,omitempty" yaml:"client_certificate,omitempty" required:"false" doc:"Client certificate for kubeconfig authentication"`
+	ClientKey               string                        `json:"client_key,omitempty" yaml:"client_key,omitempty" required:"false" doc:"Client private key for kubeconfig authentication"`
+	ClusterCidr             string                        `json:"cluster_cidr,omitempty" yaml:"cluster_cidr,omitempty" required:"false" doc:"Kubernetes cluster CIDR for pod networking (default is \"10.64.0.0/12\")"`
+	Cnodes                  *[]ComputeCluster_CnodesItem  `json:"cnodes,omitempty" yaml:"cnodes,omitempty" required:"false" doc:"List of CNodes assigned to this compute cluster with their static IPs and stats"`
+	DefaultGateway          string                        `json:"default_gateway,omitempty" yaml:"default_gateway,omitempty" required:"false" doc:"Default gateway IP address for the compute cluster network (e.g., \"10.0.0.1\"). Optional."`
+	Description             string                        `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"User-defined description for the compute cluster"`
+	Guid                    string                        `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Id                      int64                         `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	IntermediateCertificate string                        `json:"intermediate_certificate,omitempty" yaml:"intermediate_certificate,omitempty" required:"false" doc:"RKE2 intermediate certificate. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_key."`
+	IntermediateKey         string                        `json:"intermediate_key,omitempty" yaml:"intermediate_key,omitempty" required:"false" doc:"RKE2 intermediate private key. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_certificate."`
+	Name                    string                        `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Compute Cluster name"`
+	Netmask                 string                        `json:"netmask,omitempty" yaml:"netmask,omitempty" required:"false" doc:"Network mask for the compute cluster network (e.g., \"255.255.255.0\" or \"24\")"`
+	ResourceCounts          ComputeCluster_ResourceCounts `json:"resource_counts,omitempty" yaml:"resource_counts,omitempty" required:"false" doc:"Resource counts with state-based breakdowns for this cluster"`
+	RootCertificate         string                        `json:"root_certificate,omitempty" yaml:"root_certificate,omitempty" required:"false" doc:"RKE2 root certificate. If omitted, certificates will be generated automatically. Must be provided together with intermediate_certificate and intermediate_key."`
+	ServerKubeVipAddress    string                        `json:"server_kube_vip_address,omitempty" yaml:"server_kube_vip_address,omitempty" required:"false" doc:"Kubernetes VIP address for the API server"`
+	ServiceCidr             string                        `json:"service_cidr,omitempty" yaml:"service_cidr,omitempty" required:"false" doc:"Kubernetes service CIDR for service networking (default is \"10.80.0.0/12\")"`
+	State                   string                        `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Current state of the compute cluster"`
+	StaticIpRanges          *[][]string                   `json:"static_ip_ranges,omitempty" yaml:"static_ip_ranges,omitempty" required:"false" doc:"List of IP range pairs [[start1, end1], [start2, end2]] for static IP assignment to CNodes. Must provide enough IPs for all CNodes."`
+	Tags                    *[]string                     `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"User-defined tags for the compute cluster"`
+	Vlan                    int64                         `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:"VLAN ID for the compute cluster network (1-4095). Optional; omit or set to null to disable."`
+}
+
+// Component_ComputeClusterCNodeCountsPerState represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterCNodeCountsPerState
+type Component_ComputeClusterCNodeCountsPerState struct{}
+
+// Component_ComputeClusterCNodeInput represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterCNodeInput
+type Component_ComputeClusterCNodeInput struct {
+	Id             int64  `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"CNode ID"`
+	ResourcePreset string `json:"resource_preset,omitempty" yaml:"resource_preset,omitempty" required:"true" doc:"Resource allocation preset for this CNode"`
+}
+
+// Component_ComputeClusterCNodeStats represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterCNodeStats
+type Component_ComputeClusterCNodeStats struct {
+	Cpu    ComputeClusterCNodeStats_Cpu    `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU usage statistics for this CNode, in cores"`
+	Memory ComputeClusterCNodeStats_Memory `json:"memory,omitempty" yaml:"memory,omitempty" required:"false" doc:"Memory usage statistics for this CNode, in bytes"`
+	Pods   int64                           `json:"pods,omitempty" yaml:"pods,omitempty" required:"false" doc:"Number of pods running on this CNode"`
+}
+
+// Component_ComputeClusterCountsPerState represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterCountsPerState
+type Component_ComputeClusterCountsPerState struct{}
+
+// Component_ComputeClusterCreateParams represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterCreateParams
+type Component_ComputeClusterCreateParams struct {
+	Cnodes                  *[]ComputeClusterCreateParams_CnodesItem `json:"cnodes,omitempty" yaml:"cnodes,omitempty" required:"true" doc:"List of CNode assignments with resource presets"`
+	Name                    string                                   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Compute Cluster name"`
+	Netmask                 string                                   `json:"netmask,omitempty" yaml:"netmask,omitempty" required:"true" doc:"Network mask for the compute cluster network (e.g., \"255.255.255.0\" or \"24\")"`
+	StaticIpRanges          *[][]string                              `json:"static_ip_ranges,omitempty" yaml:"static_ip_ranges,omitempty" required:"true" doc:"List of IP range pairs [[start1, end1], [start2, end2]] for static IP assignment to CNodes. Must provide enough IPs for all CNodes."`
+	BackupFrequency         int64                                    `json:"backup_frequency,omitempty" yaml:"backup_frequency,omitempty" required:"false" doc:"Backup frequency in minutes"`
+	ClusterCidr             string                                   `json:"cluster_cidr,omitempty" yaml:"cluster_cidr,omitempty" required:"false" doc:"Kubernetes cluster CIDR for pod networking (default is \"10.42.0.0/16\")"`
+	Description             string                                   `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"User-defined description for the compute cluster"`
+	IntermediateCertificate string                                   `json:"intermediate_certificate,omitempty" yaml:"intermediate_certificate,omitempty" required:"false" doc:"RKE2 intermediate certificate. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_key."`
+	IntermediateKey         string                                   `json:"intermediate_key,omitempty" yaml:"intermediate_key,omitempty" required:"false" doc:"RKE2 intermediate private key. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_certificate."`
+	RootCertificate         string                                   `json:"root_certificate,omitempty" yaml:"root_certificate,omitempty" required:"false" doc:"RKE2 root certificate. If omitted, certificates will be generated automatically. Must be provided together with intermediate_certificate and intermediate_key."`
+	ServerKubeVipAddress    string                                   `json:"server_kube_vip_address,omitempty" yaml:"server_kube_vip_address,omitempty" required:"false" doc:"Kubernetes VIP address for the API server"`
+	ServiceCidr             string                                   `json:"service_cidr,omitempty" yaml:"service_cidr,omitempty" required:"false" doc:"Kubernetes service CIDR for service networking (default is \"10.43.0.0/16\")"`
+	Tags                    *[]string                                `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"User-defined tags for the compute cluster"`
+}
+
+// Component_ComputeClusterDashboard represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterDashboard
+type Component_ComputeClusterDashboard struct {
+	Cnodes          map[string]int64 `json:"cnodes,omitempty" yaml:"cnodes,omitempty" required:"false" doc:""`
+	ComputeClusters map[string]int64 `json:"compute_clusters,omitempty" yaml:"compute_clusters,omitempty" required:"false" doc:""`
+	Deployments     map[string]int64 `json:"deployments,omitempty" yaml:"deployments,omitempty" required:"false" doc:""`
+	NamespaceCounts int64            `json:"namespace_counts,omitempty" yaml:"namespace_counts,omitempty" required:"false" doc:"Total number of namespaces across all clusters"`
+	Pods            map[string]int64 `json:"pods,omitempty" yaml:"pods,omitempty" required:"false" doc:""`
+	ServiceCounts   int64            `json:"service_counts,omitempty" yaml:"service_counts,omitempty" required:"false" doc:"Total number of services across all clusters"`
+	TenantCounts    int64            `json:"tenant_counts,omitempty" yaml:"tenant_counts,omitempty" required:"false" doc:"Total number of tenants attached to compute clusters"`
+}
+
+// Component_ComputeClusterDeployment represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterDeployment
+type Component_ComputeClusterDeployment struct {
+	Available int64  `json:"available,omitempty" yaml:"available,omitempty" required:"false" doc:"Number of available replicas"`
+	CreatedAt string `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Deployment creation timestamp"`
+	Name      string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Deployment name"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"Namespace where the deployment is located"`
+	Ready     string `json:"ready,omitempty" yaml:"ready,omitempty" required:"false" doc:"Ready replicas in \"X/Y\" format (like kubectl)"`
+	UpToDate  int64  `json:"up_to_date,omitempty" yaml:"up_to_date,omitempty" required:"false" doc:"Number of up-to-date replicas"`
+}
+
+// Component_ComputeClusterDeploymentCountsPerState represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterDeploymentCountsPerState
+type Component_ComputeClusterDeploymentCountsPerState struct{}
+
+// Component_ComputeClusterListItem represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterListItem
+type Component_ComputeClusterListItem struct {
+	AllTenants              bool                                  `json:"all_tenants,omitempty" yaml:"all_tenants,omitempty" required:"false" doc:"When true, all existing and newly created tenants are automatically assigned to this compute cluster"`
+	BackupFrequency         int64                                 `json:"backup_frequency,omitempty" yaml:"backup_frequency,omitempty" required:"false" doc:"Backup frequency in minutes"`
+	Certificate             string                                `json:"certificate,omitempty" yaml:"certificate,omitempty" required:"false" doc:"Cluster CA certificate for kubeconfig authentication"`
+	ClientCertificate       string                                `json:"client_certificate,omitempty" yaml:"client_certificate,omitempty" required:"false" doc:"Client certificate for kubeconfig authentication"`
+	ClientKey               string                                `json:"client_key,omitempty" yaml:"client_key,omitempty" required:"false" doc:"Client private key for kubeconfig authentication"`
+	ClusterCidr             string                                `json:"cluster_cidr,omitempty" yaml:"cluster_cidr,omitempty" required:"false" doc:"Kubernetes cluster CIDR for pod networking (default is \"10.64.0.0/12\")"`
+	DefaultGateway          string                                `json:"default_gateway,omitempty" yaml:"default_gateway,omitempty" required:"false" doc:"Default gateway IP address for the compute cluster network (e.g., \"10.0.0.1\"). Optional."`
+	Description             string                                `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"User-defined description for the compute cluster"`
+	Guid                    string                                `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Id                      int64                                 `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	IntermediateCertificate string                                `json:"intermediate_certificate,omitempty" yaml:"intermediate_certificate,omitempty" required:"false" doc:"RKE2 intermediate certificate. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_key."`
+	IntermediateKey         string                                `json:"intermediate_key,omitempty" yaml:"intermediate_key,omitempty" required:"false" doc:"RKE2 intermediate private key. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_certificate."`
+	Name                    string                                `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Compute Cluster name"`
+	Netmask                 string                                `json:"netmask,omitempty" yaml:"netmask,omitempty" required:"false" doc:"Network mask for the compute cluster network (e.g., \"255.255.255.0\" or \"24\")"`
+	ResourceCounts          ComputeClusterListItem_ResourceCounts `json:"resource_counts,omitempty" yaml:"resource_counts,omitempty" required:"false" doc:"Resource counts with state-based breakdowns for this cluster"`
+	RootCertificate         string                                `json:"root_certificate,omitempty" yaml:"root_certificate,omitempty" required:"false" doc:"RKE2 root certificate. If omitted, certificates will be generated automatically. Must be provided together with intermediate_certificate and intermediate_key."`
+	ServerKubeVipAddress    string                                `json:"server_kube_vip_address,omitempty" yaml:"server_kube_vip_address,omitempty" required:"false" doc:"Kubernetes VIP address for the API server"`
+	ServiceCidr             string                                `json:"service_cidr,omitempty" yaml:"service_cidr,omitempty" required:"false" doc:"Kubernetes service CIDR for service networking (default is \"10.80.0.0/12\")"`
+	State                   string                                `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Current state of the compute cluster"`
+	StaticIpRanges          *[][]string                           `json:"static_ip_ranges,omitempty" yaml:"static_ip_ranges,omitempty" required:"false" doc:"List of IP range pairs [[start1, end1], [start2, end2]] for static IP assignment to CNodes. Must provide enough IPs for all CNodes."`
+	Tags                    *[]string                             `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"User-defined tags for the compute cluster"`
+	Vlan                    int64                                 `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:"VLAN ID for the compute cluster network (1-4095). Optional; omit or set to null to disable."`
+}
+
+// Component_ComputeClusterModifyParams represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterModifyParams
+type Component_ComputeClusterModifyParams struct {
+	AllTenants      bool                                     `json:"all_tenants,omitempty" yaml:"all_tenants,omitempty" required:"false" doc:"When true, all existing and newly created tenants are automatically assigned to this compute cluster"`
+	BackupFrequency int64                                    `json:"backup_frequency,omitempty" yaml:"backup_frequency,omitempty" required:"false" doc:"Backup frequency in minutes"`
+	Cnodes          *[]ComputeClusterModifyParams_CnodesItem `json:"cnodes,omitempty" yaml:"cnodes,omitempty" required:"false" doc:"List of CNode assignments with resource presets"`
+	StaticIpRanges  *[][]string                              `json:"static_ip_ranges,omitempty" yaml:"static_ip_ranges,omitempty" required:"false" doc:"List of IP range pairs [[start1, end1], [start2, end2]] for static IP assignment to CNodes. Must provide enough IPs for all CNodes."`
+}
+
+// Component_ComputeClusterNamespace represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterNamespace
+type Component_ComputeClusterNamespace struct {
+	CreatedAt string `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Namespace creation timestamp"`
+	Name      string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Namespace name"`
+	Status    string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Namespace status (Active, Terminating, etc.)"`
+}
+
+// Component_ComputeClusterNode represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterNode
+type Component_ComputeClusterNode struct {
+	Architecture   string `json:"architecture,omitempty" yaml:"architecture,omitempty" required:"false" doc:"Node architecture (amd64, arm64, etc.)"`
+	CapacityCpu    string `json:"capacity_cpu,omitempty" yaml:"capacity_cpu,omitempty" required:"false" doc:"CPU capacity of the node"`
+	CapacityMemory string `json:"capacity_memory,omitempty" yaml:"capacity_memory,omitempty" required:"false" doc:"Memory capacity of the node"`
+	CreatedAt      string `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Node creation timestamp"`
+	Message        string `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:"Unhealthy condition messages from the node"`
+	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Node name"`
+	OsImage        string `json:"os_image,omitempty" yaml:"os_image,omitempty" required:"false" doc:"Operating system image"`
+	Status         string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Node status (Ready, Unknown)"`
+	Version        string `json:"version,omitempty" yaml:"version,omitempty" required:"false" doc:"Kubernetes version running on the node"`
+}
+
+// Component_ComputeClusterPod represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterPod
+type Component_ComputeClusterPod struct {
+	Conditions *[]ComputeClusterPod_ConditionsItem `json:"conditions,omitempty" yaml:"conditions,omitempty" required:"false" doc:"Pod status conditions reported by Kubernetes"`
+	CreatedAt  string                              `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Pod creation timestamp"`
+	Ip         string                              `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"Pod IP address"`
+	Name       string                              `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Pod name"`
+	Namespace  string                              `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"Pod namespace"`
+	Node       string                              `json:"node,omitempty" yaml:"node,omitempty" required:"false" doc:"Node name where pod is scheduled"`
+	Status     string                              `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Pod status (Running, Pending, Failed, etc.)"`
+}
+
+// Component_ComputeClusterPodCondition represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterPodCondition
+type Component_ComputeClusterPodCondition struct {
+	LastTransitionTime string `json:"last_transition_time,omitempty" yaml:"last_transition_time,omitempty" required:"false" doc:"Timestamp of the condition's last transition"`
+	Message            string `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:"Human-readable message about the condition's last transition"`
+	Reason             string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Machine-readable reason for the condition's last transition"`
+	Status             string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Condition status (True, False, Unknown)"`
+	Type               string `json:"type,omitempty" yaml:"type,omitempty" required:"false" doc:"Condition type (e.g. Ready, Initialized, ContainersReady, PodScheduled)"`
+}
+
+// Component_ComputeClusterPodCountsPerState represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterPodCountsPerState
+type Component_ComputeClusterPodCountsPerState struct{}
+
+// Component_ComputeClusterService represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterService
+type Component_ComputeClusterService struct {
+	ClusterIp   string `json:"cluster_ip,omitempty" yaml:"cluster_ip,omitempty" required:"false" doc:"Cluster IP address"`
+	CreatedAt   string `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Service creation timestamp"`
+	ExternalIp  string `json:"external_ip,omitempty" yaml:"external_ip,omitempty" required:"false" doc:"External IP address"`
+	Name        string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Service name"`
+	Namespace   string `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"Namespace where the service is located"`
+	ServiceType string `json:"service_type,omitempty" yaml:"service_type,omitempty" required:"false" doc:"Service type (ClusterIP, NodePort, LoadBalancer, etc.)"`
+}
+
+// Component_ComputeClusterTenant represents the OpenAPI component schema
+// Component: #/components/schemas/ComputeClusterTenant
+type Component_ComputeClusterTenant struct {
+	ComputeCluster int64  `json:"compute_cluster,omitempty" yaml:"compute_cluster,omitempty" required:"false" doc:"Compute Cluster ID"`
+	DeComputeGuid  string `json:"de_compute_guid,omitempty" yaml:"de_compute_guid,omitempty" required:"false" doc:"Data Engine compute GUID"`
+	DeMtlsCertGuid string `json:"de_mtls_cert_guid,omitempty" yaml:"de_mtls_cert_guid,omitempty" required:"false" doc:"Data Engine mTLS certificate GUID"`
+	Status         string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Status of the tenant association. - 'INIT' means the tenant association has been created but not yet provisioned on the compute cluster. - 'PROVISIONED' means the tenant's namespaces have been created on the compute cluster. - 'DE_ATTACHED' means the tenant is fully attached to the Data Engine with mTLS certificates and compute GUID assigned. - 'DELETING' means the tenant is being detached and removed from the compute cluster. - 'ROTATING' means the tenant's mTLS certificates are being rotated. - 'PARTIALLY_PROVISIONED' means the tenant association is in an incomplete state, typically due to a failed operation or timeout."`
+	TenantId       int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+}
+
 // Component_ConflictResponse represents the OpenAPI component schema
 // Component: #/components/schemas/ConflictResponse
 type Component_ConflictResponse struct {
@@ -1328,12 +1747,50 @@ type Component_DNS struct {
 	Title               string    `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:""`
 	Ttl                 int64     `json:"ttl,omitempty" yaml:"ttl,omitempty" required:"false" doc:"Specifies the TTL value for the DNS."`
 	Url                 string    `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Endpoint URL for operations on the DNS server configuration"`
+	VipAllocation       string    `json:"vip_allocation,omitempty" yaml:"vip_allocation,omitempty" required:"false" doc:"VIP allocation type"`
 	VipGateway          string    `json:"vip_gateway,omitempty" yaml:"vip_gateway,omitempty" required:"false" doc:"Specifies a gateway IP to external DNS server if on different subnet. Must be on same subnet as the IP and reachable from the relevant nework interface."`
 	VipIpv6             string    `json:"vip_ipv6,omitempty" yaml:"vip_ipv6,omitempty" required:"false" doc:"Assigns an IPv6 to the DNS service."`
 	VipIpv6Gateway      string    `json:"vip_ipv6_gateway,omitempty" yaml:"vip_ipv6_gateway,omitempty" required:"false" doc:"Specifies a gateway IPv6 to external DNS server if on different subnet."`
 	VipIpv6SubnetCidr   int64     `json:"vip_ipv6_subnet_cidr,omitempty" yaml:"vip_ipv6_subnet_cidr,omitempty" required:"false" doc:"Specifies the subnet, as a CIDR index, on which the DNS resides. [1..128]"`
 	VipSubnetCidr       int64     `json:"vip_subnet_cidr,omitempty" yaml:"vip_subnet_cidr,omitempty" required:"false" doc:"Specifies the subnet, as a CIDR index, on which the DNS resides."`
 	VipVlan             int64     `json:"vip_vlan,omitempty" yaml:"vip_vlan,omitempty" required:"false" doc:"Specifies a VLAN if needed to enable communication with external DNS server(s)."`
+}
+
+// Component_DNSAllocateParams represents the OpenAPI component schema
+// Component: #/components/schemas/DNSAllocateParams
+type Component_DNSAllocateParams struct {
+	CnodeIds            *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"To dedicate a specific group of CNodes to the DNS, list the IDs of the CNodes."`
+	DomainSuffix        string   `json:"domain_suffix,omitempty" yaml:"domain_suffix,omitempty" required:"false" doc:"A suffix for domain names. Requests for domain names with this suffix are resolved to the VIPs configured on the cluster."`
+	Enabled             bool     `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to true to enable the DNS service"`
+	InvalidNameResponse string   `json:"invalid_name_response,omitempty" yaml:"invalid_name_response,omitempty" required:"false" doc:""`
+	InvalidTypeResponse string   `json:"invalid_type_response,omitempty" yaml:"invalid_type_response,omitempty" required:"false" doc:""`
+	Name                string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the DNS server configuration"`
+	NetType             string   `json:"net_type,omitempty" yaml:"net_type,omitempty" required:"false" doc:""`
+	Port                int64    `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Specifies a port for the DNS"`
+	Ttl                 int64    `json:"ttl,omitempty" yaml:"ttl,omitempty" required:"false" doc:"Specifies the TTL value for the DNS."`
+}
+
+// Component_DNSCreateParams represents the OpenAPI component schema
+// Component: #/components/schemas/DNSCreateParams
+type Component_DNSCreateParams struct {
+	BgpConfigId         int64    `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"The ID of the BGP configuration to use for layer 3 connectivity configuration"`
+	CnodeIds            *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"To dedicate a specific group of CNodes to the DNS, list the IDs of the CNodes."`
+	DomainSuffix        string   `json:"domain_suffix,omitempty" yaml:"domain_suffix,omitempty" required:"false" doc:"A suffix for domain names. Requests for domain names with this suffix are resolved to the VIPs configured on the cluster."`
+	EnableL3            bool     `json:"enable_l3,omitempty" yaml:"enable_l3,omitempty" required:"false" doc:"Enable layer 3 connectivity"`
+	Enabled             bool     `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to true to enable the DNS service"`
+	InvalidNameResponse string   `json:"invalid_name_response,omitempty" yaml:"invalid_name_response,omitempty" required:"false" doc:""`
+	InvalidTypeResponse string   `json:"invalid_type_response,omitempty" yaml:"invalid_type_response,omitempty" required:"false" doc:""`
+	Name                string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the DNS server configuration"`
+	NetType             string   `json:"net_type,omitempty" yaml:"net_type,omitempty" required:"false" doc:""`
+	Port                int64    `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Specifies a port for the DNS"`
+	Ttl                 int64    `json:"ttl,omitempty" yaml:"ttl,omitempty" required:"false" doc:"Specifies the TTL value for the DNS."`
+	Vip                 string   `json:"vip,omitempty" yaml:"vip,omitempty" required:"false" doc:"A virtual IP to assign to the DNS service. DNS requests from your external DNS server must be delegated to this IP."`
+	VipGateway          string   `json:"vip_gateway,omitempty" yaml:"vip_gateway,omitempty" required:"false" doc:"If the external DNS server doesn't reside on the same subnet as the DNS VIP, enter the IP of a gateway through which to connect to the DNS server."`
+	VipIpv6             string   `json:"vip_ipv6,omitempty" yaml:"vip_ipv6,omitempty" required:"false" doc:"Assigns an IPv6 to the DNS service."`
+	VipIpv6Gateway      string   `json:"vip_ipv6_gateway,omitempty" yaml:"vip_ipv6_gateway,omitempty" required:"false" doc:"Specifies a gateway IPv6 to external DNS server if on different subnet."`
+	VipIpv6SubnetCidr   int64    `json:"vip_ipv6_subnet_cidr,omitempty" yaml:"vip_ipv6_subnet_cidr,omitempty" required:"false" doc:"Specifies the subnet, as a CIDR index, on which the DNS resides. [1..128]"`
+	VipSubnetCidr       int64    `json:"vip_subnet_cidr,omitempty" yaml:"vip_subnet_cidr,omitempty" required:"false" doc:"The subnet, in CIDR format, on which the DNS VIP resides."`
+	VipVlan             int64    `json:"vip_vlan,omitempty" yaml:"vip_vlan,omitempty" required:"false" doc:"If your external DNS server is only exposed to a specific VLAN, you can enter the VLAN here to enable communication with the DNS server."`
 }
 
 // Component_DNode represents the OpenAPI component schema
@@ -1645,6 +2102,7 @@ type Component_EventDefinitionConfig struct {
 	SyslogIpmiAudit       bool      `json:"syslog_ipmi_audit,omitempty" yaml:"syslog_ipmi_audit,omitempty" required:"false" doc:"Enable CNode and DNode IPMI commands audit"`
 	SyslogPort            int64     `json:"syslog_port,omitempty" yaml:"syslog_port,omitempty" required:"false" doc:"Syslog port for events logging"`
 	SyslogProtocol        string    `json:"syslog_protocol,omitempty" yaml:"syslog_protocol,omitempty" required:"false" doc:"Syslog protocol for events logging. Default is UDP"`
+	SyslogSecureAudit     bool      `json:"syslog_secure_audit,omitempty" yaml:"syslog_secure_audit,omitempty" required:"false" doc:"Enable /var/log/secure logs audit"`
 	SyslogShellAudit      bool      `json:"syslog_shell_audit,omitempty" yaml:"syslog_shell_audit,omitempty" required:"false" doc:"Enable login/logout (GUI/CLI/VMS/SSH/IPMI),shell, clush, sudo and docker commands audit for CNode and DNode"`
 	SyslogVmsAudit        bool      `json:"syslog_vms_audit,omitempty" yaml:"syslog_vms_audit,omitempty" required:"false" doc:"Enable VMS audit"`
 }
@@ -1713,29 +2171,30 @@ type Component_Frame struct {
 // Component_GlobalSnapStream represents the OpenAPI component schema
 // Component: #/components/schemas/GlobalSnapStream
 type Component_GlobalSnapStream struct {
-	Bw               int64                         `json:"bw,omitempty" yaml:"bw,omitempty" required:"false" doc:"BW"`
-	Direction        string                        `json:"direction,omitempty" yaml:"direction,omitempty" required:"false" doc:""`
-	Enabled          bool                          `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enabled"`
-	Eta              string                        `json:"eta,omitempty" yaml:"eta,omitempty" required:"false" doc:"ETA"`
-	ExternalState    string                        `json:"external_state,omitempty" yaml:"external_state,omitempty" required:"false" doc:"Global Snapshot Clone state"`
-	Guid             string                        `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	Health           string                        `json:"health,omitempty" yaml:"health,omitempty" required:"false" doc:""`
-	Id               int64                         `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	LoaneeRootPath   string                        `json:"loanee_root_path,omitempty" yaml:"loanee_root_path,omitempty" required:"false" doc:"Target path"`
-	LoaneeSnapshot   string                        `json:"loanee_snapshot,omitempty" yaml:"loanee_snapshot,omitempty" required:"false" doc:"Loanee snapshot name"`
-	LoaneeSnapshotId int64                         `json:"loanee_snapshot_id,omitempty" yaml:"loanee_snapshot_id,omitempty" required:"false" doc:""`
-	LoaneeTenant     GlobalSnapStream_LoaneeTenant `json:"loanee_tenant,omitempty" yaml:"loanee_tenant,omitempty" required:"false" doc:""`
-	Name             string                        `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	OwnerTenant      GlobalSnapStream_OwnerTenant  `json:"owner_tenant,omitempty" yaml:"owner_tenant,omitempty" required:"false" doc:""`
-	RemoteTarget     string                        `json:"remote_target,omitempty" yaml:"remote_target,omitempty" required:"false" doc:"Remote cluster name"`
-	RemoteTargetId   int64                         `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:""`
-	RestoreTask      int64                         `json:"restore_task,omitempty" yaml:"restore_task,omitempty" required:"false" doc:""`
-	SourceCluster    string                        `json:"source_cluster,omitempty" yaml:"source_cluster,omitempty" required:"false" doc:"Source cluster"`
-	SourcePath       string                        `json:"source_path,omitempty" yaml:"source_path,omitempty" required:"false" doc:"Source path"`
-	SourceSnapshot   string                        `json:"source_snapshot,omitempty" yaml:"source_snapshot,omitempty" required:"false" doc:"Source snapshot"`
-	State            string                        `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
-	SyncProgress     int64                         `json:"sync_progress,omitempty" yaml:"sync_progress,omitempty" required:"false" doc:""`
-	TargetCluster    string                        `json:"target_cluster,omitempty" yaml:"target_cluster,omitempty" required:"false" doc:"Target cluster"`
+	Bw                     int64                         `json:"bw,omitempty" yaml:"bw,omitempty" required:"false" doc:"BW"`
+	Direction              string                        `json:"direction,omitempty" yaml:"direction,omitempty" required:"false" doc:""`
+	Enabled                bool                          `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Enabled"`
+	Eta                    string                        `json:"eta,omitempty" yaml:"eta,omitempty" required:"false" doc:"ETA"`
+	ExternalState          string                        `json:"external_state,omitempty" yaml:"external_state,omitempty" required:"false" doc:"Global Snapshot Clone state"`
+	Guid                   string                        `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	Health                 string                        `json:"health,omitempty" yaml:"health,omitempty" required:"false" doc:""`
+	Id                     int64                         `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	LoaneeRootPath         string                        `json:"loanee_root_path,omitempty" yaml:"loanee_root_path,omitempty" required:"false" doc:"Target path"`
+	LoaneeSnapshot         string                        `json:"loanee_snapshot,omitempty" yaml:"loanee_snapshot,omitempty" required:"false" doc:"Loanee snapshot name"`
+	LoaneeSnapshotId       int64                         `json:"loanee_snapshot_id,omitempty" yaml:"loanee_snapshot_id,omitempty" required:"false" doc:""`
+	LoaneeTenant           GlobalSnapStream_LoaneeTenant `json:"loanee_tenant,omitempty" yaml:"loanee_tenant,omitempty" required:"false" doc:""`
+	Name                   string                        `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	OwnerTenant            GlobalSnapStream_OwnerTenant  `json:"owner_tenant,omitempty" yaml:"owner_tenant,omitempty" required:"false" doc:""`
+	RemoteTarget           string                        `json:"remote_target,omitempty" yaml:"remote_target,omitempty" required:"false" doc:"Remote cluster name"`
+	RemoteTargetId         int64                         `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:""`
+	RestoreTask            int64                         `json:"restore_task,omitempty" yaml:"restore_task,omitempty" required:"false" doc:""`
+	SourceCluster          string                        `json:"source_cluster,omitempty" yaml:"source_cluster,omitempty" required:"false" doc:"Source cluster"`
+	SourcePath             string                        `json:"source_path,omitempty" yaml:"source_path,omitempty" required:"false" doc:"Source path"`
+	SourceSnapshot         string                        `json:"source_snapshot,omitempty" yaml:"source_snapshot,omitempty" required:"false" doc:"Source snapshot"`
+	State                  string                        `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
+	SyncProgress           int64                         `json:"sync_progress,omitempty" yaml:"sync_progress,omitempty" required:"false" doc:""`
+	TargetCluster          string                        `json:"target_cluster,omitempty" yaml:"target_cluster,omitempty" required:"false" doc:"Target cluster"`
+	ViewReplicationEnabled bool                          `json:"view_replication_enabled,omitempty" yaml:"view_replication_enabled,omitempty" required:"false" doc:"Whether view replication is enabled"`
 }
 
 // Component_Group represents the OpenAPI component schema
@@ -1762,6 +2221,21 @@ type Component_GroupData struct {
 	S3Policies    *[]string `json:"s3_policies,omitempty" yaml:"s3_policies,omitempty" required:"false" doc:""`
 	S3PoliciesIds *[]int64  `json:"s3_policies_ids,omitempty" yaml:"s3_policies_ids,omitempty" required:"false" doc:""`
 	Sid           string    `json:"sid,omitempty" yaml:"sid,omitempty" required:"false" doc:""`
+}
+
+// Component_Health represents the OpenAPI component schema
+// Component: #/components/schemas/Health
+type Component_Health struct {
+	Cache  Health_Cache `json:"cache,omitempty" yaml:"cache,omitempty" required:"false" doc:""`
+	Db     Health_Db    `json:"db,omitempty" yaml:"db,omitempty" required:"false" doc:""`
+	Status string       `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
+}
+
+// Component_HealthEntry represents the OpenAPI component schema
+// Component: #/components/schemas/HealthEntry
+type Component_HealthEntry struct {
+	Info   string `json:"info,omitempty" yaml:"info,omitempty" required:"false" doc:"Additional info regarding service status"`
+	Status string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
 }
 
 // Component_Host represents the OpenAPI component schema
@@ -1829,13 +2303,14 @@ type Component_HostNetworkSettings struct {
 // Component_IAMRole represents the OpenAPI component schema
 // Component: #/components/schemas/IAMRole
 type Component_IAMRole struct {
-	Description string         `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:""`
-	Guid        string         `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Id          int64          `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	Name        string         `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	Tenant      IAMRole_Tenant `json:"tenant,omitempty" yaml:"tenant,omitempty" required:"false" doc:""`
-	TrustPolicy string         `json:"trust_policy,omitempty" yaml:"trust_policy,omitempty" required:"false" doc:""`
-	Vid         int64          `json:"vid,omitempty" yaml:"vid,omitempty" required:"false" doc:""`
+	Description        string         `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:""`
+	Guid               string         `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Id                 int64          `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	MaxSessionDuration int64          `json:"max_session_duration,omitempty" yaml:"max_session_duration,omitempty" required:"false" doc:"Maximum session duration for temporary access keys (seconds). Default - 129600 (36 hours)."`
+	Name               string         `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Tenant             IAMRole_Tenant `json:"tenant,omitempty" yaml:"tenant,omitempty" required:"false" doc:""`
+	TrustPolicy        string         `json:"trust_policy,omitempty" yaml:"trust_policy,omitempty" required:"false" doc:""`
+	Vid                int64          `json:"vid,omitempty" yaml:"vid,omitempty" required:"false" doc:""`
 }
 
 // Component_IAMRoleCredentialsInfo represents the OpenAPI component schema
@@ -1877,6 +2352,20 @@ type Component_Injection struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Injection name"`
 }
 
+// Component_Issue represents the OpenAPI component schema
+// Component: #/components/schemas/Issue
+type Component_Issue struct {
+	Action    string `json:"action,omitempty" yaml:"action,omitempty" required:"false" doc:""`
+	Id        int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Issue     string `json:"issue,omitempty" yaml:"issue,omitempty" required:"false" doc:""`
+	IssueType string `json:"issue_type,omitempty" yaml:"issue_type,omitempty" required:"false" doc:""`
+	Location  string `json:"location,omitempty" yaml:"location,omitempty" required:"false" doc:""`
+	Severity  string `json:"severity,omitempty" yaml:"severity,omitempty" required:"false" doc:""`
+	Stage     string `json:"stage,omitempty" yaml:"stage,omitempty" required:"false" doc:""`
+	TaskId    int64  `json:"task_id,omitempty" yaml:"task_id,omitempty" required:"false" doc:""`
+	Time      string `json:"time,omitempty" yaml:"time,omitempty" required:"false" doc:""`
+}
+
 // Component_KafkaBrokerAddressParams represents the OpenAPI component schema
 // Component: #/components/schemas/KafkaBrokerAddressParams
 type Component_KafkaBrokerAddressParams struct {
@@ -1887,11 +2376,13 @@ type Component_KafkaBrokerAddressParams struct {
 // Component_KafkaBrokerConfig represents the OpenAPI component schema
 // Component: #/components/schemas/KafkaBrokerConfig
 type Component_KafkaBrokerConfig struct {
-	Addresses *[]KafkaBrokerConfig_AddressesItem `json:"addresses,omitempty" yaml:"addresses,omitempty" required:"false" doc:"List of Kafka server addresses"`
-	Guid      string                             `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Id        int64                              `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Kafka broker configuration ID"`
-	Name      string                             `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the Kafka broker configuration"`
-	TenantId  int64                              `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID. If missing, accessed by all tenants"`
+	Addresses                   *[]KafkaBrokerConfig_AddressesItem `json:"addresses,omitempty" yaml:"addresses,omitempty" required:"false" doc:"List of Kafka server addresses"`
+	CertificateSetId            int64                              `json:"certificate_set_id,omitempty" yaml:"certificate_set_id,omitempty" required:"false" doc:"Certificate Set ID"`
+	Guid                        string                             `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	HostnameVerificationEnabled bool                               `json:"hostname_verification_enabled,omitempty" yaml:"hostname_verification_enabled,omitempty" required:"false" doc:"Hostname verification is enabled when mTLS certificate is used"`
+	Id                          int64                              `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Kafka broker configuration ID"`
+	Name                        string                             `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the Kafka broker configuration"`
+	TenantId                    int64                              `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID. If missing, accessed by all tenants"`
 }
 
 // Component_Kerberos represents the OpenAPI component schema
@@ -1907,9 +2398,25 @@ type Component_Kerberos struct {
 	State             Kerberos_State `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:""`
 }
 
+// Component_KerberosPrincipalInfo represents the OpenAPI component schema
+// Component: #/components/schemas/KerberosPrincipalInfo
+type Component_KerberosPrincipalInfo struct {
+	Message string `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:""`
+	Name    string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Status  string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
+}
+
 // Component_KerberosPrincipalsInfo represents the OpenAPI component schema
 // Component: #/components/schemas/KerberosPrincipalsInfo
 type Component_KerberosPrincipalsInfo struct{}
+
+// Component_KerberosServerInfo represents the OpenAPI component schema
+// Component: #/components/schemas/KerberosServerInfo
+type Component_KerberosServerInfo struct {
+	Location string `json:"location,omitempty" yaml:"location,omitempty" required:"false" doc:""`
+	Message  string `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:""`
+	Status   string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
+}
 
 // Component_KerberosServersInfo represents the OpenAPI component schema
 // Component: #/components/schemas/KerberosServersInfo
@@ -1952,6 +2459,7 @@ type Component_Ldap struct {
 	GroupSearchbase            string    `json:"group_searchbase,omitempty" yaml:"group_searchbase,omitempty" required:"false" doc:"Base DN for group queries within the joined domain only. When auto discovery is enabled, group queries outside the joined domain use auto-discovered Base DNs."`
 	Guid                       string    `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 	Id                         int64     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	IsAbacProvider             bool      `json:"is_abac_provider,omitempty" yaml:"is_abac_provider,omitempty" required:"false" doc:"is this Ldap / Active Directory used for ABAC"`
 	IsVmsAuthProvider          bool      `json:"is_vms_auth_provider,omitempty" yaml:"is_vms_auth_provider,omitempty" required:"false" doc:"Enables use of the LDAP for VMS authentication. Two LDAP configurations per cluster can be used for VMS authentication: one with Active Directory and one without."`
 	MailPropertyName           string    `json:"mail_property_name,omitempty" yaml:"mail_property_name,omitempty" required:"false" doc:"The attribute to use for the user's email address."`
 	MatchUser                  string    `json:"match_user,omitempty" yaml:"match_user,omitempty" required:"false" doc:""`
@@ -2099,6 +2607,14 @@ type Component_Manager struct {
 	Tenant                     Manager_Tenant `json:"tenant,omitempty" yaml:"tenant,omitempty" required:"false" doc:""`
 	TenantId                   int64          `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 	UserType                   string         `json:"user_type,omitempty" yaml:"user_type,omitempty" required:"false" doc:"Manager user type. SUPER_ADMIN aka 'cluster admin' = VMS manager users who can log into the cluster VMS to manage the cluster. TENANT_ADMIN=VMS manager users who can log into a specific tenant's VMS to manage that tenant."`
+}
+
+// Component_MetricViewerCertificates represents the OpenAPI component schema
+// Component: #/components/schemas/MetricViewerCertificates
+type Component_MetricViewerCertificates struct {
+	CaCert     string `json:"ca_cert,omitempty" yaml:"ca_cert,omitempty" required:"false" doc:"PEM-encoded CA certificate"`
+	ClientCert string `json:"client_cert,omitempty" yaml:"client_cert,omitempty" required:"false" doc:"PEM-encoded client certificate"`
+	PrivateKey string `json:"private_key,omitempty" yaml:"private_key,omitempty" required:"false" doc:"PEM-encoded private key"`
 }
 
 // Component_MetricsPerSubGroup represents the OpenAPI component schema
@@ -2505,6 +3021,13 @@ type Component_PartialTenantInfo struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Tenant Name"`
 }
 
+// Component_PartialTenantMetricLabel represents the OpenAPI component schema
+// Component: #/components/schemas/PartialTenantMetricLabel
+type Component_PartialTenantMetricLabel struct {
+	Id  int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Key string `json:"key,omitempty" yaml:"key,omitempty" required:"false" doc:""`
+}
+
 // Component_PartialUserInfo represents the OpenAPI component schema
 // Component: #/components/schemas/PartialUserInfo
 type Component_PartialUserInfo struct {
@@ -2788,6 +3311,41 @@ type Component_QOSPolicy struct {
 	UseTotalLimits      bool                           `json:"use_total_limits,omitempty" yaml:"use_total_limits,omitempty" required:"false" doc:"If true - total limits are used instead of separate read/write limits."`
 }
 
+// Component_QOSPolicyCreateParams represents the OpenAPI component schema
+// Component: #/components/schemas/QOSPolicyCreateParams
+type Component_QOSPolicyCreateParams struct {
+	Name                string                                     `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	AttachedUsers       *[]QOSPolicyCreateParams_AttachedUsersItem `json:"attached_users,omitempty" yaml:"attached_users,omitempty" required:"false" doc:"The users to which to attach the policy, for a user QOS policy"`
+	CapacityLimits      QOSPolicyCreateParams_CapacityLimits       `json:"capacity_limits,omitempty" yaml:"capacity_limits,omitempty" required:"false" doc:"Performance limits per unit of either used logical capacity or provisioned capacity, depending on the mode. Units are stated per limit. Valid values: 0-4294967296. 0 means unlimited."`
+	CapacityTotalLimits QOSPolicyCreateParams_CapacityTotalLimits  `json:"capacity_total_limits,omitempty" yaml:"capacity_total_limits,omitempty" required:"false" doc:""`
+	IsDefault           bool                                       `json:"is_default,omitempty" yaml:"is_default,omitempty" required:"false" doc:"Is default User QOS Policy"`
+	IsGold              bool                                       `json:"is_gold,omitempty" yaml:"is_gold,omitempty" required:"false" doc:"Grants priority QoS over views that do not have this setting enabled. Can only be set or modified by a Cluster Admin, not supported for Volume QoS Policies"`
+	LimitBy             string                                     `json:"limit_by,omitempty" yaml:"limit_by,omitempty" required:"false" doc:"Specifies which performance parameter(s) are limited by the policy. BW_IOPS=The policy limits service according to bandwidth (BW) and IO per second (IOPS). BW=The policy limits service according to BW only. IOPS=The policy limits service according to IOPS only."`
+	Mode                string                                     `json:"mode,omitempty" yaml:"mode,omitempty" required:"false" doc:"QoS provisioning mode"`
+	PolicyType          string                                     `json:"policy_type,omitempty" yaml:"policy_type,omitempty" required:"false" doc:"QOS Policy type"`
+	S3ConnectionsLimit  int64                                      `json:"s3_connections_limit,omitempty" yaml:"s3_connections_limit,omitempty" required:"false" doc:"Maximum number of allowed S3 connections, 0 means unlimited"`
+	StaticLimits        string                                     `json:"static_limits,omitempty" yaml:"static_limits,omitempty" required:"false" doc:""`
+	StaticTotalLimits   QOSPolicyCreateParams_StaticTotalLimits    `json:"static_total_limits,omitempty" yaml:"static_total_limits,omitempty" required:"false" doc:""`
+	TenantId            int64                                      `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	UseTotalLimits      bool                                       `json:"use_total_limits,omitempty" yaml:"use_total_limits,omitempty" required:"false" doc:""`
+}
+
+// Component_QOSPolicyModifyParams represents the OpenAPI component schema
+// Component: #/components/schemas/QOSPolicyModifyParams
+type Component_QOSPolicyModifyParams struct {
+	AttachedUsers       *[]QOSPolicyModifyParams_AttachedUsersItem `json:"attached_users,omitempty" yaml:"attached_users,omitempty" required:"false" doc:"The users to which to attach the policy, for a user QOS policy"`
+	CapacityLimits      QOSPolicyModifyParams_CapacityLimits       `json:"capacity_limits,omitempty" yaml:"capacity_limits,omitempty" required:"false" doc:"Performance limits per unit of either used logical capacity or provisioned capacity, depending on the mode. Units are stated per limit. Valid values: 0-4294967296. 0 means unlimited."`
+	CapacityTotalLimits QOSPolicyModifyParams_CapacityTotalLimits  `json:"capacity_total_limits,omitempty" yaml:"capacity_total_limits,omitempty" required:"false" doc:""`
+	IsDefault           bool                                       `json:"is_default,omitempty" yaml:"is_default,omitempty" required:"false" doc:"Is default User QOS Policy"`
+	IsGold              bool                                       `json:"is_gold,omitempty" yaml:"is_gold,omitempty" required:"false" doc:"Grants priority QoS over views that do not have this setting enabled. Can only be set or modified by a Cluster Admin, not supported for Volume QoS Policies"`
+	LimitBy             string                                     `json:"limit_by,omitempty" yaml:"limit_by,omitempty" required:"false" doc:"Specifies which performance parameter(s) are limited by the policy. BW_IOPS=The policy limits service according to bandwidth (BW) and IO per second (IOPS). BW=The policy limits service according to BW only. IOPS=The policy limits service according to IOPS only."`
+	Mode                string                                     `json:"mode,omitempty" yaml:"mode,omitempty" required:"false" doc:"QoS provisioning mode"`
+	S3ConnectionsLimit  int64                                      `json:"s3_connections_limit,omitempty" yaml:"s3_connections_limit,omitempty" required:"false" doc:"Maximum number of allowed S3 connections, 0 means unlimited"`
+	StaticLimits        string                                     `json:"static_limits,omitempty" yaml:"static_limits,omitempty" required:"false" doc:""`
+	StaticTotalLimits   QOSPolicyModifyParams_StaticTotalLimits    `json:"static_total_limits,omitempty" yaml:"static_total_limits,omitempty" required:"false" doc:""`
+	UseTotalLimits      bool                                       `json:"use_total_limits,omitempty" yaml:"use_total_limits,omitempty" required:"false" doc:""`
+}
+
 // Component_QOSStaticLimits represents the OpenAPI component schema
 // Component: #/components/schemas/QOSStaticLimits
 type Component_QOSStaticLimits struct {
@@ -2876,6 +3434,55 @@ type Component_QuotaEntityInfo struct {
 	IsIamRole      bool   `json:"is_iam_role,omitempty" yaml:"is_iam_role,omitempty" required:"false" doc:""`
 	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
 	VastId         int64  `json:"vast_id,omitempty" yaml:"vast_id,omitempty" required:"false" doc:"VAST ID of the user or group with the listed user/group quota"`
+}
+
+// Component_QuotaGroup represents the OpenAPI component schema
+// Component: #/components/schemas/QuotaGroup
+type Component_QuotaGroup struct {
+	Cluster                     string                       `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
+	ClusterId                   int64                        `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"Parent Cluster ID"`
+	DefaultEmail                string                       `json:"default_email,omitempty" yaml:"default_email,omitempty" required:"false" doc:"The default email for sending user quota alert emails. This is used if no suffix is set and no address is found on providers."`
+	DefaultGroupQuota           QuotaGroup_DefaultGroupQuota `json:"default_group_quota,omitempty" yaml:"default_group_quota,omitempty" required:"false" doc:""`
+	DefaultUserQuota            QuotaGroup_DefaultUserQuota  `json:"default_user_quota,omitempty" yaml:"default_user_quota,omitempty" required:"false" doc:""`
+	EnableAlarms                bool                         `json:"enable_alarms,omitempty" yaml:"enable_alarms,omitempty" required:"false" doc:"Enable alarms when users or groups are exceeding their limit"`
+	EnableEmailProviders        bool                         `json:"enable_email_providers,omitempty" yaml:"enable_email_providers,omitempty" required:"false" doc:"Enable this setting to query Active Directory and LDAP services for user emails when sending userquota alert emails. If enabled, the provider query is the first priority source for a user's email. If a user's email is not found on the provider, a global email suffix is used if configured in cluster settings. If no suffix is set, default_email is used."`
+	GracePeriod                 string                       `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	GroupQuotas                 *[]string                    `json:"group_quotas,omitempty" yaml:"group_quotas,omitempty" required:"false" doc:""`
+	Guid                        string                       `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
+	HardLimit                   int64                        `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage space usage limit beyond which no writes are allowed."`
+	HardLimitInodes             int64                        `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path beyond which no writes will be allowed. A file with multiple hardlinks is counted only once."`
+	Id                          int64                        `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Internal                    bool                         `json:"internal,omitempty" yaml:"internal,omitempty" required:"false" doc:""`
+	IsPhysicalQuota             bool                         `json:"is_physical_quota,omitempty" yaml:"is_physical_quota,omitempty" required:"false" doc:"Set to true to Limit by Physical Capacity. Cannot be updated."`
+	IsUserQuota                 bool                         `json:"is_user_quota,omitempty" yaml:"is_user_quota,omitempty" required:"false" doc:"Set to true to enable user and group quotas. False by default."`
+	LastUserQuotasUpdate        string                       `json:"last_user_quotas_update,omitempty" yaml:"last_user_quotas_update,omitempty" required:"false" doc:"Time of last user quota update"`
+	Name                        string                       `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The name"`
+	NumBlockedUsers             int64                        `json:"num_blocked_users,omitempty" yaml:"num_blocked_users,omitempty" required:"false" doc:"The number of users that are blocked from writing to the quota path due to exceeding a hard user/group quota limit."`
+	NumExceededUsers            int64                        `json:"num_exceeded_users,omitempty" yaml:"num_exceeded_users,omitempty" required:"false" doc:"The number of users that have exceeded a user quota"`
+	PercentCapacity             int64                        `json:"percent_capacity,omitempty" yaml:"percent_capacity,omitempty" required:"false" doc:"Percentage in use of the capacity hard limit"`
+	PercentInodes               int64                        `json:"percent_inodes,omitempty" yaml:"percent_inodes,omitempty" required:"false" doc:"Percentage in use of the hard limit on directories and unique files"`
+	PrettyGracePeriod           string                       `json:"pretty_grace_period,omitempty" yaml:"pretty_grace_period,omitempty" required:"false" doc:"Quota enforcement grace period expressed in human readable format as seconds, minutes, hours or days. Example: 12 days 43 minutes 43 seconds"`
+	PrettyGracePeriodExpiration string                       `json:"pretty_grace_period_expiration,omitempty" yaml:"pretty_grace_period_expiration,omitempty" required:"false" doc:"The time remaining until the end of the grace period, in human readable format. Displayed when soft limit is exceeded."`
+	PrettyState                 string                       `json:"pretty_state,omitempty" yaml:"pretty_state,omitempty" required:"false" doc:""`
+	Quotas                      *[]QuotaGroup_QuotasItem     `json:"quotas,omitempty" yaml:"quotas,omitempty" required:"false" doc:""`
+	QuotasCount                 int64                        `json:"quotas_count,omitempty" yaml:"quotas_count,omitempty" required:"false" doc:""`
+	SoftLimit                   int64                        `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Storage usage limit at which warnings of exceeding the quota are issued."`
+	SoftLimitInodes             int64                        `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path at which warnings of exceeding the quota will be issued. A file with multiple hardlinks is counted only once."`
+	State                       string                       `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Quota state"`
+	SyncState                   string                       `json:"sync_state,omitempty" yaml:"sync_state,omitempty" required:"false" doc:""`
+	SystemId                    int64                        `json:"system_id,omitempty" yaml:"system_id,omitempty" required:"false" doc:""`
+	TenantId                    int64                        `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	TenantName                  string                       `json:"tenant_name,omitempty" yaml:"tenant_name,omitempty" required:"false" doc:"Tenant Name"`
+	TimeToBlock                 string                       `json:"time_to_block,omitempty" yaml:"time_to_block,omitempty" required:"false" doc:"The time remaining until the end of the grace period. Displayed when soft limit is exceeded."`
+	Title                       string                       `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:"Quota name"`
+	Url                         string                       `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Endpoint URL for API operations on the quota"`
+	UsedCapacity                int64                        `json:"used_capacity,omitempty" yaml:"used_capacity,omitempty" required:"false" doc:"Used capacity in bytes"`
+	UsedCapacityTb              float32                      `json:"used_capacity_tb,omitempty" yaml:"used_capacity_tb,omitempty" required:"false" doc:"Used capacity in TB"`
+	UsedEffectiveCapacity       int64                        `json:"used_effective_capacity,omitempty" yaml:"used_effective_capacity,omitempty" required:"false" doc:"Used effective capacity in bytes"`
+	UsedEffectiveCapacityTb     float32                      `json:"used_effective_capacity_tb,omitempty" yaml:"used_effective_capacity_tb,omitempty" required:"false" doc:"Used effective capacity in TB"`
+	UsedInodes                  int64                        `json:"used_inodes,omitempty" yaml:"used_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path"`
+	UsedLimitedCapacity         int64                        `json:"used_limited_capacity,omitempty" yaml:"used_limited_capacity,omitempty" required:"false" doc:""`
+	UserQuotas                  *[]string                    `json:"user_quotas,omitempty" yaml:"user_quotas,omitempty" required:"false" doc:"An array of user quota rule objects. A user quota rule overrides a default user quota rule for the specified user."`
 }
 
 // Component_Rack represents the OpenAPI component schema
@@ -2985,28 +3592,29 @@ type Component_ReplicationRestorePoint struct {
 // Component_ReplicationStream represents the OpenAPI component schema
 // Component: #/components/schemas/ReplicationStream
 type Component_ReplicationStream struct {
-	Bw                    int64   `json:"bw,omitempty" yaml:"bw,omitempty" required:"false" doc:"Replication Bandwidth"`
-	Capabilities          string  `json:"capabilities,omitempty" yaml:"capabilities,omitempty" required:"false" doc:"Indicates if the replication stream is a global access stream or an async replication stream."`
-	Enabled               bool    `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"start/pause replication"`
-	Guid                  string  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"guid"`
-	Id                    int64   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	Internal              bool    `json:"internal,omitempty" yaml:"internal,omitempty" required:"false" doc:""`
-	IsManualPriorityScore bool    `json:"is_manual_priority_score,omitempty" yaml:"is_manual_priority_score,omitempty" required:"false" doc:"Indicates whether the priority score is set manually by a user."`
-	Name                  string  `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	PriorityNumber        int64   `json:"priority_number,omitempty" yaml:"priority_number,omitempty" required:"false" doc:"Priority of replication job. A lower number means higher priority."`
-	PriorityScore         float64 `json:"priority_score,omitempty" yaml:"priority_score,omitempty" required:"false" doc:"Indicates how close replication is to missing its RPO in relation to their current interval. A lower score means a higher priority."`
-	ProtectedPathGuid     string  `json:"protected_path_guid,omitempty" yaml:"protected_path_guid,omitempty" required:"false" doc:"protected path guid"`
-	ProtectedPathId       int64   `json:"protected_path_id,omitempty" yaml:"protected_path_id,omitempty" required:"false" doc:"protected path id"`
-	ProtectionPolicy      string  `json:"protection_policy,omitempty" yaml:"protection_policy,omitempty" required:"false" doc:"protection policy id"`
-	RemoteTargetId        int64   `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:"Remote target ID for streams with GN capability."`
-	RemoteTargetName      string  `json:"remote_target_name,omitempty" yaml:"remote_target_name,omitempty" required:"false" doc:"Remote target name for streams with GN capability."`
-	RemoteTenantGuid      string  `json:"remote_tenant_guid,omitempty" yaml:"remote_tenant_guid,omitempty" required:"false" doc:"remote tenant guid"`
-	RemoteTenantName      string  `json:"remote_tenant_name,omitempty" yaml:"remote_tenant_name,omitempty" required:"false" doc:"remote tenant name"`
-	ReplicationGroupId    int64   `json:"replication_group_id,omitempty" yaml:"replication_group_id,omitempty" required:"false" doc:"replication group id"`
-	ReplicationPolicy     string  `json:"replication_policy,omitempty" yaml:"replication_policy,omitempty" required:"false" doc:"replication policy id"`
-	Role                  string  `json:"role,omitempty" yaml:"role,omitempty" required:"false" doc:"current role in the replication"`
-	SourceDir             string  `json:"source_dir,omitempty" yaml:"source_dir,omitempty" required:"false" doc:"path to replicate"`
-	State                 string  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"state"`
+	Bw                     int64   `json:"bw,omitempty" yaml:"bw,omitempty" required:"false" doc:"Replication Bandwidth"`
+	Capabilities           string  `json:"capabilities,omitempty" yaml:"capabilities,omitempty" required:"false" doc:"Indicates if the replication stream is a global access stream or an async replication stream."`
+	Enabled                bool    `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"start/pause replication"`
+	Guid                   string  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"guid"`
+	Id                     int64   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Internal               bool    `json:"internal,omitempty" yaml:"internal,omitempty" required:"false" doc:""`
+	IsManualPriorityScore  bool    `json:"is_manual_priority_score,omitempty" yaml:"is_manual_priority_score,omitempty" required:"false" doc:"Indicates whether the priority score is set manually by a user."`
+	Name                   string  `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	PriorityNumber         int64   `json:"priority_number,omitempty" yaml:"priority_number,omitempty" required:"false" doc:"Priority of replication job. A lower number means higher priority."`
+	PriorityScore          float64 `json:"priority_score,omitempty" yaml:"priority_score,omitempty" required:"false" doc:"Indicates how close replication is to missing its RPO in relation to their current interval. A lower score means a higher priority."`
+	ProtectedPathGuid      string  `json:"protected_path_guid,omitempty" yaml:"protected_path_guid,omitempty" required:"false" doc:"protected path guid"`
+	ProtectedPathId        int64   `json:"protected_path_id,omitempty" yaml:"protected_path_id,omitempty" required:"false" doc:"protected path id"`
+	ProtectionPolicy       string  `json:"protection_policy,omitempty" yaml:"protection_policy,omitempty" required:"false" doc:"protection policy id"`
+	RemoteTargetId         int64   `json:"remote_target_id,omitempty" yaml:"remote_target_id,omitempty" required:"false" doc:"Remote target ID for streams with GN capability."`
+	RemoteTargetName       string  `json:"remote_target_name,omitempty" yaml:"remote_target_name,omitempty" required:"false" doc:"Remote target name for streams with GN capability."`
+	RemoteTenantGuid       string  `json:"remote_tenant_guid,omitempty" yaml:"remote_tenant_guid,omitempty" required:"false" doc:"remote tenant guid"`
+	RemoteTenantName       string  `json:"remote_tenant_name,omitempty" yaml:"remote_tenant_name,omitempty" required:"false" doc:"remote tenant name"`
+	ReplicationGroupId     int64   `json:"replication_group_id,omitempty" yaml:"replication_group_id,omitempty" required:"false" doc:"replication group id"`
+	ReplicationPolicy      string  `json:"replication_policy,omitempty" yaml:"replication_policy,omitempty" required:"false" doc:"replication policy id"`
+	Role                   string  `json:"role,omitempty" yaml:"role,omitempty" required:"false" doc:"current role in the replication"`
+	SourceDir              string  `json:"source_dir,omitempty" yaml:"source_dir,omitempty" required:"false" doc:"path to replicate"`
+	State                  string  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"state"`
+	ViewReplicationEnabled bool    `json:"view_replication_enabled,omitempty" yaml:"view_replication_enabled,omitempty" required:"false" doc:"Indicates if view replication is enabled"`
 }
 
 // Component_ReplicationTarget represents the OpenAPI component schema
@@ -3119,6 +3727,24 @@ type Component_Role struct {
 	TenantId    int64                `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 	TenantNames string               `json:"tenant_names,omitempty" yaml:"tenant_names,omitempty" required:"false" doc:"Tenant names for the role"`
 	Tenants     *[]int64             `json:"tenants,omitempty" yaml:"tenants,omitempty" required:"false" doc:"Tenants for the role"`
+}
+
+// Component_RotateBaseCertificatesParams represents the OpenAPI component schema
+// Component: #/components/schemas/RotateBaseCertificatesParams
+type Component_RotateBaseCertificatesParams struct {
+	IntermediateCertificate string `json:"intermediate_certificate,omitempty" yaml:"intermediate_certificate,omitempty" required:"false" doc:"RKE2 intermediate certificate. Must be provided together with root_certificate and intermediate_key."`
+	IntermediateKey         string `json:"intermediate_key,omitempty" yaml:"intermediate_key,omitempty" required:"false" doc:"RKE2 intermediate private key. Must be provided together with root_certificate and intermediate_certificate."`
+	RootCertificate         string `json:"root_certificate,omitempty" yaml:"root_certificate,omitempty" required:"false" doc:"RKE2 root certificate. Must be provided together with intermediate_certificate and intermediate_key."`
+}
+
+// Component_S3CORSRuleData represents the OpenAPI component schema
+// Component: #/components/schemas/S3CORSRuleData
+type Component_S3CORSRuleData struct {
+	AllowedMethods *[]string `json:"allowed_methods,omitempty" yaml:"allowed_methods,omitempty" required:"true" doc:"CORS allowed methods"`
+	AllowedOrigins *[]string `json:"allowed_origins,omitempty" yaml:"allowed_origins,omitempty" required:"true" doc:"CORS allowed origins"`
+	AllowedHeaders *[]string `json:"allowed_headers,omitempty" yaml:"allowed_headers,omitempty" required:"false" doc:"CORS allowed headers"`
+	ExposeHeaders  *[]string `json:"expose_headers,omitempty" yaml:"expose_headers,omitempty" required:"false" doc:"Headers the browser can expose to client-side"`
+	MaxAgeSeconds  int64     `json:"max_age_seconds,omitempty" yaml:"max_age_seconds,omitempty" required:"false" doc:"Time in seconds to cache the preflight response"`
 }
 
 // Component_S3Key represents the OpenAPI component schema
@@ -3293,6 +3919,7 @@ type Component_Snapshot struct {
 	Indestructible       bool    `json:"indestructible,omitempty" yaml:"indestructible,omitempty" required:"false" doc:"Protected from accidental or malicious deletion by the indestructibility feature. Authorized unlocking of the cluster's indestructibility mechanism is required to do any of the following: deleting the snapshot, shortening its expiration time or disabling this setting."`
 	Locked               bool    `json:"locked,omitempty" yaml:"locked,omitempty" required:"false" doc:"Lock the snapshot from being deleted by cleanup"`
 	Policy               string  `json:"policy,omitempty" yaml:"policy,omitempty" required:"false" doc:"Associated snapshot policy"`
+	PolicyId             int64   `json:"policy_id,omitempty" yaml:"policy_id,omitempty" required:"false" doc:"Associated snapshot policy ID"`
 	ProtectionPolicy     string  `json:"protection_policy,omitempty" yaml:"protection_policy,omitempty" required:"false" doc:"Protection Policy Name"`
 	ProtectionPolicyId   int64   `json:"protection_policy_id,omitempty" yaml:"protection_policy_id,omitempty" required:"false" doc:""`
 	State                string  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Snapshot stats"`
@@ -3355,43 +3982,54 @@ type Component_SubnetManager struct {
 // Component_SupportBundle represents the OpenAPI component schema
 // Component: #/components/schemas/SupportBundle
 type Component_SupportBundle struct {
-	Aggregated      bool    `json:"aggregated,omitempty" yaml:"aggregated,omitempty" required:"false" doc:"Aggregate harvests into final bundle (deprecated)"`
-	AstronArgs      string  `json:"astron_args,omitempty" yaml:"astron_args,omitempty" required:"false" doc:""`
-	BundleFile      string  `json:"bundle_file,omitempty" yaml:"bundle_file,omitempty" required:"false" doc:""`
-	BundleSize      string  `json:"bundle_size,omitempty" yaml:"bundle_size,omitempty" required:"false" doc:""`
-	BundleUrl       string  `json:"bundle_url,omitempty" yaml:"bundle_url,omitempty" required:"false" doc:"URL to access/download support bundle file"`
-	Callhome        bool    `json:"callhome,omitempty" yaml:"callhome,omitempty" required:"false" doc:""`
-	Cluster         string  `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
-	ClusterId       int64   `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
-	CnodeIds        string  `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Array of IDs of specific CNodes from which logs are collected. If not specified, logs are collected from all CNodes."`
-	CnodesOnly      bool    `json:"cnodes_only,omitempty" yaml:"cnodes_only,omitempty" required:"false" doc:""`
-	Core            string  `json:"core,omitempty" yaml:"core,omitempty" required:"false" doc:""`
-	CreateDatetime  string  `json:"create_datetime,omitempty" yaml:"create_datetime,omitempty" required:"false" doc:""`
-	Created         string  `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:"Bundle creation time"`
-	DeleteAfterSend bool    `json:"delete_after_send,omitempty" yaml:"delete_after_send,omitempty" required:"false" doc:"Delete the bundle immediately after successfully uploading"`
-	DnodeIds        string  `json:"dnode_ids,omitempty" yaml:"dnode_ids,omitempty" required:"false" doc:"Array of IDs of specific DNodes from which logs are collected. If not specified, logs are collected from all DNodes."`
-	DnodesOnly      bool    `json:"dnodes_only,omitempty" yaml:"dnodes_only,omitempty" required:"false" doc:""`
-	EndTime         string  `json:"end_time,omitempty" yaml:"end_time,omitempty" required:"false" doc:"End time of logs in UTC+3"`
-	Guid            string  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	HubbleArgs      string  `json:"hubble_args,omitempty" yaml:"hubble_args,omitempty" required:"false" doc:""`
-	Id              int64   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	Level           string  `json:"level,omitempty" yaml:"level,omitempty" required:"false" doc:"Bundle level e.g. small, medium, large"`
-	LunaArgs        string  `json:"luna_args,omitempty" yaml:"luna_args,omitempty" required:"false" doc:""`
-	Management      bool    `json:"management,omitempty" yaml:"management,omitempty" required:"false" doc:""`
-	MaxSize         float32 `json:"max_size,omitempty" yaml:"max_size,omitempty" required:"false" doc:"Trace files bundle size limit in GB for each node"`
-	MemTraces       bool    `json:"mem_traces,omitempty" yaml:"mem_traces,omitempty" required:"false" doc:""`
-	Metrics         bool    `json:"metrics,omitempty" yaml:"metrics,omitempty" required:"false" doc:""`
-	Name            string  `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	Obfuscated      bool    `json:"obfuscated,omitempty" yaml:"obfuscated,omitempty" required:"false" doc:"True if the bundle is obfuscated. If obfuscated, all bundled objects are converted to text and obfuscated. Any data that cannot be converted to text is not included in the bundle. The following types of information are replaced with a non-reversible hash: file and directory names, IP addresses, host names, user names, passwords, MAC addresses."`
-	Performance     bool    `json:"performance,omitempty" yaml:"performance,omitempty" required:"false" doc:""`
-	Platform        bool    `json:"platform,omitempty" yaml:"platform,omitempty" required:"false" doc:""`
-	Prefix          string  `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Identifying label included in the bundle file name as a prefix"`
-	Preset          string  `json:"preset,omitempty" yaml:"preset,omitempty" required:"false" doc:"Type of predefined preset bundle"`
-	StartTime       string  `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Start time of logs in UTC+3"`
-	State           string  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"State of the bundle"`
-	Text            bool    `json:"text,omitempty" yaml:"text,omitempty" required:"false" doc:"Include only textual logs in bundle"`
-	Traces          bool    `json:"traces,omitempty" yaml:"traces,omitempty" required:"false" doc:""`
-	Url             string  `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+	AccessKey       string   `json:"access_key,omitempty" yaml:"access_key,omitempty" required:"false" doc:"S3 Bucket access key"`
+	Aggregated      bool     `json:"aggregated,omitempty" yaml:"aggregated,omitempty" required:"false" doc:"Aggregate harvests into final bundle (deprecated)"`
+	AstronArgs      string   `json:"astron_args,omitempty" yaml:"astron_args,omitempty" required:"false" doc:""`
+	BucketName      string   `json:"bucket_name,omitempty" yaml:"bucket_name,omitempty" required:"false" doc:"S3 Bucket for upload"`
+	BucketSubdir    string   `json:"bucket_subdir,omitempty" yaml:"bucket_subdir,omitempty" required:"false" doc:"Sub-directory in support bucket"`
+	BundleFile      string   `json:"bundle_file,omitempty" yaml:"bundle_file,omitempty" required:"false" doc:""`
+	BundleSize      int64    `json:"bundle_size,omitempty" yaml:"bundle_size,omitempty" required:"false" doc:"Bundle size in bytes"`
+	BundleUrl       string   `json:"bundle_url,omitempty" yaml:"bundle_url,omitempty" required:"false" doc:"URL to access/download support bundle file"`
+	Callhome        bool     `json:"callhome,omitempty" yaml:"callhome,omitempty" required:"false" doc:""`
+	Cluster         string   `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"Parent Cluster"`
+	ClusterId       int64    `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	CnodeIds        *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Array of IDs of specific CNodes from which logs are collected. If not specified, logs are collected from all CNodes."`
+	CnodeIdsArray   *[]int64 `json:"cnode_ids_array,omitempty" yaml:"cnode_ids_array,omitempty" required:"false" doc:"Resolved CNode IDs included in the bundle harvest"`
+	CnodesOnly      bool     `json:"cnodes_only,omitempty" yaml:"cnodes_only,omitempty" required:"false" doc:""`
+	Core            bool     `json:"core,omitempty" yaml:"core,omitempty" required:"false" doc:""`
+	CreateDatetime  string   `json:"create_datetime,omitempty" yaml:"create_datetime,omitempty" required:"false" doc:""`
+	Created         string   `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:"Bundle creation time"`
+	DeleteAfterSend bool     `json:"delete_after_send,omitempty" yaml:"delete_after_send,omitempty" required:"false" doc:"Delete the bundle immediately after successfully uploading"`
+	DnodeIds        *[]int64 `json:"dnode_ids,omitempty" yaml:"dnode_ids,omitempty" required:"false" doc:"Array of IDs of specific DNodes from which logs are collected. If not specified, logs are collected from all DNodes."`
+	DnodeIdsArray   *[]int64 `json:"dnode_ids_array,omitempty" yaml:"dnode_ids_array,omitempty" required:"false" doc:"Resolved DNode IDs included in the bundle harvest"`
+	DnodesOnly      bool     `json:"dnodes_only,omitempty" yaml:"dnodes_only,omitempty" required:"false" doc:""`
+	EndTime         string   `json:"end_time,omitempty" yaml:"end_time,omitempty" required:"false" doc:"End time of logs in UTC+3"`
+	Guid            string   `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	HubbleArgs      string   `json:"hubble_args,omitempty" yaml:"hubble_args,omitempty" required:"false" doc:""`
+	Id              int64    `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Level           string   `json:"level,omitempty" yaml:"level,omitempty" required:"false" doc:"Bundle level e.g. small, medium, large"`
+	LunaArgs        string   `json:"luna_args,omitempty" yaml:"luna_args,omitempty" required:"false" doc:""`
+	Management      bool     `json:"management,omitempty" yaml:"management,omitempty" required:"false" doc:""`
+	MaxSize         float32  `json:"max_size,omitempty" yaml:"max_size,omitempty" required:"false" doc:"Trace files bundle size limit in GB for each node"`
+	MemTraces       bool     `json:"mem_traces,omitempty" yaml:"mem_traces,omitempty" required:"false" doc:""`
+	Metrics         bool     `json:"metrics,omitempty" yaml:"metrics,omitempty" required:"false" doc:""`
+	Name            string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Obfuscated      bool     `json:"obfuscated,omitempty" yaml:"obfuscated,omitempty" required:"false" doc:"True if the bundle is obfuscated. If obfuscated, all bundled objects are converted to text and obfuscated. Any data that cannot be converted to text is not included in the bundle. The following types of information are replaced with a non-reversible hash: file and directory names, IP addresses, host names, user names, passwords, MAC addresses."`
+	OnNfs           bool     `json:"on_nfs,omitempty" yaml:"on_nfs,omitempty" required:"false" doc:"True if the bundle is stored on NFS"`
+	Performance     bool     `json:"performance,omitempty" yaml:"performance,omitempty" required:"false" doc:""`
+	Platform        bool     `json:"platform,omitempty" yaml:"platform,omitempty" required:"false" doc:""`
+	PositionInQueue int64    `json:"position_in_queue,omitempty" yaml:"position_in_queue,omitempty" required:"false" doc:"Position of the support bundle in the queue"`
+	Prefix          string   `json:"prefix,omitempty" yaml:"prefix,omitempty" required:"false" doc:"Identifying label included in the bundle file name as a prefix"`
+	Preset          string   `json:"preset,omitempty" yaml:"preset,omitempty" required:"false" doc:"Type of predefined preset bundle"`
+	SecretKey       string   `json:"secret_key,omitempty" yaml:"secret_key,omitempty" required:"false" doc:"S3 Bucket secret key"`
+	SendNow         bool     `json:"send_now,omitempty" yaml:"send_now,omitempty" required:"false" doc:"Upload support bundle after creation"`
+	StartTime       string   `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Start time of logs in UTC+3"`
+	State           string   `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"State of the bundle"`
+	Text            bool     `json:"text,omitempty" yaml:"text,omitempty" required:"false" doc:"True if only textual logs are included in the bundle"`
+	Traces          bool     `json:"traces,omitempty" yaml:"traces,omitempty" required:"false" doc:""`
+	UploadViaVms    bool     `json:"upload_via_vms,omitempty" yaml:"upload_via_vms,omitempty" required:"false" doc:""`
+	Url             string   `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:""`
+	VolumeSize      int64    `json:"volume_size,omitempty" yaml:"volume_size,omitempty" required:"false" doc:""`
 }
 
 // Component_SupportedDrive represents the OpenAPI component schema
@@ -3463,6 +4101,41 @@ type Component_Switch struct {
 	SwitchType        string `json:"switch_type,omitempty" yaml:"switch_type,omitempty" required:"false" doc:""`
 	Title             string `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:"Switch title"`
 	Username          string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:""`
+}
+
+// Component_TLSCertificate represents the OpenAPI component schema
+// Component: #/components/schemas/TLSCertificate
+type Component_TLSCertificate struct {
+	CaCertificateName     string                `json:"ca_certificate_name,omitempty" yaml:"ca_certificate_name,omitempty" required:"false" doc:""`
+	CaCertificateUploaded string                `json:"ca_certificate_uploaded,omitempty" yaml:"ca_certificate_uploaded,omitempty" required:"false" doc:""`
+	Created               string                `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:""`
+	ExpiresOn             string                `json:"expires_on,omitempty" yaml:"expires_on,omitempty" required:"false" doc:""`
+	Id                    int64                 `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Protocols             *[]string             `json:"protocols,omitempty" yaml:"protocols,omitempty" required:"false" doc:"Protocols for this tls certificate."`
+	RevocationsExist      bool                  `json:"revocations_exist,omitempty" yaml:"revocations_exist,omitempty" required:"false" doc:""`
+	RevocationsExpireOn   string                `json:"revocations_expire_on,omitempty" yaml:"revocations_expire_on,omitempty" required:"false" doc:""`
+	RevocationsName       string                `json:"revocations_name,omitempty" yaml:"revocations_name,omitempty" required:"false" doc:""`
+	RevocationsUploaded   string                `json:"revocations_uploaded,omitempty" yaml:"revocations_uploaded,omitempty" required:"false" doc:""`
+	Tenant                TLSCertificate_Tenant `json:"tenant,omitempty" yaml:"tenant,omitempty" required:"false" doc:""`
+	TenantAssociateParam  string                `json:"tenant_associate_param,omitempty" yaml:"tenant_associate_param,omitempty" required:"false" doc:""`
+}
+
+// Component_TLSCertificateProtocolList represents the OpenAPI component schema
+// Component: #/components/schemas/TLSCertificateProtocolList
+type Component_TLSCertificateProtocolList struct{}
+
+// Component_TLSCertificateProtocols represents the OpenAPI component schema
+// Component: #/components/schemas/TLSCertificateProtocols
+type Component_TLSCertificateProtocols struct{}
+
+// Component_TLSCertificateUploadParams represents the OpenAPI component schema
+// Component: #/components/schemas/TLSCertificateUploadParams
+type Component_TLSCertificateUploadParams struct {
+	CaCertificateName    string    `json:"ca_certificate_name,omitempty" yaml:"ca_certificate_name,omitempty" required:"false" doc:"Certificate name (default - the file name)."`
+	Protocols            *[]string `json:"protocols,omitempty" yaml:"protocols,omitempty" required:"false" doc:"Protocols for this tls certificate."`
+	RevocationsName      string    `json:"revocations_name,omitempty" yaml:"revocations_name,omitempty" required:"false" doc:"Revocation name (default - the file name)."`
+	TenantAssociateParam string    `json:"tenant_associate_param,omitempty" yaml:"tenant_associate_param,omitempty" required:"false" doc:""`
+	TenantId             int64     `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 }
 
 // Component_Table represents the OpenAPI component schema
@@ -3621,6 +4294,7 @@ type Component_Tenant struct {
 	LocalProviderTitle                   string                 `json:"local_provider_title,omitempty" yaml:"local_provider_title,omitempty" required:"false" doc:"The local provider associated with the tenant"`
 	LoginNamePrimaryProvider             string                 `json:"login_name_primary_provider,omitempty" yaml:"login_name_primary_provider,omitempty" required:"false" doc:"Primary provider for the user's login name"`
 	MaxViews                             int64                  `json:"max_views,omitempty" yaml:"max_views,omitempty" required:"false" doc:"Max views we can create on this tenant (0:unlimted as default)"`
+	MtlsIdentifier                       string                 `json:"mtls_identifier,omitempty" yaml:"mtls_identifier,omitempty" required:"false" doc:"The mTLS identifier of the tenant"`
 	NisProviderId                        int64                  `json:"nis_provider_id,omitempty" yaml:"nis_provider_id,omitempty" required:"false" doc:"NIS provider ID"`
 	NisTitle                             string                 `json:"nis_title,omitempty" yaml:"nis_title,omitempty" required:"false" doc:""`
 	OidcProviderId                       int64                  `json:"oidc_provider_id,omitempty" yaml:"oidc_provider_id,omitempty" required:"false" doc:"OIDC provider ID"`
@@ -3662,6 +4336,29 @@ type Component_TenantIdBody struct {
 	TenantId int64 `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
 }
 
+// Component_TenantMetricLabel represents the OpenAPI component schema
+// Component: #/components/schemas/TenantMetricLabel
+type Component_TenantMetricLabel struct {
+	DefaultValue string `json:"default_value,omitempty" yaml:"default_value,omitempty" required:"true" doc:"The default value for this metric label."`
+	Description  string `json:"description,omitempty" yaml:"description,omitempty" required:"true" doc:"Description of the metric label purpose."`
+	Key          string `json:"key,omitempty" yaml:"key,omitempty" required:"true" doc:"The unique key for the metric label."`
+	CreatedAt    string `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label was created."`
+	Id           int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+}
+
+// Component_TenantMetricLabelValue represents the OpenAPI component schema
+// Component: #/components/schemas/TenantMetricLabelValue
+type Component_TenantMetricLabelValue struct {
+	Value     string                       `json:"value,omitempty" yaml:"value,omitempty" required:"true" doc:"The value for this metric label for the tenant."`
+	CreatedAt string                       `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the metric label value was created."`
+	Id        int64                        `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Label     TenantMetricLabelValue_Label `json:"label,omitempty" yaml:"label,omitempty" required:"false" doc:""`
+}
+
+// Component_TenantMetricLabelValues represents the OpenAPI component schema
+// Component: #/components/schemas/TenantMetricLabelValues
+type Component_TenantMetricLabelValues struct{}
+
 // Component_Topic represents the OpenAPI component schema
 // Component: #/components/schemas/Topic
 type Component_Topic struct {
@@ -3698,6 +4395,14 @@ type Component_TopicModifyParams struct {
 	MessageTimestampType        string `json:"message_timestamp_type,omitempty" yaml:"message_timestamp_type,omitempty" required:"false" doc:"Message timestamp type"`
 	NewName                     string `json:"new_name,omitempty" yaml:"new_name,omitempty" required:"false" doc:"New name of the topic"`
 	RetentionMs                 int64  `json:"retention_ms,omitempty" yaml:"retention_ms,omitempty" required:"false" doc:"Retention period in milli-seconds"`
+}
+
+// Component_TransformNode represents the OpenAPI component schema
+// Component: #/components/schemas/TransformNode
+type Component_TransformNode struct {
+	Args  *[]TransformNode_ArgsItem `json:"args,omitempty" yaml:"args,omitempty" required:"true" doc:""`
+	Type  string                    `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
+	Value string                    `json:"value,omitempty" yaml:"value,omitempty" required:"true" doc:""`
 }
 
 // Component_TruncatedQOS represents the OpenAPI component schema
@@ -3894,6 +4599,7 @@ type Component_VIPPool struct {
 	Title                   string      `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:"IP range of the VIP pool"`
 	Url                     string      `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"The VIP Pool's endpoint URL for API operations"`
 	VastAsn                 int64       `json:"vast_asn,omitempty" yaml:"vast_asn,omitempty" required:"false" doc:"The cluster's ASN. Applicable only if enable_l3 is true."`
+	VipAllocation           string      `json:"vip_allocation,omitempty" yaml:"vip_allocation,omitempty" required:"false" doc:"VIP allocation type"`
 	Vlan                    int64       `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:"VIPPool VLAN, if the VIP pool is tagged with a specific VLAN. The VIP pool is exposed only to the specified VLAN on the client data network"`
 	VmsPreferred            bool        `json:"vms_preferred,omitempty" yaml:"vms_preferred,omitempty" required:"false" doc:"If true, CNodes participating in the vip pool are preferred in VMS host election."`
 }
@@ -3961,6 +4667,14 @@ type Component_VTask struct {
 	StartTime        string `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Task start time"`
 	State            string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
 	TimeoutInSeconds int64  `json:"timeout_in_seconds,omitempty" yaml:"timeout_in_seconds,omitempty" required:"false" doc:"Task should timeout after X seconds."`
+}
+
+// Component_ValidateComputeClusterCertificatesParams represents the OpenAPI component schema
+// Component: #/components/schemas/ValidateComputeClusterCertificatesParams
+type Component_ValidateComputeClusterCertificatesParams struct {
+	IntermediateCertificate string `json:"intermediate_certificate,omitempty" yaml:"intermediate_certificate,omitempty" required:"true" doc:"PEM-encoded intermediate CA certificate"`
+	IntermediateKey         string `json:"intermediate_key,omitempty" yaml:"intermediate_key,omitempty" required:"true" doc:"PEM-encoded intermediate private key"`
+	RootCertificate         string `json:"root_certificate,omitempty" yaml:"root_certificate,omitempty" required:"true" doc:"PEM-encoded root CA certificate"`
 }
 
 // Component_ValuePerMetric represents the OpenAPI component schema
@@ -4079,6 +4793,7 @@ type Component_View struct {
 	Alias                         string                         `json:"alias,omitempty" yaml:"alias,omitempty" required:"false" doc:"Alias for NFS export, must start with '/' and only ASCII characters are allowed. If configured, this supersedes the exposed NFS export path"`
 	AllowAnonymousAccess          bool                           `json:"allow_anonymous_access,omitempty" yaml:"allow_anonymous_access,omitempty" required:"false" doc:"Allow S3 anonymous access"`
 	AllowS3AnonymousAccess        bool                           `json:"allow_s3_anonymous_access,omitempty" yaml:"allow_s3_anonymous_access,omitempty" required:"false" doc:"Allow S3 anonymous access"`
+	AllowedDelegations            string                         `json:"allowed_delegations,omitempty" yaml:"allowed_delegations,omitempty" required:"false" doc:"Which types of NFSv4 file delegations are enabled for this view. - 'NONE' means NFSv4 file delegations are disabled. - 'READ' means read type NFSv4 file delegations can be granted to a client opening a file. - 'WRITE' means write type NFSv4 file delegations can be granted to a client opening a file. - 'READ_WRITE' means both read and write type NFSv4 file delegations can be granted to a client opening a file. - 'USE_TENANT_ALLOWED_DELEG' (default) means the view inherits the tenant’s 'allowed_delegations'. **Important:** If the tenant has 'DISABLED' delegations, this overrides the view entirely. The effective delegations value for this view is forced to 'NONE', regardless of the view’s setting."`
 	AutoCommit                    string                         `json:"auto_commit,omitempty" yaml:"auto_commit,omitempty" required:"false" doc:"Applicable if locking is enabled. Sets the auto-commit time for files that are locked automatically. These files are locked automatically after the auto-commit period elapses from the time the file is saved. Files locked automatically are locked for the default-retention-period, after which they are unlocked. Specify as an integer value followed by a letter for the unit (h - hours, d - days, y - years). Example: 2h (2 hours)."`
 	Bucket                        string                         `json:"bucket,omitempty" yaml:"bucket,omitempty" required:"false" doc:"S3 Bucket name"`
 	BucketCreators                *[]string                      `json:"bucket_creators,omitempty" yaml:"bucket_creators,omitempty" required:"false" doc:"For S3 endpoint buckets, this is a list of users whose bucket create requests use this view."`
@@ -4094,11 +4809,13 @@ type Component_View struct {
 	Created                       string                         `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:""`
 	DefaultRetentionPeriod        string                         `json:"default_retention_period,omitempty" yaml:"default_retention_period,omitempty" required:"false" doc:"Default retention period for objects in the bucket. Required if s3_locks_retention_mode is set to governance or compliance. Object versions that are placed in the bucket are automatically protected with the specified retention for the specified amount of time. Otherwise, by default, each object version has no automatic protection but can be configured with a retention period or legal hold. Specify as an integer followed by h for hours, d for days, m for months, or y for years. For example: 2d or 1y."`
 	Directory                     bool                           `json:"directory,omitempty" yaml:"directory,omitempty" required:"false" doc:"Create the directory if it does not exist"`
+	EffectiveAllowedDelegations   string                         `json:"effective_allowed_delegations,omitempty" yaml:"effective_allowed_delegations,omitempty" required:"false" doc:"The resolved NFSv4 delegation type that applies to the View. Resolution rules: - If the tenant's allowed delegations is 'DISABLED', the effective value is forced to 'NONE'. - Otherwise, if 'allowed_delegations' is 'USE_TENANT_ALLOWED_DELEG', the value is inherited from the Tenant's 'allowed_delegations'. - In all other cases, the effective value equals this object's own 'allowed_delegations'. This field shows the final delegation behavior observed by clients."`
 	EventNotifications            *[]View_EventNotificationsItem `json:"event_notifications,omitempty" yaml:"event_notifications,omitempty" required:"false" doc:""`
 	FilesRetentionMode            string                         `json:"files_retention_mode,omitempty" yaml:"files_retention_mode,omitempty" required:"false" doc:"Applicable if locking is enabled. The retention mode for new files. For views enabled for NFSv3 or SMB, if locking is enabled, files_retention_mode must be set to GOVERNANCE or COMPLIANCE. If the view is enabled for S3 and not for NFSv3 or SMB, files_retention_mode can be set to NONE. If GOVERNANCE, locked files cannot be deleted or changed. The Retention settings can be shortened or extended by users with sufficient permissions. If COMPLIANCE, locked files cannot be deleted or changed. Retention settings can be extended, but not shortened, by users with sufficient permissions. If NONE (S3 only), the retention mode is not set for the view; it is set individually for each object."`
 	Guid                          string                         `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 	HasBucketLoggingDestination   bool                           `json:"has_bucket_logging_destination,omitempty" yaml:"has_bucket_logging_destination,omitempty" required:"false" doc:"Has a destination bucket configured as a destination for S3 bucket logging"`
 	HasBucketLoggingSources       bool                           `json:"has_bucket_logging_sources,omitempty" yaml:"has_bucket_logging_sources,omitempty" required:"false" doc:"Is referenced by other S3 bucket views as the destination bucket for S3 bucket logging."`
+	HasNfs4Triggers               bool                           `json:"has_nfs4_triggers,omitempty" yaml:"has_nfs4_triggers,omitempty" required:"false" doc:"Whether NFSv4 triggers are currently enabled for this view"`
 	Id                            int64                          `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
 	IgnoreOos                     bool                           `json:"ignore_oos,omitempty" yaml:"ignore_oos,omitempty" required:"false" doc:""`
 	IndestructibleObjectDuration  int64                          `json:"indestructible_object_duration,omitempty" yaml:"indestructible_object_duration,omitempty" required:"false" doc:"Retention period for indestructible object mode, in days."`
@@ -4176,6 +4893,7 @@ type Component_ViewPolicy struct {
 	Id                                 int64                     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"ID"`
 	InheritParentModeBits              bool                      `json:"inherit_parent_mode_bits,omitempty" yaml:"inherit_parent_mode_bits,omitempty" required:"false" doc:"Enable NFS behavior of inheriting POSIX settings from the parent directory versus configured values."`
 	Internal                           bool                      `json:"internal,omitempty" yaml:"internal,omitempty" required:"false" doc:""`
+	IsBlockDefaultPolicy               bool                      `json:"is_block_default_policy,omitempty" yaml:"is_block_default_policy,omitempty" required:"false" doc:"Specifies whether to make this View Policy default for BLOCK"`
 	IsS3DefaultPolicy                  bool                      `json:"is_s3_default_policy,omitempty" yaml:"is_s3_default_policy,omitempty" required:"false" doc:"Specifies whether to make this View Policy default for S3"`
 	LogDeleted                         bool                      `json:"log_deleted,omitempty" yaml:"log_deleted,omitempty" required:"false" doc:"Log deleted files/dirs from trash dir"`
 	LogFullPath                        bool                      `json:"log_full_path,omitempty" yaml:"log_full_path,omitempty" required:"false" doc:"Log full path"`
@@ -4183,6 +4901,7 @@ type Component_ViewPolicy struct {
 	LogUsername                        bool                      `json:"log_username,omitempty" yaml:"log_username,omitempty" required:"false" doc:"Log username"`
 	NfsAllSquash                       *[]string                 `json:"nfs_all_squash,omitempty" yaml:"nfs_all_squash,omitempty" required:"false" doc:"Hosts with all squash policy"`
 	NfsCaseInsensitive                 bool                      `json:"nfs_case_insensitive,omitempty" yaml:"nfs_case_insensitive,omitempty" required:"false" doc:"Force case insensitivity for NFSv3 and NFSv4"`
+	NfsEnforceMtls                     bool                      `json:"nfs_enforce_mtls,omitempty" yaml:"nfs_enforce_mtls,omitempty" required:"false" doc:"Specifies whether we enforce mTLS authentication over NFS."`
 	NfsEnforceTls                      bool                      `json:"nfs_enforce_tls,omitempty" yaml:"nfs_enforce_tls,omitempty" required:"false" doc:"Accept NFSv3 and NFSv4 client mounts only if they are TLS-encrypted. Use only with Minimal Protection Level set to System or None."`
 	NfsEnforceTlsRelaxed               bool                      `json:"nfs_enforce_tls_relaxed,omitempty" yaml:"nfs_enforce_tls_relaxed,omitempty" required:"false" doc:"Whether to relax TLS enforcement by not requiring TLS for auxiliary NFSv3 sub-protocols | (MOUNT, NLM, NSM, RQUOTA, NFSACL)"`
 	NfsMinimalProtectionLevel          string                    `json:"nfs_minimal_protection_level,omitempty" yaml:"nfs_minimal_protection_level,omitempty" required:"false" doc:"Minimal Protection Level for NFSv4 client mounts: 'KRB_AUTH_ONLY' allows client mounts with Kerberos authentication only (using the RPCSEC_GSS authentication service), 'SYSTEM' allows client mounts using either the AUTH_SYS RCP security flavor (the traditional default NFS authentication scheme) or with Kerberos authentication, 'NONE' (default) allows client mounts with the AUTH_NONE (anonymous access), or AUTH_SYS RCP security flavors, or with Kerberos authentication."`
@@ -4235,6 +4954,7 @@ type Component_ViewPolicy struct {
 	Url                                string                    `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Endpoint URL for API operations on the view policy object"`
 	Use32bitFileid                     bool                      `json:"use_32bit_fileid,omitempty" yaml:"use_32bit_fileid,omitempty" required:"false" doc:"If true, the VAST Cluster's NFS server uses 32bit file IDs. This setting supports legacy 32-bit applications running over NFS."`
 	UseAuthProvider                    bool                      `json:"use_auth_provider,omitempty" yaml:"use_auth_provider,omitempty" required:"false" doc:"Not in use"`
+	VipPools                           *[]int64                  `json:"vip_pools,omitempty" yaml:"vip_pools,omitempty" required:"false" doc:"Comma separated vip pool ids. Restricts view access to specified VIP pools."`
 }
 
 // Component_ViewsCheckPermissionsTemplatesResponse represents the OpenAPI component schema
@@ -4242,6 +4962,51 @@ type Component_ViewPolicy struct {
 type Component_ViewsCheckPermissionsTemplatesResponse struct {
 	TemplateDirPath  ViewsCheckPermissionsTemplatesResponse_TemplateDirPath  `json:"template_dir_path,omitempty" yaml:"template_dir_path,omitempty" required:"false" doc:""`
 	TemplateFilePath ViewsCheckPermissionsTemplatesResponse_TemplateFilePath `json:"template_file_path,omitempty" yaml:"template_file_path,omitempty" required:"false" doc:""`
+}
+
+// Component_VippoolAllocateParams represents the OpenAPI component schema
+// Component: #/components/schemas/VippoolAllocateParams
+type Component_VippoolAllocateParams struct {
+	ClusterId               int64    `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	CnodeIds                *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the IDs of the CNodes. Separate IDs by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overridden if cnode_names is passed."`
+	CnodeNames              string   `json:"cnode_names,omitempty" yaml:"cnode_names,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the names of the CNodes. Separate names by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overrides cnode_ids."`
+	DomainName              string   `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"Domain name for the VAST DNS server. If a DNS configuration exists, the domain suffix defined in the DNS server configuration is appended to this domain name to form a FQDN which the DNS server resolves to this VIP pool."`
+	EnableWeightedBalancing bool     `json:"enable_weighted_balancing,omitempty" yaml:"enable_weighted_balancing,omitempty" required:"false" doc:"Enable weighted balancing"`
+	Enabled                 bool     `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to false to disable the pool"`
+	IpsCount                int64    `json:"ips_count,omitempty" yaml:"ips_count,omitempty" required:"false" doc:"Number of IPs from the cloud"`
+	Name                    string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Role                    string   `json:"role,omitempty" yaml:"role,omitempty" required:"false" doc:"'PROTOCOLS' dedicates the VIP pool to client traffic from all of the supported access protocols (NFSv3, NFSv4.2, SMBv2, S3, Database). At least one VIP pool must be created to enable client access. 'REPLICATION' dedicates the VIP pool for connectivity with an async replication peer cluster. This is needed for async replication. 'BIG_CATALOG' dedicates the VIP pool to VAST Catalog query access from the client network."`
+	TenantId                int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	VmsPreferred            bool     `json:"vms_preferred,omitempty" yaml:"vms_preferred,omitempty" required:"false" doc:"If true, CNodes participating in the vip pool are preferred in VMS host election"`
+}
+
+// Component_VippoolCreateParams represents the OpenAPI component schema
+// Component: #/components/schemas/VippoolCreateParams
+type Component_VippoolCreateParams struct {
+	SubnetCidr              int64       `json:"subnet_cidr,omitempty" yaml:"subnet_cidr,omitempty" required:"true" doc:"The subnet expressed as a CIDR index (number of bits in each IP that belong to the subnet)"`
+	BgpConfigId             int64       `json:"bgp_config_id,omitempty" yaml:"bgp_config_id,omitempty" required:"false" doc:"The ID of the BGP configuration to use for layer 3 connectivity configuration"`
+	ClientMonitoringIps     *[][]string `json:"client_monitoring_ips,omitempty" yaml:"client_monitoring_ips,omitempty" required:"false" doc:"External client monitoring IP ranges for VIP pool connectivity monitoring"`
+	ClusterId               int64       `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	CnodeIds                *[]int64    `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the IDs of the CNodes. Separate IDs by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overridden if cnode_names is passed."`
+	CnodeNames              string      `json:"cnode_names,omitempty" yaml:"cnode_names,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the names of the CNodes. Separate names by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overrides cnode_ids."`
+	DomainName              string      `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"Domain name for the VAST DNS server. If a DNS configuration exists, the domain suffix defined in the DNS server configuration is appended to this domain name to form a FQDN which the DNS server resolves to this VIP pool."`
+	EnableL3                bool        `json:"enable_l3,omitempty" yaml:"enable_l3,omitempty" required:"false" doc:"Enables L3 networking, in which the cluster's CNodes act as Border Gateway Protocol (BGP) peers belonging to a VAST Autonomous system (AS) which is connected to the client network's AS"`
+	EnableWeightedBalancing bool        `json:"enable_weighted_balancing,omitempty" yaml:"enable_weighted_balancing,omitempty" required:"false" doc:"Enable weighted balancing"`
+	Enabled                 bool        `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to false to disable the pool"`
+	EndIp                   string      `json:"end_ip,omitempty" yaml:"end_ip,omitempty" required:"false" doc:"Not currently in use. Use ip_ranges instead."`
+	GwIp                    string      `json:"gw_ip,omitempty" yaml:"gw_ip,omitempty" required:"false" doc:"The IP address of a local gateway device if client traffic is routed through one"`
+	GwIpv6                  string      `json:"gw_ipv6,omitempty" yaml:"gw_ipv6,omitempty" required:"false" doc:"The IP address of a local gateway device if client traffic is routed through one"`
+	IpRanges                *[][]string `json:"ip_ranges,omitempty" yaml:"ip_ranges,omitempty" required:"false" doc:"Array of IP ranges to include in the vippool."`
+	Name                    string      `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	PeerAsn                 int64       `json:"peer_asn,omitempty" yaml:"peer_asn,omitempty" required:"false" doc:"The client network's ASN. Must not be equal to vast_asn. Applicable only if enable_ls is true."`
+	PortMembership          string      `json:"port_membership,omitempty" yaml:"port_membership,omitempty" required:"false" doc:"Allocates left, right or all CNode ports to the VIP pool. Allocating the left port and the right port in different VIP pools enables the CNodes to be connected to multiple networks simultaneously. Default: all"`
+	Role                    string      `json:"role,omitempty" yaml:"role,omitempty" required:"false" doc:"'PROTOCOLS' dedicates the VIP pool to client traffic from all of the supported access protocols (NFSv3, NFSv4.2, SMBv2, S3, Database). At least one VIP pool must be created to enable client access. 'REPLICATION' dedicates the VIP pool for connectivity with an async replication peer cluster. This is needed for async replication. 'BIG_CATALOG' dedicates the VIP pool to VAST Catalog query access from the client network."`
+	StartIp                 string      `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"false" doc:"Not currently in use. Use ip_ranges instead."`
+	SubnetCidrIpv6          int64       `json:"subnet_cidr_ipv6,omitempty" yaml:"subnet_cidr_ipv6,omitempty" required:"false" doc:"The subnet expressed as a CIDR index (number of bits in each IP that belong to the subnet)"`
+	TenantId                int64       `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	VastAsn                 int64       `json:"vast_asn,omitempty" yaml:"vast_asn,omitempty" required:"false" doc:"The cluster's ASN. Must not be equal to peer_asn. Applicable only if enable_ls is true."`
+	Vlan                    int64       `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:"To tag the VIP pool with a specific VLAN on the data network, specify the VLAN (0-4096). The VIP pool will be exposed only to the specified VLAN on the client network."`
+	VmsPreferred            bool        `json:"vms_preferred,omitempty" yaml:"vms_preferred,omitempty" required:"false" doc:"If true, CNodes participating in the vip pool are preferred in VMS host election"`
 }
 
 // Component_VirtualMachine represents the OpenAPI component schema
@@ -4255,6 +5020,7 @@ type Component_VirtualMachine struct {
 	Description        string `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"Description"`
 	DriveType          string `json:"drive_type,omitempty" yaml:"drive_type,omitempty" required:"false" doc:""`
 	Dtray              string `json:"dtray,omitempty" yaml:"dtray,omitempty" required:"false" doc:""`
+	ExternalMachineId  string `json:"external_machine_id,omitempty" yaml:"external_machine_id,omitempty" required:"false" doc:"Instance name in cloud provider"`
 	Guid               string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Globally unique identifier"`
 	Id                 int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"ID of the virtual machine."`
 	IndexInRack        int64  `json:"index_in_rack,omitempty" yaml:"index_in_rack,omitempty" required:"false" doc:"Index of unit position in rack."`
@@ -4284,6 +5050,7 @@ type Component_Vms struct {
 	DegradedReason               string  `json:"degraded_reason,omitempty" yaml:"degraded_reason,omitempty" required:"false" doc:"The reason for VMS degraded state"`
 	DisableMgmtHa                bool    `json:"disable_mgmt_ha,omitempty" yaml:"disable_mgmt_ha,omitempty" required:"false" doc:"True if management HA is disabled"`
 	DisableVmsMetrics            bool    `json:"disable_vms_metrics,omitempty" yaml:"disable_vms_metrics,omitempty" required:"false" doc:"True if VMS metrics collection is disabled"`
+	EnableIdleTimeout            bool    `json:"enable_idle_timeout,omitempty" yaml:"enable_idle_timeout,omitempty" required:"false" doc:"Enable GUI timeout based on inactivity"`
 	Guid                         string  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 	Id                           int64   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"The ID of the VMS object."`
 	Ip                           string  `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"The bond interface IP for the cluster's internal data network, on the current management CNode, the CNode hosting VMS"`
@@ -4347,6 +5114,7 @@ type Component_Volume struct {
 	ViewId                  int64               `json:"view_id,omitempty" yaml:"view_id,omitempty" required:"true" doc:"Id of the block subsystem view to which the volume belongs."`
 	Capacity                int64               `json:"capacity,omitempty" yaml:"capacity,omitempty" required:"false" doc:"The amount of data written to the volume (deprecated as of 5.4)."`
 	Created                 string              `json:"created,omitempty" yaml:"created,omitempty" required:"false" doc:""`
+	FullPath                string              `json:"full_path,omitempty" yaml:"full_path,omitempty" required:"false" doc:"The full path of the volume (subsystem path joined with the volume name)."`
 	Id                      int64               `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Volume ID"`
 	IsMonitored             bool                `json:"is_monitored,omitempty" yaml:"is_monitored,omitempty" required:"false" doc:"Is this volume live monitored (default - False)."`
 	MappedBlockHostCount    int64               `json:"mapped_block_host_count,omitempty" yaml:"mapped_block_host_count,omitempty" required:"false" doc:"The number of block hosts mapped to the volume."`
@@ -4356,6 +5124,7 @@ type Component_Volume struct {
 	QosPolicy               Volume_QosPolicy    `json:"qos_policy,omitempty" yaml:"qos_policy,omitempty" required:"false" doc:""`
 	QosPolicyId             int64               `json:"qos_policy_id,omitempty" yaml:"qos_policy_id,omitempty" required:"false" doc:"QOS Policy ID"`
 	SnapshotData            Volume_SnapshotData `json:"snapshot_data,omitempty" yaml:"snapshot_data,omitempty" required:"false" doc:""`
+	State                   string              `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Volume state"`
 	Tags                    map[string]string   `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:""`
 	TenantName              string              `json:"tenant_name,omitempty" yaml:"tenant_name,omitempty" required:"false" doc:"The name of the tenant to which the volume belongs."`
 	Uuid                    string              `json:"uuid,omitempty" yaml:"uuid,omitempty" required:"false" doc:"The UUID, used by hosts to search the volume in the subsystem."`
@@ -4434,6 +5203,7 @@ type ActiveDirectory_Ldap struct {
 	GroupSearchbase            string    `json:"group_searchbase,omitempty" yaml:"group_searchbase,omitempty" required:"false" doc:"Base DN for group queries within the joined domain only. When auto discovery is enabled, group queries outside the joined domain use auto-discovered Base DNs."`
 	Guid                       string    `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 	Id                         int64     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	IsAbacProvider             bool      `json:"is_abac_provider,omitempty" yaml:"is_abac_provider,omitempty" required:"false" doc:"is this Ldap / Active Directory used for ABAC"`
 	IsVmsAuthProvider          bool      `json:"is_vms_auth_provider,omitempty" yaml:"is_vms_auth_provider,omitempty" required:"false" doc:"Enables use of the LDAP for VMS authentication. Two LDAP configurations per cluster can be used for VMS authentication: one with Active Directory and one without."`
 	MailPropertyName           string    `json:"mail_property_name,omitempty" yaml:"mail_property_name,omitempty" required:"false" doc:"The attribute to use for the user's email address."`
 	MatchUser                  string    `json:"match_user,omitempty" yaml:"match_user,omitempty" required:"false" doc:""`
@@ -4574,6 +5344,45 @@ type AsyncCluster_UpgradeProgress_Dnodes struct {
 	Total int64 `json:"total,omitempty" yaml:"total,omitempty" required:"false" doc:""`
 }
 
+// AsyncComputeCluster_CnodesItem represents a nested type within components
+type AsyncComputeCluster_CnodesItem struct {
+	Id      int64                                `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"CNode ID"`
+	Ip      string                               `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"Static IP address assigned to this CNode"`
+	Message string                               `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:"Unhealthy condition messages from the node"`
+	State   string                               `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Current state of the CNode in the compute cluster"`
+	Stats   AsyncComputeCluster_CnodesItem_Stats `json:"stats,omitempty" yaml:"stats,omitempty" required:"false" doc:"Statistics for a CNode in a compute cluster"`
+	Type    string                               `json:"type,omitempty" yaml:"type,omitempty" required:"false" doc:"CNode role type in the compute cluster"`
+}
+
+// AsyncComputeCluster_CnodesItem_Stats represents a nested type within components
+type AsyncComputeCluster_CnodesItem_Stats struct {
+	Cpu    AsyncComputeCluster_CnodesItem_Stats_Cpu    `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU usage statistics for this CNode, in cores"`
+	Memory AsyncComputeCluster_CnodesItem_Stats_Memory `json:"memory,omitempty" yaml:"memory,omitempty" required:"false" doc:"Memory usage statistics for this CNode, in bytes"`
+	Pods   int64                                       `json:"pods,omitempty" yaml:"pods,omitempty" required:"false" doc:"Number of pods running on this CNode"`
+}
+
+// AsyncComputeCluster_CnodesItem_Stats_Cpu represents a nested type within components
+type AsyncComputeCluster_CnodesItem_Stats_Cpu struct {
+	Total float32 `json:"total,omitempty" yaml:"total,omitempty" required:"false" doc:"CPU limit allocated to this CNode, in cores"`
+	Used  float32 `json:"used,omitempty" yaml:"used,omitempty" required:"false" doc:"CPU cores currently consumed by this CNode."`
+}
+
+// AsyncComputeCluster_CnodesItem_Stats_Memory represents a nested type within components
+type AsyncComputeCluster_CnodesItem_Stats_Memory struct {
+	Total float32 `json:"total,omitempty" yaml:"total,omitempty" required:"false" doc:"Total memory available on the CNode, in bytes"`
+	Used  float32 `json:"used,omitempty" yaml:"used,omitempty" required:"false" doc:"Memory currently used on the CNode, in bytes."`
+}
+
+// AsyncComputeCluster_ResourceCounts represents a nested type within components
+type AsyncComputeCluster_ResourceCounts struct {
+	Cnodes          map[string]int64 `json:"cnodes,omitempty" yaml:"cnodes,omitempty" required:"false" doc:""`
+	Deployments     map[string]int64 `json:"deployments,omitempty" yaml:"deployments,omitempty" required:"false" doc:""`
+	NamespaceCounts int64            `json:"namespace_counts,omitempty" yaml:"namespace_counts,omitempty" required:"false" doc:"Total number of namespaces in the cluster"`
+	Pods            map[string]int64 `json:"pods,omitempty" yaml:"pods,omitempty" required:"false" doc:""`
+	ServiceCounts   int64            `json:"service_counts,omitempty" yaml:"service_counts,omitempty" required:"false" doc:"Total number of services in the cluster"`
+	TenantCounts    int64            `json:"tenant_counts,omitempty" yaml:"tenant_counts,omitempty" required:"false" doc:"Total number of tenants attached to this cluster"`
+}
+
 // AsyncGlobalSnapStream_LoaneeTenant represents a nested type within components
 type AsyncGlobalSnapStream_LoaneeTenant struct {
 	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Loanee tenant guid"`
@@ -4590,6 +5399,95 @@ type AsyncGlobalSnapStream_OwnerTenant struct {
 type BGPConfig_RacksItem struct {
 	IpRanges *[]string `json:"ip_ranges,omitempty" yaml:"ip_ranges,omitempty" required:"false" doc:""`
 	RackId   int64     `json:"rack_id,omitempty" yaml:"rack_id,omitempty" required:"false" doc:""`
+}
+
+// BaseQuota_DefaultGroupQuota represents a nested type within components
+type BaseQuota_DefaultGroupQuota struct {
+	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
+	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
+	QuotaSystemId   int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
+	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
+	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
+}
+
+// BaseQuota_DefaultUserQuota represents a nested type within components
+type BaseQuota_DefaultUserQuota struct {
+	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
+	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
+	QuotaSystemId   int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
+	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
+	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
+}
+
+// BlobExpansionAddColumnsParams_ArrowSchemaItem represents a nested type within components
+type BlobExpansionAddColumnsParams_ArrowSchemaItem struct {
+	Field BlobExpansionAddColumnsParams_ArrowSchemaItem_Field `json:"field,omitempty" yaml:"field,omitempty" required:"true" doc:"Column type"`
+	Name  string                                              `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the object"`
+}
+
+// BlobExpansionAddColumnsParams_ArrowSchemaItem_Field represents a nested type within components
+type BlobExpansionAddColumnsParams_ArrowSchemaItem_Field struct {
+	ColumnType string                                                        `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:""`
+	KeyType    BlobExpansionAddColumnsParams_ArrowSchemaItem_Field_KeyType   `json:"key_type,omitempty" yaml:"key_type,omitempty" required:"false" doc:"Column type for the map key (only when 'column_type' is \"map\")"`
+	ValueType  BlobExpansionAddColumnsParams_ArrowSchemaItem_Field_ValueType `json:"value_type,omitempty" yaml:"value_type,omitempty" required:"false" doc:"Column type for the map value (only when 'column_type' is \"map\")"`
+}
+
+// BlobExpansionAddColumnsParams_ArrowSchemaItem_Field_KeyType represents a nested type within components
+type BlobExpansionAddColumnsParams_ArrowSchemaItem_Field_KeyType struct {
+	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:"The type of the key (e.g., \"string\", \"bool\")"`
+}
+
+// BlobExpansionAddColumnsParams_ArrowSchemaItem_Field_ValueType represents a nested type within components
+type BlobExpansionAddColumnsParams_ArrowSchemaItem_Field_ValueType struct {
+	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:"The type of the value (e.g., \"string\", \"bool\")"`
+}
+
+// BlobExpansionCreateParams_ArrowSchemaItem represents a nested type within components
+type BlobExpansionCreateParams_ArrowSchemaItem struct {
+	Field BlobExpansionCreateParams_ArrowSchemaItem_Field `json:"field,omitempty" yaml:"field,omitempty" required:"true" doc:"Column type"`
+	Name  string                                          `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the object"`
+}
+
+// BlobExpansionCreateParams_ArrowSchemaItem_Field represents a nested type within components
+type BlobExpansionCreateParams_ArrowSchemaItem_Field struct {
+	ColumnType string                                                    `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:""`
+	KeyType    BlobExpansionCreateParams_ArrowSchemaItem_Field_KeyType   `json:"key_type,omitempty" yaml:"key_type,omitempty" required:"false" doc:"Column type for the map key (only when 'column_type' is \"map\")"`
+	ValueType  BlobExpansionCreateParams_ArrowSchemaItem_Field_ValueType `json:"value_type,omitempty" yaml:"value_type,omitempty" required:"false" doc:"Column type for the map value (only when 'column_type' is \"map\")"`
+}
+
+// BlobExpansionCreateParams_ArrowSchemaItem_Field_KeyType represents a nested type within components
+type BlobExpansionCreateParams_ArrowSchemaItem_Field_KeyType struct {
+	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:"The type of the key (e.g., \"string\", \"bool\")"`
+}
+
+// BlobExpansionCreateParams_ArrowSchemaItem_Field_ValueType represents a nested type within components
+type BlobExpansionCreateParams_ArrowSchemaItem_Field_ValueType struct {
+	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:"The type of the value (e.g., \"string\", \"bool\")"`
+}
+
+// BlobExpansionDropColumnsParams_ArrowSchemaItem represents a nested type within components
+type BlobExpansionDropColumnsParams_ArrowSchemaItem struct {
+	Field BlobExpansionDropColumnsParams_ArrowSchemaItem_Field `json:"field,omitempty" yaml:"field,omitempty" required:"true" doc:"Column type"`
+	Name  string                                               `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the object"`
+}
+
+// BlobExpansionDropColumnsParams_ArrowSchemaItem_Field represents a nested type within components
+type BlobExpansionDropColumnsParams_ArrowSchemaItem_Field struct {
+	ColumnType string                                                         `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:""`
+	KeyType    BlobExpansionDropColumnsParams_ArrowSchemaItem_Field_KeyType   `json:"key_type,omitempty" yaml:"key_type,omitempty" required:"false" doc:"Column type for the map key (only when 'column_type' is \"map\")"`
+	ValueType  BlobExpansionDropColumnsParams_ArrowSchemaItem_Field_ValueType `json:"value_type,omitempty" yaml:"value_type,omitempty" required:"false" doc:"Column type for the map value (only when 'column_type' is \"map\")"`
+}
+
+// BlobExpansionDropColumnsParams_ArrowSchemaItem_Field_KeyType represents a nested type within components
+type BlobExpansionDropColumnsParams_ArrowSchemaItem_Field_KeyType struct {
+	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:"The type of the key (e.g., \"string\", \"bool\")"`
+}
+
+// BlobExpansionDropColumnsParams_ArrowSchemaItem_Field_ValueType represents a nested type within components
+type BlobExpansionDropColumnsParams_ArrowSchemaItem_Field_ValueType struct {
+	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:"The type of the value (e.g., \"string\", \"bool\")"`
 }
 
 // BlockMapping_BlockHost represents a nested type within components
@@ -4702,6 +5600,88 @@ type ColumnDeleteParams_ArrowSchema_Field_ValueType struct {
 	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:"The type of the value (e.g., \"string\", \"bool\")"`
 }
 
+// ComputeClusterCNodeStats_Cpu represents a nested type within components
+type ComputeClusterCNodeStats_Cpu struct {
+	Total float32 `json:"total,omitempty" yaml:"total,omitempty" required:"false" doc:"CPU limit allocated to this CNode, in cores"`
+	Used  float32 `json:"used,omitempty" yaml:"used,omitempty" required:"false" doc:"CPU cores currently consumed by this CNode."`
+}
+
+// ComputeClusterCNodeStats_Memory represents a nested type within components
+type ComputeClusterCNodeStats_Memory struct {
+	Total float32 `json:"total,omitempty" yaml:"total,omitempty" required:"false" doc:"Total memory available on the CNode, in bytes"`
+	Used  float32 `json:"used,omitempty" yaml:"used,omitempty" required:"false" doc:"Memory currently used on the CNode, in bytes."`
+}
+
+// ComputeClusterCreateParams_CnodesItem represents a nested type within components
+type ComputeClusterCreateParams_CnodesItem struct {
+	Id             int64  `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"CNode ID"`
+	ResourcePreset string `json:"resource_preset,omitempty" yaml:"resource_preset,omitempty" required:"true" doc:"Resource allocation preset for this CNode"`
+}
+
+// ComputeClusterListItem_ResourceCounts represents a nested type within components
+type ComputeClusterListItem_ResourceCounts struct {
+	Cnodes          map[string]int64 `json:"cnodes,omitempty" yaml:"cnodes,omitempty" required:"false" doc:""`
+	Deployments     map[string]int64 `json:"deployments,omitempty" yaml:"deployments,omitempty" required:"false" doc:""`
+	NamespaceCounts int64            `json:"namespace_counts,omitempty" yaml:"namespace_counts,omitempty" required:"false" doc:"Total number of namespaces in the cluster"`
+	Pods            map[string]int64 `json:"pods,omitempty" yaml:"pods,omitempty" required:"false" doc:""`
+	ServiceCounts   int64            `json:"service_counts,omitempty" yaml:"service_counts,omitempty" required:"false" doc:"Total number of services in the cluster"`
+	TenantCounts    int64            `json:"tenant_counts,omitempty" yaml:"tenant_counts,omitempty" required:"false" doc:"Total number of tenants attached to this cluster"`
+}
+
+// ComputeClusterModifyParams_CnodesItem represents a nested type within components
+type ComputeClusterModifyParams_CnodesItem struct {
+	Id             int64  `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"CNode ID"`
+	ResourcePreset string `json:"resource_preset,omitempty" yaml:"resource_preset,omitempty" required:"true" doc:"Resource allocation preset for this CNode"`
+}
+
+// ComputeClusterPod_ConditionsItem represents a nested type within components
+type ComputeClusterPod_ConditionsItem struct {
+	LastTransitionTime string `json:"last_transition_time,omitempty" yaml:"last_transition_time,omitempty" required:"false" doc:"Timestamp of the condition's last transition"`
+	Message            string `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:"Human-readable message about the condition's last transition"`
+	Reason             string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Machine-readable reason for the condition's last transition"`
+	Status             string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Condition status (True, False, Unknown)"`
+	Type               string `json:"type,omitempty" yaml:"type,omitempty" required:"false" doc:"Condition type (e.g. Ready, Initialized, ContainersReady, PodScheduled)"`
+}
+
+// ComputeCluster_CnodesItem represents a nested type within components
+type ComputeCluster_CnodesItem struct {
+	Id      int64                           `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"CNode ID"`
+	Ip      string                          `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"Static IP address assigned to this CNode"`
+	Message string                          `json:"message,omitempty" yaml:"message,omitempty" required:"false" doc:"Unhealthy condition messages from the node"`
+	State   string                          `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Current state of the CNode in the compute cluster"`
+	Stats   ComputeCluster_CnodesItem_Stats `json:"stats,omitempty" yaml:"stats,omitempty" required:"false" doc:"Statistics for a CNode in a compute cluster"`
+	Type    string                          `json:"type,omitempty" yaml:"type,omitempty" required:"false" doc:"CNode role type in the compute cluster"`
+}
+
+// ComputeCluster_CnodesItem_Stats represents a nested type within components
+type ComputeCluster_CnodesItem_Stats struct {
+	Cpu    ComputeCluster_CnodesItem_Stats_Cpu    `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU usage statistics for this CNode, in cores"`
+	Memory ComputeCluster_CnodesItem_Stats_Memory `json:"memory,omitempty" yaml:"memory,omitempty" required:"false" doc:"Memory usage statistics for this CNode, in bytes"`
+	Pods   int64                                  `json:"pods,omitempty" yaml:"pods,omitempty" required:"false" doc:"Number of pods running on this CNode"`
+}
+
+// ComputeCluster_CnodesItem_Stats_Cpu represents a nested type within components
+type ComputeCluster_CnodesItem_Stats_Cpu struct {
+	Total float32 `json:"total,omitempty" yaml:"total,omitempty" required:"false" doc:"CPU limit allocated to this CNode, in cores"`
+	Used  float32 `json:"used,omitempty" yaml:"used,omitempty" required:"false" doc:"CPU cores currently consumed by this CNode."`
+}
+
+// ComputeCluster_CnodesItem_Stats_Memory represents a nested type within components
+type ComputeCluster_CnodesItem_Stats_Memory struct {
+	Total float32 `json:"total,omitempty" yaml:"total,omitempty" required:"false" doc:"Total memory available on the CNode, in bytes"`
+	Used  float32 `json:"used,omitempty" yaml:"used,omitempty" required:"false" doc:"Memory currently used on the CNode, in bytes."`
+}
+
+// ComputeCluster_ResourceCounts represents a nested type within components
+type ComputeCluster_ResourceCounts struct {
+	Cnodes          map[string]int64 `json:"cnodes,omitempty" yaml:"cnodes,omitempty" required:"false" doc:""`
+	Deployments     map[string]int64 `json:"deployments,omitempty" yaml:"deployments,omitempty" required:"false" doc:""`
+	NamespaceCounts int64            `json:"namespace_counts,omitempty" yaml:"namespace_counts,omitempty" required:"false" doc:"Total number of namespaces in the cluster"`
+	Pods            map[string]int64 `json:"pods,omitempty" yaml:"pods,omitempty" required:"false" doc:""`
+	ServiceCounts   int64            `json:"service_counts,omitempty" yaml:"service_counts,omitempty" required:"false" doc:"Total number of services in the cluster"`
+	TenantCounts    int64            `json:"tenant_counts,omitempty" yaml:"tenant_counts,omitempty" required:"false" doc:"Total number of tenants attached to this cluster"`
+}
+
 // DTray_DnodesItem represents a nested type within components
 type DTray_DnodesItem struct {
 	Name             string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
@@ -4801,6 +5781,18 @@ type Group_LocalProvider struct {
 type Group_S3PoliciesItem struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Identity Policy ID"`
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Identity Policy name"`
+}
+
+// Health_Cache represents a nested type within components
+type Health_Cache struct {
+	Info   string `json:"info,omitempty" yaml:"info,omitempty" required:"false" doc:"Additional info regarding service status"`
+	Status string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
+}
+
+// Health_Db represents a nested type within components
+type Health_Db struct {
+	Info   string `json:"info,omitempty" yaml:"info,omitempty" required:"false" doc:"Additional info regarding service status"`
+	Status string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
 }
 
 // Host_VastInstallInfo represents a nested type within components
@@ -4997,6 +5989,76 @@ type ProtocolHandle_OpenProtocolHandlesItem struct {
 	Username          string    `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:""`
 }
 
+// QOSPolicyCreateParams_AttachedUsersItem represents a nested type within components
+type QOSPolicyCreateParams_AttachedUsersItem struct {
+	Fqdn            string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"true" doc:"The Fully Qualified Domain Name (FQDN) of the user's domain."`
+	IdentifierType  string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"true" doc:"The attribute used to identify the user."`
+	IdentifierValue string `json:"identifier_value,omitempty" yaml:"identifier_value,omitempty" required:"true" doc:"The value of the identifying attribute for the user. Must be of the attribute specified as identifier_type."`
+	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"User's name"`
+	Label           string `json:"label,omitempty" yaml:"label,omitempty" required:"false" doc:"A label for the user"`
+}
+
+// QOSPolicyCreateParams_CapacityLimits represents a nested type within components
+type QOSPolicyCreateParams_CapacityLimits struct {
+	MaxReadsBwMbpsPerGbCapacity  int64 `json:"max_reads_bw_mbps_per_gb_capacity,omitempty" yaml:"max_reads_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxReadsIopsPerGbCapacity    int64 `json:"max_reads_iops_per_gb_capacity,omitempty" yaml:"max_reads_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxWritesBwMbpsPerGbCapacity int64 `json:"max_writes_bw_mbps_per_gb_capacity,omitempty" yaml:"max_writes_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxWritesIopsPerGbCapacity   int64 `json:"max_writes_iops_per_gb_capacity,omitempty" yaml:"max_writes_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+}
+
+// QOSPolicyCreateParams_CapacityTotalLimits represents a nested type within components
+type QOSPolicyCreateParams_CapacityTotalLimits struct {
+	MaxBwMbpsPerGbCapacity int64 `json:"max_bw_mbps_per_gb_capacity,omitempty" yaml:"max_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxIopsPerGbCapacity   int64 `json:"max_iops_per_gb_capacity,omitempty" yaml:"max_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+}
+
+// QOSPolicyCreateParams_StaticTotalLimits represents a nested type within components
+type QOSPolicyCreateParams_StaticTotalLimits struct {
+	BurstBwMb     int64 `json:"burst_bw_mb,omitempty" yaml:"burst_bw_mb,omitempty" required:"false" doc:"Burst BW Mb"`
+	BurstIops     int64 `json:"burst_iops,omitempty" yaml:"burst_iops,omitempty" required:"false" doc:"Burst IOPS"`
+	BurstLoanIops int64 `json:"burst_loan_iops,omitempty" yaml:"burst_loan_iops,omitempty" required:"false" doc:"Burst loan IOPS"`
+	BurstLoanMb   int64 `json:"burst_loan_mb,omitempty" yaml:"burst_loan_mb,omitempty" required:"false" doc:"Burst loan Mb"`
+	MaxBwMbps     int64 `json:"max_bw_mbps,omitempty" yaml:"max_bw_mbps,omitempty" required:"false" doc:"Maximal BW Mb/s"`
+	MaxIops       int64 `json:"max_iops,omitempty" yaml:"max_iops,omitempty" required:"false" doc:"Maximal IOPS"`
+	MinBwMbps     int64 `json:"min_bw_mbps,omitempty" yaml:"min_bw_mbps,omitempty" required:"false" doc:"Minimal BW Mb/s"`
+	MinIops       int64 `json:"min_iops,omitempty" yaml:"min_iops,omitempty" required:"false" doc:"Minimal IOPS"`
+}
+
+// QOSPolicyModifyParams_AttachedUsersItem represents a nested type within components
+type QOSPolicyModifyParams_AttachedUsersItem struct {
+	Fqdn            string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"true" doc:"The Fully Qualified Domain Name (FQDN) of the user's domain."`
+	IdentifierType  string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"true" doc:"The attribute used to identify the user."`
+	IdentifierValue string `json:"identifier_value,omitempty" yaml:"identifier_value,omitempty" required:"true" doc:"The value of the identifying attribute for the user. Must be of the attribute specified as identifier_type."`
+	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"User's name"`
+	Label           string `json:"label,omitempty" yaml:"label,omitempty" required:"false" doc:"A label for the user"`
+}
+
+// QOSPolicyModifyParams_CapacityLimits represents a nested type within components
+type QOSPolicyModifyParams_CapacityLimits struct {
+	MaxReadsBwMbpsPerGbCapacity  int64 `json:"max_reads_bw_mbps_per_gb_capacity,omitempty" yaml:"max_reads_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxReadsIopsPerGbCapacity    int64 `json:"max_reads_iops_per_gb_capacity,omitempty" yaml:"max_reads_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxWritesBwMbpsPerGbCapacity int64 `json:"max_writes_bw_mbps_per_gb_capacity,omitempty" yaml:"max_writes_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxWritesIopsPerGbCapacity   int64 `json:"max_writes_iops_per_gb_capacity,omitempty" yaml:"max_writes_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+}
+
+// QOSPolicyModifyParams_CapacityTotalLimits represents a nested type within components
+type QOSPolicyModifyParams_CapacityTotalLimits struct {
+	MaxBwMbpsPerGbCapacity int64 `json:"max_bw_mbps_per_gb_capacity,omitempty" yaml:"max_bw_mbps_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+	MaxIopsPerGbCapacity   int64 `json:"max_iops_per_gb_capacity,omitempty" yaml:"max_iops_per_gb_capacity,omitempty" required:"false" doc:"Maximal amount of performance per GB to provide when there is no resource contention"`
+}
+
+// QOSPolicyModifyParams_StaticTotalLimits represents a nested type within components
+type QOSPolicyModifyParams_StaticTotalLimits struct {
+	BurstBwMb     int64 `json:"burst_bw_mb,omitempty" yaml:"burst_bw_mb,omitempty" required:"false" doc:"Burst BW Mb"`
+	BurstIops     int64 `json:"burst_iops,omitempty" yaml:"burst_iops,omitempty" required:"false" doc:"Burst IOPS"`
+	BurstLoanIops int64 `json:"burst_loan_iops,omitempty" yaml:"burst_loan_iops,omitempty" required:"false" doc:"Burst loan IOPS"`
+	BurstLoanMb   int64 `json:"burst_loan_mb,omitempty" yaml:"burst_loan_mb,omitempty" required:"false" doc:"Burst loan Mb"`
+	MaxBwMbps     int64 `json:"max_bw_mbps,omitempty" yaml:"max_bw_mbps,omitempty" required:"false" doc:"Maximal BW Mb/s"`
+	MaxIops       int64 `json:"max_iops,omitempty" yaml:"max_iops,omitempty" required:"false" doc:"Maximal IOPS"`
+	MinBwMbps     int64 `json:"min_bw_mbps,omitempty" yaml:"min_bw_mbps,omitempty" required:"false" doc:"Minimal BW Mb/s"`
+	MinIops       int64 `json:"min_iops,omitempty" yaml:"min_iops,omitempty" required:"false" doc:"Minimal IOPS"`
+}
+
 // QOSPolicy_AttachedUsersItem represents a nested type within components
 type QOSPolicy_AttachedUsersItem struct {
 	Fqdn            string `json:"fqdn,omitempty" yaml:"fqdn,omitempty" required:"true" doc:"The Fully Qualified Domain Name (FQDN) of the user's domain."`
@@ -5030,6 +6092,32 @@ type QOSPolicy_StaticTotalLimits struct {
 	MaxIops       int64 `json:"max_iops,omitempty" yaml:"max_iops,omitempty" required:"false" doc:"Maximal IOPS"`
 	MinBwMbps     int64 `json:"min_bw_mbps,omitempty" yaml:"min_bw_mbps,omitempty" required:"false" doc:"Minimal BW Mb/s"`
 	MinIops       int64 `json:"min_iops,omitempty" yaml:"min_iops,omitempty" required:"false" doc:"Minimal IOPS"`
+}
+
+// QuotaGroup_DefaultGroupQuota represents a nested type within components
+type QuotaGroup_DefaultGroupQuota struct {
+	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
+	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
+	QuotaSystemId   int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
+	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
+	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
+}
+
+// QuotaGroup_DefaultUserQuota represents a nested type within components
+type QuotaGroup_DefaultUserQuota struct {
+	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period in seconds, minutes, hours or days. Example: 90m"`
+	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Hard quota limit"`
+	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard inodes quota limit"`
+	QuotaSystemId   int64  `json:"quota_system_id,omitempty" yaml:"quota_system_id,omitempty" required:"false" doc:""`
+	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Soft quota limit"`
+	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft inodes quota limit"`
+}
+
+// QuotaGroup_QuotasItem represents a nested type within components
+type QuotaGroup_QuotasItem struct {
+	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"ID"`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name"`
 }
 
 // Quota_DefaultGroupQuota represents a nested type within components
@@ -5127,6 +6215,12 @@ type SupportedPlatform_RawData struct {
 	SsdCapacityTb        int64  `json:"ssd_capacity_tb,omitempty" yaml:"ssd_capacity_tb,omitempty" required:"false" doc:""`
 }
 
+// TLSCertificate_Tenant represents a nested type within components
+type TLSCertificate_Tenant struct {
+	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Tenant ID"`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Tenant Name"`
+}
+
 // TableAddColumnsParams_ArrowSchemaItem represents a nested type within components
 type TableAddColumnsParams_ArrowSchemaItem struct {
 	Field TableAddColumnsParams_ArrowSchemaItem_Field `json:"field,omitempty" yaml:"field,omitempty" required:"true" doc:"Column type"`
@@ -5222,6 +6316,12 @@ type TenantClientMetrics_DefaultColumnsItem_Field_ValueType struct {
 	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:"The type of the value (e.g., \"string\", \"bool\")"`
 }
 
+// TenantMetricLabelValue_Label represents a nested type within components
+type TenantMetricLabelValue_Label struct {
+	Id  int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Key string `json:"key,omitempty" yaml:"key,omitempty" required:"false" doc:""`
+}
+
 // Tenant_CapacityRules represents a nested type within components
 type Tenant_CapacityRules struct {
 	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period for tenant capacity limit, in seconds"`
@@ -5264,6 +6364,11 @@ type Tenant_Qos_StaticLimits struct {
 type Tenant_VippoolsItem struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+}
+
+// TransformNode_ArgsItem represents a nested type within components
+type TransformNode_ArgsItem struct {
+	Type string `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
 }
 
 // TruncatedQOS_StaticLimits represents a nested type within components
