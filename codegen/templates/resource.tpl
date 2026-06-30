@@ -6,7 +6,7 @@ package typed
 import (
 	"context"
 {{if or .HasTextPlainMethods .ReturnsTextPlain .HasPrimitiveMethods .HasArrayMethods}}	"fmt"
-{{end}}{{if .ExtraMethods}}	"net/http"
+{{end}}{{if or .ExtraMethods .DeleteIsAsync .DeleteByIdIsAsync}}	"net/http"
 {{end}}{{if .HasAsyncMethods}}	"time"
 {{end}}
 {{if or .HasAsyncMethods .ExtraMethods .HasTextPlainMethods .ReturnsTextPlain .HasArrayMethods}}

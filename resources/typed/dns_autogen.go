@@ -5,6 +5,7 @@ package typed
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
