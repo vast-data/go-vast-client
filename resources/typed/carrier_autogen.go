@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,9 +28,9 @@ type Carrier struct {
 
 // CarrierSearchParams represents the search parameters for Carrier operations
 type CarrierSearchParams struct {
-	Guid  string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name  string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	State string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by carrier state"`
+	Guid  expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Name  expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	State expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by carrier state"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

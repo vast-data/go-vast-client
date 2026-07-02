@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -26,10 +27,10 @@ type Topic struct {
 
 // TopicSearchParams represents the search parameters for Topic operations
 type TopicSearchParams struct {
-	CountOnly    bool   `json:"count_only,omitempty" yaml:"count_only,omitempty" required:"false" doc:"Whether to only return count of objects"`
-	DatabaseName string `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"false" doc:"Getting list of objects by database_name"`
-	Name         string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Getting list of objects by exact match"`
-	TenantId     int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	CountOnly    bool          `json:"count_only,omitempty" yaml:"count_only,omitempty" required:"false" doc:"Whether to only return count of objects"`
+	DatabaseName expr.StrField `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"false" doc:"Getting list of objects by database_name"`
+	Name         expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Getting list of objects by exact match"`
+	TenantId     expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

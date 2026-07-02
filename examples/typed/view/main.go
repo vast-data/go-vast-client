@@ -5,6 +5,7 @@ import (
 
 	client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -33,13 +34,11 @@ func main() {
 		panic(fmt.Errorf("failed to create view: %w", err))
 	}
 	fmt.Printf("View created successfully: %s (ID: %d)\n", view.Name, view.Id)
-	
-	// --- DELETE ---
-	searchParams := &typed.ViewSearchParams{
-		Path: "/go-client-testview",
-	}
 
-	err = rest.Views.Delete(searchParams, true)
+	// --- DELETE ---
+	err = rest.Views.Delete(&typed.ViewSearchParams{
+		Path: expr.S("/go-client-testview"),
+	}, true)
 	if err != nil {
 		panic(fmt.Errorf("failed to delete view: %w", err))
 	}

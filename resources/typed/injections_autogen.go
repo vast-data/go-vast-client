@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,8 +25,8 @@ type Injections struct {
 
 // InjectionsSearchParams represents the search parameters for Injections operations
 type InjectionsSearchParams struct {
-	InjectionType string `json:"injection_type,omitempty" yaml:"injection_type,omitempty" required:"false" doc:"Injection type"`
-	Name          string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Injection name"`
+	InjectionType expr.StrField `json:"injection_type,omitempty" yaml:"injection_type,omitempty" required:"false" doc:"Injection type"`
+	Name          expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Injection name"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

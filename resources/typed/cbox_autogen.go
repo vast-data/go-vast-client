@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,10 +28,10 @@ type Cbox struct {
 
 // CboxSearchParams represents the search parameters for Cbox operations
 type CboxSearchParams struct {
-	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	Guid   string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	RackId int64  `json:"rack_id,omitempty" yaml:"rack_id,omitempty" required:"false" doc:"Filter by Rack"`
-	Uid    string `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"Unique h/w identifier"`
+	Name   expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Guid   expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	RackId expr.IntField `json:"rack_id,omitempty" yaml:"rack_id,omitempty" required:"false" doc:"Filter by Rack"`
+	Uid    expr.StrField `json:"uid,omitempty" yaml:"uid,omitempty" required:"false" doc:"Unique h/w identifier"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,9 +25,9 @@ type EncryptedPath struct {
 
 // EncryptedPathSearchParams represents the search parameters for EncryptedPath operations
 type EncryptedPathSearchParams struct {
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of Encrypted Path"`
-	Path     string `json:"path,omitempty" yaml:"path,omitempty" required:"true" doc:"Encrypted path"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of Encrypted Path"`
+	Path     expr.StrField `json:"path,omitempty" yaml:"path,omitempty" required:"true" doc:"Encrypted path"`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

@@ -5,6 +5,7 @@ import (
 
 	client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 
 	// --- DELETE ---
 	err = rest.Users.Delete(&typed.UserSearchParams{
-		Name: "myUser",
+		Name: expr.S("myUser"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete user: %w", err))

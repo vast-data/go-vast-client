@@ -5,6 +5,7 @@ import (
 
 	client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -41,7 +42,7 @@ func main() {
 
 	// --- GET ---
 	fetchedPolicy, err := rest.ProtectionPolicies.Get(&typed.ProtectionPolicySearchParams{
-		Name: "go-client-test-policy",
+		Name: expr.S("go-client-test-policy"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get protection policy: %w", err))
@@ -49,11 +50,9 @@ func main() {
 	fmt.Printf("Fetched protection policy: %s (Clone Type: %s)\n", fetchedPolicy.Name, fetchedPolicy.CloneType)
 
 	// --- DELETE ---
-	searchParams := &typed.ProtectionPolicySearchParams{
-		Name: "go-client-test-policy",
-	}
-
-	err = rest.ProtectionPolicies.Delete(searchParams)
+	err = rest.ProtectionPolicies.Delete(&typed.ProtectionPolicySearchParams{
+		Name: expr.S("go-client-test-policy"),
+	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete protection policy: %w", err))
 	}

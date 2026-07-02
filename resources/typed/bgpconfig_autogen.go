@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,8 +25,8 @@ type BGPConfig struct {
 
 // BGPConfigSearchParams represents the search parameters for BGPConfig operations
 type BGPConfigSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the BGP layer 3 connectivity configuration."`
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The name of the BGP layer 3 connectivity configuration."`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

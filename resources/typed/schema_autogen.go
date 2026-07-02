@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,12 +26,12 @@ type Schema struct {
 
 // SchemaSearchParams represents the search parameters for Schema operations
 type SchemaSearchParams struct {
-	ByLevel      string `json:"by_level,omitempty" yaml:"by_level,omitempty" required:"false" doc:"Can be true or false. If this by_level is true, the VMS will provide a list of all schemas of only one level. to get the next level, need to make another request with the name of the parent scheme"`
-	CountOnly    bool   `json:"count_only,omitempty" yaml:"count_only,omitempty" required:"false" doc:"Whether to only return count of objects"`
-	DatabaseName string `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"false" doc:"Filter by database in which the schemas reside"`
-	Name         string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Getting list of objects by exact match"`
-	SchemaName   string `json:"schema_name,omitempty" yaml:"schema_name,omitempty" required:"false" doc:"Get list of schemas by schema_name"`
-	TenantId     int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	ByLevel      expr.StrField `json:"by_level,omitempty" yaml:"by_level,omitempty" required:"false" doc:"Can be true or false. If this by_level is true, the VMS will provide a list of all schemas of only one level. to get the next level, need to make another request with the name of the parent scheme"`
+	CountOnly    bool          `json:"count_only,omitempty" yaml:"count_only,omitempty" required:"false" doc:"Whether to only return count of objects"`
+	DatabaseName expr.StrField `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"false" doc:"Filter by database in which the schemas reside"`
+	Name         expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Getting list of objects by exact match"`
+	SchemaName   expr.StrField `json:"schema_name,omitempty" yaml:"schema_name,omitempty" required:"false" doc:"Get list of schemas by schema_name"`
+	TenantId     expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

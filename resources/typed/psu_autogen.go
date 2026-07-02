@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,11 +25,11 @@ type Psu struct {
 
 // PsuSearchParams represents the search parameters for Psu operations
 type PsuSearchParams struct {
-	Guid  string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Model string `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:"Filter by PSU model"`
-	Name  string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name"`
-	Sn    string `json:"sn,omitempty" yaml:"sn,omitempty" required:"false" doc:"Filter by PSU serial number"`
-	State string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by PSU state"`
+	Guid  expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Model expr.StrField `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:"Filter by PSU model"`
+	Name  expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name"`
+	Sn    expr.StrField `json:"sn,omitempty" yaml:"sn,omitempty" required:"false" doc:"Filter by PSU serial number"`
+	State expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by PSU state"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

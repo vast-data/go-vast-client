@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,7 +26,7 @@ type BigCatalogIndexedColumns struct {
 
 // BigCatalogIndexedColumnsSearchParams represents the search parameters for BigCatalogIndexedColumns operations
 type BigCatalogIndexedColumnsSearchParams struct {
-	ColumnType string `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:""`
+	ColumnType expr.StrField `json:"column_type,omitempty" yaml:"column_type,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -26,7 +27,7 @@ type Permissions struct {
 
 // PermissionsSearchParams represents the search parameters for Permissions operations
 type PermissionsSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The permission name"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The permission name"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

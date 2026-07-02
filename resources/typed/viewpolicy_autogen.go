@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,15 +26,15 @@ type ViewPolicy struct {
 
 // ViewPolicySearchParams represents the search parameters for ViewPolicy operations
 type ViewPolicySearchParams struct {
-	AppleSid                 bool   `json:"apple_sid,omitempty" yaml:"apple_sid,omitempty" required:"false" doc:"apple sid"`
-	AtimeFrequency           string `json:"atime_frequency,omitempty" yaml:"atime_frequency,omitempty" required:"false" doc:"Filter by atime frequency."`
-	Guid                     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Globally unique identifier"`
-	Name                     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by name."`
-	NfsReturnOpenPermissions bool   `json:"nfs_return_open_permissions,omitempty" yaml:"nfs_return_open_permissions,omitempty" required:"false" doc:"Filter by enabled nfs-return-open-permissions flag"`
-	ServesTenant             string `json:"serves_tenant,omitempty" yaml:"serves_tenant,omitempty" required:"false" doc:"Filter by served tenants. Accepts tenant ID or \"all\" for all served tenants."`
-	SmbDirectoryMode         int64  `json:"smb_directory_mode,omitempty" yaml:"smb_directory_mode,omitempty" required:"false" doc:"Filter by smb_directory_mode. smb_directory_mode is the default unix permission bits applied to directories created by SMB clients. It is relevant only to views that are exposed to both SMB and NFS access protocols and have NFS security flavor."`
-	SmbFileMode              int64  `json:"smb_file_mode,omitempty" yaml:"smb_file_mode,omitempty" required:"false" doc:"Filter by smb_file_mode. smb_file_mode is the default unix permission bits applied to files created by SMB clients. It is relevant only to views that are exposed to both SMB and NFS access protocols and have NFS security flavor."`
-	TenantId                 int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	AppleSid                 bool          `json:"apple_sid,omitempty" yaml:"apple_sid,omitempty" required:"false" doc:"apple sid"`
+	AtimeFrequency           expr.StrField `json:"atime_frequency,omitempty" yaml:"atime_frequency,omitempty" required:"false" doc:"Filter by atime frequency."`
+	Guid                     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Globally unique identifier"`
+	Name                     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by name."`
+	NfsReturnOpenPermissions bool          `json:"nfs_return_open_permissions,omitempty" yaml:"nfs_return_open_permissions,omitempty" required:"false" doc:"Filter by enabled nfs-return-open-permissions flag"`
+	ServesTenant             expr.StrField `json:"serves_tenant,omitempty" yaml:"serves_tenant,omitempty" required:"false" doc:"Filter by served tenants. Accepts tenant ID or \"all\" for all served tenants."`
+	SmbDirectoryMode         expr.IntField `json:"smb_directory_mode,omitempty" yaml:"smb_directory_mode,omitempty" required:"false" doc:"Filter by smb_directory_mode. smb_directory_mode is the default unix permission bits applied to directories created by SMB clients. It is relevant only to views that are exposed to both SMB and NFS access protocols and have NFS security flavor."`
+	SmbFileMode              expr.IntField `json:"smb_file_mode,omitempty" yaml:"smb_file_mode,omitempty" required:"false" doc:"Filter by smb_file_mode. smb_file_mode is the default unix permission bits applied to files created by SMB clients. It is relevant only to views that are exposed to both SMB and NFS access protocols and have NFS security flavor."`
+	TenantId                 expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

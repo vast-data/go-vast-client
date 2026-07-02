@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,8 +25,8 @@ type CnodeGroup struct {
 
 // CnodeGroupSearchParams represents the search parameters for CnodeGroup operations
 type CnodeGroupSearchParams struct {
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"CNode Group name"`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"CNode Group name"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

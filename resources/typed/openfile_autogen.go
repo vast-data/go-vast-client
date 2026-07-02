@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,9 +28,9 @@ type OpenFile struct {
 
 // OpenFileSearchParams represents the search parameters for OpenFile operations
 type OpenFileSearchParams struct {
-	HasLocks bool   `json:"has_locks,omitempty" yaml:"has_locks,omitempty" required:"false" doc:"Filter by lock status"`
-	Path     string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Open file's path"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	HasLocks bool          `json:"has_locks,omitempty" yaml:"has_locks,omitempty" required:"false" doc:"Filter by lock status"`
+	Path     expr.StrField `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Open file's path"`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

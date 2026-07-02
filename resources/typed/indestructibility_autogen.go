@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,9 +26,9 @@ type Indestructibility struct {
 
 // IndestructibilitySearchParams represents the search parameters for Indestructibility operations
 type IndestructibilitySearchParams struct {
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	Username string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:""`
+	Guid     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Username expr.StrField `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

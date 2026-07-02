@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,14 +28,14 @@ type Cnode struct {
 
 // CnodeSearchParams represents the search parameters for Cnode operations
 type CnodeSearchParams struct {
-	ClusterId   int64  `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
-	ClusterName string `json:"cluster_name,omitempty" yaml:"cluster_name,omitempty" required:"false" doc:""`
-	Enabled     bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Return only enabled CNodes"`
-	Guid        string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
-	Ip          string `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"Filter by CNode IP"`
-	Name        string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by CNode name"`
-	State       string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by state"`
-	VippoolId   int64  `json:"vippool_id,omitempty" yaml:"vippool_id,omitempty" required:"false" doc:""`
+	ClusterId   expr.IntField `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	ClusterName expr.StrField `json:"cluster_name,omitempty" yaml:"cluster_name,omitempty" required:"false" doc:""`
+	Enabled     bool          `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Return only enabled CNodes"`
+	Guid        expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
+	Ip          expr.StrField `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"Filter by CNode IP"`
+	Name        expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by CNode name"`
+	State       expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by state"`
+	VippoolId   expr.IntField `json:"vippool_id,omitempty" yaml:"vippool_id,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

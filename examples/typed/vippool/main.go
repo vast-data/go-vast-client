@@ -5,6 +5,7 @@ import (
 
 	client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 func main() {
@@ -40,25 +41,26 @@ func main() {
 	}
 	fmt.Printf("VipPool created successfully: %s (ID: %d)\n", vippool.Name, vippool.Id)
 
-	// --- LIST ---
-	fmt.Println("\n--- Listing VipPools ---")
-	searchParams := &typed.VipPoolSearchParams{
-		// You can filter by various fields
-		// StartIp: "192.168.1.100",
-		// PortMembership: 1,
-	}
-
-	vippools, err := rest.VipPools.List(searchParams)
+	// --- LIST all ---
+	vippools, err := rest.VipPools.List(&typed.VipPoolSearchParams{})
 	if err != nil {
 		panic(fmt.Errorf("failed to list vippools: %w", err))
 	}
-	fmt.Printf("Found %d vippools\n", len(vippools))
+	fmt.Printf("Found %d vippool(s)\n", len(vippools))
 	for _, vp := range vippools {
 		fmt.Printf("  - %s (ID: %d, Role: %s)\n", vp.Name, vp.Id, vp.Role)
 	}
 
+	// --- LIST with expression filter ---
+	filtered, err := rest.VipPools.List(&typed.VipPoolSearchParams{
+		Name: expr.Str.StartsWith("go-client"),
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to list filtered vippools: %w", err))
+	}
+	fmt.Printf("VipPools starting with 'go-client': %d\n", len(filtered))
+
 	// --- GET BY ID ---
-	fmt.Println("\n--- Getting VipPool by ID ---")
 	retrievedVipPool, err := rest.VipPools.GetById(vippool.Id)
 	if err != nil {
 		panic(fmt.Errorf("failed to get vippool by ID: %w", err))
@@ -66,14 +68,13 @@ func main() {
 	fmt.Printf("Retrieved VipPool: %s\n", retrievedVipPool.Name)
 
 	// --- UPDATE ---
-	fmt.Println("\n--- Updating VipPool ---")
 	newIpRanges := [][]string{
-		{"192.168.1.100", "192.168.1.120"}, // Extended range
+		{"192.168.1.100", "192.168.1.120"},
 	}
 
 	updateParams := &typed.VipPoolRequestBody{
 		IpRanges: &newIpRanges,
-		Vlan:     200, // Change VLAN
+		Vlan:     200,
 	}
 
 	_, err = rest.VipPools.Update(vippool.Id, updateParams)
@@ -82,10 +83,9 @@ func main() {
 	}
 	fmt.Println("VipPool updated successfully.")
 
-	// --- CHECK IF EXISTS ---
-	fmt.Println("\n--- Checking if VipPool exists ---")
+	// --- CHECK EXISTS ---
 	exists, err := rest.VipPools.Exists(&typed.VipPoolSearchParams{
-		StartIp: "192.168.1.100",
+		StartIp: expr.S("192.168.1.100"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to check vippool existence: %w", err))
@@ -93,19 +93,9 @@ func main() {
 	fmt.Printf("VipPool with start IP 192.168.1.100 exists: %t\n", exists)
 
 	// --- DELETE ---
-	fmt.Println("\n--- Deleting VipPool ---")
-	deleteParams := &typed.VipPoolSearchParams{
-		// Delete by name
-		// Note: You can also use rest.VipPools.DeleteById(vippool.Id)
-	}
-
-	err = rest.VipPools.Delete(deleteParams)
+	_, err = rest.VipPools.DeleteById(vippool.Id, 0) // 0 = fire-and-forget (no wait)
 	if err != nil {
-		// Try by ID if search deletion fails
-		err = rest.VipPools.DeleteById(vippool.Id)
-		if err != nil {
-			panic(fmt.Errorf("failed to delete vippool: %w", err))
-		}
+		panic(fmt.Errorf("failed to delete vippool: %w", err))
 	}
 	fmt.Println("VipPool deleted successfully.")
 }

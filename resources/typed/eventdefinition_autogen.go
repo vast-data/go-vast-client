@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,9 +28,9 @@ type EventDefinition struct {
 
 // EventDefinitionSearchParams represents the search parameters for EventDefinition operations
 type EventDefinitionSearchParams struct {
-	EventType  string `json:"event_type,omitempty" yaml:"event_type,omitempty" required:"false" doc:""`
-	Name       string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	ObjectType string `json:"object_type,omitempty" yaml:"object_type,omitempty" required:"false" doc:""`
+	EventType  expr.StrField `json:"event_type,omitempty" yaml:"event_type,omitempty" required:"false" doc:""`
+	Name       expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	ObjectType expr.StrField `json:"object_type,omitempty" yaml:"object_type,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

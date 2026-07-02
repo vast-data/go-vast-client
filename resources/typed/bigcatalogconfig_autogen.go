@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -26,9 +27,9 @@ type BigCatalogConfig struct {
 
 // BigCatalogConfigSearchParams represents the search parameters for BigCatalogConfig operations
 type BigCatalogConfigSearchParams struct {
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	Guid     string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	TenantId int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Guid     expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	TenantId expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

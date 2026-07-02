@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,9 +26,9 @@ type Group struct {
 
 // GroupSearchParams represents the search parameters for Group operations
 type GroupSearchParams struct {
-	Gid  int64  `json:"gid,omitempty" yaml:"gid,omitempty" required:"true" doc:""`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Gid  expr.IntField `json:"gid,omitempty" yaml:"gid,omitempty" required:"true" doc:""`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

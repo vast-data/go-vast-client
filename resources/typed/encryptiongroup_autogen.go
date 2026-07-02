@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,7 +26,7 @@ type EncryptionGroup struct {
 
 // EncryptionGroupSearchParams represents the search parameters for EncryptionGroup operations
 type EncryptionGroupSearchParams struct {
-	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"true" doc:""`
+	Guid expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"true" doc:""`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

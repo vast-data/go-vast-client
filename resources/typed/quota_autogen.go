@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,16 +26,16 @@ type Quota struct {
 
 // QuotaSearchParams represents the search parameters for Quota operations
 type QuotaSearchParams struct {
-	Path            string `json:"path,omitempty" yaml:"path,omitempty" required:"true" doc:"Directory path"`
-	Guid            string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
-	HardLimit       string `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Filter results by hard capacity limit."`
-	HardLimitInodes string `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Filter results by hard limit on number of files and directories"`
-	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	ShowUserRules   bool   `json:"show_user_rules,omitempty" yaml:"show_user_rules,omitempty" required:"false" doc:"Include user and group quota rules in response."`
-	SoftLimit       string `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Filter results by soft capacity limit."`
-	SoftLimitInodes string `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Filter results by soft limit on number of files and directories."`
-	SystemId        string `json:"system_id,omitempty" yaml:"system_id,omitempty" required:"false" doc:""`
-	TenantId        int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	Path            expr.StrField `json:"path,omitempty" yaml:"path,omitempty" required:"true" doc:"Directory path"`
+	Guid            expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
+	HardLimit       expr.StrField `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Filter results by hard capacity limit."`
+	HardLimitInodes expr.StrField `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Filter results by hard limit on number of files and directories"`
+	Name            expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	ShowUserRules   bool          `json:"show_user_rules,omitempty" yaml:"show_user_rules,omitempty" required:"false" doc:"Include user and group quota rules in response."`
+	SoftLimit       expr.StrField `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Filter results by soft capacity limit."`
+	SoftLimitInodes expr.StrField `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Filter results by soft limit on number of files and directories."`
+	SystemId        expr.StrField `json:"system_id,omitempty" yaml:"system_id,omitempty" required:"false" doc:""`
+	TenantId        expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

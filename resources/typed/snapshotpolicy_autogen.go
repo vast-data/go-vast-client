@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,12 +25,12 @@ type SnapshotPolicy struct {
 
 // SnapshotPolicySearchParams represents the search parameters for SnapshotPolicy operations
 type SnapshotPolicySearchParams struct {
-	Name               string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	Enabled            bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Filter to return only enabled snapshots"`
-	Guid               string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	LastOperationState string `json:"last_operation_state,omitempty" yaml:"last_operation_state,omitempty" required:"false" doc:"Filter by last operation state"`
-	Path               string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by snapshot path"`
-	Schedule           string `json:"schedule,omitempty" yaml:"schedule,omitempty" required:"false" doc:"Filter by schedule"`
+	Name               expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Enabled            bool          `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Filter to return only enabled snapshots"`
+	Guid               expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	LastOperationState expr.StrField `json:"last_operation_state,omitempty" yaml:"last_operation_state,omitempty" required:"false" doc:"Filter by last operation state"`
+	Path               expr.StrField `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by snapshot path"`
+	Schedule           expr.StrField `json:"schedule,omitempty" yaml:"schedule,omitempty" required:"false" doc:"Filter by schedule"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

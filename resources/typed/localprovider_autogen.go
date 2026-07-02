@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,7 +25,7 @@ type LocalProvider struct {
 
 // LocalProviderSearchParams represents the search parameters for LocalProvider operations
 type LocalProviderSearchParams struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the local provider"`
+	Name expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the local provider"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

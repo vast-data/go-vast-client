@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,11 +25,11 @@ type OpenFileHandle struct {
 
 // OpenFileHandleSearchParams represents the search parameters for OpenFileHandle operations
 type OpenFileHandleSearchParams struct {
-	ClientIpSubnet string `json:"client_ip_subnet,omitempty" yaml:"client_ip_subnet,omitempty" required:"false" doc:"Filter by CIDR subnet"`
-	HasLease       bool   `json:"has_lease,omitempty" yaml:"has_lease,omitempty" required:"false" doc:"Filter by lease status"`
-	HasLocks       bool   `json:"has_locks,omitempty" yaml:"has_locks,omitempty" required:"false" doc:"Filter by lock status"`
-	Protocol       string `json:"protocol,omitempty" yaml:"protocol,omitempty" required:"false" doc:"Filter by protocol"`
-	TenantId       int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	ClientIpSubnet expr.StrField `json:"client_ip_subnet,omitempty" yaml:"client_ip_subnet,omitempty" required:"false" doc:"Filter by CIDR subnet"`
+	HasLease       bool          `json:"has_lease,omitempty" yaml:"has_lease,omitempty" required:"false" doc:"Filter by lease status"`
+	HasLocks       bool          `json:"has_locks,omitempty" yaml:"has_locks,omitempty" required:"false" doc:"Filter by lock status"`
+	Protocol       expr.StrField `json:"protocol,omitempty" yaml:"protocol,omitempty" required:"false" doc:"Filter by protocol"`
+	TenantId       expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

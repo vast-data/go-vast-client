@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,9 +28,9 @@ type Switch struct {
 
 // SwitchSearchParams represents the search parameters for Switch operations
 type SwitchSearchParams struct {
-	Guid  string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Name  string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Switch hostname"`
-	State string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by switch state"`
+	Guid  expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Name  expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Switch hostname"`
+	State expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by switch state"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

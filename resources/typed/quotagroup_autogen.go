@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,15 +28,15 @@ type QuotaGroup struct {
 
 // QuotaGroupSearchParams represents the search parameters for QuotaGroup operations
 type QuotaGroupSearchParams struct {
-	Guid            string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
-	HardLimit       string `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:""`
-	HardLimitInodes string `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:""`
-	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	ShowUserRules   bool   `json:"show_user_rules,omitempty" yaml:"show_user_rules,omitempty" required:"false" doc:""`
-	SoftLimit       string `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:""`
-	SoftLimitInodes string `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:""`
-	SystemId        string `json:"system_id,omitempty" yaml:"system_id,omitempty" required:"false" doc:""`
-	TenantId        int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	Guid            expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Quota guid"`
+	HardLimit       expr.StrField `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:""`
+	HardLimitInodes expr.StrField `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:""`
+	Name            expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	ShowUserRules   bool          `json:"show_user_rules,omitempty" yaml:"show_user_rules,omitempty" required:"false" doc:""`
+	SoftLimit       expr.StrField `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:""`
+	SoftLimitInodes expr.StrField `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:""`
+	SystemId        expr.StrField `json:"system_id,omitempty" yaml:"system_id,omitempty" required:"false" doc:""`
+	TenantId        expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

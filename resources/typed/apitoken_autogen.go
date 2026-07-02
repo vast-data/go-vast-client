@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -26,9 +27,9 @@ type ApiToken struct {
 
 // ApiTokenSearchParams represents the search parameters for ApiToken operations
 type ApiTokenSearchParams struct {
-	Archived string `json:"archived,omitempty" yaml:"archived,omitempty" required:"false" doc:""`
-	Name     string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The name of the Api token"`
-	Owner    string `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Filter by token owner username"`
+	Archived expr.StrField `json:"archived,omitempty" yaml:"archived,omitempty" required:"false" doc:""`
+	Name     expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The name of the Api token"`
+	Owner    expr.StrField `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Filter by token owner username"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

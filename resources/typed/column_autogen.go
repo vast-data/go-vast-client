@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -25,14 +26,14 @@ type Column struct {
 
 // ColumnSearchParams represents the search parameters for Column operations
 type ColumnSearchParams struct {
-	CountOnly         bool   `json:"count_only,omitempty" yaml:"count_only,omitempty" required:"false" doc:"Whether to only return count of objects"`
-	DatabaseName      string `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"false" doc:"Getting list of objects by database_name"`
-	IsImportsTable    bool   `json:"is_imports_table,omitempty" yaml:"is_imports_table,omitempty" required:"false" doc:"Is table actually a sub-table to track imported .parquet files."`
-	ListSortedColumns bool   `json:"list_sorted_columns,omitempty" yaml:"list_sorted_columns,omitempty" required:"false" doc:"List only columns that are sorted."`
-	Name              string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Getting list of objects by exact match"`
-	SchemaName        string `json:"schema_name,omitempty" yaml:"schema_name,omitempty" required:"false" doc:"Getting list of objects by schema_name"`
-	TableName         string `json:"table_name,omitempty" yaml:"table_name,omitempty" required:"false" doc:"Getting list of objects by table_name"`
-	TenantId          int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	CountOnly         bool          `json:"count_only,omitempty" yaml:"count_only,omitempty" required:"false" doc:"Whether to only return count of objects"`
+	DatabaseName      expr.StrField `json:"database_name,omitempty" yaml:"database_name,omitempty" required:"false" doc:"Getting list of objects by database_name"`
+	IsImportsTable    bool          `json:"is_imports_table,omitempty" yaml:"is_imports_table,omitempty" required:"false" doc:"Is table actually a sub-table to track imported .parquet files."`
+	ListSortedColumns bool          `json:"list_sorted_columns,omitempty" yaml:"list_sorted_columns,omitempty" required:"false" doc:"List only columns that are sorted."`
+	Name              expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Getting list of objects by exact match"`
+	SchemaName        expr.StrField `json:"schema_name,omitempty" yaml:"schema_name,omitempty" required:"false" doc:"Getting list of objects by schema_name"`
+	TableName         expr.StrField `json:"table_name,omitempty" yaml:"table_name,omitempty" required:"false" doc:"Getting list of objects by table_name"`
+	TenantId          expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

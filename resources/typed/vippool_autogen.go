@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
@@ -27,13 +28,13 @@ type VipPool struct {
 
 // VipPoolSearchParams represents the search parameters for VipPool operations
 type VipPoolSearchParams struct {
-	EndIp          string `json:"end_ip,omitempty" yaml:"end_ip,omitempty" required:"false" doc:"Filter by end IP of VIP pool range"`
-	Guid           string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
-	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"VIP pool name"`
-	PortMembership string `json:"port_membership,omitempty" yaml:"port_membership,omitempty" required:"false" doc:"Filters pools by port affinity"`
-	ServesTenant   string `json:"serves_tenant,omitempty" yaml:"serves_tenant,omitempty" required:"false" doc:"Filter by served tenants. Accepts tenant ID or \"all\" for all served tenants."`
-	StartIp        string `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"false" doc:"Filter by start IP of VIP pool range"`
-	TenantId       int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	EndIp          expr.StrField `json:"end_ip,omitempty" yaml:"end_ip,omitempty" required:"false" doc:"Filter by end IP of VIP pool range"`
+	Guid           expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Global unique ID"`
+	Name           expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"VIP pool name"`
+	PortMembership expr.StrField `json:"port_membership,omitempty" yaml:"port_membership,omitempty" required:"false" doc:"Filters pools by port affinity"`
+	ServesTenant   expr.StrField `json:"serves_tenant,omitempty" yaml:"serves_tenant,omitempty" required:"false" doc:"Filter by served tenants. Accepts tenant ID or \"all\" for all served tenants."`
+	StartIp        expr.StrField `json:"start_ip,omitempty" yaml:"start_ip,omitempty" required:"false" doc:"Filter by start IP of VIP pool range"`
+	TenantId       expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,11 +25,11 @@ type S3replicationPeers struct {
 
 // S3replicationPeersSearchParams represents the search parameters for S3replicationPeers operations
 type S3replicationPeersSearchParams struct {
-	BucketName      string `json:"bucket_name,omitempty" yaml:"bucket_name,omitempty" required:"false" doc:"Filter by target bucket name"`
-	CustomBucketUrl string `json:"custom_bucket_url,omitempty" yaml:"custom_bucket_url,omitempty" required:"false" doc:"Filter by the URL of a custom target bucket"`
-	Guid            string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
-	HttpProtocol    string `json:"http_protocol,omitempty" yaml:"http_protocol,omitempty" required:"false" doc:"Filter by protocol used to connect to the bucket (http or https)"`
-	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by name"`
+	BucketName      expr.StrField `json:"bucket_name,omitempty" yaml:"bucket_name,omitempty" required:"false" doc:"Filter by target bucket name"`
+	CustomBucketUrl expr.StrField `json:"custom_bucket_url,omitempty" yaml:"custom_bucket_url,omitempty" required:"false" doc:"Filter by the URL of a custom target bucket"`
+	Guid            expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"unique identifier"`
+	HttpProtocol    expr.StrField `json:"http_protocol,omitempty" yaml:"http_protocol,omitempty" required:"false" doc:"Filter by protocol used to connect to the bucket (http or https)"`
+	Name            expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by name"`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//

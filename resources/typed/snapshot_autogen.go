@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/typed/expr"
 )
 
 // -----------------------------------------------------
@@ -24,14 +25,14 @@ type Snapshot struct {
 
 // SnapshotSearchParams represents the search parameters for Snapshot operations
 type SnapshotSearchParams struct {
-	Name           string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
-	ExpirationTime string `json:"expiration_time,omitempty" yaml:"expiration_time,omitempty" required:"false" doc:"Filter by expiration time"`
-	Guid           string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Locked         bool   `json:"locked,omitempty" yaml:"locked,omitempty" required:"false" doc:"Filter for locked snapshots"`
-	Path           string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by snapshot path"`
-	State          string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by state"`
-	TenantId       int64  `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
-	VolumeId       int64  `json:"volume_id,omitempty" yaml:"volume_id,omitempty" required:"false" doc:"Mapped volume id to filter by."`
+	Name           expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	ExpirationTime expr.StrField `json:"expiration_time,omitempty" yaml:"expiration_time,omitempty" required:"false" doc:"Filter by expiration time"`
+	Guid           expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Locked         bool          `json:"locked,omitempty" yaml:"locked,omitempty" required:"false" doc:"Filter for locked snapshots"`
+	Path           expr.StrField `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:"Filter by snapshot path"`
+	State          expr.StrField `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Filter by state"`
+	TenantId       expr.IntField `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Filter by tenant. Specify tenant ID."`
+	VolumeId       expr.IntField `json:"volume_id,omitempty" yaml:"volume_id,omitempty" required:"false" doc:"Mapped volume id to filter by."`
 
 	// RawData allows passing arbitrary search parameters as key-value pairs.
 	//
