@@ -241,9 +241,10 @@ func (pr *Params) FromStruct(obj any) error {
 // This is a convenience function that creates a new Params and calls FromStruct on it.
 //
 // Special handling for RawData field:
-// If the struct has a RawData field (type Params) with len > 0, the RawData map is returned
-// directly instead of parsing the struct fields. This allows bypassing typed field parsing
-// when custom query parameters are needed.
+// If the struct has a RawData field (type Params) with len > 0, its entries are merged
+// into the serialized typed fields. RawData entries take precedence over typed fields
+// with the same key. This allows adding extra query parameters (e.g. "fields" projection)
+// alongside typed expression fields.
 //
 // Example usage:
 //
@@ -258,10 +259,10 @@ func (pr *Params) FromStruct(obj any) error {
 //	params, err := NewParamsFromStruct(req)
 //	// params contains: {"name": "John", "age": 30}
 //
-//	// Using RawData (bypasses typed fields):
-//	req := MyRequest{RawData: Params{"custom__filter": "value"}}
+//	// Mixing typed fields with RawData (RawData entries are merged in):
+//	req := MyRequest{Name: "John", RawData: Params{"fields": "id,name"}}
 //	params, err := NewParamsFromStruct(req)
-//	// params contains: {"custom__filter": "value"}
+//	// params contains: {"name": "John", "fields": "id,name"}
 //
 // Returns a new Params map or an error if the conversion fails.
 func NewParamsFromStruct(obj any) (Params, error) {
@@ -272,31 +273,31 @@ func NewParamsFromStruct(obj any) (Params, error) {
 		return params, nil
 	}
 
-	// Check if the struct has a RawData field with content
-	val := reflect.ValueOf(obj)
+	err := params.FromStruct(obj)
+	if err != nil {
+		return params, err
+	}
 
-	// Dereference pointer if needed
+	// Merge RawData entries on top of typed fields (RawData wins on key conflicts).
+	val := reflect.ValueOf(obj)
 	if val.Kind() == reflect.Ptr {
 		if val.IsNil() {
 			return params, nil
 		}
 		val = val.Elem()
 	}
-
-	// Only check for RawData if it's a struct
 	if val.Kind() == reflect.Struct {
 		rawDataField := val.FieldByName("RawData")
 		if rawDataField.IsValid() && rawDataField.Type() == reflect.TypeOf(Params{}) {
-			rawData, ok := rawDataField.Interface().(Params)
-			if ok && len(rawData) > 0 {
-				// Return RawData directly, don't parse struct fields
-				return rawData, nil
+			if rawData, ok := rawDataField.Interface().(Params); ok {
+				for k, v := range rawData {
+					params[k] = v
+				}
 			}
 		}
 	}
 
-	err := params.FromStruct(obj)
-	return params, err
+	return params, nil
 }
 
 // listifyParams converts a slice of arbitrary structs into a slice of Params (map[string]any).
