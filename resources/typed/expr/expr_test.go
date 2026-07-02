@@ -11,11 +11,11 @@ import (
 
 // searchParams mirrors a typical generated *SearchParams struct.
 type searchParams struct {
-	Name expr.StrField `json:"name,omitempty"`
-	Guid expr.StrField `json:"guid,omitempty"`
-	ID   expr.IntField `json:"id,omitempty"`
-	// plain field must still work alongside expr fields
-	TenantID int64 `json:"tenant_id,omitempty"`
+	Name     expr.StrField `json:"name,omitempty"`
+	Guid     expr.StrField `json:"guid,omitempty"`
+	ID       expr.IntField `json:"id,omitempty"`
+	TenantID int64         `json:"tenant_id,omitempty"`
+	RawData  core.Params   `json:"-"`
 }
 
 // ---- helpers ----
@@ -161,4 +161,55 @@ func TestQueryStringEncoding(t *testing.T) {
 	if got := parsed.Get("id__in"); got != "1,2" {
 		t.Errorf("id__in: %q", got)
 	}
+}
+
+// TestRawDataMergesWithTypedFields verifies that RawData entries (e.g. "fields"
+// projection) are merged alongside typed expr fields, not replacing them.
+// This covers the real-world pattern:
+//
+//	ViewSearchParams{Name: expr.S("clusterA"), RawData: Params{"fields": "id,path"}}
+//	=> ?name=clusterA&fields=id,path
+func TestRawDataMergesWithTypedFields(t *testing.T) {
+	p := toParams(t, searchParams{
+		Name:    expr.S("clusterA-source"),
+		ID:      expr.I(42),
+		RawData: core.Params{"fields": "id,name,path"},
+	})
+
+	has(t, p, "name", "clusterA-source")
+	has(t, p, "id", "42")
+	has(t, p, "fields", "id,name,path")
+}
+
+// TestRawDataOverridesTypedField verifies that RawData wins on key conflict.
+func TestRawDataOverridesTypedField(t *testing.T) {
+	p := toParams(t, searchParams{
+		Name:    expr.S("original"),
+		RawData: core.Params{"name": "override"},
+	})
+
+	has(t, p, "name", "override")
+}
+
+// TestRawDataOnlyNoTypedFields verifies backward-compat: RawData-only still works.
+func TestRawDataOnlyNoTypedFields(t *testing.T) {
+	p := toParams(t, searchParams{
+		RawData: core.Params{"subsystem_name": "foo", "fields": "id"},
+	})
+
+	has(t, p, "subsystem_name", "foo")
+	has(t, p, "fields", "id")
+	absent(t, p, "name")
+}
+
+// TestTypedFieldsOnlyNoRawData verifies typed-only still works (regression guard).
+func TestTypedFieldsOnlyNoRawData(t *testing.T) {
+	p := toParams(t, searchParams{
+		Name: expr.Str.StartsWith("prefix"),
+		ID:   expr.Int.GT(100),
+	})
+
+	has(t, p, "name__startswith", "prefix")
+	has(t, p, "id__gt", "100")
+	absent(t, p, "fields")
 }
