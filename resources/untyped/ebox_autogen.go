@@ -21,13 +21,18 @@ import (
 //   - rack_name: Rack name
 //   - rack_unit: Rack unit name
 //   - skip_everything: skip discovery and os upgrade
-func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := "/eboxes/add/"
 	result, err := core.Request[core.Record](ctx, e, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, e.Rest, waitTimeout)
+
 }
 
 // EboxAdd_POST
@@ -41,8 +46,11 @@ func (e *Ebox) EboxAddWithContext_POST(ctx context.Context, body core.Params) (c
 //   - rack_name: Rack name
 //   - rack_unit: Rack unit name
 //   - skip_everything: skip discovery and os upgrade
-func (e *Ebox) EboxAdd_POST(body core.Params) (core.Record, error) {
-	return e.EboxAddWithContext_POST(e.Rest.GetCtx(), body)
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (e *Ebox) EboxAdd_POST(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return e.EboxAddWithContext_POST(e.Rest.GetCtx(), body, waitTimeout)
 }
 
 // EboxControlLedWithContext_PATCH

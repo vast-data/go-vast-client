@@ -5,8 +5,11 @@ package typed
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/vast-data/go-vast-client/core"
+	"github.com/vast-data/go-vast-client/resources/untyped"
 )
 
 // -----------------------------------------------------
@@ -163,9 +166,92 @@ func (r *CallhomeConfigs) MustExistsWithContext(ctx context.Context, req *Callho
 }
 
 // -----------------------------------------------------
+// EXTRA METHODS
+// -----------------------------------------------------
+
+// CallhomeConfigsRegisterClusterWithContext_PATCH
+// method: PATCH
+// url: /callhomeconfigs/{id}/register-cluster/
+// summary: Register Cluster with Uplink
+//
+// Parameters:
+//   - email (body): VAST Uplink super user login email
+//   - password (body): VAST Uplink super user password
+//   - token (body): VAST Uplink cluster registration token
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *CallhomeConfigs) CallhomeConfigsRegisterClusterWithContext_PATCH(ctx context.Context, id any, email string, password string, token string, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := core.BuildResourcePathWithID("callhomeconfigs", id, "register-cluster")
+
+	var reqParams core.Params
+	reqBody := core.Params{}
+	if email != "" {
+		reqBody["email"] = email
+	}
+	if password != "" {
+		reqBody["password"] = password
+	}
+	if token != "" {
+		reqBody["token"] = token
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// CallhomeConfigsRegisterCluster_PATCH
+// method: PATCH
+// url: /callhomeconfigs/{id}/register-cluster/
+// summary: Register Cluster with Uplink
+//
+// Parameters:
+//   - email (body): VAST Uplink super user login email
+//   - password (body): VAST Uplink super user password
+//   - token (body): VAST Uplink cluster registration token
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *CallhomeConfigs) CallhomeConfigsRegisterCluster_PATCH(id any, email string, password string, token string, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.CallhomeConfigsRegisterClusterWithContext_PATCH(r.Untyped.GetCtx(), id, email, password, token, waitTimeout)
+}
+
+// CallhomeConfigsSendWithContext_PATCH
+// method: PATCH
+// url: /callhomeconfigs/{id}/send/
+// summary: Send a Call Home Message
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *CallhomeConfigs) CallhomeConfigsSendWithContext_PATCH(ctx context.Context, id any, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := core.BuildResourcePathWithID("callhomeconfigs", id, "send")
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPatch, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// CallhomeConfigsSend_PATCH
+// method: PATCH
+// url: /callhomeconfigs/{id}/send/
+// summary: Send a Call Home Message
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *CallhomeConfigs) CallhomeConfigsSend_PATCH(id any, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.CallhomeConfigsSendWithContext_PATCH(r.Untyped.GetCtx(), id, waitTimeout)
+}
+
+// -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - CREATE operation excluded: POST callhomeconfigs has no response schema and doesn't return 204 NO CONTENT
-//   - Extra method PATCH /callhomeconfigs/{id}/register-cluster/ skipped: PATCH /callhomeconfigs/{id}/register-cluster/ - Response schema contains ambiguous nested objects (objects with no properties)
-//   - Extra method PATCH /callhomeconfigs/{id}/send/ skipped: PATCH /callhomeconfigs/{id}/send/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - UPDATE operation excluded: PATCH/PUT /callhomeconfigs/{id}/ has no response schema and doesn't return 204 NO CONTENT

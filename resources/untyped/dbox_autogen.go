@@ -25,13 +25,18 @@ import (
 //   - nvram_size: Optional NVRAM size (for tests)
 //   - rack_name: Rack name
 //   - rack_unit: Rack unit name
-func (d *Dbox) DboxAddWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (d *Dbox) DboxAddWithContext_POST(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := "/dboxes/add/"
 	result, err := core.Request[core.Record](ctx, d, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, d.Rest, waitTimeout)
+
 }
 
 // DboxAdd_POST
@@ -49,8 +54,11 @@ func (d *Dbox) DboxAddWithContext_POST(ctx context.Context, body core.Params) (c
 //   - nvram_size: Optional NVRAM size (for tests)
 //   - rack_name: Rack name
 //   - rack_unit: Rack unit name
-func (d *Dbox) DboxAdd_POST(body core.Params) (core.Record, error) {
-	return d.DboxAddWithContext_POST(d.Rest.GetCtx(), body)
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (d *Dbox) DboxAdd_POST(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return d.DboxAddWithContext_POST(d.Rest.GetCtx(), body, waitTimeout)
 }
 
 // DboxControlLedWithContext_PATCH

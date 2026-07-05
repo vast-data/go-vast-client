@@ -239,17 +239,15 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 			} else if extraMethod.Method == "POST" {
 				op = rawResp.Post
 			}
-			if op != nil {
-				if resp := op.Responses.Status(200); resp != nil && resp.Value != nil {
-					if content := resp.Value.Content["application/json"]; content != nil && content.Schema != nil && content.Schema.Value != nil {
-						if content.Schema.Value.Type != nil && (*content.Schema.Value.Type).Is("array") {
-							isBareArray = true
-							methodInfo.ReturnsArray = true
-							fmt.Printf("  ℹ️  Detected bare array response\n")
-						}
-					}
+		if op != nil {
+			if content := getSuccessContent(op); content != nil && content.Schema != nil && content.Schema.Value != nil {
+				if content.Schema.Value.Type != nil && (*content.Schema.Value.Type).Is("array") {
+					isBareArray = true
+					methodInfo.ReturnsArray = true
+					fmt.Printf("  ℹ️  Detected bare array response\n")
 				}
 			}
+		}
 		}
 	}
 
@@ -278,18 +276,16 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 			op = rawResp.Delete
 		}
 
-		if op != nil {
-			if resp := op.Responses.Status(200); resp != nil && resp.Value != nil {
-				if content := resp.Value.Content["application/json"]; content != nil && content.Schema != nil {
-					// Check if response references AsyncTaskInResponse
-					if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
-						// This is an async method - add timeout parameter
-						methodInfo.IsAsyncTask = true
-						fmt.Printf("  ℹ️  Async task method detected (will add timeout parameter)\n")
-					}
-				}
+	if op != nil {
+		if content := getSuccessContent(op); content != nil && content.Schema != nil {
+			// Check if response references AsyncTaskInResponse
+			if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
+				// This is an async method - add timeout parameter
+				methodInfo.IsAsyncTask = true
+				fmt.Printf("  ℹ️  Async task method detected (will add timeout parameter)\n")
 			}
 		}
+	}
 	}
 
 	// Generate query parameter fields for ALL extra methods
@@ -870,6 +866,19 @@ type SimplifiedParam struct {
 	Description string // Parameter description from OpenAPI spec
 }
 
+// getSuccessContent returns the application/json content for the first successful
+// response (200 then 201 then 202) of the given operation, or nil if none found.
+func getSuccessContent(op *openapi3.Operation) *openapi3.MediaType {
+	for _, code := range []int{200, 201, 202} {
+		if resp := op.Responses.Status(code); resp != nil && resp.Value != nil {
+			if content := resp.Value.Content["application/json"]; content != nil {
+				return content
+			}
+		}
+	}
+	return nil
+}
+
 // returnsAsyncTaskInResponse checks if an operation returns AsyncTaskInResponse
 func returnsAsyncTaskInResponse(method, resourcePath string) bool {
 	rawResp, err := api.GetOpenApiResource(resourcePath)
@@ -895,15 +904,11 @@ func returnsAsyncTaskInResponse(method, resourcePath string) bool {
 		return false
 	}
 
-	// Only check 200 OK responses - async tasks return 200 with AsyncTaskInResponse
+	// Check 200/201/202 responses - async tasks return AsyncTaskInResponse
 	// Methods returning 204 No Content are NOT async tasks
-	if resp := op.Responses.Status(200); resp != nil && resp.Value != nil {
-		// Must have application/json content
-		if content := resp.Value.Content["application/json"]; content != nil && content.Schema != nil {
-			// Check if response references AsyncTaskInResponse
-			if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
-				return true
-			}
+	if content := getSuccessContent(op); content != nil && content.Schema != nil {
+		if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
+			return true
 		}
 	}
 

@@ -355,6 +355,57 @@ func (r *VipPool) MustExistsWithContext(ctx context.Context, req *VipPoolSearchP
 // EXTRA METHODS
 // -----------------------------------------------------
 
+// VipPoolAllocate_POST_Body represents the request body for VipPoolAllocate
+type VipPoolAllocate_POST_Body struct {
+	ClusterId               int64    `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	CnodeIds                *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the IDs of the CNodes. Separate IDs by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overridden if cnode_names is passed."`
+	CnodeNames              string   `json:"cnode_names,omitempty" yaml:"cnode_names,omitempty" required:"false" doc:"Dedicates a specific group of CNodes to the VIP pool. List the names of the CNodes. Separate names by commas. This is a way to dedicate a specific set of CNodes to a specific set of client hosts or applications. Overrides cnode_ids."`
+	DomainName              string   `json:"domain_name,omitempty" yaml:"domain_name,omitempty" required:"false" doc:"Domain name for the VAST DNS server. If a DNS configuration exists, the domain suffix defined in the DNS server configuration is appended to this domain name to form a FQDN which the DNS server resolves to this VIP pool."`
+	EnableWeightedBalancing bool     `json:"enable_weighted_balancing,omitempty" yaml:"enable_weighted_balancing,omitempty" required:"false" doc:"Enable weighted balancing"`
+	Enabled                 bool     `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to false to disable the pool"`
+	IpsCount                int64    `json:"ips_count,omitempty" yaml:"ips_count,omitempty" required:"false" doc:"Number of IPs from the cloud"`
+	Name                    string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Role                    string   `json:"role,omitempty" yaml:"role,omitempty" required:"false" doc:"'PROTOCOLS' dedicates the VIP pool to client traffic from all of the supported access protocols (NFSv3, NFSv4.2, SMBv2, S3, Database). At least one VIP pool must be created to enable client access. 'REPLICATION' dedicates the VIP pool for connectivity with an async replication peer cluster. This is needed for async replication. 'BIG_CATALOG' dedicates the VIP pool to VAST Catalog query access from the client network."`
+	TenantId                int64    `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	VmsPreferred            bool     `json:"vms_preferred,omitempty" yaml:"vms_preferred,omitempty" required:"false" doc:"If true, CNodes participating in the vip pool are preferred in VMS host election"`
+}
+
+// VipPoolAllocateWithContext_POST
+// method: POST
+// url: /vippools/allocate/
+// summary: Allocate VIP Pool
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VipPool) VipPoolAllocateWithContext_POST(ctx context.Context, body *VipPoolAllocate_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/vippools/allocate/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// VipPoolAllocate_POST
+// method: POST
+// url: /vippools/allocate/
+// summary: Allocate VIP Pool
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *VipPool) VipPoolAllocate_POST(body *VipPoolAllocate_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.VipPoolAllocateWithContext_POST(r.Untyped.GetCtx(), body, waitTimeout)
+}
+
 // VipPoolReallocate_PATCH_Body represents the request body for VipPoolReallocate
 type VipPoolReallocate_PATCH_Body struct {
 	IpRangesToRemove *[][]string `json:"ip_ranges_to_remove,omitempty" yaml:"ip_ranges_to_remove,omitempty" required:"false" doc:"An array of IP ranges to deallocate and remove from the vippool."`
@@ -396,8 +447,3 @@ func (r *VipPool) VipPoolReallocateWithContext_PATCH(ctx context.Context, id any
 func (r *VipPool) VipPoolReallocate_PATCH(id any, body *VipPoolReallocate_PATCH_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
 	return r.VipPoolReallocateWithContext_PATCH(r.Untyped.GetCtx(), id, body, waitTimeout)
 }
-
-// -----------------------------------------------------
-// GENERATION ISSUES
-// -----------------------------------------------------
-//   - Extra method POST /vippools/allocate/ skipped: POST /vippools/allocate/ - Response schema contains ambiguous nested objects (objects with no properties)

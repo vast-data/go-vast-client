@@ -27,13 +27,18 @@ import (
 //   - role: 'PROTOCOLS' dedicates the VIP pool to client traffic from all of the supported access protocols (NFSv3, NFSv4.2, SMBv2, S3, Database). At least one VIP pool must be created to enable client access. 'REPLICATION' dedicates the VIP pool for connectivity with an async replication peer cluster. This is needed for async replication. 'BIG_CATALOG' dedicates the VIP pool to VAST Catalog query access from the client network.
 //   - tenant_id: Tenant ID
 //   - vms_preferred: If true, CNodes participating in the vip pool are preferred in VMS host election
-func (v *VipPool) VipPoolAllocateWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (v *VipPool) VipPoolAllocateWithContext_POST(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := "/vippools/allocate/"
 	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, v.Rest, waitTimeout)
+
 }
 
 // VipPoolAllocate_POST
@@ -53,8 +58,11 @@ func (v *VipPool) VipPoolAllocateWithContext_POST(ctx context.Context, body core
 //   - role: 'PROTOCOLS' dedicates the VIP pool to client traffic from all of the supported access protocols (NFSv3, NFSv4.2, SMBv2, S3, Database). At least one VIP pool must be created to enable client access. 'REPLICATION' dedicates the VIP pool for connectivity with an async replication peer cluster. This is needed for async replication. 'BIG_CATALOG' dedicates the VIP pool to VAST Catalog query access from the client network.
 //   - tenant_id: Tenant ID
 //   - vms_preferred: If true, CNodes participating in the vip pool are preferred in VMS host election
-func (v *VipPool) VipPoolAllocate_POST(body core.Params) (core.Record, error) {
-	return v.VipPoolAllocateWithContext_POST(v.Rest.GetCtx(), body)
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (v *VipPool) VipPoolAllocate_POST(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return v.VipPoolAllocateWithContext_POST(v.Rest.GetCtx(), body, waitTimeout)
 }
 
 // VipPoolReallocateWithContext_PATCH

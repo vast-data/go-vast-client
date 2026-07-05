@@ -312,7 +312,59 @@ func (r *Dns) MustExistsWithContext(ctx context.Context, req *DnsSearchParams) b
 }
 
 // -----------------------------------------------------
+// EXTRA METHODS
+// -----------------------------------------------------
+
+// DnsAllocate_POST_Body represents the request body for DnsAllocate
+type DnsAllocate_POST_Body struct {
+	CnodeIds            *[]int64 `json:"cnode_ids,omitempty" yaml:"cnode_ids,omitempty" required:"false" doc:"To dedicate a specific group of CNodes to the DNS, list the IDs of the CNodes."`
+	DomainSuffix        string   `json:"domain_suffix,omitempty" yaml:"domain_suffix,omitempty" required:"false" doc:"A suffix for domain names. Requests for domain names with this suffix are resolved to the VIPs configured on the cluster."`
+	Enabled             bool     `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Set to true to enable the DNS service"`
+	InvalidNameResponse string   `json:"invalid_name_response,omitempty" yaml:"invalid_name_response,omitempty" required:"false" doc:""`
+	InvalidTypeResponse string   `json:"invalid_type_response,omitempty" yaml:"invalid_type_response,omitempty" required:"false" doc:""`
+	Name                string   `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the DNS server configuration"`
+	NetType             string   `json:"net_type,omitempty" yaml:"net_type,omitempty" required:"false" doc:""`
+	Port                int64    `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Specifies a port for the DNS"`
+	Ttl                 int64    `json:"ttl,omitempty" yaml:"ttl,omitempty" required:"false" doc:"Specifies the TTL value for the DNS."`
+}
+
+// DnsAllocateWithContext_POST
+// method: POST
+// url: /dns/allocate/
+// summary: Allocate DNS
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dns) DnsAllocateWithContext_POST(ctx context.Context, body *DnsAllocate_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/dns/allocate/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// DnsAllocate_POST
+// method: POST
+// url: /dns/allocate/
+// summary: Allocate DNS
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dns) DnsAllocate_POST(body *DnsAllocate_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.DnsAllocateWithContext_POST(r.Untyped.GetCtx(), body, waitTimeout)
+}
+
+// -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
-//   - Extra method POST /dns/allocate/ skipped: POST /dns/allocate/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - UPDATE operation excluded: PATCH/PUT /dns/{id}/ has no response schema and doesn't return 204 NO CONTENT

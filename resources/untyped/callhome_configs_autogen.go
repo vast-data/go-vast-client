@@ -5,6 +5,7 @@ package untyped
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/vast-data/go-vast-client/core"
 )
@@ -18,13 +19,18 @@ import (
 //   - email: VAST Uplink super user login email
 //   - password: VAST Uplink super user password
 //   - token: VAST Uplink cluster registration token
-func (c *CallhomeConfigs) CallhomeConfigsRegisterClusterWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (c *CallhomeConfigs) CallhomeConfigsRegisterClusterWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("callhomeconfigs", id, "register-cluster")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+
 }
 
 // CallhomeConfigsRegisterCluster_PATCH
@@ -36,8 +42,11 @@ func (c *CallhomeConfigs) CallhomeConfigsRegisterClusterWithContext_PATCH(ctx co
 //   - email: VAST Uplink super user login email
 //   - password: VAST Uplink super user password
 //   - token: VAST Uplink cluster registration token
-func (c *CallhomeConfigs) CallhomeConfigsRegisterCluster_PATCH(id any, body core.Params) (core.Record, error) {
-	return c.CallhomeConfigsRegisterClusterWithContext_PATCH(c.Rest.GetCtx(), id, body)
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (c *CallhomeConfigs) CallhomeConfigsRegisterCluster_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.CallhomeConfigsRegisterClusterWithContext_PATCH(c.Rest.GetCtx(), id, body, waitTimeout)
 }
 
 // CallhomeConfigsSendWithContext_PATCH
@@ -48,13 +57,18 @@ func (c *CallhomeConfigs) CallhomeConfigsRegisterCluster_PATCH(id any, body core
 // Body:
 //
 //	< not declared in schema >
-func (c *CallhomeConfigs) CallhomeConfigsSendWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (c *CallhomeConfigs) CallhomeConfigsSendWithContext_PATCH(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := core.BuildResourcePathWithID("callhomeconfigs", id, "send")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, c.Rest, waitTimeout)
+
 }
 
 // CallhomeConfigsSend_PATCH
@@ -65,6 +79,9 @@ func (c *CallhomeConfigs) CallhomeConfigsSendWithContext_PATCH(ctx context.Conte
 // Body:
 //
 //	< not declared in schema >
-func (c *CallhomeConfigs) CallhomeConfigsSend_PATCH(id any, body core.Params) (core.Record, error) {
-	return c.CallhomeConfigsSendWithContext_PATCH(c.Rest.GetCtx(), id, body)
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (c *CallhomeConfigs) CallhomeConfigsSend_PATCH(id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return c.CallhomeConfigsSendWithContext_PATCH(c.Rest.GetCtx(), id, body, waitTimeout)
 }

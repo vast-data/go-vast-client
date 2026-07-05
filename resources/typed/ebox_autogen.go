@@ -212,6 +212,51 @@ func (r *Ebox) MustExistsWithContext(ctx context.Context, req *EboxSearchParams)
 // EXTRA METHODS
 // -----------------------------------------------------
 
+// EboxAdd_POST_Body represents the request body for EboxAdd
+type EboxAdd_POST_Body struct {
+	EnodeIp        string `json:"enode_ip,omitempty" yaml:"enode_ip,omitempty" required:"true" doc:"Specify the internal bond IP of ENode."`
+	ClusterId      int64  `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"The cluster ID"`
+	RackName       string `json:"rack_name,omitempty" yaml:"rack_name,omitempty" required:"false" doc:"Rack name"`
+	RackUnit       string `json:"rack_unit,omitempty" yaml:"rack_unit,omitempty" required:"false" doc:"Rack unit name"`
+	SkipEverything bool   `json:"skip_everything,omitempty" yaml:"skip_everything,omitempty" required:"false" doc:"skip discovery and os upgrade"`
+}
+
+// EboxAddWithContext_POST
+// method: POST
+// url: /eboxes/add/
+// summary: Add EBox
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Ebox) EboxAddWithContext_POST(ctx context.Context, body *EboxAdd_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/eboxes/add/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// EboxAdd_POST
+// method: POST
+// url: /eboxes/add/
+// summary: Add EBox
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Ebox) EboxAdd_POST(body *EboxAdd_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.EboxAddWithContext_POST(r.Untyped.GetCtx(), body, waitTimeout)
+}
+
 // EboxControlLedWithContext_PATCH
 // method: PATCH
 // url: /eboxes/{id}/control_led/
@@ -375,5 +420,4 @@ func (r *Ebox) EboxResume_POST(waitTimeout time.Duration) (*untyped.AsyncResult,
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - CREATE operation excluded: POST eboxes has no response schema and doesn't return 204 NO CONTENT
-//   - Extra method POST /eboxes/add/ skipped: POST /eboxes/add/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - UPDATE operation excluded: PATCH/PUT /eboxes/{id}/ has no response schema and doesn't return 204 NO CONTENT

@@ -213,6 +213,55 @@ func (r *Dbox) MustExistsWithContext(ctx context.Context, req *DboxSearchParams)
 // EXTRA METHODS
 // -----------------------------------------------------
 
+// DboxAdd_POST_Body represents the request body for DboxAdd
+type DboxAdd_POST_Body struct {
+	DnodeIps      *[]string `json:"dnode_ips,omitempty" yaml:"dnode_ips,omitempty" required:"true" doc:"Specify the internal bond IPs of both DNodes in the DNodes as an array."`
+	ClusterId     int64     `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"The cluster ID"`
+	DriveSize     int64     `json:"drive_size,omitempty" yaml:"drive_size,omitempty" required:"false" doc:"Optional drive size (for tests)"`
+	EmptyBox      bool      `json:"empty_box,omitempty" yaml:"empty_box,omitempty" required:"false" doc:"Without SSD, NVRAM devices (for dbox replacement)"`
+	LabDeploy     bool      `json:"lab_deploy,omitempty" yaml:"lab_deploy,omitempty" required:"false" doc:"Execute in lab deploy mode (lab only!)"`
+	MigrateTarget bool      `json:"migrate_target,omitempty" yaml:"migrate_target,omitempty" required:"false" doc:"DBox will act as a DBox Migration target, has SSDs and NVRAMs"`
+	NvramSize     int64     `json:"nvram_size,omitempty" yaml:"nvram_size,omitempty" required:"false" doc:"Optional NVRAM size (for tests)"`
+	RackName      string    `json:"rack_name,omitempty" yaml:"rack_name,omitempty" required:"false" doc:"Rack name"`
+	RackUnit      string    `json:"rack_unit,omitempty" yaml:"rack_unit,omitempty" required:"false" doc:"Rack unit name"`
+}
+
+// DboxAddWithContext_POST
+// method: POST
+// url: /dboxes/add/
+// summary: Add DBox
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dbox) DboxAddWithContext_POST(ctx context.Context, body *DboxAdd_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	resourcePath := "/dboxes/add/"
+
+	var reqParams core.Params
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return untyped.MaybeWaitAsyncResultWithContext(ctx, result, r.Untyped, waitTimeout)
+
+}
+
+// DboxAdd_POST
+// method: POST
+// url: /dboxes/add/
+// summary: Add DBox
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (r *Dbox) DboxAdd_POST(body *DboxAdd_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
+	return r.DboxAddWithContext_POST(r.Untyped.GetCtx(), body, waitTimeout)
+}
+
 // DboxControlLedWithContext_PATCH
 // method: PATCH
 // url: /dboxes/{id}/control_led/
@@ -409,5 +458,4 @@ func (r *Dbox) DboxResume_POST(waitTimeout time.Duration) (*untyped.AsyncResult,
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - CREATE operation excluded: POST dboxes has no response schema and doesn't return 204 NO CONTENT
-//   - Extra method POST /dboxes/add/ skipped: POST /dboxes/add/ - Response schema contains ambiguous nested objects (objects with no properties)
 //   - UPDATE operation excluded: PATCH/PUT /dboxes/{id}/ has no response schema and doesn't return 204 NO CONTENT

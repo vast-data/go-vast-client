@@ -200,18 +200,14 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 			op = rawResp.Delete
 		}
 
-		if op != nil {
-			if resp := op.Responses.Status(200); resp != nil && resp.Value != nil {
-				if content := resp.Value.Content["application/json"]; content != nil && content.Schema != nil {
-					// Check if response references AsyncTaskInResponse
-					if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
-						// This is an async method - add timeout parameter
-						methodInfo.IsAsyncTask = true
-						fmt.Printf("  ℹ️  Async task method detected (will add timeout parameter)\n")
-					}
-				}
+	if op != nil {
+		if content := getSuccessContent(op); content != nil && content.Schema != nil {
+			if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
+				methodInfo.IsAsyncTask = true
+				fmt.Printf("  ℹ️  Async task method detected (will add timeout parameter)\n")
 			}
 		}
+	}
 	}
 
 	// Convert HTTP method to Go constant (e.g., "PATCH" -> "MethodPatch")
@@ -244,35 +240,27 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 				op = rawResp.Post
 			}
 			if op != nil {
-				if resp := op.Responses.Status(200); resp != nil && resp.Value != nil {
-					if content := resp.Value.Content["application/json"]; content != nil && content.Schema != nil && content.Schema.Value != nil {
-						schema := content.Schema.Value
-						if schema.Type != nil && (*schema.Type).Is("array") {
-							// Check if the array contains objects or primitives
-							isArrayOfObjects := false
-							if schema.Items != nil {
-								// Check for $ref (reference to another schema definition)
-								if schema.Items.Ref != "" {
-									// It's a reference - assume it's an object
+				if content := getSuccessContent(op); content != nil && content.Schema != nil && content.Schema.Value != nil {
+					schema := content.Schema.Value
+					if schema.Type != nil && (*schema.Type).Is("array") {
+						isArrayOfObjects := false
+						if schema.Items != nil {
+							if schema.Items.Ref != "" {
+								isArrayOfObjects = true
+							} else if schema.Items.Value != nil {
+								itemType := schema.Items.Value.Type
+								if itemType != nil && (*itemType).Is("object") {
 									isArrayOfObjects = true
-								} else if schema.Items.Value != nil {
-									itemType := schema.Items.Value.Type
-									// If items type is "object" or has properties, it's an array of objects
-									if itemType != nil && (*itemType).Is("object") {
-										isArrayOfObjects = true
-									} else if schema.Items.Value.Properties != nil && len(schema.Items.Value.Properties) > 0 {
-										isArrayOfObjects = true
-									}
+								} else if schema.Items.Value.Properties != nil && len(schema.Items.Value.Properties) > 0 {
+									isArrayOfObjects = true
 								}
 							}
-
-							if isArrayOfObjects {
-								methodInfo.ReturnsArray = true
-								fmt.Printf("  ℹ️  Detected array of objects response, using core.RecordSet\n")
-							} else {
-								// Array of primitives - use core.Record with @raw
-								fmt.Printf("  ℹ️  Detected array of primitives response, using core.Record\n")
-							}
+						}
+						if isArrayOfObjects {
+							methodInfo.ReturnsArray = true
+							fmt.Printf("  ℹ️  Detected array of objects response, using core.RecordSet\n")
+						} else {
+							fmt.Printf("  ℹ️  Detected array of primitives response, using core.Record\n")
 						}
 					}
 				}
@@ -509,6 +497,19 @@ func disambiguateMethodNames(methods []MethodInfo) {
 }
 
 // pathHasIDParam reports whether the path has a /{id}/ path parameter segment.
+// getSuccessContent returns the application/json content for the first successful
+// response (200 then 201 then 202) of the given operation, or nil if none found.
+func getSuccessContent(op *openapi3.Operation) *openapi3.MediaType {
+	for _, code := range []int{200, 201, 202} {
+		if resp := op.Responses.Status(code); resp != nil && resp.Value != nil {
+			if content := resp.Value.Content["application/json"]; content != nil {
+				return content
+			}
+		}
+	}
+	return nil
+}
+
 func pathHasIDParam(path string) bool {
 	for _, part := range strings.Split(strings.Trim(path, "/"), "/") {
 		if part == "{id}" {

@@ -5,6 +5,7 @@ package untyped
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/vast-data/go-vast-client/core"
 )
@@ -24,13 +25,18 @@ import (
 //   - net_type
 //   - port: Specifies a port for the DNS
 //   - ttl: Specifies the TTL value for the DNS.
-func (d *Dns) DnsAllocateWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (d *Dns) DnsAllocateWithContext_POST(ctx context.Context, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
 	resourcePath := "/dns/allocate/"
 	result, err := core.Request[core.Record](ctx, d, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+
+	return MaybeWaitAsyncResultWithContext(ctx, result, d.Rest, waitTimeout)
+
 }
 
 // DnsAllocate_POST
@@ -48,6 +54,9 @@ func (d *Dns) DnsAllocateWithContext_POST(ctx context.Context, body core.Params)
 //   - net_type
 //   - port: Specifies a port for the DNS
 //   - ttl: Specifies the TTL value for the DNS.
-func (d *Dns) DnsAllocate_POST(body core.Params) (core.Record, error) {
-	return d.DnsAllocateWithContext_POST(d.Rest.GetCtx(), body)
+//
+// Parameters:
+//   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
+func (d *Dns) DnsAllocate_POST(body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
+	return d.DnsAllocateWithContext_POST(d.Rest.GetCtx(), body, waitTimeout)
 }

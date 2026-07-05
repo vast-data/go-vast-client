@@ -353,13 +353,14 @@ func (v *View) ViewS3corsConfiguration_GET(id any, params core.Params) (core.Rec
 // Body:
 //   - aws_cors_rules: AWS format CORS rules array in camelCase (mutually exclusive with cors_rules)
 //   - cors_rules: List of S3 CORS rules in snake_case format (mutually exclusive with aws_cors_rules)
-func (v *View) ViewS3corsConfigurationWithContext_POST(ctx context.Context, id any, body core.Params) (core.Record, error) {
+func (v *View) ViewS3corsConfigurationWithContext_POST(ctx context.Context, id any, body core.Params) (core.RecordSet, error) {
 	resourcePath := core.BuildResourcePathWithID("views", id, "s3cors_configuration")
-	result, err := core.Request[core.Record](ctx, v, http.MethodPost, resourcePath, nil, body)
+	result, err := core.Request[core.RecordSet](ctx, v, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
+
 }
 
 // ViewS3corsConfiguration_POST
@@ -370,6 +371,6 @@ func (v *View) ViewS3corsConfigurationWithContext_POST(ctx context.Context, id a
 // Body:
 //   - aws_cors_rules: AWS format CORS rules array in camelCase (mutually exclusive with cors_rules)
 //   - cors_rules: List of S3 CORS rules in snake_case format (mutually exclusive with aws_cors_rules)
-func (v *View) ViewS3corsConfiguration_POST(id any, body core.Params) (core.Record, error) {
+func (v *View) ViewS3corsConfiguration_POST(id any, body core.Params) (core.RecordSet, error) {
 	return v.ViewS3corsConfigurationWithContext_POST(v.Rest.GetCtx(), id, body)
 }
