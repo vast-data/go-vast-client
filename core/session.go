@@ -182,8 +182,19 @@ func RequestWithHeaders[T RecordUnion](
 		// We want to eliminate this discrepancy by casting Record to RecordSet
 		var zero T
 		if typeMatch[RecordSet](Renderable(zero)) {
-			if !response.(Record).Empty() {
-				response = RecordSet{response.(Record)}
+			rec := response.(Record)
+			// Paginated responses arrive as a JSON object with a "results" key
+			// containing the actual list.  Unpack it so callers receive a flat RecordSet.
+			if raw, ok := rec["results"].([]any); ok {
+				unpacked := make(RecordSet, 0, len(raw))
+				for _, item := range raw {
+					if m, ok := item.(map[string]any); ok {
+						unpacked = append(unpacked, Record(m))
+					}
+				}
+				response = unpacked
+			} else if !rec.Empty() {
+				response = RecordSet{rec}
 			} else {
 				response = RecordSet{}
 			}
