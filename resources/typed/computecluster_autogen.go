@@ -421,7 +421,7 @@ type ComputeClusterBulk_POST_Body struct {
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (r *ComputeCluster) ComputeClusterBulkWithContext_POST(ctx context.Context, id any, body *ComputeClusterBulk_POST_Body, waitTimeout time.Duration) (*untyped.AsyncResult, error) {
-	resourcePath := core.BuildResourcePathWithID("computeclusters", id, "tenants/bulk")
+	resourcePath := core.BuildResourcePathWithID("computeclusters", id, "tenants", "bulk")
 
 	var reqParams core.Params
 	reqBody, err := core.NewParamsFromStruct(body)
@@ -951,8 +951,8 @@ type ComputeClusterTenantId_GET_Model struct {
 // method: GET
 // url: /computeclusters/{id}/tenants/{tenant_id}/
 // summary: Retrieve a Compute Cluster Tenant Association
-func (r *ComputeCluster) ComputeClusterTenantIdWithContext_GET(ctx context.Context, id any) (*ComputeClusterTenantId_GET_Model, error) {
-	resourcePath := core.BuildResourcePathWithID("computeclusters", id, "tenants/{tenant_id}")
+func (r *ComputeCluster) ComputeClusterTenantIdWithContext_GET(ctx context.Context, id any, tenantId any) (*ComputeClusterTenantId_GET_Model, error) {
+	resourcePath := core.InterpolatePathTemplate("/computeclusters/{id}/tenants/{tenant_id}/", id, tenantId)
 
 	var reqParams core.Params
 	var reqBody core.Params
@@ -974,8 +974,8 @@ func (r *ComputeCluster) ComputeClusterTenantIdWithContext_GET(ctx context.Conte
 // method: GET
 // url: /computeclusters/{id}/tenants/{tenant_id}/
 // summary: Retrieve a Compute Cluster Tenant Association
-func (r *ComputeCluster) ComputeClusterTenantId_GET(id any) (*ComputeClusterTenantId_GET_Model, error) {
-	return r.ComputeClusterTenantIdWithContext_GET(r.Untyped.GetCtx(), id)
+func (r *ComputeCluster) ComputeClusterTenantId_GET(id any, tenantId any) (*ComputeClusterTenantId_GET_Model, error) {
+	return r.ComputeClusterTenantIdWithContext_GET(r.Untyped.GetCtx(), id, tenantId)
 }
 
 // ComputeClusterTenantsWithContext_GET

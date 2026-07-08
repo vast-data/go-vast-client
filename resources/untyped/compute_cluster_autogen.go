@@ -22,7 +22,7 @@ import (
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.
 func (c *ComputeCluster) ComputeClusterBulkWithContext_POST(ctx context.Context, id any, body core.Params, waitTimeout time.Duration) (*AsyncResult, error) {
-	resourcePath := core.BuildResourcePathWithID("computeclusters", id, "tenants/bulk")
+	resourcePath := core.BuildResourcePathWithID("computeclusters", id, "tenants", "bulk")
 	result, err := core.Request[core.Record](ctx, c, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -610,8 +610,8 @@ func (c *ComputeCluster) ComputeClusterStop_POST(id any, body core.Params, waitT
 // method: GET
 // url: /computeclusters/{id}/tenants/{tenant_id}/
 // summary: Retrieve a Compute Cluster Tenant Association
-func (c *ComputeCluster) ComputeClusterTenantIdWithContext_GET(ctx context.Context, id any) (core.Record, error) {
-	resourcePath := core.BuildResourcePathWithID("computeclusters", id, "tenants/{tenant_id}")
+func (c *ComputeCluster) ComputeClusterTenantIdWithContext_GET(ctx context.Context, id any, tenantId any) (core.Record, error) {
+	resourcePath := core.InterpolatePathTemplate("/computeclusters/{id}/tenants/{tenant_id}/", id, tenantId)
 	result, err := core.Request[core.Record](ctx, c, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
@@ -623,8 +623,8 @@ func (c *ComputeCluster) ComputeClusterTenantIdWithContext_GET(ctx context.Conte
 // method: GET
 // url: /computeclusters/{id}/tenants/{tenant_id}/
 // summary: Retrieve a Compute Cluster Tenant Association
-func (c *ComputeCluster) ComputeClusterTenantId_GET(id any) (core.Record, error) {
-	return c.ComputeClusterTenantIdWithContext_GET(c.Rest.GetCtx(), id)
+func (c *ComputeCluster) ComputeClusterTenantId_GET(id any, tenantId any) (core.Record, error) {
+	return c.ComputeClusterTenantIdWithContext_GET(c.Rest.GetCtx(), id, tenantId)
 }
 
 // ComputeClusterTenantsWithContext_GET

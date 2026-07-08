@@ -13,8 +13,8 @@ import (
 // method: GET
 // url: /tenants/{tenant_id}/metric_label_values/bulk/
 // summary: Get All Tenant Metric Label Values
-func (t *Tenant) TenantBulkWithContext_GET(ctx context.Context) (core.Record, error) {
-	resourcePath := "/tenants/{tenant_id}/metric_label_values/bulk/"
+func (t *Tenant) TenantBulkWithContext_GET(ctx context.Context, tenantId any) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants", tenantId, "metric_label_values", "bulk")
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
@@ -26,8 +26,8 @@ func (t *Tenant) TenantBulkWithContext_GET(ctx context.Context) (core.Record, er
 // method: GET
 // url: /tenants/{tenant_id}/metric_label_values/bulk/
 // summary: Get All Tenant Metric Label Values
-func (t *Tenant) TenantBulk_GET() (core.Record, error) {
-	return t.TenantBulkWithContext_GET(t.Rest.GetCtx())
+func (t *Tenant) TenantBulk_GET(tenantId any) (core.Record, error) {
+	return t.TenantBulkWithContext_GET(t.Rest.GetCtx(), tenantId)
 }
 
 // TenantBulkWithContext_POST
@@ -38,8 +38,8 @@ func (t *Tenant) TenantBulk_GET() (core.Record, error) {
 // Body:
 //
 //	< not declared in schema >
-func (t *Tenant) TenantBulkWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
-	resourcePath := "/tenants/{tenant_id}/metric_label_values/bulk/"
+func (t *Tenant) TenantBulkWithContext_POST(ctx context.Context, tenantId any, body core.Params) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants", tenantId, "metric_label_values", "bulk")
 	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -55,8 +55,8 @@ func (t *Tenant) TenantBulkWithContext_POST(ctx context.Context, body core.Param
 // Body:
 //
 //	< not declared in schema >
-func (t *Tenant) TenantBulk_POST(body core.Params) (core.Record, error) {
-	return t.TenantBulkWithContext_POST(t.Rest.GetCtx(), body)
+func (t *Tenant) TenantBulk_POST(tenantId any, body core.Params) (core.Record, error) {
+	return t.TenantBulkWithContext_POST(t.Rest.GetCtx(), tenantId, body)
 }
 
 // TenantClientIpRangesWithContext_PATCH
@@ -255,8 +255,8 @@ func (t *Tenant) TenantIsOperationHealthy_POST(id any, params core.Params, body 
 // method: GET
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Get Tenant Metric Label Value
-func (t *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context, id any) (core.Record, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+func (t *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context, tenantId any, id any) (core.Record, error) {
+	resourcePath := core.InterpolatePathTemplate("/tenants/{tenant_id}/metric_label_values/{id}/", tenantId, id)
 	result, err := core.Request[core.Record](ctx, t, http.MethodGet, resourcePath, nil, nil)
 	if err != nil {
 		return nil, err
@@ -268,8 +268,8 @@ func (t *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context,
 // method: GET
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Get Tenant Metric Label Value
-func (t *Tenant) TenantMetricLabelValuesById_GET(id any) (core.Record, error) {
-	return t.TenantMetricLabelValuesByIdWithContext_GET(t.Rest.GetCtx(), id)
+func (t *Tenant) TenantMetricLabelValuesById_GET(tenantId any, id any) (core.Record, error) {
+	return t.TenantMetricLabelValuesByIdWithContext_GET(t.Rest.GetCtx(), tenantId, id)
 }
 
 // TenantMetricLabelValuesListWithContext_GET
@@ -280,8 +280,8 @@ func (t *Tenant) TenantMetricLabelValuesById_GET(id any) (core.Record, error) {
 // Params:
 //   - page
 //   - page_size
-func (t *Tenant) TenantMetricLabelValuesListWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
-	resourcePath := "/tenants/{tenant_id}/metric_label_values/"
+func (t *Tenant) TenantMetricLabelValuesListWithContext_GET(ctx context.Context, tenantId any, params core.Params) (core.RecordSet, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants", tenantId, "metric_label_values")
 	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
@@ -298,16 +298,16 @@ func (t *Tenant) TenantMetricLabelValuesListWithContext_GET(ctx context.Context,
 // Params:
 //   - page
 //   - page_size
-func (t *Tenant) TenantMetricLabelValuesList_GET(params core.Params) (core.RecordSet, error) {
-	return t.TenantMetricLabelValuesListWithContext_GET(t.Rest.GetCtx(), params)
+func (t *Tenant) TenantMetricLabelValuesList_GET(tenantId any, params core.Params) (core.RecordSet, error) {
+	return t.TenantMetricLabelValuesListWithContext_GET(t.Rest.GetCtx(), tenantId, params)
 }
 
 // TenantMetricLabelValuesWithContext_DELETE
 // method: DELETE
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Delete Tenant Metric Label Value
-func (t *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, id any) error {
-	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+func (t *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, tenantId any, id any) error {
+	resourcePath := core.InterpolatePathTemplate("/tenants/{tenant_id}/metric_label_values/{id}/", tenantId, id)
 	_, err := core.Request[core.Record](ctx, t, http.MethodDelete, resourcePath, nil, nil)
 	return err
 
@@ -317,8 +317,8 @@ func (t *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, 
 // method: DELETE
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Delete Tenant Metric Label Value
-func (t *Tenant) TenantMetricLabelValues_DELETE(id any) error {
-	return t.TenantMetricLabelValuesWithContext_DELETE(t.Rest.GetCtx(), id)
+func (t *Tenant) TenantMetricLabelValues_DELETE(tenantId any, id any) error {
+	return t.TenantMetricLabelValuesWithContext_DELETE(t.Rest.GetCtx(), tenantId, id)
 }
 
 // TenantMetricLabelValuesWithContext_PATCH
@@ -328,8 +328,8 @@ func (t *Tenant) TenantMetricLabelValues_DELETE(id any) error {
 //
 // Body:
 //   - value: The new value for this metric label.
-func (t *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, id any, body core.Params) (core.Record, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+func (t *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, tenantId any, id any, body core.Params) (core.Record, error) {
+	resourcePath := core.InterpolatePathTemplate("/tenants/{tenant_id}/metric_label_values/{id}/", tenantId, id)
 	result, err := core.Request[core.Record](ctx, t, http.MethodPatch, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -344,8 +344,8 @@ func (t *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, i
 //
 // Body:
 //   - value: The new value for this metric label.
-func (t *Tenant) TenantMetricLabelValues_PATCH(id any, body core.Params) (core.Record, error) {
-	return t.TenantMetricLabelValuesWithContext_PATCH(t.Rest.GetCtx(), id, body)
+func (t *Tenant) TenantMetricLabelValues_PATCH(tenantId any, id any, body core.Params) (core.Record, error) {
+	return t.TenantMetricLabelValuesWithContext_PATCH(t.Rest.GetCtx(), tenantId, id, body)
 }
 
 // TenantMetricLabelValuesWithContext_POST
@@ -356,8 +356,8 @@ func (t *Tenant) TenantMetricLabelValues_PATCH(id any, body core.Params) (core.R
 // Body:
 //   - label_id: The ID of the metric label.
 //   - value: The value for this metric label.
-func (t *Tenant) TenantMetricLabelValuesWithContext_POST(ctx context.Context, body core.Params) (core.Record, error) {
-	resourcePath := "/tenants/{tenant_id}/metric_label_values/"
+func (t *Tenant) TenantMetricLabelValuesWithContext_POST(ctx context.Context, tenantId any, body core.Params) (core.Record, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants", tenantId, "metric_label_values")
 	result, err := core.Request[core.Record](ctx, t, http.MethodPost, resourcePath, nil, body)
 	if err != nil {
 		return nil, err
@@ -373,8 +373,8 @@ func (t *Tenant) TenantMetricLabelValuesWithContext_POST(ctx context.Context, bo
 // Body:
 //   - label_id: The ID of the metric label.
 //   - value: The value for this metric label.
-func (t *Tenant) TenantMetricLabelValues_POST(body core.Params) (core.Record, error) {
-	return t.TenantMetricLabelValuesWithContext_POST(t.Rest.GetCtx(), body)
+func (t *Tenant) TenantMetricLabelValues_POST(tenantId any, body core.Params) (core.Record, error) {
+	return t.TenantMetricLabelValuesWithContext_POST(t.Rest.GetCtx(), tenantId, body)
 }
 
 // TenantMetricLabelsByIdWithContext_GET

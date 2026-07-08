@@ -113,6 +113,37 @@ func TestNewParamsFromStruct_OmitEmptyNestedStruct(t *testing.T) {
 
 // TestNewParamsFromStruct_IncludeNonZeroNestedStruct verifies that a non-zero
 // nested struct is still serialized even when tagged omitempty.
+func TestInterpolatePathTemplate(t *testing.T) {
+	tests := []struct {
+		name     string
+		template string
+		values   []any
+		expected string
+	}{
+		{
+			name:     "tenant id placeholder",
+			template: "/tenants/{tenant_id}/metric_label_values/bulk/",
+			values:   []any{int64(42)},
+			expected: "/tenants/42/metric_label_values/bulk/",
+		},
+		{
+			name:     "multiple placeholders",
+			template: "/tenants/{tenant_id}/metric_label_values/{id}/",
+			values:   []any{7, 99},
+			expected: "/tenants/7/metric_label_values/99/",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := InterpolatePathTemplate(tt.template, tt.values...)
+			if got != tt.expected {
+				t.Fatalf("expected %q, got %q", tt.expected, got)
+			}
+		})
+	}
+}
+
 func TestNewParamsFromStruct_IncludeNonZeroNestedStruct(t *testing.T) {
 	type StaticLimits struct {
 		ReadBwMbps *int64 `json:"read_bw_mbps,omitempty"`

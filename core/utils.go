@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	_ "unsafe"
 )
@@ -11,6 +12,8 @@ import (
 // Handles Field[T], StringFilter, IntFilter — emits expression-aware query params
 // (e.g. name__contains=foo) without core needing to import the expr package.
 var exprSerializeField func(v any, key string) (map[string]any, bool)
+
+var pathPlaceholderPattern = regexp.MustCompile(`\{[^}]+\}`)
 
 func toInt(val any) (int64, error) {
 	var idInt int64
@@ -93,6 +96,26 @@ func Must[T any](v T, err error) T {
 		panic(fmt.Sprintf("must: %v", err))
 	}
 	return v
+}
+
+func formatPathParamValue(val any) string {
+	if intVal, err := toInt(val); err == nil {
+		return fmt.Sprintf("%d", intVal)
+	}
+	return fmt.Sprintf("%v", val)
+}
+
+// InterpolatePathTemplate replaces {param} placeholders in order with positional values.
+func InterpolatePathTemplate(pathTemplate string, values ...any) string {
+	i := 0
+	return pathPlaceholderPattern.ReplaceAllStringFunc(pathTemplate, func(_ string) string {
+		if i >= len(values) {
+			return ""
+		}
+		v := formatPathParamValue(values[i])
+		i++
+		return v
+	})
 }
 
 // BuildResourcePathWithID builds a complete resource path with an ID parameter and optional additional segments.

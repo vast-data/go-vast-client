@@ -150,7 +150,9 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 		methodInfo.Summary = summary
 	}
 
-	methodInfo.HasID = pathHasIDParam(extraMethod.Path)
+	methodInfo.PathBuild = apibuilder.AnalyzePathBuild(extraMethod.Path)
+	methodInfo.PathParams = methodInfo.PathBuild.PathParams
+	methodInfo.HasID = apibuilder.PathHasIDParam(extraMethod.Path)
 
 	// Parse path to extract resource path and sub-path.
 	// ResourcePath is all segments before {id} (joined with "/").
@@ -746,12 +748,7 @@ func applyExtraMethodRename(m *ExtraMethodInfo, oldName, newName string) {
 
 // pathHasIDParam reports whether the path has a /{id}/ path parameter segment.
 func pathHasIDParam(path string) bool {
-	for _, part := range strings.Split(strings.Trim(path, "/"), "/") {
-		if part == "{id}" {
-			return true
-		}
-	}
-	return false
+	return apibuilder.PathHasIDParam(path)
 }
 
 // isNonIDPathParam reports whether a path segment is a path parameter other
@@ -830,6 +827,8 @@ type ExtraMethodInfo struct {
 	SubPath          string
 	Summary          string
 	HasID            bool
+	PathBuild        apibuilder.PathBuildInfo
+	PathParams       []apibuilder.PathParam
 	HasParams        bool
 	HasBody          bool
 	BodyFields       []Field

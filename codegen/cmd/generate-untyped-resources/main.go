@@ -30,6 +30,8 @@ type MethodInfo struct {
 	SubPath          string
 	Summary          string
 	HasID            bool
+	PathBuild        apibuilder.PathBuildInfo
+	PathParams       []apibuilder.PathParam
 	HasParams        bool
 	HasBody          bool
 	ReceiverName     string
@@ -200,14 +202,14 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 			op = rawResp.Delete
 		}
 
-	if op != nil {
-		if content := getSuccessContent(op); content != nil && content.Schema != nil {
-			if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
-				methodInfo.IsAsyncTask = true
-				fmt.Printf("  ℹ️  Async task method detected (will add timeout parameter)\n")
+		if op != nil {
+			if content := getSuccessContent(op); content != nil && content.Schema != nil {
+				if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
+					methodInfo.IsAsyncTask = true
+					fmt.Printf("  ℹ️  Async task method detected (will add timeout parameter)\n")
+				}
 			}
 		}
-	}
 	}
 
 	// Convert HTTP method to Go constant (e.g., "PATCH" -> "MethodPatch")
@@ -268,16 +270,18 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 		}
 	}
 
-	// True when path has a /{id}/ segment (exact match, not {tenant_id} etc.)
-	methodInfo.HasID = pathHasIDParam(extraMethod.Path)
+	methodInfo.PathBuild = apibuilder.AnalyzePathBuild(extraMethod.Path)
+	methodInfo.PathParams = methodInfo.PathBuild.PathParams
+	methodInfo.HasID = apibuilder.PathHasIDParam(extraMethod.Path)
 
-	// Parse the path to extract resource path and sub-path.
-	// ResourcePath is all segments before {id} (joined with "/").
-	// Example: /users/{id}/tenant_data/          -> resource: "users",                subPath: "tenant_data"
-	// Example: /tenants/metric_labels/{id}/      -> resource: "tenants/metric_labels", subPath: ""
-	// Example: /tenants/{id}/client_metrics/     -> resource: "tenants",              subPath: "client_metrics"
+	// Parse the path to extract resource path and sub-path
+	// Example: /users/{id}/tenant_data/ -> resource: "users", subPath: "tenant_data"
 	pathParts := strings.Split(strings.Trim(extraMethod.Path, "/"), "/")
+	if len(pathParts) > 0 {
+		methodInfo.ResourcePath = pathParts[0]
+	}
 
+	// Extract sub-path (everything after {id})
 	if methodInfo.HasID {
 		idIndex := -1
 		for i, part := range pathParts {
@@ -286,17 +290,10 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 				break
 			}
 		}
-		if idIndex > 0 {
-			methodInfo.ResourcePath = strings.Join(pathParts[:idIndex], "/")
-		} else if len(pathParts) > 0 {
-			methodInfo.ResourcePath = pathParts[0]
-		}
 		if idIndex >= 0 && idIndex < len(pathParts)-1 {
 			methodInfo.SubPath = strings.Join(pathParts[idIndex+1:], "/")
 			methodInfo.SubPath = strings.TrimSuffix(methodInfo.SubPath, "/")
 		}
-	} else if len(pathParts) > 0 {
-		methodInfo.ResourcePath = pathParts[0]
 	}
 
 	// Generate method name: ResourceName + HTTPMethodAction + LastPathPart
@@ -311,7 +308,6 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	// name itself as the action to avoid colliding with the collection path.
 	// If it was {id}, walk backwards to find the last meaningful segment.
 	if isNonIDPathParam(lastPart) {
-		// Strip braces and use param name: {tenant_id} -> TenantId
 		lastPart = strings.Trim(lastPart, "{}")
 	} else {
 		lastPart = cleanPathPart(lastPart)
@@ -485,9 +481,9 @@ func disambiguateMethodNames(methods []MethodInfo) {
 		for _, i := range indices {
 			m := &methods[i]
 			switch {
-			case m.ReturnsArray && !m.HasID:
+			case m.ReturnsArray:
 				m.Name += "List"
-			case m.HasID:
+			case m.HasID || len(m.PathParams) > 0:
 				m.Name += "ById"
 			default:
 				m.Name += "Alt"
@@ -496,7 +492,6 @@ func disambiguateMethodNames(methods []MethodInfo) {
 	}
 }
 
-// pathHasIDParam reports whether the path has a /{id}/ path parameter segment.
 // getSuccessContent returns the application/json content for the first successful
 // response (200 then 201 then 202) of the given operation, or nil if none found.
 func getSuccessContent(op *openapi3.Operation) *openapi3.MediaType {
@@ -510,18 +505,13 @@ func getSuccessContent(op *openapi3.Operation) *openapi3.MediaType {
 	return nil
 }
 
+// pathHasIDParam reports whether the path has a /{id}/ path parameter segment.
 func pathHasIDParam(path string) bool {
-	for _, part := range strings.Split(strings.Trim(path, "/"), "/") {
-		if part == "{id}" {
-			return true
-		}
-	}
-	return false
+	return apibuilder.PathHasIDParam(path)
 }
 
 // isNonIDPathParam reports whether a path segment is a path parameter other
-// than {id} (e.g. {tenant_id}, {key}). Used to preserve secondary param names
-// in generated method names, preventing collisions with collection-level paths.
+// than {id} (e.g. {tenant_id}, {access_key}).
 func isNonIDPathParam(part string) bool {
 	return len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' && part != "{id}"
 }
@@ -582,8 +572,9 @@ import (
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}{{end}}
-func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{if .HasID}}, id any{{end}}{{if .HasParams}}, params core.Params{{end}}{{if .HasBody}}, body core.Params{{end}}{{if .IsAsyncTask}}, waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
-	{{if .HasID}}resourcePath := core.BuildResourcePathWithID("{{.ResourcePath}}", id{{if .SubPath}}, "{{.SubPath}}"{{end}})
+func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx context.Context{{range .PathParams}}, {{.GoName}} any{{end}}{{if .HasParams}}, params core.Params{{end}}{{if .HasBody}}, body core.Params{{end}}{{if .IsAsyncTask}}, waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
+	{{if .PathBuild.UseBuildResourcePathWithID}}resourcePath := core.BuildResourcePathWithID("{{.PathBuild.ResourcePath}}", {{(index .PathParams 0).GoName}}{{range .PathBuild.SubPathSegments}}, "{{.}}"{{end}})
+	{{else if .PathParams}}resourcePath := core.InterpolatePathTemplate("{{.Path}}", {{range $i, $p := .PathParams}}{{if gt $i 0}}, {{end}}{{$p.GoName}}{{end}})
 	{{else}}resourcePath := "{{.Path}}"
 	{{end}}{{if .IsAsyncTask}}result, err := core.Request[core.Record](ctx, {{$.ReceiverName}}, http.{{.GoHTTPMethod}}, resourcePath, {{if .HasParams}}params{{else}}nil{{end}}, {{if .HasBody}}body{{else}}nil{{end}})
 	if err != nil {
@@ -619,8 +610,8 @@ func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}WithContext_{{.HTTPMethod}}(ctx c
 //
 // Parameters:
 //   - waitTimeout: If 0, returns immediately without waiting (async). Otherwise, waits for task completion with the specified timeout.{{end}}{{end}}
-func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{if .HasID}}id any, {{end}}{{if .HasParams}}params core.Params, {{end}}{{if .HasBody}}body core.Params{{if .IsAsyncTask}}, {{end}}{{end}}{{if .IsAsyncTask}}waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
-	return {{$.ReceiverName}}.{{.Name}}WithContext_{{.HTTPMethod}}({{$.ReceiverName}}.Rest.GetCtx(){{if .HasID}}, id{{end}}{{if .HasParams}}, params{{end}}{{if .HasBody}}, body{{end}}{{if .IsAsyncTask}}, waitTimeout{{end}})
+func ({{$.ReceiverName}} *{{$.Name}}) {{.Name}}_{{.HTTPMethod}}({{range $i, $p := .PathParams}}{{if gt $i 0}}, {{end}}{{$p.GoName}} any{{end}}{{if .PathParams}}{{if or .HasParams .HasBody .IsAsyncTask}}, {{end}}{{end}}{{if .HasParams}}params core.Params{{if or .HasBody .IsAsyncTask}}, {{end}}{{end}}{{if .HasBody}}body core.Params{{if .IsAsyncTask}}, {{end}}{{end}}{{if .IsAsyncTask}}waitTimeout time.Duration{{end}}) ({{if .IsAsyncTask}}*AsyncResult, error{{else}}{{if .ReturnsNoContent}}error{{else}}{{if .ReturnsArray}}core.RecordSet, error{{else}}core.Record, error{{end}}{{end}}{{end}}) {
+	return {{$.ReceiverName}}.{{.Name}}WithContext_{{.HTTPMethod}}({{$.ReceiverName}}.Rest.GetCtx(){{range .PathParams}}, {{.GoName}}{{end}}{{if .HasParams}}, params{{end}}{{if .HasBody}}, body{{end}}{{if .IsAsyncTask}}, waitTimeout{{end}})
 }
 
 {{end}}`

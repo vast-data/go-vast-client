@@ -766,8 +766,8 @@ type TenantMetricLabelValuesById_GET_Model struct {
 // method: GET
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Get Tenant Metric Label Value
-func (r *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context, id any) (*TenantMetricLabelValuesById_GET_Model, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+func (r *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context, tenantId any, id any) (*TenantMetricLabelValuesById_GET_Model, error) {
+	resourcePath := core.InterpolatePathTemplate("/tenants/{tenant_id}/metric_label_values/{id}/", tenantId, id)
 
 	var reqParams core.Params
 	var reqBody core.Params
@@ -789,16 +789,16 @@ func (r *Tenant) TenantMetricLabelValuesByIdWithContext_GET(ctx context.Context,
 // method: GET
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Get Tenant Metric Label Value
-func (r *Tenant) TenantMetricLabelValuesById_GET(id any) (*TenantMetricLabelValuesById_GET_Model, error) {
-	return r.TenantMetricLabelValuesByIdWithContext_GET(r.Untyped.GetCtx(), id)
+func (r *Tenant) TenantMetricLabelValuesById_GET(tenantId any, id any) (*TenantMetricLabelValuesById_GET_Model, error) {
+	return r.TenantMetricLabelValuesByIdWithContext_GET(r.Untyped.GetCtx(), tenantId, id)
 }
 
 // TenantMetricLabelValuesListWithContext_GET
 // method: GET
 // url: /tenants/{tenant_id}/metric_label_values/
 // summary: List Tenant Metric Label Values
-func (r *Tenant) TenantMetricLabelValuesListWithContext_GET(ctx context.Context) ([]TenantMetricLabelValuesListItem, error) {
-	resourcePath := "/tenants/{tenant_id}/metric_label_values/"
+func (r *Tenant) TenantMetricLabelValuesListWithContext_GET(ctx context.Context, tenantId any) ([]TenantMetricLabelValuesListItem, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants", tenantId, "metric_label_values")
 
 	var reqParams core.Params
 	var reqBody core.Params
@@ -822,16 +822,16 @@ func (r *Tenant) TenantMetricLabelValuesListWithContext_GET(ctx context.Context)
 // method: GET
 // url: /tenants/{tenant_id}/metric_label_values/
 // summary: List Tenant Metric Label Values
-func (r *Tenant) TenantMetricLabelValuesList_GET() ([]TenantMetricLabelValuesListItem, error) {
-	return r.TenantMetricLabelValuesListWithContext_GET(r.Untyped.GetCtx())
+func (r *Tenant) TenantMetricLabelValuesList_GET(tenantId any) ([]TenantMetricLabelValuesListItem, error) {
+	return r.TenantMetricLabelValuesListWithContext_GET(r.Untyped.GetCtx(), tenantId)
 }
 
 // TenantMetricLabelValuesWithContext_DELETE
 // method: DELETE
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Delete Tenant Metric Label Value
-func (r *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, id any) error {
-	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+func (r *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, tenantId any, id any) error {
+	resourcePath := core.InterpolatePathTemplate("/tenants/{tenant_id}/metric_label_values/{id}/", tenantId, id)
 
 	var reqParams core.Params
 	var reqBody core.Params
@@ -845,8 +845,8 @@ func (r *Tenant) TenantMetricLabelValuesWithContext_DELETE(ctx context.Context, 
 // method: DELETE
 // url: /tenants/{tenant_id}/metric_label_values/{id}/
 // summary: Delete Tenant Metric Label Value
-func (r *Tenant) TenantMetricLabelValues_DELETE(id any) error {
-	return r.TenantMetricLabelValuesWithContext_DELETE(r.Untyped.GetCtx(), id)
+func (r *Tenant) TenantMetricLabelValues_DELETE(tenantId any, id any) error {
+	return r.TenantMetricLabelValuesWithContext_DELETE(r.Untyped.GetCtx(), tenantId, id)
 }
 
 // TenantMetricLabelValues_PATCH_Model represents the response model for TenantMetricLabelValues
@@ -864,8 +864,8 @@ type TenantMetricLabelValues_PATCH_Model struct {
 //
 // Parameters:
 //   - value (body): The new value for this metric label.
-func (r *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, id any, value string) (*TenantMetricLabelValues_PATCH_Model, error) {
-	resourcePath := core.BuildResourcePathWithID("tenants/{tenant_id}/metric_label_values", id)
+func (r *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, tenantId any, id any, value string) (*TenantMetricLabelValues_PATCH_Model, error) {
+	resourcePath := core.InterpolatePathTemplate("/tenants/{tenant_id}/metric_label_values/{id}/", tenantId, id)
 
 	var reqParams core.Params
 	reqBody := core.Params{}
@@ -893,8 +893,8 @@ func (r *Tenant) TenantMetricLabelValuesWithContext_PATCH(ctx context.Context, i
 //
 // Parameters:
 //   - value (body): The new value for this metric label.
-func (r *Tenant) TenantMetricLabelValues_PATCH(id any, value string) (*TenantMetricLabelValues_PATCH_Model, error) {
-	return r.TenantMetricLabelValuesWithContext_PATCH(r.Untyped.GetCtx(), id, value)
+func (r *Tenant) TenantMetricLabelValues_PATCH(tenantId any, id any, value string) (*TenantMetricLabelValues_PATCH_Model, error) {
+	return r.TenantMetricLabelValuesWithContext_PATCH(r.Untyped.GetCtx(), tenantId, id, value)
 }
 
 // TenantMetricLabelValues_POST_Model represents the response model for TenantMetricLabelValues
@@ -913,8 +913,8 @@ type TenantMetricLabelValues_POST_Model struct {
 // Parameters:
 //   - labelId (body): The ID of the metric label.
 //   - value (body): The value for this metric label.
-func (r *Tenant) TenantMetricLabelValuesWithContext_POST(ctx context.Context, labelId int64, value string) (*TenantMetricLabelValues_POST_Model, error) {
-	resourcePath := "/tenants/{tenant_id}/metric_label_values/"
+func (r *Tenant) TenantMetricLabelValuesWithContext_POST(ctx context.Context, tenantId any, labelId int64, value string) (*TenantMetricLabelValues_POST_Model, error) {
+	resourcePath := core.BuildResourcePathWithID("tenants", tenantId, "metric_label_values")
 
 	var reqParams core.Params
 	reqBody := core.Params{}
@@ -942,8 +942,8 @@ func (r *Tenant) TenantMetricLabelValuesWithContext_POST(ctx context.Context, la
 // Parameters:
 //   - labelId (body): The ID of the metric label.
 //   - value (body): The value for this metric label.
-func (r *Tenant) TenantMetricLabelValues_POST(labelId int64, value string) (*TenantMetricLabelValues_POST_Model, error) {
-	return r.TenantMetricLabelValuesWithContext_POST(r.Untyped.GetCtx(), labelId, value)
+func (r *Tenant) TenantMetricLabelValues_POST(tenantId any, labelId int64, value string) (*TenantMetricLabelValues_POST_Model, error) {
+	return r.TenantMetricLabelValuesWithContext_POST(r.Untyped.GetCtx(), tenantId, labelId, value)
 }
 
 // TenantMetricLabelsById_GET_Model represents the response model for TenantMetricLabelsById
