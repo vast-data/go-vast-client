@@ -4120,24 +4120,6 @@ type Component_TLSCertificate struct {
 	TenantAssociateParam  string                `json:"tenant_associate_param,omitempty" yaml:"tenant_associate_param,omitempty" required:"false" doc:""`
 }
 
-// Component_TLSCertificateProtocolList represents the OpenAPI component schema
-// Component: #/components/schemas/TLSCertificateProtocolList
-type Component_TLSCertificateProtocolList struct{}
-
-// Component_TLSCertificateProtocols represents the OpenAPI component schema
-// Component: #/components/schemas/TLSCertificateProtocols
-type Component_TLSCertificateProtocols struct{}
-
-// Component_TLSCertificateUploadParams represents the OpenAPI component schema
-// Component: #/components/schemas/TLSCertificateUploadParams
-type Component_TLSCertificateUploadParams struct {
-	CaCertificateName    string    `json:"ca_certificate_name,omitempty" yaml:"ca_certificate_name,omitempty" required:"false" doc:"Certificate name (default - the file name)."`
-	Protocols            *[]string `json:"protocols,omitempty" yaml:"protocols,omitempty" required:"false" doc:"Protocols for this tls certificate."`
-	RevocationsName      string    `json:"revocations_name,omitempty" yaml:"revocations_name,omitempty" required:"false" doc:"Revocation name (default - the file name)."`
-	TenantAssociateParam string    `json:"tenant_associate_param,omitempty" yaml:"tenant_associate_param,omitempty" required:"false" doc:""`
-	TenantId             int64     `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
-}
-
 // Component_Table represents the OpenAPI component schema
 // Component: #/components/schemas/Table
 type Component_Table struct {
@@ -4667,14 +4649,6 @@ type Component_VTask struct {
 	StartTime        string `json:"start_time,omitempty" yaml:"start_time,omitempty" required:"false" doc:"Task start time"`
 	State            string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Task state"`
 	TimeoutInSeconds int64  `json:"timeout_in_seconds,omitempty" yaml:"timeout_in_seconds,omitempty" required:"false" doc:"Task should timeout after X seconds."`
-}
-
-// Component_ValidateComputeClusterCertificatesParams represents the OpenAPI component schema
-// Component: #/components/schemas/ValidateComputeClusterCertificatesParams
-type Component_ValidateComputeClusterCertificatesParams struct {
-	IntermediateCertificate string `json:"intermediate_certificate,omitempty" yaml:"intermediate_certificate,omitempty" required:"true" doc:"PEM-encoded intermediate CA certificate"`
-	IntermediateKey         string `json:"intermediate_key,omitempty" yaml:"intermediate_key,omitempty" required:"true" doc:"PEM-encoded intermediate private key"`
-	RootCertificate         string `json:"root_certificate,omitempty" yaml:"root_certificate,omitempty" required:"true" doc:"PEM-encoded root CA certificate"`
 }
 
 // Component_ValuePerMetric represents the OpenAPI component schema

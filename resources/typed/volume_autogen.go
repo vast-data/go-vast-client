@@ -232,23 +232,25 @@ func (r *Volume) UpdateWithContext(ctx context.Context, id any, req *VolumeReque
 // Delete deletes a volume with search parameters
 //
 // Parameters:
+//   - forceUnmap: Forces removal of mappings of the volume to hosts. A volume can be removed only if it is not mapped to any host.
 //   - force: Forces removal of mappings of the volume to hosts. A volume can be removed only if it is not mapped to any host.
-func (r *Volume) Delete(req *VolumeSearchParams, force bool) error {
-	return r.DeleteWithContext(r.Untyped.GetCtx(), req, force)
+func (r *Volume) Delete(req *VolumeSearchParams, forceUnmap bool, force bool) error {
+	return r.DeleteWithContext(r.Untyped.GetCtx(), req, forceUnmap, force)
 }
 
 // DeleteWithContext deletes a volume with search parameters using provided context
 //
 // Parameters:
+//   - forceUnmap: Forces removal of mappings of the volume to hosts. A volume can be removed only if it is not mapped to any host.
 //   - force: Forces removal of mappings of the volume to hosts. A volume can be removed only if it is not mapped to any host.
-func (r *Volume) DeleteWithContext(ctx context.Context, req *VolumeSearchParams, force bool) error {
+func (r *Volume) DeleteWithContext(ctx context.Context, req *VolumeSearchParams, forceUnmap bool, force bool) error {
 	params, err := core.NewParamsFromStruct(req)
 	if err != nil {
 		return err
 	}
 
 	// Build DELETE query params
-	deleteQueryParams := core.Params{"force": force}
+	deleteQueryParams := core.Params{"force_unmap": forceUnmap, "force": force}
 	// Build DELETE body params
 	var deleteBody core.Params
 	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, deleteQueryParams, deleteBody)
@@ -263,9 +265,10 @@ func (r *Volume) DeleteWithContext(ctx context.Context, req *VolumeSearchParams,
 //
 // Parameters:
 //   - id: Object ID specified in the path
+//   - forceUnmap: Forces removal of mappings of the volume to hosts. A volume can be removed only if it is not mapped to any host.
 //   - force: Forces removal of mappings of the volume to hosts. A volume can be removed only if it is not mapped to any host.
-func (r *Volume) DeleteById(id any, force bool) error {
-	return r.DeleteByIdWithContext(r.Untyped.GetCtx(), id, force)
+func (r *Volume) DeleteById(id any, forceUnmap bool, force bool) error {
+	return r.DeleteByIdWithContext(r.Untyped.GetCtx(), id, forceUnmap, force)
 }
 
 // DeleteByIdWithContext deletes a volume by ID using provided context
@@ -273,11 +276,12 @@ func (r *Volume) DeleteById(id any, force bool) error {
 //
 // Parameters:
 //   - id: Object ID specified in the path
+//   - forceUnmap: Forces removal of mappings of the volume to hosts. A volume can be removed only if it is not mapped to any host.
 //   - force: Forces removal of mappings of the volume to hosts. A volume can be removed only if it is not mapped to any host.
-func (r *Volume) DeleteByIdWithContext(ctx context.Context, id any, force bool) error {
+func (r *Volume) DeleteByIdWithContext(ctx context.Context, id any, forceUnmap bool, force bool) error {
 
 	// Build DELETE query params
-	deleteQueryParams := core.Params{"force": force}
+	deleteQueryParams := core.Params{"force_unmap": forceUnmap, "force": force}
 	// Build DELETE body params
 	var deleteBody core.Params
 	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, deleteQueryParams, deleteBody)
