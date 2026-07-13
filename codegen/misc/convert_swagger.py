@@ -301,12 +301,7 @@ class SwaggerConverter:
     def copy_outputs(self, dest_dir="."):
         """Copy final outputs to destination directory"""
         dest_dir = Path(dest_dir)
-        
-        if self.api_json.exists():
-            dest_json = dest_dir / "api.json"
-            dest_json.write_bytes(self.api_json.read_bytes())
-            self.log(f"Copied {self.api_json} -> {dest_json}", "success")
-        
+
         if self.api_tarball.exists():
             dest_tar = dest_dir / "api.tar.gz"
             dest_tar.write_bytes(self.api_tarball.read_bytes())

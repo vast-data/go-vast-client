@@ -155,7 +155,7 @@ endif
 #     - Automatically fixes known problems (null properties, missing types)  
 #     - Provides detailed debugging information
 #     - Converts to OpenAPI v3 using the Go converter
-#     - Creates final outputs: api.json and api.tar.gz
+#     - Creates final output in openapi_schema/: api.tar.gz
 #
 #   Usage:
 #     make gen-openapi-tar <path> [options]
@@ -172,6 +172,8 @@ endif
 #     make gen-openapi-tar ./specs/swagger.yaml
 #     make gen-openapi-tar /tmp/vast-openapi.yaml --debug
 #     make gen-openapi-tar ./specs/swagger.yaml --no-auto-fix
+OPENAPI_SCHEMA_DIR := $(CURDIR)/openapi_schema
+
 gen-openapi-tar: ## Convert Swagger/OpenAPI YAML to tarball with validation & auto-fixes
 	@set -e; \
 	args="$(runargs)"; \
@@ -182,8 +184,9 @@ gen-openapi-tar: ## Convert Swagger/OpenAPI YAML to tarball with validation & au
 		exit 1; \
 	fi; \
 	echo "🚀 Running enhanced OpenAPI conversion with validation and auto-fixes..."; \
-	python3 $(CURDIR)/codegen/misc/convert_swagger.py $$args --dest-dir $(CURDIR); \
-	echo "✅ Enhanced conversion completed!"
+	rm -f $(OPENAPI_SCHEMA_DIR)/api.tar.gz; \
+	python3 $(CURDIR)/codegen/misc/convert_swagger.py $$args --dest-dir $(OPENAPI_SCHEMA_DIR); \
+	echo "✅ Enhanced conversion completed! Outputs: $(OPENAPI_SCHEMA_DIR)/api.tar.gz"
 
 # Validate Swagger/OpenAPI schema
 #
