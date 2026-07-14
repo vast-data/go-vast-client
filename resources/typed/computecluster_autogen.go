@@ -65,8 +65,10 @@ type ComputeClusterRequestBody struct {
 	Name                    string                                  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Compute Cluster name"`
 	Netmask                 string                                  `json:"netmask,omitempty" yaml:"netmask,omitempty" required:"true" doc:"Network mask for the compute cluster network (e.g., \"255.255.255.0\" or \"24\")"`
 	StaticIpRanges          *[][]string                             `json:"static_ip_ranges,omitempty" yaml:"static_ip_ranges,omitempty" required:"true" doc:"List of IP range pairs [[start1, end1], [start2, end2]] for static IP assignment to CNodes. Must provide enough IPs for all CNodes."`
+	AllTenants              bool                                    `json:"all_tenants,omitempty" yaml:"all_tenants,omitempty" required:"false" doc:"When true, all existing and newly created tenants are automatically assigned to this compute cluster"`
 	BackupFrequency         int64                                   `json:"backup_frequency,omitempty" yaml:"backup_frequency,omitempty" required:"false" doc:"Backup frequency in minutes"`
 	ClusterCidr             string                                  `json:"cluster_cidr,omitempty" yaml:"cluster_cidr,omitempty" required:"false" doc:"Kubernetes cluster CIDR for pod networking (default is \"10.42.0.0/16\")"`
+	DefaultGateway          string                                  `json:"default_gateway,omitempty" yaml:"default_gateway,omitempty" required:"false" doc:"Default gateway IP address for the compute cluster network (e.g., \"10.0.0.1\"). Optional."`
 	Description             string                                  `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"User-defined description for the compute cluster"`
 	IntermediateCertificate string                                  `json:"intermediate_certificate,omitempty" yaml:"intermediate_certificate,omitempty" required:"false" doc:"RKE2 intermediate certificate. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_key."`
 	IntermediateKey         string                                  `json:"intermediate_key,omitempty" yaml:"intermediate_key,omitempty" required:"false" doc:"RKE2 intermediate private key. If omitted, certificates will be generated automatically. Must be provided together with root_certificate and intermediate_certificate."`
@@ -74,6 +76,7 @@ type ComputeClusterRequestBody struct {
 	ServerKubeVipAddress    string                                  `json:"server_kube_vip_address,omitempty" yaml:"server_kube_vip_address,omitempty" required:"false" doc:"Kubernetes VIP address for the API server"`
 	ServiceCidr             string                                  `json:"service_cidr,omitempty" yaml:"service_cidr,omitempty" required:"false" doc:"Kubernetes service CIDR for service networking (default is \"10.43.0.0/16\")"`
 	Tags                    *[]string                               `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"User-defined tags for the compute cluster"`
+	Vlan                    int64                                   `json:"vlan,omitempty" yaml:"vlan,omitempty" required:"false" doc:"VLAN ID for the compute cluster network (1-4095). Optional; omit or set to null to disable."`
 }
 
 // -----------------------------------------------------
