@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/vast-data/go-vast-client/core"
@@ -323,6 +324,33 @@ func (rest *UntypedVMSRest) GetCtx() context.Context {
 
 func (rest *UntypedVMSRest) SetCtx(ctx context.Context) {
 	rest.ctx = ctx
+}
+
+// String returns a log-friendly identity of this client: VMS host and auth mode.
+// Examples: "10.0.0.1 [type=api-token]", "vms.example.com [type=bearer-token;user=admin;tenant=foo]"
+func (rest *UntypedVMSRest) String() string {
+	cfg := rest.Session.GetConfig()
+	var parts []string
+	switch a := rest.Session.GetAuthenticator().(type) {
+	case *core.ApiRTokenAuthenticator:
+		parts = append(parts, "type=api-token")
+		if a.Tenant != "" {
+			parts = append(parts, "tenant="+a.Tenant)
+		}
+	case *core.BaseAuthAuthenticator:
+		parts = append(parts, "type=basic-auth", "user="+a.Username)
+		if a.Tenant != "" {
+			parts = append(parts, "tenant="+a.Tenant)
+		}
+	case *core.JWTAuthenticator:
+		parts = append(parts, "type=bearer-token", "user="+a.Username)
+		if a.Tenant != "" {
+			parts = append(parts, "tenant="+a.Tenant)
+		}
+	default:
+		panic(fmt.Sprintf("UntypedVMSRest.String: unexpected authenticator type %T", rest.Session.GetAuthenticator()))
+	}
+	return fmt.Sprintf("%s [%s]", cfg.Host, strings.Join(parts, ";"))
 }
 
 func newUntypedResource[T UntypedVastResourceType](rest *UntypedVMSRest, resourcePath string, resourceOps ...core.ResourceOps) *T {

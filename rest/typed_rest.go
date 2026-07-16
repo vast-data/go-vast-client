@@ -294,6 +294,11 @@ func (rest *TypedVMSRest) SetCtx(ctx context.Context) {
 	rest.Untyped.ctx = ctx
 }
 
+// String returns a log-friendly identity of this client: VMS host and auth mode.
+func (rest *TypedVMSRest) String() string {
+	return rest.Untyped.String()
+}
+
 func newTypedResource[T TypedVastResourceType](rest *TypedVMSRest) *T {
 	// Get the concrete type from the type parameter
 	var zero T
