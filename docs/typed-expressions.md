@@ -14,7 +14,7 @@ import needed.
 
 | Factory | Type | Generated query parameter |
 |---|---|---|
-| `expr.S("foo")` | `StrField` | `name=foo` |
+| `expr.Str("foo")` | `StrField` | `name=foo` |
 | `expr.Str.Exact("foo")` | `StrField` | `name=foo` |
 | `expr.Str.Contains("foo")` | `StrField` | `name__contains=foo` |
 | `expr.Str.IContains("foo")` | `StrField` | `name__icontains=foo` |
@@ -25,7 +25,7 @@ import needed.
 | `expr.Str.In("a", "b")` | `StrField` | `name__in=a,b` |
 | `expr.Str.NotContains("foo")` | `StrField` | `name__not_contains=foo` |
 | `expr.Str.NotIn("a", "b")` | `StrField` | `name__not_in=a,b` |
-| `expr.I(42)` | `IntField` | `uid=42` |
+| `expr.Int(42)` | `IntField` | `uid=42` |
 | `expr.Int.Exact(42)` | `IntField` | `uid=42` |
 | `expr.Int.GT(100)` | `IntField` | `uid__gt=100` |
 | `expr.Int.GTE(100)` | `IntField` | `uid__gte=100` |
@@ -40,18 +40,17 @@ import needed.
 
 ## Exact Match
 
-For a simple exact-match filter use the short-form helpers `client.S` (string) and
-`client.I` (integer):
+Call `expr.Str` / `expr.Int` directly for an exact-match filter:
 
 ```go
 // GET /users/?name=admin
 user, err := rest.Users.Get(&typed.UserSearchParams{
-    Name: expr.S("admin"),
+    Name: expr.Str("admin"),
 })
 
 // GET /users/?uid=9999
 user, err := rest.Users.Get(&typed.UserSearchParams{
-    Uid: expr.I(9999),
+    Uid: expr.Int(9999),
 })
 ```
 

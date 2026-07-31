@@ -51,9 +51,9 @@ func main() {
         panic(err)
     }
 
-    // expr.S() creates an exact-match StrField — see docs/typed-expressions.md
+    // expr.Str("...") is an exact-match StrField — see docs/typed-expressions.md
     searchParams := &typed.ViewSearchParams{
-        Path: expr.S("/myview"),
+        Path: expr.Str("/myview"),
     }
 
     body := &typed.ViewRequestBody{

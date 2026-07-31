@@ -37,7 +37,7 @@ func main() {
 
 	// --- DELETE ---
 	err = rest.Views.Delete(&typed.ViewSearchParams{
-		Path: expr.S("/go-client-testview"),
+		Path: expr.Str("/go-client-testview"),
 	}, true)
 	if err != nil {
 		panic(fmt.Errorf("failed to delete view: %w", err))

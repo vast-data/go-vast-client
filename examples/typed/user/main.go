@@ -33,7 +33,7 @@ func main() {
 
 	// --- DELETE ---
 	err = rest.Users.Delete(&typed.UserSearchParams{
-		Name: expr.S("myUser"),
+		Name: expr.Str("myUser"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete user: %w", err))

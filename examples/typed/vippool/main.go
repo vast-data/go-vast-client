@@ -85,7 +85,7 @@ func main() {
 
 	// --- CHECK EXISTS ---
 	exists, err := rest.VipPools.Exists(&typed.VipPoolSearchParams{
-		StartIp: expr.S("192.168.1.100"),
+		StartIp: expr.Str("192.168.1.100"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to check vippool existence: %w", err))

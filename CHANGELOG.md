@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## 0.150.0
 
+BREAKING CHANGES:
+
+* **Typed Search Expressions**: Removed `expr.S` / `expr.I` aliases; use `expr.Str(...)` / `expr.Int(...)` for exact match.
+
 ENHANCEMENTS:
 
 * **VAST 5.5 API Coverage**: Continued OpenAPI/swagger schema refreshes and regenerated typed/untyped resources for VAST 5.5 endpoints.
@@ -18,7 +22,7 @@ BUG FIXES:
 
 BREAKING CHANGES:
 
-* **Typed Search Expressions**: Typed `*SearchParams` string/int fields are now `expr.StrField` / `expr.IntField` instead of plain `string` / `int64`. Pass exact values via `expr.S(...)` / `expr.I(...)`, or use Django-style lookups (`Contains`, `GTE`, `In`, etc.). See `docs/typed-expressions.md`.
+* **Typed Search Expressions**: Typed `*SearchParams` string/int fields are now `expr.StrField` / `expr.IntField` instead of plain `string` / `int64`. Pass exact values via `expr.Str(...)` / `expr.Int(...)`, or use Django-style lookups (`Contains`, `GTE`, `In`, etc.). See `docs/typed-expressions.md`.
 
 ENHANCEMENTS:
 

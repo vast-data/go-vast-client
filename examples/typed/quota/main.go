@@ -43,7 +43,7 @@ func main() {
 
 	// --- GET ---
 	fetchedQuota, err := rest.Quotas.Get(&typed.QuotaSearchParams{
-		Path: expr.S("/go-client-test-quota"),
+		Path: expr.Str("/go-client-test-quota"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get quota: %w", err))
@@ -52,7 +52,7 @@ func main() {
 
 	// --- DELETE ---
 	err = rest.Quotas.Delete(&typed.QuotaSearchParams{
-		Path: expr.S("/go-client-test-quota"),
+		Path: expr.Str("/go-client-test-quota"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete quota: %w", err))
