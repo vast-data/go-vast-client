@@ -160,9 +160,9 @@ func TestAsyncResult_Wait_Completed(t *testing.T) {
 	mockAPI := &mockVastResourceAPI{
 		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
 			return Record{
-				"id":            123,
-				"state":         "completed",
-				ResourceTypeKey: VTaskKey,
+				"id":    123,
+				"state": "completed",
+				"url":   "https://l101/api/v5/vtasks/123/",
 			}, nil
 		},
 	}
@@ -197,11 +197,11 @@ func TestAsyncResult_Wait_FailedTask(t *testing.T) {
 	mockAPI := &mockVastResourceAPI{
 		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
 			return Record{
-				"id":            123,
-				"name":          "test-task",
-				"state":         "failed",
-				"messages":      []any{"Task execution error"},
-				ResourceTypeKey: VTaskKey,
+				"id":       123,
+				"name":     "test-task",
+				"state":    "failed",
+				"messages": []any{"Task execution error"},
+				"url":      "https://l101/api/v5/vtasks/123/",
 			}, nil
 		},
 	}
@@ -233,10 +233,10 @@ func TestAsyncResult_Wait_FailedTaskNoMessages(t *testing.T) {
 	mockAPI := &mockVastResourceAPI{
 		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
 			return Record{
-				"id":            123,
-				"name":          "test-task",
-				"state":         "error",
-				ResourceTypeKey: VTaskKey,
+				"id":    123,
+				"name":  "test-task",
+				"state": "error",
+				"url":   "https://l101/api/v5/vtasks/123/",
 			}, nil
 		},
 	}
@@ -275,15 +275,15 @@ func TestAsyncResult_Wait_RunningThenCompleted(t *testing.T) {
 			callCount++
 			if callCount < 3 {
 				return Record{
-					"id":            123,
-					"state":         "running",
-					ResourceTypeKey: VTaskKey,
+					"id":    123,
+					"state": "running",
+					"url":   "https://l101/api/v5/vtasks/123/",
 				}, nil
 			}
 			return Record{
-				"id":            123,
-				"state":         "completed",
-				ResourceTypeKey: VTaskKey,
+				"id":    123,
+				"state": "completed",
+				"url":   "https://l101/api/v5/vtasks/123/",
 			}, nil
 		},
 	}
@@ -342,13 +342,13 @@ func TestMaybeAsyncResultFromRecord_EmptyRecord(t *testing.T) {
 	}
 }
 
-func TestMaybeAsyncResultFromRecord_DirectTask(t *testing.T) {
+func TestMaybeAsyncResultFromRecord_DirectTaskWithURL(t *testing.T) {
 	ctx := context.Background()
 	rest := &mockVastRest{}
 
 	record := Record{
-		"id":            int64(456),
-		ResourceTypeKey: VTaskKey,
+		"id":  int64(456),
+		"url": "https://l101/api/v5/vtasks/456/",
 	}
 
 	result := MaybeAsyncResultFromRecord(ctx, record, rest)
@@ -366,7 +366,7 @@ func TestMaybeAsyncResultFromRecord_DirectTaskNoID(t *testing.T) {
 	rest := &mockVastRest{}
 
 	record := Record{
-		ResourceTypeKey: VTaskKey,
+		"url": "https://l101/api/v5/vtasks/456/",
 	}
 
 	result := MaybeAsyncResultFromRecord(ctx, record, rest)
@@ -381,8 +381,8 @@ func TestMaybeAsyncResultFromRecord_WrongResourceType(t *testing.T) {
 	rest := &mockVastRest{}
 
 	record := Record{
-		"id":            int64(456),
-		ResourceTypeKey: "SomeOtherResource",
+		"id":  int64(456),
+		"url": "https://l101/api/v5/views/456/",
 	}
 
 	result := MaybeAsyncResultFromRecord(ctx, record, rest)

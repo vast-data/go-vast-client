@@ -571,3 +571,216 @@ func TestReturnsTextPlain_PrometheusHeuristic(t *testing.T) {
 	}
 	t.Skip("no prometheus heuristic endpoint in schema")
 }
+
+func TestOpenAPISchema_AllPathOperations(t *testing.T) {
+	doc := mustLoadDoc(t)
+	methods := []string{"GET", "POST", "PATCH", "PUT", "DELETE", "HEAD", "OPTIONS"}
+	for p, item := range doc.Paths.Map() {
+		for _, method := range methods {
+			_, _ = GetOperationSummary(method, p)
+			_, _ = ReturnsTextPlain(method, p)
+			_, _ = Returns204NoContent(method, p)
+		}
+		if item.Get != nil {
+			_, _ = GetResponseModelSchema("GET", p)
+			_, _ = GetResponseModelSchemaUnresolved("GET", p)
+			_, _ = SearchableQueryParams(p)
+			_, _ = GetQueryParameters("GET", p)
+			_, _ = GetSchema_GET_QueryParams(p)
+		}
+		if item.Post != nil {
+			_, _ = GetRequestBodySchema("POST", p)
+		}
+		if item.Patch != nil {
+			_, _ = GetRequestBodySchema("PATCH", p)
+		}
+	}
+}
+
+func TestOpenAPISchema_GetAllPathsAndComponents(t *testing.T) {
+	paths, err := GetAllPaths()
+	if err != nil {
+		t.Fatalf("GetAllPaths: %v", err)
+	}
+	if len(paths) == 0 {
+		t.Fatal("expected paths")
+	}
+
+	schemas, err := GetAllComponentSchemas()
+	if err != nil {
+		t.Fatalf("GetAllComponentSchemas: %v", err)
+	}
+	if len(schemas) == 0 {
+		t.Fatal("expected component schemas")
+	}
+}
+
+func TestGetResponseModelSchema_GETAllSuccessfulPaths(t *testing.T) {
+	doc := mustLoadDoc(t)
+	success := 0
+	for p, item := range doc.Paths.Map() {
+		if item.Get == nil {
+			continue
+		}
+		if _, err := GetResponseModelSchema("GET", p); err == nil {
+			success++
+		}
+	}
+	if success == 0 {
+		t.Fatal("expected at least one GET path with response schema")
+	}
+}
+
+func TestGetResponseModelSchemaForGET_Variants(t *testing.T) {
+	doc := mustLoadDoc(t)
+	var paginated, flatArray, singleObject string
+	for p, item := range doc.Paths.Map() {
+		if item.Get == nil || item.Get.Responses == nil {
+			continue
+		}
+		resp := item.Get.Responses.Status(200)
+		if resp == nil || resp.Value == nil || resp.Value.Content == nil {
+			continue
+		}
+		content := resp.Value.Content["application/json"]
+		if content == nil || content.Schema == nil {
+			continue
+		}
+		root := ResolveComposedSchema(ResolveAllRefs(content.Schema))
+		if root == nil || root.Type == nil {
+			continue
+		}
+		if (*root.Type).Is("object") && root.Properties != nil {
+			if resultsRef, ok := root.Properties["results"]; ok {
+				results := ResolveComposedSchema(ResolveAllRefs(resultsRef))
+				if results != nil && results.Type != nil && (*results.Type).Is("array") {
+					paginated = p
+				}
+			} else if paginated == "" {
+				singleObject = p
+			}
+		}
+		if (*root.Type).Is("array") && flatArray == "" {
+			flatArray = p
+		}
+	}
+
+	if paginated != "" {
+		if _, err := GetResponseModelSchema("GET", paginated); err != nil {
+			t.Fatalf("paginated GET %s: %v", paginated, err)
+		}
+	}
+	if flatArray != "" {
+		if _, err := GetResponseModelSchema("GET", flatArray); err != nil {
+			t.Fatalf("array GET %s: %v", flatArray, err)
+		}
+	}
+	if singleObject != "" {
+		if _, err := GetResponseModelSchema("GET", singleObject); err != nil {
+			t.Fatalf("object GET %s: %v", singleObject, err)
+		}
+	}
+}
+
+func TestReturnsTextPlain_ExplicitContentType(t *testing.T) {
+	doc := mustLoadDoc(t)
+	for p, item := range doc.Paths.Map() {
+		for _, op := range []*openapi3.Operation{item.Get, item.Post, item.Put, item.Patch, item.Delete} {
+			if op == nil || op.Responses == nil {
+				continue
+			}
+			for code := 200; code < 300; code++ {
+				resp := op.Responses.Status(code)
+				if resp == nil || resp.Value == nil || resp.Value.Content == nil {
+					continue
+				}
+				for contentType := range resp.Value.Content {
+					if strings.Contains(contentType, "text/plain") {
+						method := "GET"
+						if op == item.Post {
+							method = "POST"
+						}
+						ok, err := ReturnsTextPlain(method, p)
+						if err != nil {
+							t.Fatalf("ReturnsTextPlain(%s %s): %v", method, p, err)
+						}
+						if !ok {
+							t.Fatalf("expected text/plain for %s %s", method, p)
+						}
+						return
+					}
+				}
+			}
+		}
+	}
+	t.Skip("no explicit text/plain endpoint in schema")
+}
+
+func TestReturns204NoContent_ExplicitStatus(t *testing.T) {
+	doc := mustLoadDoc(t)
+	for p, item := range doc.Paths.Map() {
+		for method, op := range map[string]*openapi3.Operation{
+			"GET": item.Get, "POST": item.Post, "PUT": item.Put,
+			"PATCH": item.Patch, "DELETE": item.Delete,
+		} {
+			if op == nil || op.Responses == nil || op.Responses.Status(204) == nil {
+				continue
+			}
+			ok, err := Returns204NoContent(method, p)
+			if err != nil {
+				t.Fatalf("Returns204NoContent(%s %s): %v", method, p, err)
+			}
+			if !ok {
+				t.Fatalf("expected 204 for %s %s", method, p)
+			}
+			return
+		}
+	}
+	t.Skip("no explicit 204 endpoint in schema")
+}
+
+func TestSearchableQueryParams_AllGETPaths(t *testing.T) {
+	doc := mustLoadDoc(t)
+	found := 0
+	for p, item := range doc.Paths.Map() {
+		if item.Get == nil {
+			continue
+		}
+		params, err := SearchableQueryParams(p)
+		if err != nil {
+			t.Fatalf("SearchableQueryParams(%s): %v", p, err)
+		}
+		_ = params
+		found++
+	}
+	if found == 0 {
+		t.Fatal("expected searchable params on at least one GET path")
+	}
+}
+
+func TestGetOperationSummary_AllPaths(t *testing.T) {
+	doc := mustLoadDoc(t)
+	for p, item := range doc.Paths.Map() {
+		if item.Get != nil {
+			if _, err := GetOperationSummary("GET", p); err != nil {
+				t.Fatalf("GetOperationSummary GET %s: %v", p, err)
+			}
+		}
+		if item.Post != nil {
+			if _, err := GetOperationSummary("POST", p); err != nil {
+				t.Fatalf("GetOperationSummary POST %s: %v", p, err)
+			}
+		}
+	}
+}
+
+func TestValidateOperationExists_NormalizesPath(t *testing.T) {
+	path := findPathWithOperation(t, "GET")
+	if path == "" {
+		t.Skip("no GET path")
+	}
+	trimmed := strings.Trim(path, "/")
+	if err := ValidateOperationExists("GET", trimmed); err != nil {
+		t.Fatalf("ValidateOperationExists: %v", err)
+	}
+}

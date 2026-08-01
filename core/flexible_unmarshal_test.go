@@ -2,6 +2,7 @@ package core
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -661,5 +662,106 @@ func TestFlexibleUnmarshal_StringToUnsigned(t *testing.T) {
 	}
 	if result.Count != 42 {
 		t.Fatalf("expected 42, got %d", result.Count)
+	}
+}
+
+func TestFlexibleUnmarshal_InvalidTargets(t *testing.T) {
+	jsonData := []byte(`{"name":"x"}`)
+
+	var notPtr struct {
+		Name string `json:"name"`
+	}
+	if err := FlexibleUnmarshal(jsonData, notPtr); err == nil {
+		t.Fatal("expected error for non-pointer target")
+	}
+
+	var notStruct int
+	if err := FlexibleUnmarshal(jsonData, &notStruct); err == nil {
+		t.Fatal("expected error for non-struct target")
+	}
+}
+
+func TestFlexibleUnmarshal_PointerToSlice(t *testing.T) {
+	type Payload struct {
+		Names *[]string `json:"names"`
+	}
+	jsonData := []byte(`{"names": ["a", 1, true]}`)
+
+	var result Payload
+	if err := FlexibleUnmarshal(jsonData, &result); err != nil {
+		t.Fatalf("FlexibleUnmarshal: %v", err)
+	}
+	if result.Names == nil || len(*result.Names) != 3 {
+		t.Fatalf("unexpected names: %+v", result.Names)
+	}
+	if (*result.Names)[0] != "a" || (*result.Names)[1] != "1" || (*result.Names)[2] != "true" {
+		t.Fatalf("unexpected converted names: %+v", *result.Names)
+	}
+}
+
+func TestFlexibleUnmarshal_ConvertToStringDefault(t *testing.T) {
+	type Payload struct {
+		Value string `json:"value"`
+	}
+	jsonData := []byte(`{"value": {"nested": true}}`)
+
+	var result Payload
+	if err := FlexibleUnmarshal(jsonData, &result); err != nil {
+		t.Fatalf("FlexibleUnmarshal: %v", err)
+	}
+	if !strings.Contains(result.Value, "nested") {
+		t.Fatalf("expected stringified map, got %q", result.Value)
+	}
+}
+
+func TestFlexibleUnmarshal_BoolConversionFailure(t *testing.T) {
+	type Payload struct {
+		Enabled bool `json:"enabled"`
+	}
+	var result Payload
+	if err := FlexibleUnmarshal([]byte(`{"enabled": "maybe"}`), &result); err == nil {
+		t.Fatal("expected error for invalid bool conversion")
+	}
+}
+
+func TestGetZeroValueForNumericKind_AllKinds(t *testing.T) {
+	kinds := []reflect.Kind{
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+	}
+	for _, kind := range kinds {
+		if got := getZeroValueForNumericKind(kind); got == nil {
+			t.Fatalf("expected zero value for %v", kind)
+		}
+	}
+	if got := getZeroValueForNumericKind(reflect.String); got != nil {
+		t.Fatalf("expected nil for non-numeric kind, got %v", got)
+	}
+}
+
+func TestConvertStringToNumeric_AllKinds(t *testing.T) {
+	cases := []struct {
+		kind reflect.Kind
+		in   string
+		want any
+	}{
+		{reflect.Int8, "7", int8(7)},
+		{reflect.Int16, "16", int16(16)},
+		{reflect.Int32, "32", int32(32)},
+		{reflect.Uint, "9", uint(9)},
+		{reflect.Uint8, "8", uint8(8)},
+		{reflect.Uint16, "16", uint16(16)},
+		{reflect.Uint32, "32", uint32(32)},
+		{reflect.Float32, "1.5", float32(1.5)},
+	}
+	for _, tc := range cases {
+		got := convertStringToNumeric(tc.in, tc.kind)
+		if got != tc.want {
+			t.Fatalf("convertStringToNumeric(%q, %v) = %v (%T), want %v", tc.in, tc.kind, got, got, tc.want)
+		}
+	}
+	if got := convertStringToNumeric("bad", reflect.Int); got != nil {
+		t.Fatalf("expected nil for invalid int, got %v", got)
 	}
 }

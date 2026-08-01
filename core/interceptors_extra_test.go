@@ -18,8 +18,8 @@ func TestInterceptorLogging(t *testing.T) {
 
 	logLevel = "info"
 	beforeRequestLog(http.MethodGet, "http://example/api", nil)
-	afterRequestLog(Record{"@resourceType": "User", "id": 1})
-	afterRequestLogInfo(RecordSet{{"@resourceType": "User", "id": 1}})
+	afterRequestLog(Record{"url": "https://l101:443/api/v5/users/1/", "id": 1})
+	afterRequestLogInfo(RecordSet{{"url": "https://l101:443/api/v5/users/1/", "id": 1}})
 	afterRequestLogInfo(RecordSet{})
 	afterRequestLogInfo(Record{"id": 1})
 	afterRequestLogInfo(nil)
@@ -27,9 +27,9 @@ func TestInterceptorLogging(t *testing.T) {
 	logLevel = "debug"
 	body := io.NopCloser(bytes.NewBufferString(`{"name":"alice"}`))
 	beforeRequestLog(http.MethodPost, "http://example/api", body)
-	afterRequestLogDebug(Record{"@resourceType": "User", "name": "alice"})
+	afterRequestLogDebug(Record{"url": "https://l101:443/api/v5/users/1/", "name": "alice"})
 	afterRequestLogDebug(Record{"name": "alice"})
-	afterRequestLogDebug(RecordSet{{"@resourceType": "User", "id": 1}})
+	afterRequestLogDebug(RecordSet{{"url": "https://l101:443/api/v5/users/1/", "id": 1}})
 	afterRequestLogDebug(RecordSet{{"id": 1}})
 	afterRequestLogDebug(RecordSet{})
 	afterRequestLogDebug(nil)
@@ -106,21 +106,7 @@ func TestDoRequestWithRetries_ReauthorizesOnUnauthorized(t *testing.T) {
 	}
 }
 
-func TestDefaultResponseMutations_AsyncTaskInvalidType(t *testing.T) {
-	_, err := defaultResponseMutations(Record{"async_task": "not-a-map"})
-	if err == nil {
-		t.Fatal("expected error for invalid async_task type")
-	}
-}
-
-func TestDefaultResponseMutations_UnsupportedType(t *testing.T) {
-	_, err := defaultResponseMutations(nil)
-	if err == nil {
-		t.Fatal("expected error for unsupported type")
-	}
-}
-
-func TestDoAfterRequest_AsyncTaskNormalization(t *testing.T) {
+func TestDoAfterRequest_AsyncTaskEnvelopePreserved(t *testing.T) {
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{"async_task": map[string]any{"id": 42}})
@@ -132,7 +118,7 @@ func TestDoAfterRequest_AsyncTaskNormalization(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetById: %v", err)
 	}
-	if got[ResourceTypeKey] != "VTask" {
-		t.Fatalf("expected VTask normalization, got %v", got[ResourceTypeKey])
+	if _, ok := got["async_task"]; !ok {
+		t.Fatalf("expected async_task envelope, got %v", got)
 	}
 }

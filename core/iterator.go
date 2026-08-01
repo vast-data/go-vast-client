@@ -129,14 +129,6 @@ func (it *ResourceIterator) fetchPage(url string, params Params) error {
 		it.nextURL = nil
 		it.previousURL = nil
 		it.totalCount = len(recordSet)
-
-		// Set resource type on all records for consistency
-		resourceType := it.resource.GetResourceType()
-		if resourceType != "Dummy" {
-			if err := setResourceKey(it.current, resourceType); err != nil {
-				return err
-			}
-		}
 		return nil
 	}
 
@@ -160,13 +152,6 @@ func (it *ResourceIterator) processPaginationEnvelope(envelope Record) error {
 					return fmt.Errorf("failed to convert results to RecordSet: %w", err)
 				}
 				it.current = recordSet
-				// Set resource type on all records for consistency
-				resourceType := it.resource.GetResourceType()
-				if resourceType != "Dummy" {
-					if err := setResourceKey(it.current, resourceType); err != nil {
-						return err
-					}
-				}
 			} else if resultsList, ok := resultsRaw.([]any); ok {
 				// Convert []any to []map[string]any
 				converted := make([]map[string]any, 0, len(resultsList))
@@ -182,13 +167,6 @@ func (it *ResourceIterator) processPaginationEnvelope(envelope Record) error {
 					return fmt.Errorf("failed to convert results to RecordSet: %w", err)
 				}
 				it.current = recordSet
-				// Set resource type on all records for consistency
-				resourceType := it.resource.GetResourceType()
-				if resourceType != "Dummy" {
-					if err := setResourceKey(it.current, resourceType); err != nil {
-						return err
-					}
-				}
 			} else {
 				return fmt.Errorf("unexpected type for results field: %T", resultsRaw)
 			}
@@ -230,14 +208,6 @@ func (it *ResourceIterator) processPaginationEnvelope(envelope Record) error {
 	it.nextURL = nil
 	it.previousURL = nil
 	it.totalCount = 1
-
-	// Set resource type on all records for consistency
-	resourceType := it.resource.GetResourceType()
-	if resourceType != "Dummy" {
-		if err := setResourceKey(it.current, resourceType); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

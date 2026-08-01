@@ -467,8 +467,8 @@ func (r Record) PrettyTable() string {
 	headers := []string{"attr", "value"}
 	var rows [][]any
 	var name string
-	if resourceTyp, ok := r[ResourceTypeKey]; ok {
-		name = resourceTyp.(string)
+	if displayName := recordDisplayName(r); displayName != "" {
+		name = displayName
 	}
 	if len(r) == 0 {
 		return "<>"
@@ -724,28 +724,8 @@ func typeMatch[T RecordUnion](val Renderable) bool {
 	return reflect.TypeOf(val) == reflect.TypeOf(zero)
 }
 
-// setResourceKey sets resource type key for tabular formatting (only if not already set).
-func setResourceKey(result Renderable, resourceType string) error {
-	switch v := result.(type) {
-	case Record:
-		if _, ok := v[ResourceTypeKey]; !ok && len(v) > 0 {
-			v[ResourceTypeKey] = resourceType
-		}
-		return nil
-	case RecordSet:
-		for _, rec := range v {
-			if _, ok := rec[ResourceTypeKey]; !ok && len(rec) > 0 {
-				rec[ResourceTypeKey] = resourceType
-			}
-		}
-		return nil
-	default:
-		return fmt.Errorf("unsupported type")
-	}
-}
-
-// ModelToRecord converts any typed model struct to a Record with @resourceType
-// This is a helper function for typed resources to convert their models to Records
+// ModelToRecord converts any typed model struct to a Record.
+// This is a helper function for typed resources to convert their models to Records.
 func ModelToRecord(model any) Record {
 	// Marshal the model struct
 	jsonBytes, err := json.Marshal(model)
@@ -757,18 +737,6 @@ func ModelToRecord(model any) Record {
 	if err := json.Unmarshal(jsonBytes, &record); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal to record: %v", err))
 	}
-
-	// Get the type name and remove "Model" suffix
-	modelType := reflect.TypeOf(model)
-	// If it's a pointer, get the element type
-	if modelType.Kind() == reflect.Ptr {
-		modelType = modelType.Elem()
-	}
-
-	resourceType := modelType.Name()
-
-	// Add resource type
-	record[ResourceTypeKey] = resourceType
 
 	return record
 }

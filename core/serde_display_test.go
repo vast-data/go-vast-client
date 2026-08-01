@@ -48,6 +48,22 @@ func TestParams_ToMultipartFormData(t *testing.T) {
 	}
 }
 
+func TestParams_ToMultipartFormData_FileWithoutContentType(t *testing.T) {
+	params := Params{
+		"upload": FileData{
+			Filename: "data.bin",
+			Content:  []byte("payload"),
+		},
+	}
+	form, err := params.ToMultipartFormData()
+	if err != nil {
+		t.Fatalf("ToMultipartFormData: %v", err)
+	}
+	if form == nil || form.Body == nil {
+		t.Fatal("expected multipart body")
+	}
+}
+
 func TestParams_UpdateAndWithout(t *testing.T) {
 	params := Params{"a": 1, "b": 2}
 	other := Params{"b": 99, "c": 3}
@@ -150,6 +166,16 @@ func TestRecord_DisplayAndAccessors(t *testing.T) {
 	}
 }
 
+func TestRecord_FillErrors(t *testing.T) {
+	record := Record{"name": "alice"}
+	if err := record.Fill("not-a-pointer"); err == nil {
+		t.Fatal("expected error for non-pointer container")
+	}
+	if err := record.Fill((*int)(nil)); err == nil {
+		t.Fatal("expected error for nil pointer container")
+	}
+}
+
 func TestRecordSet_Display(t *testing.T) {
 	set := RecordSet{
 		{"id": 1, "name": "alice"},
@@ -222,4 +248,49 @@ func TestModelToRecord(t *testing.T) {
 	if record["name"] != "alice" {
 		t.Fatalf("unexpected record: %v", record)
 	}
+	if _, ok := record[ResourceTypeKey]; ok {
+		t.Fatal("ModelToRecord should not inject @resourceType")
+	}
+}
+
+func TestRecord_AccessorPanics(t *testing.T) {
+	empty := Record{}
+	panics := []struct {
+		name string
+		fn   func()
+	}{
+		{"RecordID", func() { _ = empty.RecordID() }},
+		{"RecordGUID", func() { _ = empty.RecordGUID() }},
+		{"RecordName", func() { _ = empty.RecordName() }},
+		{"RecordTenantID", func() { _ = empty.RecordTenantID() }},
+		{"RecordTenantName", func() { _ = empty.RecordTenantName() }},
+	}
+	for _, tc := range panics {
+		t.Run(tc.name, func(t *testing.T) {
+			defer func() {
+				if recover() == nil {
+					t.Fatalf("%s should panic when field missing", tc.name)
+				}
+			}()
+			tc.fn()
+		})
+	}
+
+	badID := Record{"id": "not-a-number"}
+	defer func() {
+		if recover() == nil {
+			t.Fatal("RecordID should panic on invalid id type")
+		}
+	}()
+	_ = badID.RecordID()
+}
+
+func TestRecord_TenantIDInvalidTypePanics(t *testing.T) {
+	record := Record{"tenant_id": "bad"}
+	defer func() {
+		if recover() == nil {
+			t.Fatal("RecordTenantID should panic on invalid tenant_id type")
+		}
+	}()
+	_ = record.RecordTenantID()
 }
