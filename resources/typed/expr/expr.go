@@ -1,7 +1,7 @@
 // Package expr provides typed query field expressions for the VMS typed REST API.
 //
-//	expr.Str  — singleton factory for string search fields
-//	expr.Int  — singleton factory for integer search fields
+//	expr.Str  — callable factory for string search fields (call = exact match)
+//	expr.Int  — callable factory for integer search fields (call = exact match)
 //	expr.StrField — field type to use in *SearchParams structs for string params
 //	expr.IntField — field type to use in *SearchParams structs for integer params
 //
@@ -12,7 +12,9 @@
 //	    Uid  expr.IntField `json:"uid,omitempty"`
 //	}
 //
+//	UserSearchParams{Name: expr.Str("admin")}            // ?name=admin
 //	UserSearchParams{Name: expr.Str.StartsWith("sys")}   // ?name__startswith=sys
+//	UserSearchParams{Uid:  expr.Int(42)}                 // ?uid=42
 //	UserSearchParams{Uid:  expr.Int.GT(1000)}            // ?uid__gt=1000
 package expr
 

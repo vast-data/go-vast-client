@@ -21,9 +21,9 @@ if err != nil {
     log.Fatal(err)
 }
 
-// client.S() creates an exact-match string field
+// expr.Str("...") creates an exact-match string field
 searchParams := &typed.QuotaSearchParams{
-    Name: client.S("my-quota"),
+    Name: expr.Str("my-quota"),
 }
 
 body := &typed.QuotaRequestBody{
@@ -159,13 +159,13 @@ result, err := rest.Views.Create(client.Params{
 **Typed Client:**
 ```go
 // Exact match
-user, err := rest.Users.Get(&typed.UserSearchParams{Name: client.S("admin")})
+user, err := rest.Users.Get(&typed.UserSearchParams{Name: expr.Str("admin")})
 
 // Expression: name starts with "svc-"
-users, err := rest.Users.List(&typed.UserSearchParams{Name: client.Str.StartsWith("svc-")})
+users, err := rest.Users.List(&typed.UserSearchParams{Name: expr.Str.StartsWith("svc-")})
 
 // Expression: uid greater than 1000
-users, err := rest.Users.List(&typed.UserSearchParams{Uid: client.Int.GT(1000)})
+users, err := rest.Users.List(&typed.UserSearchParams{Uid: expr.Int.GT(1000)})
 ```
 
 **Untyped Client:**
@@ -182,25 +182,30 @@ This lets you pass Django-style lookup expressions directly — no `RawData` nee
 filters:
 
 ```go
+// ?name=admin  (exact match via call)
+rest.Users.Get(&typed.UserSearchParams{
+    Name: expr.Str("admin"),
+})
+
 // ?name__startswith=prod
 rest.Views.List(&typed.ViewSearchParams{
-    Name: client.Str.StartsWith("prod"),
+    Name: expr.Str.StartsWith("prod"),
 })
 
 // ?name__in=alice,bob
 rest.Users.List(&typed.UserSearchParams{
-    Name: client.Str.In("alice", "bob"),
+    Name: expr.Str.In("alice", "bob"),
 })
 
 // ?uid__gte=500
 rest.Users.List(&typed.UserSearchParams{
-    Uid: client.Int.GTE(500),
+    Uid: expr.Int.GTE(500),
 })
 
 // ?name__not_contains=test&tenant_id__gt=0
 rest.Snapshots.List(&typed.SnapshotSearchParams{
-    Name:     client.Str.NotContains("test"),
-    TenantId: client.Int.GT(0),
+    Name:     expr.Str.NotContains("test"),
+    TenantId: expr.Int.GT(0),
 })
 ```
 

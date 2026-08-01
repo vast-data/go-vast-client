@@ -50,6 +50,9 @@ func absent(t *testing.T, p core.Params, key string) {
 
 // ---- expr.Str tests ----
 
+func TestStrCallExact(t *testing.T) {
+	has(t, toParams(t, searchParams{Name: expr.Str("admin")}), "name", "admin")
+}
 func TestStrExact(t *testing.T) {
 	has(t, toParams(t, searchParams{Name: expr.Str.Exact("admin")}), "name", "admin")
 }
@@ -99,6 +102,9 @@ func TestStrNotRegex(t *testing.T) {
 
 // ---- expr.Int tests ----
 
+func TestIntCallExact(t *testing.T) {
+	has(t, toParams(t, searchParams{ID: expr.Int(42)}), "id", "42")
+}
 func TestIntExact(t *testing.T) {
 	has(t, toParams(t, searchParams{ID: expr.Int.Exact(42)}), "id", "42")
 }
@@ -124,6 +130,33 @@ func TestIntNotGTE(t *testing.T) {
 func TestIntNotIn(t *testing.T) {
 	has(t, toParams(t, searchParams{ID: expr.Int.NotIn(1, 2)}), "id__not_in", "1,2")
 }
+func TestIntNotGT(t *testing.T) {
+	has(t, toParams(t, searchParams{ID: expr.Int.NotGT(5)}), "id__not_gt", "5")
+}
+func TestIntNotLT(t *testing.T) {
+	has(t, toParams(t, searchParams{ID: expr.Int.NotLT(5)}), "id__not_lt", "5")
+}
+func TestIntNotLTE(t *testing.T) {
+	has(t, toParams(t, searchParams{ID: expr.Int.NotLTE(5)}), "id__not_lte", "5")
+}
+
+func TestStrNotIExact(t *testing.T) {
+	has(t, toParams(t, searchParams{Name: expr.Str.NotIExact("Admin")}), "name__not_iexact", "Admin")
+}
+func TestStrNotEndsWith(t *testing.T) {
+	has(t, toParams(t, searchParams{Name: expr.Str.NotEndsWith("tmp")}), "name__not_endswith", "tmp")
+}
+func TestStrNotIRegex(t *testing.T) {
+	has(t, toParams(t, searchParams{Name: expr.Str.NotIRegex(`^tmp`)}), "name__not_iregex", "^tmp")
+}
+
+func TestNotWrapperExactFallback(t *testing.T) {
+	// not_ on an exact-match expression falls back to __not_exact
+	field := expr.Str.NotExact("root")
+	p := toParams(t, searchParams{Name: field})
+	has(t, p, "name__not_exact", "root")
+}
+
 
 // ---- unset / mixed / query string ----
 
@@ -167,12 +200,12 @@ func TestQueryStringEncoding(t *testing.T) {
 // projection) are merged alongside typed expr fields, not replacing them.
 // This covers the real-world pattern:
 //
-//	ViewSearchParams{Name: expr.S("clusterA"), RawData: Params{"fields": "id,path"}}
+//	ViewSearchParams{Name: expr.Str("clusterA"), RawData: Params{"fields": "id,path"}}
 //	=> ?name=clusterA&fields=id,path
 func TestRawDataMergesWithTypedFields(t *testing.T) {
 	p := toParams(t, searchParams{
-		Name:    expr.S("clusterA-source"),
-		ID:      expr.I(42),
+		Name:    expr.Str("clusterA-source"),
+		ID:      expr.Int(42),
 		RawData: core.Params{"fields": "id,name,path"},
 	})
 
@@ -184,7 +217,7 @@ func TestRawDataMergesWithTypedFields(t *testing.T) {
 // TestRawDataOverridesTypedField verifies that RawData wins on key conflict.
 func TestRawDataOverridesTypedField(t *testing.T) {
 	p := toParams(t, searchParams{
-		Name:    expr.S("original"),
+		Name:    expr.Str("original"),
 		RawData: core.Params{"name": "override"},
 	})
 

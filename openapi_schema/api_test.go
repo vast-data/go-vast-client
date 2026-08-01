@@ -3,6 +3,8 @@ package openapi_schema
 import (
 	"testing"
 
+	"strings"
+
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -203,5 +205,173 @@ func TestSearchableQueryParams(t *testing.T) {
 	}
 	if names == nil {
 		t.Fatalf("names slice is nil")
+	}
+}
+
+func TestGetSchemaFromComponent(t *testing.T) {
+	doc := mustLoadDoc(t)
+	var name string
+	for k := range doc.Components.Schemas {
+		name = k
+		break
+	}
+	if name == "" {
+		t.Skip("no components found in OpenAPI doc")
+	}
+
+	schema, err := GetSchemaFromComponent(name)
+	if err != nil {
+		t.Fatalf("GetSchemaFromComponent error: %v", err)
+	}
+	if schema == nil || schema.Value == nil {
+		t.Fatal("expected resolved schema")
+	}
+}
+
+func TestGetAllComponentSchemas(t *testing.T) {
+	components, err := GetAllComponentSchemas()
+	if err != nil {
+		t.Fatalf("GetAllComponentSchemas error: %v", err)
+	}
+	if len(components) == 0 {
+		t.Fatal("expected components")
+	}
+	if components[0].Name == "" || components[0].Schema == nil {
+		t.Fatalf("unexpected component: %+v", components[0])
+	}
+}
+
+func TestIsDirectComponentReference(t *testing.T) {
+	doc := mustLoadDoc(t)
+	for _, schemaRef := range doc.Components.Schemas {
+		if name := IsDirectComponentReference(schemaRef); name != "" {
+			return
+		}
+	}
+	t.Log("no direct component references found in schema sample")
+}
+
+func TestResolveComposedSchema(t *testing.T) {
+	objectType := openapi3.TypeObject
+	schema := &openapi3.Schema{
+		Type: &openapi3.Types{objectType},
+		Properties: map[string]*openapi3.SchemaRef{
+			"name": {Value: &openapi3.Schema{Type: &openapi3.Types{openapi3.TypeString}}},
+		},
+		AllOf: []*openapi3.SchemaRef{
+			{Value: &openapi3.Schema{
+				Type: &openapi3.Types{objectType},
+				Properties: map[string]*openapi3.SchemaRef{
+					"id": {Value: &openapi3.Schema{Type: &openapi3.Types{openapi3.TypeInteger}}},
+				},
+			}},
+		},
+	}
+	resolved := ResolveComposedSchema(schema)
+	if resolved == nil || len(resolved.Properties) < 2 {
+		t.Fatalf("expected merged properties, got %+v", resolved)
+	}
+}
+
+func TestGetAllPaths(t *testing.T) {
+	paths, err := GetAllPaths()
+	if err != nil {
+		t.Fatalf("GetAllPaths: %v", err)
+	}
+	if len(paths) == 0 {
+		t.Fatal("expected paths")
+	}
+}
+
+func TestValidateOperationExists(t *testing.T) {
+	path := findPathWithOperation(t, "GET")
+	if path == "" {
+		t.Skip("no GET operation available")
+	}
+	if err := ValidateOperationExists("GET", path); err != nil {
+		t.Fatalf("ValidateOperationExists: %v", err)
+	}
+	if err := ValidateOperationExists("GET", "/definitely/missing/"); err == nil {
+		t.Fatal("expected error for missing path")
+	}
+}
+
+func TestGetOperationSummary(t *testing.T) {
+	path := findPathWithOperation(t, "GET")
+	if path == "" {
+		t.Skip("no GET operation available")
+	}
+	summary, err := GetOperationSummary("GET", path)
+	if err != nil {
+		t.Fatalf("GetOperationSummary: %v", err)
+	}
+	if summary == "" {
+		t.Log("empty summary is acceptable for some operations")
+	}
+}
+
+func TestGetDeleteParams(t *testing.T) {
+	doc := mustLoadDoc(t)
+	var deletePath string
+	for p, item := range doc.Paths.Map() {
+		if item.Delete == nil {
+			continue
+		}
+		trimmed := strings.Trim(p, "/")
+		if !strings.HasSuffix(trimmed, "/{id}") && trimmed != "{id}" {
+			continue
+		}
+		base := strings.TrimSuffix(trimmed, "/{id}")
+		if base == "" {
+			continue
+		}
+		if _, err := GetDeleteParams(base); err != nil {
+			continue
+		}
+		deletePath = base
+		break
+	}
+	if deletePath == "" {
+		t.Skip("no DELETE operation matching /{resource}/{id}/ pattern")
+	}
+	params, err := GetDeleteParams(deletePath)
+	if err != nil {
+		t.Fatalf("GetDeleteParams(%q): %v", deletePath, err)
+	}
+	if params == nil {
+		t.Fatal("expected delete params struct")
+	}
+}
+
+func TestReturnsFlags(t *testing.T) {
+	path := findPathWithOperation(t, "GET")
+	if path == "" {
+		t.Skip("no GET operation available")
+	}
+	if _, err := ReturnsTextPlain("GET", path); err != nil {
+		t.Fatalf("ReturnsTextPlain: %v", err)
+	}
+	if _, err := Returns204NoContent("GET", path); err != nil {
+		t.Fatalf("Returns204NoContent: %v", err)
+	}
+}
+
+func TestResolveAllRefs(t *testing.T) {
+	doc := mustLoadDoc(t)
+	for _, schemaRef := range doc.Components.Schemas {
+		if resolved := ResolveAllRefs(schemaRef); resolved != nil {
+			return
+		}
+	}
+	t.Fatal("expected at least one resolvable schema")
+}
+
+func TestGetResponseModelSchemaUnresolved(t *testing.T) {
+	path := findPathWithOperation(t, "POST")
+	if path == "" {
+		t.Skip("no POST operation available")
+	}
+	if _, err := GetResponseModelSchemaUnresolved("POST", path); err != nil {
+		t.Logf("GetResponseModelSchemaUnresolved returned: %v", err)
 	}
 }

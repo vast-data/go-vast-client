@@ -41,7 +41,7 @@ func main() {
 
 	// --- GET (exact match) ---
 	fetchedSnapshot, err := rest.Snapshots.Get(&typed.SnapshotSearchParams{
-		Name: expr.S("go-client-test-snapshot"),
+		Name: expr.Str("go-client-test-snapshot"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get snapshot: %w", err))
@@ -59,7 +59,7 @@ func main() {
 
 	// --- DELETE ---
 	err = rest.Snapshots.Delete(&typed.SnapshotSearchParams{
-		Name: expr.S("go-client-test-snapshot"),
+		Name: expr.Str("go-client-test-snapshot"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete snapshot: %w", err))

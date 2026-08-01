@@ -43,7 +43,25 @@ jobs:
       run: go mod verify
 
     - name: Run tests
-      run: go test -v -race -coverprofile=coverage.out ./...
+      run: go test -v -race ./...
+
+    - name: Run library coverage
+      run: |
+        go test -v -race \
+          -coverprofile=coverage.out \
+          -coverpkg=./core,./rest,./resources/typed/expr,./openapi_schema,github.com/vast-data/go-vast-client \
+          ./core ./rest ./resources/typed/expr ./openapi_schema .
+
+    - name: Check coverage threshold
+      if: matrix.go-version == '1.23'
+      run: |
+        COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        THRESHOLD=85
+        echo "Library coverage: ${COVERAGE}%"
+        if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+          echo "Coverage ${COVERAGE}% is below threshold ${THRESHOLD}%"
+          exit 1
+        fi
 
     - name: Generate coverage report
       run: go tool cover -html=coverage.out -o coverage.html

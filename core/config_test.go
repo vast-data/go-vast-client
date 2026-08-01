@@ -162,6 +162,9 @@ func TestWithApiVersion(t *testing.T) {
 }
 
 func TestWithFillFn(t *testing.T) {
+	original := fillFunc
+	t.Cleanup(func() { fillFunc = original })
+
 	config := &VMSConfig{
 		FillFn: func(r Record, container any) error {
 			return nil

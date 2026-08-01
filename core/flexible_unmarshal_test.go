@@ -633,3 +633,33 @@ func TestFlexibleUnmarshal_ProtectedPathExample(t *testing.T) {
 		t.Errorf("expected State to be 'Active', got %q", result.State)
 	}
 }
+
+func TestFlexibleUnmarshal_NumericKinds(t *testing.T) {
+	type Payload struct {
+		A int8   `json:"a"`
+		B uint16 `json:"b"`
+		C uint32 `json:"c"`
+		D uint64 `json:"d"`
+	}
+	jsonData := []byte(`{"a": null, "b": null, "c": null, "d": null}`)
+	var result Payload
+	if err := FlexibleUnmarshal(jsonData, &result); err != nil {
+		t.Fatalf("FlexibleUnmarshal: %v", err)
+	}
+	if result.A != 0 || result.B != 0 || result.C != 0 || result.D != 0 {
+		t.Fatalf("expected zero values, got %+v", result)
+	}
+}
+
+func TestFlexibleUnmarshal_StringToUnsigned(t *testing.T) {
+	type Payload struct {
+		Count uint64 `json:"count"`
+	}
+	var result Payload
+	if err := FlexibleUnmarshal([]byte(`{"count":"42"}`), &result); err != nil {
+		t.Fatalf("FlexibleUnmarshal: %v", err)
+	}
+	if result.Count != 42 {
+		t.Fatalf("expected 42, got %d", result.Count)
+	}
+}

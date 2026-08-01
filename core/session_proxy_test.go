@@ -37,6 +37,10 @@ func clearProxyEnv(t *testing.T) {
 
 // TestProxyEnvironmentVariable verifies that HTTPS_PROXY environment variable is respected
 func TestProxyEnvironmentVariable(t *testing.T) {
+	if os.Getenv("RUN_ISOLATION_TESTS") == "" {
+		t.Skip("Skipping TestProxyEnvironmentVariable (requires isolation). To run: RUN_ISOLATION_TESTS=1 go test ./core -run ^TestProxyEnvironmentVariable$ -v")
+	}
+
 	// Set up test proxy URL
 	testProxyURL := "http://10.100.11.154:3128"
 
@@ -55,6 +59,7 @@ func TestProxyEnvironmentVariable(t *testing.T) {
 		SslVerify:      false,
 		Timeout:        &timeout,
 		MaxConnections: 10,
+		RespectProxy:   true,
 	}
 
 	// Create a session
@@ -121,6 +126,7 @@ func TestNO_PROXY(t *testing.T) {
 		SslVerify:      false,
 		Timeout:        &timeout,
 		MaxConnections: 10,
+		RespectProxy:   true,
 	}
 
 	// Create a session

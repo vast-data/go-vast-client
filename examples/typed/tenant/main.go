@@ -48,7 +48,7 @@ func main() {
 
 	// --- GET ---
 	fetchedTenant, err := rest.Tenants.Get(&typed.TenantSearchParams{
-		Name: expr.S("go-client-test-tenant"),
+		Name: expr.Str("go-client-test-tenant"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get tenant: %w", err))
@@ -69,7 +69,7 @@ func main() {
 
 	// --- DELETE ---
 	err = rest.Tenants.Delete(&typed.TenantSearchParams{
-		Name: expr.S("go-client-test-tenant"),
+		Name: expr.Str("go-client-test-tenant"),
 	}, false)
 	if err != nil {
 		panic(fmt.Errorf("failed to delete tenant: %w", err))

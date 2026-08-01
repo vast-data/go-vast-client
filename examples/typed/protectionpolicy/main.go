@@ -42,7 +42,7 @@ func main() {
 
 	// --- GET ---
 	fetchedPolicy, err := rest.ProtectionPolicies.Get(&typed.ProtectionPolicySearchParams{
-		Name: expr.S("go-client-test-policy"),
+		Name: expr.Str("go-client-test-policy"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to get protection policy: %w", err))
@@ -51,7 +51,7 @@ func main() {
 
 	// --- DELETE ---
 	err = rest.ProtectionPolicies.Delete(&typed.ProtectionPolicySearchParams{
-		Name: expr.S("go-client-test-policy"),
+		Name: expr.Str("go-client-test-policy"),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to delete protection policy: %w", err))
