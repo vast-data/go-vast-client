@@ -1,4 +1,4 @@
-name: Core Package Tests
+name: Library Package Tests
 
 on:
   push:
@@ -7,46 +7,24 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  test-core:
-    name: Test Core Package
+  test-library:
+    name: Test Library Packages
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
-      
+
     - name: Set up Go
       uses: actions/setup-go@v6
       with:
-        go-version: '1.22.5'
-        
-    - name: Run Core Tests
-      run: |
-        go test ./core -v -coverprofile=core_coverage.out -coverpkg=./core
-        
-    - name: Display Coverage
-      run: |
-        go tool cover -func=core_coverage.out
-        
-    - name: Calculate Coverage Percentage
-      id: coverage
-      run: |
-        COVERAGE=$(go tool cover -func=core_coverage.out | grep total | awk '{print $3}' | sed 's/%//')
-        echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
-        echo "Core package coverage: $COVERAGE%"
-        
-    - name: Check Coverage Threshold
-      run: |
-        COVERAGE=${{ steps.coverage.outputs.coverage }}
-        THRESHOLD=39
-        if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
-          echo "❌ Coverage $COVERAGE% is below threshold $THRESHOLD%"
-          exit 1
-        fi
-        echo "✅ Coverage $COVERAGE% meets threshold $THRESHOLD%"
-        
+        go-version: '1.23'
+
+    - name: Run library tests with coverage
+      run: make test-core
+
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v7
       with:
-        name: core-coverage
+        name: library-coverage
         path: core_coverage.out
