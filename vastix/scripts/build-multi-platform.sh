@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VASTIX_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUTPUT_DIR="$VASTIX_ROOT/dist"
-VERSION=$(cat "$VASTIX_ROOT/version" 2>/dev/null || echo "unknown")
+VERSION="${VERSION:-$(cat "$VASTIX_ROOT/version" 2>/dev/null || echo "unknown")}"
 
 echo -e "${GREEN}Building vastix for multiple platforms...${NC}"
 echo "Vastix root: $VASTIX_ROOT"
