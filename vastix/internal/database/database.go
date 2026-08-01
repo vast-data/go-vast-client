@@ -11,11 +11,10 @@ import (
 
 	vastixlog "vastix/internal/logging"
 
+	"github.com/glebarez/sqlite"
 	_ "github.com/joho/godotenv/autoload"
-	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 )

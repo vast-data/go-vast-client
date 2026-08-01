@@ -1,22 +1,11 @@
 name: Release Vastix
 
 on:
-  workflow_dispatch:
-    inputs:
-      version_override:
-        description: 'Override version from vastix/version file (optional)'
-        required: false
-        type: string
-      prerelease:
-        description: 'Mark as pre-release'
-        required: false
-        type: boolean
-        default: false
-      draft:
-        description: 'Create as draft'
-        required: false
-        type: boolean
-        default: false
+  push:
+    branches:
+      - main
+    paths:
+      - vastix/version
 
 permissions:
   contents: write
@@ -25,154 +14,143 @@ jobs:
   build-and-release:
     name: Build and Release Vastix
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Check out code
       uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
+    - name: Read version and check release line
+      id: meta
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        VERSION=$(tr -d '[:space:]' < vastix/version)
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+
+        if [[ ! "$VERSION" =~ ^[0-9]+(-[a-z0-9-]+)?-vast-[0-9]+(\.[0-9]+)*$ ]]; then
+          echo "::error::Invalid vastix/version '$VERSION' (expected N-vast-X.Y or N-qualifier-vast-X.Y, e.g. 1-vast-5.4 or 1-beta-vast-5.5)"
+          exit 1
+        fi
+
+        RELEASE_LINE="${VERSION%%-vast-*}"
+        echo "release_line=$RELEASE_LINE" >> "$GITHUB_OUTPUT"
+        echo "Vastix version: $VERSION (release line $RELEASE_LINE)"
+
+        EXISTING=$(gh release list --limit 200 --json tagName --jq '.[].tagName' | grep -E "^${RELEASE_LINE}-vast-" || true)
+        if [ -n "$EXISTING" ]; then
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+          echo "A vastix release for line ${RELEASE_LINE} already exists:"
+          echo "$EXISTING"
+          echo "Skipping tag creation, build, and release."
+        else
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "No existing release for line ${RELEASE_LINE}; proceeding."
+        fi
+
+        if git rev-parse "refs/tags/${VERSION}" >/dev/null 2>&1; then
+          echo "tag_exists=true" >> "$GITHUB_OUTPUT"
+          echo "Git tag ${VERSION} already exists."
+        else
+          echo "tag_exists=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Skip summary
+      if: steps.meta.outputs.skip == 'true'
+      run: |
+        echo "## Vastix release skipped" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "Version \`${{ steps.meta.outputs.version }}\` was not released because release line **${{ steps.meta.outputs.release_line }}** already has a GitHub release." >> "$GITHUB_STEP_SUMMARY"
+
     - name: Set up Go
+      if: steps.meta.outputs.skip != 'true'
       uses: actions/setup-go@v7
       with:
-        go-version: '1.23'
-
-    - name: Read version
-      id: version
-      run: |
-        if [ -n "${{ inputs.version_override }}" ]; then
-          VERSION="${{ inputs.version_override }}"
-          echo "Using override version: $VERSION"
-        else
-          VERSION=$(cat vastix/version)
-          echo "Using version from file: $VERSION"
-        fi
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "tag=vastix-v$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Check if tag exists
-      id: check_tag
-      run: |
-        if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-          echo "exists=true" >> $GITHUB_OUTPUT
-          echo "⚠️  Tag ${{ steps.version.outputs.tag }} already exists"
-        else
-          echo "exists=false" >> $GITHUB_OUTPUT
-          echo "✓ Tag ${{ steps.version.outputs.tag }} is available"
-        fi
+        go-version: '1.25'
 
     - name: Build VPN server binaries
+      if: steps.meta.outputs.skip != 'true'
       run: |
         cd vastix
         chmod +x scripts/build-vpn-binaries.sh
         ./scripts/build-vpn-binaries.sh
 
     - name: Build Vastix for multiple platforms
+      if: steps.meta.outputs.skip != 'true'
       run: |
         cd vastix
         chmod +x scripts/build-multi-platform.sh
-        ./scripts/build-multi-platform.sh
+        VERSION="${{ steps.meta.outputs.version }}" ./scripts/build-multi-platform.sh
 
     - name: Generate checksums
+      if: steps.meta.outputs.skip != 'true'
       run: |
         cd vastix/dist
         sha256sum vx-* > checksums.txt
         cat checksums.txt
 
     - name: Create release notes
-      id: release_notes
+      if: steps.meta.outputs.skip != 'true'
       run: |
-        cat > release_notes.md << 'EOF'
-        # Vastix Release ${{ steps.version.outputs.version }}
+        cat > release_notes.md << EOF
+        # Vastix ${{ steps.meta.outputs.version }}
 
-        ## 📦 Downloads
-
-        Choose the binary for your platform:
+        ## Downloads
 
         | Platform | Architecture | Binary |
         |----------|--------------|--------|
-        | Linux | x86_64 | `vx-linux-amd64.${{ steps.version.outputs.version }}` |
-        | Linux | ARM64 | `vx-linux-arm64.${{ steps.version.outputs.version }}` |
-        | macOS | Intel | `vx-darwin-amd64.${{ steps.version.outputs.version }}` |
-        | macOS | Apple Silicon | `vx-darwin-arm64.${{ steps.version.outputs.version }}` |
+        | Linux | x86_64 | \`vx-linux-amd64.${{ steps.meta.outputs.version }}\` |
+        | Linux | ARM64 | \`vx-linux-arm64.${{ steps.meta.outputs.version }}\` |
+        | macOS | Intel | \`vx-darwin-amd64.${{ steps.meta.outputs.version }}\` |
+        | macOS | Apple Silicon | \`vx-darwin-arm64.${{ steps.meta.outputs.version }}\` |
 
-        ## 🚀 Installation
+        ## Installation
 
-        ### Linux / macOS
-
-        ```bash
-        # Download the appropriate binary for your platform
-        # Example for Linux x86_64:
-        wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/vx-linux-amd64.${{ steps.version.outputs.version }}
-
-        # Make it executable
-        chmod +x vx-linux-amd64.${{ steps.version.outputs.version }}
-
-        # Move to PATH and rename to 'vx'
-        sudo mv vx-linux-amd64.${{ steps.version.outputs.version }} /usr/local/bin/vx
-
-        # Now you can run it from anywhere
+        \`\`\`bash
+        # Example: Linux x86_64
+        wget https://github.com/${{ github.repository }}/releases/download/${{ steps.meta.outputs.version }}/vx-linux-amd64.${{ steps.meta.outputs.version }}
+        chmod +x vx-linux-amd64.${{ steps.meta.outputs.version }}
+        sudo mv vx-linux-amd64.${{ steps.meta.outputs.version }} /usr/local/bin/vx
         vx
-        ```
+        \`\`\`
 
-        ## ✨ Features
+        ## Verification
 
-        - Multi-platform support (Linux, macOS, x86_64, ARM64)
-        - Pre-compiled VPN server binaries embedded
-        - Automatic WireGuard setup for VIP Pool Forwarding
-        - TUI-based VAST cluster management
-
-        ## 🔐 Verification
-
-        Verify your download with checksums:
-
-        ```bash
+        \`\`\`bash
         sha256sum -c checksums.txt
-        ```
+        \`\`\`
 
-        ## 📝 Changelog
-
-        See [commits](https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }}) for details.
-
-        ---
-
-        **Full Documentation**: [vastix/docs/](https://github.com/${{ github.repository }}/tree/main/vastix/docs)
+        See [commits](https://github.com/${{ github.repository }}/commits/${{ steps.meta.outputs.version }}) for details.
         EOF
 
-    - name: Create or update tag
-      if: steps.check_tag.outputs.exists == 'false'
+    - name: Create git tag from vastix/version
+      if: steps.meta.outputs.skip != 'true' && steps.meta.outputs.tag_exists == 'false'
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag -a "${{ steps.version.outputs.tag }}" -m "Vastix release ${{ steps.version.outputs.version }}"
-        git push origin "${{ steps.version.outputs.tag }}"
+        git tag -a "${{ steps.meta.outputs.tag }}" -m "Vastix ${{ steps.meta.outputs.version }}"
+        git push origin "${{ steps.meta.outputs.tag }}"
 
     - name: Create GitHub Release
+      if: steps.meta.outputs.skip != 'true'
       uses: softprops/action-gh-release@v3
       with:
-        tag_name: ${{ steps.version.outputs.tag }}
-        name: Vastix ${{ steps.version.outputs.version }}
+        tag_name: ${{ steps.meta.outputs.tag }}
+        name: Vastix ${{ steps.meta.outputs.version }}
         body_path: release_notes.md
-        draft: ${{ inputs.draft }}
-        prerelease: ${{ inputs.prerelease }}
         files: |
           vastix/dist/vx-*
           vastix/dist/checksums.txt
         fail_on_unmatched_files: true
 
-    - name: Summary
+    - name: Release summary
+      if: steps.meta.outputs.skip != 'true'
       run: |
-        echo "## 🎉 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Tag:** ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Draft:** ${{ inputs.draft }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Pre-release:** ${{ inputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        ls -lh vastix/dist/vx-* >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
-        echo "- [Release Page](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
-
+        echo "## Vastix release published" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "**Version:** ${{ steps.meta.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+        echo "**Tag:** ${{ steps.meta.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        ls -lh vastix/dist/vx-* >> "$GITHUB_STEP_SUMMARY"
