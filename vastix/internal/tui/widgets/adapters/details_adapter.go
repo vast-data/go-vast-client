@@ -328,20 +328,8 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 		filteredContent = da.content
 	}
 
-	// Update viewport with filtered content and get the content to render
-	var content string
-	if da.ready {
-		da.viewport.SetContent(filteredContent)
-		content = da.viewport.View()
-	} else {
-		content = "Initializing details view..."
-	}
-
-	// Calculate dimensions with safety checks
-	innerWidth := width - 2   // Account for left and right borders
-	innerHeight := height - 3 // Account for top, bottom borders and header
-
-	// Ensure minimum viable dimensions
+	innerWidth := width - 2
+	innerHeight := height - 2
 	if innerWidth < 1 {
 		innerWidth = 1
 	}
@@ -349,38 +337,16 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 		innerHeight = 1
 	}
 
-	// Split content into lines for processing
-	lines := strings.Split(content, "\n")
-
-	// Create a style for opaque background to cover any content behind
-	opaqueStyle := lipgloss.NewStyle().
-		Width(innerWidth).
-		Background(colors.BlackTerm) // Black background to ensure opacity
-
-	// Ensure we have enough lines with opaque background
-	for len(lines) < innerHeight {
-		lines = append(lines, opaqueStyle.Render(strings.Repeat(" ", innerWidth)))
+	// Update viewport with filtered content and get the content to render
+	var content string
+	if da.ready {
+		da.viewport.SetContent(filteredContent)
+		content = common.VisibleLines(filteredContent, da.viewport.YOffset, innerWidth, innerHeight)
+	} else {
+		content = "Initializing details view..."
 	}
 
-	// Ensure each line fills the width with opaque background
-	for i, line := range lines {
-		lineWidth := lipgloss.Width(line)
-		if lineWidth < innerWidth {
-			// Pad with spaces and ensure opaque background
-			paddedLine := line + strings.Repeat(" ", innerWidth-lineWidth)
-			lines[i] = opaqueStyle.Render(paddedLine)
-		} else if lineWidth > innerWidth {
-			// Truncate lines that are too long, preserving styling with opaque background
-			lines[i] = opaqueStyle.Render(lipgloss.NewStyle().Width(innerWidth).Render(line))
-		} else {
-			// Line is exact width, ensure opaque background
-			lines[i] = opaqueStyle.Render(line)
-		}
-	}
-
-	content = strings.Join(lines, "\n")
-
-	// Use predefined title if available, otherwise use default format
+	// Calculate dimensions with safety checks
 	var titleText string
 	if da.predefinedTitle != "" {
 		titleText = da.predefinedTitle
@@ -392,11 +358,11 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 	// Add fuzzy search label if active
 	if fuzzyDetailsLocalSearch != "" {
 		labelStyle := lipgloss.NewStyle().
-			Background(colors.DarkGreenBlue). // Muted green background
-			Foreground(colors.BlackTerm)      // Black text
+			Background(colors.FuzzySearchLabelBg).
+			Foreground(colors.White)
 
 		label := labelStyle.Render(fmt.Sprintf(" fuzzy-search: %s ", fuzzyDetailsLocalSearch))
-		resourceTypeLabel = fmt.Sprintf("%s %s", resourceTypeLabel, label)
+		resourceTypeLabel = lipgloss.JoinHorizontal(lipgloss.Left, resourceTypeLabel, label)
 	}
 
 	// Create border with embedded text
@@ -655,13 +621,13 @@ func parseGoMapString(mapStr string) (map[string]interface{}, error) {
 
 // formatObjectRecursive formats a JSON object string with proper indentation and colors recursively
 func formatObjectRecursive(objStr string, nestLevel int) string {
-	// Define colors for syntax highlighting (balanced brightness)
-	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)        // Medium cyan for keys
-	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)    // Medium green for strings
-	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)    // Muted orange for numbers
-	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)     // Medium purple for booleans
-	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)       // Gray for null values
-	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
+	s := common.NewJSONSyntaxStyles()
+	keyColor := s.Key
+	stringColor := s.String
+	numberColor := s.Number
+	boolColor := s.Bool
+	nullColor := s.Null
+	bracketColor := s.Bracket
 
 	var obj map[string]interface{}
 	if err := json.Unmarshal([]byte(objStr), &obj); err != nil {
@@ -674,8 +640,8 @@ func formatObjectRecursive(objStr string, nestLevel int) string {
 	}
 
 	// Calculate indentation for nested objects
-	baseIndent := strings.Repeat("  ", nestLevel+1) // Base indentation
-	fieldIndent := baseIndent + "  "                // Field indentation (extra 2 spaces)
+	baseIndent := common.IndentSpaces((nestLevel + 1) * 2)
+	fieldIndent := common.IndentSpaces((nestLevel + 1)*2 + 2)
 
 	// Build nested object string with proper indentation and colors
 	var details strings.Builder
@@ -851,15 +817,16 @@ func formatRecordAsJSON(record map[string]any) string {
 	var details strings.Builder
 
 	// Define colors for syntax highlighting (balanced brightness)
-	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)        // Medium cyan for keys
-	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)    // Medium green for strings
-	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)    // Muted orange for numbers
-	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)     // Medium purple for booleans
-	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)       // Gray for null values
-	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
+	s := common.NewJSONSyntaxStyles()
+	keyColor := s.Key
+	stringColor := s.String
+	numberColor := s.Number
+	boolColor := s.Bool
+	nullColor := s.Null
+	bracketColor := s.Bracket
 
-	// Left margin (2 spaces)
-	leftMargin := "  "
+	// Left margin (2 spaces with opaque background)
+	leftMargin := s.Indent2
 
 	// Start JSON object
 	details.WriteString(leftMargin + bracketColor.Render("{\n"))
@@ -1183,7 +1150,7 @@ func formatRecordAsJSON(record map[string]any) string {
 			result := bracketColor.Render("[\n")
 			for i, item := range items {
 				isLast := i == len(items)-1
-				indent := leftMargin + "    "
+				indent := common.IndentSpaces(6)
 
 				var itemStr string
 				switch v := item.(type) {
@@ -1262,7 +1229,7 @@ func formatRecordAsJSON(record map[string]any) string {
 				}
 				result += indent + itemStr + comma + "\n"
 			}
-			result += leftMargin + "  " + bracketColor.Render("]")
+			result += common.IndentSpaces(4) + bracketColor.Render("]")
 			return result
 		} else {
 			// Inline format for simple short arrays
@@ -1439,11 +1406,9 @@ func formatRecordSetAsJSON(recordSet vast_client.RecordSet) string {
 
 	var result strings.Builder
 
-	// Define colors for syntax highlighting (same as formatRecordAsJSON)
-	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
-
-	// Left margin (2 spaces)
-	leftMargin := "  "
+	s := common.NewJSONSyntaxStyles()
+	bracketColor := s.Bracket
+	leftMargin := s.Indent2
 
 	// Start JSON array
 	result.WriteString(leftMargin + bracketColor.Render("[\n"))
@@ -1461,10 +1426,10 @@ func formatRecordSetAsJSON(recordSet vast_client.RecordSet) string {
 		for j, line := range lines {
 			if j == 0 {
 				// First line - already has left margin, just add array element indent
-				result.WriteString("  " + strings.TrimPrefix(line, "  ") + "\n")
+				result.WriteString(common.IndentSpaces(4) + strings.TrimPrefix(line, common.IndentSpaces(2)) + "\n")
 			} else {
 				// Other lines - add array element indent
-				result.WriteString("  " + line + "\n")
+				result.WriteString(common.IndentSpaces(2) + line + "\n")
 			}
 		}
 

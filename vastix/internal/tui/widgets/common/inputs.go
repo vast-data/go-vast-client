@@ -91,13 +91,7 @@ func NewTextInputWrapperWithOneOf(ti *textinput.Model, oneOf []string) *TextInpu
 
 // Update handles updates for text input
 func (t *TextInputWrapper) Update(msg tea.Msg) tea.Cmd {
-	// Intercept right arrow key to accept suggestions (instead of tab)
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
-		if keyMsg.Type == tea.KeyRight && t.TextInput.ShowSuggestions && len(t.TextInput.AvailableSuggestions()) > 0 {
-			// Convert right arrow to tab to accept suggestion
-			msg = tea.KeyMsg{Type: tea.KeyTab}
-		}
-	}
+	msg = RemapRightArrowToTab(msg, t.TextInput.ShowSuggestions && len(t.TextInput.AvailableSuggestions()) > 0)
 
 	var cmd tea.Cmd
 	*t.TextInput, cmd = t.TextInput.Update(msg)
@@ -345,13 +339,7 @@ func NewInt64Input(defaultValue string) *Int64Input {
 
 // Update handles updates for int64 input
 func (i *Int64Input) Update(msg tea.Msg) tea.Cmd {
-	// Intercept right arrow key to accept suggestions (instead of tab)
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
-		if keyMsg.Type == tea.KeyRight && i.TextInput.ShowSuggestions && len(i.TextInput.AvailableSuggestions()) > 0 {
-			// Convert right arrow to tab to accept suggestion
-			msg = tea.KeyMsg{Type: tea.KeyTab}
-		}
-	}
+	msg = RemapRightArrowToTab(msg, i.TextInput.ShowSuggestions && len(i.TextInput.AvailableSuggestions()) > 0)
 
 	// Let the underlying textinput handle focus state like TextInputWrapper does
 	var cmd tea.Cmd

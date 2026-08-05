@@ -1,6 +1,7 @@
 package colors
 
 import (
+	"image/color"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -58,7 +59,8 @@ const (
 	MediumCyan    = lipgloss.Color("51") // Medium cyan for JSON keys
 	Blue          = lipgloss.Color("63")
 	LightishBlue  = lipgloss.Color("75")
-	LightBlue     = lipgloss.Color("81")
+	LightBlue          = lipgloss.Color("81")
+	FuzzySearchLabelBg = lipgloss.Color("#3D6FA8") // light blue panel; readable with white text
 
 	// Purples
 	MediumPurple = lipgloss.Color("105")
@@ -206,4 +208,8 @@ func ApplyGradient(lines []string) []string {
 	}
 
 	return gradientLines
+}
+
+func AppBackgroundRGBA() color.Color {
+	return color.RGBA{R: 0x20, G: 0x1F, B: 0x26, A: 0xFF} // Pepper #201F26
 }

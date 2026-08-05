@@ -258,6 +258,9 @@ func (w *WorkingZone) InitializeAPIWidgets(restClient *rest.UntypedVMSRest, prof
 			w.currentWidget.SetSize(w.width, w.height)
 			log.Info("Restored to saved widget from database",
 				zap.String("widget", savedResource))
+			if w.AfterSetResourceCb != nil {
+				w.AfterSetResourceCb()
+			}
 		} else {
 			auxlog.Printf("Saved widget '%s' still not available, staying on current widget", savedResource)
 		}

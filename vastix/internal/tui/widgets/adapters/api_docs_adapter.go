@@ -30,6 +30,9 @@ const (
 type docItem struct {
 	kind        docItemKind
 	display     string // compact rendered text (plain, no cursor styling)
+	method      string // docItemSection: HTTP method
+	path        string // docItemSection: API path
+	summary     string // docItemSection: operation summary
 	name        string // param/field name
 	typeName    string // param type
 	required    bool
@@ -51,9 +54,10 @@ type ApiDocsAdapter struct {
 	db           *database.Service
 	resourcePath string // e.g. "topics"
 
-	items      []docItem
-	selectIdx  []int // indices into items[] of selectable (param) rows
-	cursor     int   // index into selectIdx
+	items         []docItem
+	selectIdx     []int // indices into items[] of selectable (param) rows
+	cursor        int   // index into selectIdx
+	itemLineStart []int // visual line index where each items[] entry begins
 
 	viewport      viewport.Model
 	ready         bool
@@ -126,7 +130,9 @@ func (a *ApiDocsAdapter) buildItems() {
 			summary, _ := api.GetOperationSummary(method, path)
 			a.items = append(a.items, docItem{
 				kind:    docItemSection,
-				display: formatSection(method, path, summary),
+				method:  method,
+				path:    path,
+				summary: summary,
 			})
 
 			// Query parameters
@@ -325,23 +331,7 @@ func (a *ApiDocsAdapter) ViewApiDocs(width, height int) string {
 	a.viewport.SetContent(body)
 	a.scrollToCursor()
 
-	viewContent := a.viewport.View()
-	lines := strings.Split(viewContent, "\n")
-
-	opaqueStyle := lipgloss.NewStyle().Width(innerWidth).Background(colors.BlackTerm)
-	for len(lines) < innerHeight {
-		lines = append(lines, opaqueStyle.Render(strings.Repeat(" ", innerWidth)))
-	}
-	for i, line := range lines {
-		lw := lipgloss.Width(line)
-		if lw < innerWidth {
-			lines[i] = opaqueStyle.Render(line + strings.Repeat(" ", innerWidth-lw))
-		} else if lw > innerWidth {
-			lines[i] = opaqueStyle.Render(lipgloss.NewStyle().Width(innerWidth).Render(line))
-		} else {
-			lines[i] = opaqueStyle.Render(line)
-		}
-	}
+	content := common.VisibleLines(body, a.viewport.YOffset, innerWidth, innerHeight)
 
 	titleLabel := titleStyle.Render(fmt.Sprintf(" api docs: %s ", a.resourcePath))
 	scrollPct := fmt.Sprintf("%.0f%%", a.viewport.ScrollPercent()*100)
@@ -350,35 +340,66 @@ func (a *ApiDocsAdapter) ViewApiDocs(width, height int) string {
 		common.BottomRightBorder: scrollPct,
 	}
 
-	return common.BorderizeWithSpinnerCheck(strings.Join(lines, "\n"), true, embeddedText)
+	return common.BorderizeWithSpinnerCheck(content, true, embeddedText)
 }
 
 func (a *ApiDocsAdapter) renderBody() string {
+	innerWidth := a.width - 2
+	if innerWidth < 1 {
+		innerWidth = 1
+	}
+
 	var sb strings.Builder
+	lineNum := 0
+	a.itemLineStart = make([]int, len(a.items))
 
 	for i, item := range a.items {
+		a.itemLineStart[i] = lineNum
+
 		switch item.kind {
 		case docItemSeparator:
 			if item.display != "" {
 				sb.WriteString(sectionLabelStyle.Render(item.display))
 			}
 			sb.WriteByte('\n')
+			lineNum++
 
 		case docItemSection:
-			sb.WriteString(item.display)
-			sb.WriteByte('\n')
+			lines := a.renderSectionLines(item, innerWidth)
+			for _, line := range lines {
+				sb.WriteString(line)
+				sb.WriteByte('\n')
+				lineNum++
+			}
 
 		case docItemParam:
-			// Check if this item is currently selected
 			selected := len(a.selectIdx) > 0 && a.selectIdx[a.cursor] == i
-			sb.WriteString(a.renderParamLine(item, selected))
-			sb.WriteByte('\n')
+			for _, line := range a.renderParamLines(item, selected, innerWidth) {
+				sb.WriteString(line)
+				sb.WriteByte('\n')
+				lineNum++
+			}
 		}
 	}
 	return sb.String()
 }
 
-func (a *ApiDocsAdapter) renderParamLine(item docItem, selected bool) string {
+func (a *ApiDocsAdapter) renderSectionLines(item docItem, innerWidth int) []string {
+	if item.method != "" {
+		return formatSectionLines(item.method, item.path, item.summary, innerWidth)
+	}
+	if item.display == "" {
+		return nil
+	}
+	wrapped := wrapDescription(item.display, innerWidth)
+	lines := make([]string, len(wrapped))
+	for i, w := range wrapped {
+		lines[i] = sectionLabelStyle.Render(w)
+	}
+	return lines
+}
+
+func (a *ApiDocsAdapter) renderParamLines(item docItem, selected bool, innerWidth int) []string {
 	indent := strings.Repeat("    ", item.depth)
 
 	prefix := "  "
@@ -409,26 +430,26 @@ func (a *ApiDocsAdapter) renderParamLine(item docItem, selected bool) string {
 		namePart = fieldNameStyle.Render(item.name)
 	}
 
-	desc := ""
+	header := indent + prefix + namePart + req + "  " + typePart + arrow
+
 	if item.description != "" {
-		desc = summaryStyle.Render("  " + item.description)
+		descIndent := indent + "  "
+		return wrapInlineAfter(header, item.description, innerWidth, descIndent, summaryStyle)
 	}
 
-	// layout: indent  prefix  name[*]  [type][arrow]   description
-	return indent + prefix + namePart + req + "  " + typePart + arrow + desc
+	return []string{header}
 }
 
 func (a *ApiDocsAdapter) scrollToCursor() {
-	if !a.ready || len(a.selectIdx) == 0 {
+	if !a.ready || len(a.selectIdx) == 0 || len(a.itemLineStart) == 0 {
 		return
 	}
 
-	// Count the visible line of the selected item
-	targetLine := 0
 	targetItemIdx := a.selectIdx[a.cursor]
-	for i := 0; i < targetItemIdx && i < len(a.items); i++ {
-		targetLine++
+	if targetItemIdx >= len(a.itemLineStart) {
+		return
 	}
+	targetLine := a.itemLineStart[targetItemIdx]
 
 	// Scroll viewport to keep cursor visible
 	vTop := a.viewport.YOffset
@@ -444,14 +465,109 @@ func (a *ApiDocsAdapter) scrollToCursor() {
 // Helpers
 // ---------------------------------------------------------------------------
 
-func formatSection(method, path, summary string) string {
-	methodStr := methodStyle(method).Render(fmt.Sprintf("[%s]", method))
-	pathStr := pathStyle.Render(" " + path)
-	sumStr := ""
-	if summary != "" {
-		sumStr = summaryStyle.Render("  " + summary)
+func formatSectionLines(method, path, summary string, maxWidth int) []string {
+	methodPart := methodStyle(method).Render(fmt.Sprintf("[%s]", method))
+	pathPart := pathStyle.Render(" " + path)
+	header := methodPart + pathPart
+
+	summary = strings.TrimSpace(summary)
+	if summary == "" {
+		return []string{header}
 	}
-	return methodStr + pathStr + sumStr
+
+	return wrapInlineAfter(header, summary, maxWidth, "  ", summaryStyle)
+}
+
+// wrapInlineAfter always starts text on the same line as header; overflow wraps on continuation lines.
+func wrapInlineAfter(header, text string, innerWidth int, contIndent string, style lipgloss.Style) []string {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return []string{header}
+	}
+
+	sep := "  "
+	prefix := header + sep
+	prefixWidth := lipgloss.Width(prefix)
+
+	contWidth := innerWidth - lipgloss.Width(contIndent)
+	if contWidth < 1 {
+		contWidth = 1
+	}
+	firstLineWidth := innerWidth - prefixWidth
+	if firstLineWidth < 1 {
+		firstLineWidth = 1
+	}
+
+	words := strings.Fields(strings.ReplaceAll(text, "\n", " "))
+	if len(words) == 0 {
+		return []string{header}
+	}
+
+	firstChunk := words[0]
+	wordIdx := 1
+	for wordIdx < len(words) {
+		next := firstChunk + " " + words[wordIdx]
+		if lipgloss.Width(next) <= firstLineWidth {
+			firstChunk = next
+			wordIdx++
+		} else {
+			break
+		}
+	}
+
+	lines := []string{prefix + style.Render(firstChunk)}
+	if wordIdx < len(words) {
+		rest := strings.Join(words[wordIdx:], " ")
+		for _, wl := range wrapWords(rest, contWidth) {
+			lines = append(lines, contIndent+style.Render(wl))
+		}
+	}
+	return lines
+}
+
+// wrapDescription splits on paragraph breaks and word-wraps each paragraph to maxWidth.
+func wrapDescription(desc string, maxWidth int) []string {
+	desc = strings.TrimSpace(desc)
+	if desc == "" {
+		return nil
+	}
+	if maxWidth < 1 {
+		maxWidth = 1
+	}
+
+	var lines []string
+	paragraphs := strings.Split(desc, "\n")
+	for _, para := range paragraphs {
+		para = strings.TrimSpace(para)
+		if para == "" {
+			continue
+		}
+		lines = append(lines, wrapWords(para, maxWidth)...)
+	}
+	return lines
+}
+
+func wrapWords(text string, maxWidth int) []string {
+	if maxWidth < 1 {
+		return []string{text}
+	}
+	words := strings.Fields(text)
+	if len(words) == 0 {
+		return nil
+	}
+
+	var lines []string
+	line := words[0]
+	for _, word := range words[1:] {
+		if lipgloss.Width(line)+1+lipgloss.Width(word) <= maxWidth {
+			line += " " + word
+		} else {
+			lines = append(lines, line)
+			line = word
+		}
+	}
+	lines = append(lines, line)
+	return lines
 }
 
 func paramToItem(p *openapi3.Parameter) docItem {
@@ -617,13 +733,13 @@ func schemaTypeName(s *openapi3.Schema) string {
 var (
 	titleStyle        = lipgloss.NewStyle().Background(colors.Orange).Foreground(colors.BlackTerm).Bold(true)
 	sectionLabelStyle = lipgloss.NewStyle().Foreground(colors.LightGrey)
-	pathStyle    = lipgloss.NewStyle().Foreground(colors.VeryLightGrey)
-	summaryStyle = lipgloss.NewStyle().Foreground(colors.Grey240).Italic(true)
+	pathStyle    = lipgloss.NewStyle().Foreground(colors.White).Bold(true)
+	summaryStyle = lipgloss.NewStyle().Foreground(colors.VeryLightGrey)
 	typeStyle      = lipgloss.NewStyle().Foreground(colors.MediumCyan)
 	typeInnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f0a500"))
 	requiredStarStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f93e3e"))
-	fieldNameStyle      = lipgloss.NewStyle().Foreground(colors.VeryLightGrey)
-	selectedNameStyle   = lipgloss.NewStyle().Foreground(colors.VeryLightGrey).Background(colors.DarkGreenBlue)
+	fieldNameStyle      = lipgloss.NewStyle().Foreground(colors.White).Bold(true)
+	selectedNameStyle   = lipgloss.NewStyle().Foreground(colors.White).Bold(true).Background(colors.DarkGreenBlue)
 	expandedArrowStyle = lipgloss.NewStyle().Foreground(colors.MediumCyan)
 )
 
