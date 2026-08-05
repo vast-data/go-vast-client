@@ -1,15 +1,14 @@
 package widgets
 
 import (
-	"vastix/internal/colors"
 	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
 	"strings"
 	"vastix/internal/database"
+	"vastix/internal/tui/widgets/common"
 
-	"github.com/charmbracelet/lipgloss"
 	vast_client "github.com/vast-data/go-vast-client"
 )
 
@@ -30,15 +29,16 @@ func formatRecordAsJSON(record map[string]any) string {
 	var details strings.Builder
 
 	// Define colors for syntax highlighting (balanced brightness)
-	keyColor := lipgloss.NewStyle().Foreground(colors.MediumCyan)      // Medium cyan for keys
-	stringColor := lipgloss.NewStyle().Foreground(colors.MediumGreen)   // Medium green for strings
-	numberColor := lipgloss.NewStyle().Foreground(colors.MutedOrange)  // Muted orange for numbers
-	boolColor := lipgloss.NewStyle().Foreground(colors.MediumPurple)    // Medium purple for booleans
-	nullColor := lipgloss.NewStyle().Foreground(colors.MediumGrey)    // Gray for null values
-	bracketColor := lipgloss.NewStyle().Foreground(colors.VeryLightGrey) // Light white for brackets/punctuation
+	s := common.NewJSONSyntaxStyles()
+	keyColor := s.Key
+	stringColor := s.String
+	numberColor := s.Number
+	boolColor := s.Bool
+	nullColor := s.Null
+	bracketColor := s.Bracket
 
-	// Left margin (2 spaces)
-	leftMargin := "  "
+	// Left margin (2 spaces with opaque background)
+	leftMargin := s.Indent2
 
 	// Start JSON object
 	details.WriteString(leftMargin + bracketColor.Render("{\n"))
@@ -68,8 +68,8 @@ func formatRecordAsJSON(record map[string]any) string {
 		}
 
 		// Calculate indentation for nested objects
-		baseIndent := strings.Repeat("  ", nestLevel+1) // Base indentation
-		fieldIndent := baseIndent + "  "                // Field indentation (extra 2 spaces)
+		baseIndent := common.IndentSpaces((nestLevel + 1) * 2)
+		fieldIndent := common.IndentSpaces((nestLevel + 1)*2 + 2)
 
 		result := bracketColor.Render("{\n")
 

@@ -501,16 +501,48 @@ func (bw *BaseWidget) formatFieldValue(key string, value interface{}) string {
 
 	// Handle slices/arrays
 	if reflect.TypeOf(value).Kind() == reflect.Slice {
-		sliceVal := reflect.ValueOf(value)
-		if sliceVal.Len() == 0 {
-			return "[]"
-		}
-		// For non-empty arrays, show count
-		return fmt.Sprintf("[%d items]", sliceVal.Len())
+		return formatSliceForDisplay(reflect.ValueOf(value))
 	}
 
 	// Default formatting for other fields
 	return fmt.Sprintf("%v", value)
+}
+
+// formatSliceForDisplay renders primitive arrays as [a, b]; complex arrays stay abbreviated.
+func formatSliceForDisplay(sliceVal reflect.Value) string {
+	if sliceVal.Len() == 0 {
+		return "[]"
+	}
+
+	parts := make([]string, 0, sliceVal.Len())
+	for i := 0; i < sliceVal.Len(); i++ {
+		text, ok := scalarSliceElement(sliceVal.Index(i))
+		if !ok {
+			return fmt.Sprintf("[%d items]", sliceVal.Len())
+		}
+		parts = append(parts, text)
+	}
+
+	return "[" + strings.Join(parts, ", ") + "]"
+}
+
+func scalarSliceElement(elem reflect.Value) (string, bool) {
+	if elem.Kind() == reflect.Interface {
+		if elem.IsNil() {
+			return "<nil>", true
+		}
+		elem = elem.Elem()
+	}
+
+	switch elem.Kind() {
+	case reflect.String, reflect.Bool,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64:
+		return fmt.Sprintf("%v", elem.Interface()), true
+	default:
+		return "", false
+	}
 }
 
 // isNumericField returns true if the field should be treated as a numeric field

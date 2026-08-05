@@ -314,31 +314,17 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 		headerCells = append(headerCells, headerStyles[i].Render(header))
 	}
 	headerRow := lipgloss.JoinHorizontal(lipgloss.Top, headerCells...)
-	headerRow = lipgloss.NewStyle().Width(innerWidth).Render(headerRow)
+	headerRow = common.ContentBase().Width(innerWidth).Render(headerRow)
 	rows = append(rows, headerRow)
 
 	// Separator
-	separatorStyle := lipgloss.NewStyle().Foreground(LightGrey)
-	separator := separatorStyle.Render(strings.Repeat("─", innerWidth))
+	separator := common.ContentMuted().Width(innerWidth).Render(strings.Repeat("─", innerWidth))
 	rows = append(rows, separator)
 
 	// Check if there's no data to display
 	if len(lr.filteredData) == 0 {
-		// Show "No content" message with same styling as details adapter
-		grayStyle := lipgloss.NewStyle().Foreground(colors.LightGrey) // Light gray color
-		paddingStyle := lipgloss.NewStyle().
-			Padding(0, 0, 0, 2) // top: 0, right: 0, bottom: 0, left: 2
-
-		noContentMessage := grayStyle.Render("No content")
-		noContentRow := paddingStyle.Render(noContentMessage)
-		noContentRow = lipgloss.NewStyle().Width(innerWidth).Render(noContentRow)
+		noContentRow := common.ContentMuted().PaddingLeft(2).Width(innerWidth).Render("No content")
 		rows = append(rows, noContentRow)
-
-		// Fill remaining space with empty rows
-		emptyRowStyle := lipgloss.NewStyle().Width(innerWidth)
-		for i := 1; i < lr.maxVisibleRows; i++ { // Start from 1 since we already added the "No content" row
-			rows = append(rows, emptyRowStyle.Render(""))
-		}
 	} else {
 		// Calculate visible row range
 		visibleEndRow := min(lr.visibleStartRow+lr.maxVisibleRows, len(lr.filteredData))
@@ -382,19 +368,20 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 				}
 			}
 			dataRow := lipgloss.JoinHorizontal(lipgloss.Top, cells...)
-			dataRow = lipgloss.NewStyle().Width(innerWidth).Render(dataRow)
+			if isSelected {
+				dataRow = lipgloss.NewStyle().Width(innerWidth).Render(dataRow)
+			} else {
+				dataRow = common.ContentBase().Width(innerWidth).Render(dataRow)
+			}
 			rows = append(rows, dataRow)
 		}
-
-		// Fill remaining space with empty rows
-		rowsRendered := visibleEndRow - lr.visibleStartRow
-		emptyRowsNeeded := lr.maxVisibleRows - rowsRendered
-
-		emptyRowStyle := lipgloss.NewStyle().Width(innerWidth)
-		for i := 0; i < emptyRowsNeeded; i++ {
-			rows = append(rows, emptyRowStyle.Render(""))
-		}
 	}
+
+	innerHeight := height - 2
+	if innerHeight < 1 {
+		innerHeight = 1
+	}
+	rows = common.FillOpaqueLines(rows, innerWidth, innerHeight)
 
 	// Join list content
 	listContent := strings.Join(rows, "\n")
@@ -433,11 +420,11 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 			}
 
 			labelStyle := lipgloss.NewStyle().
-				Background(colors.DarkGreenBlue). // Muted green background
-				Foreground(colors.BlackTerm)   // Black text
+				Background(colors.FuzzySearchLabelBg).
+				Foreground(colors.White)
 
 			label := labelStyle.Render(fmt.Sprintf(" fuzzy-search=%s ", fuzzySearch))
-			resourceTypeLabel = fmt.Sprintf("%s %s", resourceTypeLabel, label)
+			resourceTypeLabel = lipgloss.JoinHorizontal(lipgloss.Left, resourceTypeLabel, label)
 		} else {
 			// No fuzzy search active, use original data
 			lr.filteredData = lr.data

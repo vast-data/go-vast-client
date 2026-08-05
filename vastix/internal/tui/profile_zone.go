@@ -201,7 +201,7 @@ func (p *ProfileZone) View() string {
 	}
 
 	keyStyle := lipgloss.NewStyle().
-		Foreground(LightGrey).
+		Foreground(LightBlue).
 		Width(12)
 
 	valueStyle := lipgloss.NewStyle().

@@ -81,16 +81,25 @@ func (f *FiltersZone) IsActive() bool {
 
 // IsSearchable returns true if any search mode is active
 func (f *FiltersZone) IsSearchable() bool {
+	if f.currentWidget == nil {
+		return false
+	}
 	return f.currentWidget.IsServerSearchable() || f.currentWidget.IsFuzzySearchable()
 }
 
 // IsServerSearchable returns true if server-side search is supported
 func (f *FiltersZone) IsServerSearchable() bool {
+	if f.currentWidget == nil {
+		return false
+	}
 	return f.currentWidget.IsServerSearchable()
 }
 
 // IsFuzzySearchable returns true if fuzzy search is supported
 func (f *FiltersZone) IsFuzzySearchable() bool {
+	if f.currentWidget == nil {
+		return false
+	}
 	return f.currentWidget.IsFuzzySearchable()
 }
 
@@ -120,15 +129,17 @@ func (f *FiltersZone) Update(msg tea.Msg) (*FiltersZone, tea.Cmd) {
 			case "ctrl+c":
 				return f, tea.Quit
 			case "esc":
-				// Exit search mode
+				// Exit search mode and clear fuzzy filter
 				f.searchMode = false
 				f.searchInput.SetValue("")
+				f.clearFuzzySearch()
 				if f.updateSizes != nil {
 					f.updateSizes()
 				}
 				return f, nil
 			case "enter":
 				// Apply search and exit search mode
+				f.applyFuzzySearchFromInput()
 				f.searchMode = false
 				if f.updateSizes != nil {
 					f.updateSizes()
@@ -141,24 +152,7 @@ func (f *FiltersZone) Update(msg tea.Msg) (*FiltersZone, tea.Cmd) {
 
 				// Apply filter to working zone
 				searchValue := f.searchInput.Value()
-
-				switch f.currentWidget.GetMode() {
-				case common.NavigatorModeList:
-					f.currentWidget.SetFuzzyListSearchString(searchValue)
-				case common.NavigatorModeDetails:
-					f.currentWidget.SetFuzzyDetailsSearchString(searchValue)
-				case common.NavigatorModeExtra:
-					switch f.currentWidget.(common.ExtraWidget).GetExtraMode() {
-					case common.ExtraNavigatorModeList:
-						f.currentWidget.SetFuzzyListSearchString(searchValue)
-					case common.ExtraNavigatorModeDetails:
-						f.currentWidget.SetFuzzyDetailsSearchString(searchValue)
-					default:
-						panic("Unsupported extra mode for search: " + f.currentWidget.(common.ExtraWidget).GetExtraMode().String())
-					}
-				default:
-					panic("Unsupported mode for search: " + f.currentWidget.GetMode().String())
-				}
+				f.setFuzzySearch(searchValue)
 				return f, tea.Batch(cmds...)
 			}
 		}
@@ -285,6 +279,53 @@ func (f *FiltersZone) View() string {
 // SetCurrentWidget sets the current widget that the filters will operate on
 func (f *FiltersZone) SetCurrentWidget(widget common.Widget) {
 	f.currentWidget = widget
+}
+
+func (f *FiltersZone) setFuzzySearch(searchValue string) {
+	if f.currentWidget == nil {
+		return
+	}
+
+	switch f.currentWidget.GetMode() {
+	case common.NavigatorModeList:
+		f.currentWidget.SetFuzzyListSearchString(searchValue)
+	case common.NavigatorModeDetails:
+		f.currentWidget.SetFuzzyDetailsSearchString(searchValue)
+	case common.NavigatorModeExtra:
+		switch f.currentWidget.(common.ExtraWidget).GetExtraMode() {
+		case common.ExtraNavigatorModeList:
+			f.currentWidget.SetFuzzyListSearchString(searchValue)
+		case common.ExtraNavigatorModeDetails:
+			f.currentWidget.SetFuzzyDetailsSearchString(searchValue)
+		default:
+			panic("Unsupported extra mode for search: " + f.currentWidget.(common.ExtraWidget).GetExtraMode().String())
+		}
+	default:
+		panic("Unsupported mode for search: " + f.currentWidget.GetMode().String())
+	}
+}
+
+func (f *FiltersZone) applyFuzzySearchFromInput() {
+	f.setFuzzySearch(f.searchInput.Value())
+}
+
+func (f *FiltersZone) clearFuzzySearch() {
+	if f.currentWidget == nil {
+		return
+	}
+	switch f.currentWidget.GetMode() {
+	case common.NavigatorModeList:
+		f.currentWidget.ClearFuzzyListSearch()
+	case common.NavigatorModeDetails:
+		f.currentWidget.ClearFuzzyDetailsSearch()
+	case common.NavigatorModeExtra:
+		switch f.currentWidget.(common.ExtraWidget).GetExtraMode() {
+		case common.ExtraNavigatorModeList:
+			f.currentWidget.ClearFuzzyListSearch()
+		case common.ExtraNavigatorModeDetails:
+			f.currentWidget.ClearFuzzyDetailsSearch()
+		}
+	}
 }
 
 // ResetFilters clears all active filters and search state

@@ -85,10 +85,10 @@ func (k *KeybindingsZone) View() string {
 		Bold(true)
 
 	widgetDescStyle := lipgloss.NewStyle().
-		Foreground(colors.LightGrey)
+		Foreground(colors.White)
 
 	extraActionVerbStyle := lipgloss.NewStyle().
-		Foreground(colors.VeryLightGrey)
+		Foreground(colors.OffWhite)
 
 	// Get current keybindings dynamically using getter function if available
 	currentKeyBindings := k.keyBindings

@@ -151,6 +151,7 @@ func (a *App) Init() tea.Cmd {
 	var initError string // Store error to set after spinner completes
 
 	initAppCmd := func() tea.Msg {
+		tui.ApplyTerminalDefaultBackground()
 		a.auxlog.Println("[app.Init] - start")
 		// OpenAPI document will be loaded automatically when first needed
 		a.profile.Init()
@@ -254,6 +255,7 @@ func (a *App) clean() {
 	a.workingZone.ClearWidget()
 
 	a.auxlog.Println("App.clean: cleanup complete")
+	tui.RestoreTerminalDefaultBackground()
 }
 
 // Update handles messages and updates the application state
@@ -514,31 +516,29 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return a, tea.Batch(cmds...)
 }
 
-// View renders the entire application
+// View renders the entire application with crush-style Pepper root background.
 func (a *App) View() string {
-	// Log any panics that occur during view rendering
 	defer logging.LogPanic()
 
+	var content string
 	if !a.allZonesReady() || !a.Ready() {
-		return a.renderSplashScreen()
-	}
-
-	// Handle initial transition from splash screen to normal view (only once)
-	if !a.initialTransition {
-		if len(activeSpinners) == 0 {
-			a.spinnerControl.Suspend()
-			a.spinnerActive = false
-			a.spinnerView = "" // Clear the spinner view too
-			a.statusZone.ClearSpinner()
-		} else {
-			// Keep spinner active if there are other operations running
-			a.auxlog.Printf("Keeping spinner active during transition - %d operations running", len(activeSpinners))
+		content = a.renderSplashScreen()
+	} else {
+		if !a.initialTransition {
+			if len(activeSpinners) == 0 {
+				a.spinnerControl.Suspend()
+				a.spinnerActive = false
+				a.spinnerView = ""
+				a.statusZone.ClearSpinner()
+			} else {
+				a.auxlog.Printf("Keeping spinner active during transition - %d operations running", len(activeSpinners))
+			}
+			a.initialTransition = true
 		}
-		a.initialTransition = true // Mark that we've completed initial transition
+		content = a.renderNormal()
 	}
 
-	// Normal rendering - spinner is now handled by status zone for operations
-	return a.renderNormal()
+	return tui.FillScreenBackground(content, a.width, a.height)
 }
 
 // renderNormal renders the normal application layout
@@ -858,6 +858,7 @@ func Run(appVersion string) error {
 	app.spinnerActive = true // Enable spinner for splash screen
 
 	p := tea.NewProgram(app, tea.WithAltScreen())
+	defer tui.RestoreTerminalDefaultBackground()
 
 	go func() {
 		// Relay events to model in background
@@ -932,8 +933,8 @@ func Run(appVersion string) error {
 		return err
 	case <-sigChan:
 		auxlog.Println("Received interrupt signal, shutting down...")
-		cancel()                               // Cancel context first
-		p.Send(tea.KeyMsg{Type: tea.KeyCtrlC}) // Send quit to program
+		cancel()
+		p.Send(tea.KeyMsg{Type: tea.KeyCtrlC})
 
 		// Give the program a moment to clean up
 		select {
