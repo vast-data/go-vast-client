@@ -21,26 +21,25 @@ func CheckSudoNeedsPassword() bool {
 // CheckWgQuickNeedsPassword checks if wg-quick specifically requires a password.
 // This is more accurate than CheckSudoNeedsPassword because wg-quick might be
 // configured in sudoers for passwordless execution even if other sudo commands require a password.
-// It runs `sudo -n wg-quick` to check if passwordless execution is possible.
 func CheckWgQuickNeedsPassword() bool {
-	// Try to run wg-quick with -n flag (non-interactive) to test passwordless execution
-	// Using just the command name without arguments to test sudo access
+	// wg-quick exits 1 when invoked without arguments, so we cannot rely on exit code alone.
+	// Distinguish sudo authentication failure from wg-quick actually running.
 	cmd := exec.Command("sudo", "-n", "wg-quick")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	err := cmd.Run()
+	if err == nil {
+		return false
+	}
 
-	if err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			exitCode := exitError.ExitCode()
-			// Exit code 1 means password is required
-			// Exit code 2 or other might mean wg-quick ran but failed due to missing args (which is fine for our test)
-			// We only care if it asks for password (exit code 1)
-			return exitCode == 1
-		}
-		// Other errors - assume password might be needed
+	stderrStr := stderr.String()
+	if strings.Contains(stderrStr, "password") ||
+		strings.Contains(stderrStr, "authentication") ||
+		strings.Contains(stderrStr, "try again") {
 		return true
 	}
 
-	// Command succeeded (or failed for non-password reasons), no password needed
+	// wg-quick ran (usage error, missing args, etc.) — passwordless sudo works
 	return false
 }
 

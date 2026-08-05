@@ -350,13 +350,10 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 func (w *VipPoolForwarding) getSudoPassword() error {
 	w.auxlog.Printf("DEBUG getSudoPassword: checking if password is needed...")
 
-	// Check if wg-quick specifically needs a password
-	// This is more accurate than checking generic sudo, as wg-quick might be
-	// configured in sudoers for passwordless execution
-	if !vpn_client.CheckWgQuickNeedsPassword() {
-		// wg-quick doesn't need password, use empty string
+	// VPN setup needs general sudo (install tools, write /etc/wireguard, wg-quick, cleanup)
+	if !vpn_client.CheckSudoNeedsPassword() {
 		w.sudoPassword = ""
-		w.auxlog.Printf("wg-quick configured for passwordless sudo execution")
+		w.auxlog.Printf("passwordless sudo configured for local VPN setup")
 		return nil
 	}
 
@@ -556,7 +553,7 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		w.needingSudoPassword = true
 		w.DetailsAdapter.ShowPopup(
 			"Sudo Password Required",
-			"Enter your local system password",
+			"Enter your local password for one-time WireGuard setup",
 			true, // isSecret
 		)
 		// Stay in prompt mode and wait for popup submission
@@ -589,16 +586,16 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		// Set VIP pool IPs for health monitoring
 		w.deployer.SetVipPoolIPs(w.privateIPs)
 
-		// Step 0: Check if WireGuard is installed
-		w.lastStatus = "Checking WireGuard installation..."
-		if err := vpn_client.CheckWireGuardInstalled(); err != nil {
+		// Step 0: Prepare local WireGuard environment before remote deployment
+		w.lastStatus = "Preparing local WireGuard environment..."
+		if err := vpn_client.PrepareLocalEnvironment(w.sudoPassword, writer); err != nil {
 			w.lastError = err
-			w.lastStatus = "WireGuard not installed"
+			w.lastStatus = "Local WireGuard setup failed"
 			w.deploying = false
-			w.auxlog.Printf("Error: WireGuard check failed: %v", err)
-			return msg_types.ErrorMsg{Err: fmt.Errorf("WireGuard check failed:\n%w", err)}
+			w.auxlog.Printf("Error: local WireGuard setup failed: %v", err)
+			return msg_types.ErrorMsg{Err: fmt.Errorf("local WireGuard setup failed:\n%w", err)}
 		}
-		w.auxlog.Printf("WireGuard is installed")
+		w.auxlog.Printf("Local WireGuard environment ready")
 
 		w.lastStatus = "Deploying VPN server..."
 
