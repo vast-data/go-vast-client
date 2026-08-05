@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	vastclient "github.com/vast-data/go-vast-client"
+
+	"vastix/internal/common"
 )
 
 // RestClientConfig holds configuration for a REST client
@@ -122,9 +124,13 @@ func NewRest(
 	sslVerify bool,
 	apiVersion string,
 ) (*vastclient.VMSRest, error) {
+	p, err := common.ToPort(port)
+	if err != nil {
+		return nil, err
+	}
 	vmsConfig := &vastclient.VMSConfig{
 		Host:       host,
-		Port:       uint64(port),
+		Port:       uint64(p),
 		Username:   username,
 		Password:   password,
 		ApiToken:   apiToken,

@@ -4,6 +4,8 @@ package common
 import (
 	"fmt"
 	"net/netip"
+
+	shared "vastix/internal/common"
 )
 
 // VPNConfig represents a VPN configuration
@@ -103,8 +105,15 @@ func GenerateVPNNetwork(clientID int) (netip.Prefix, netip.Addr, netip.Addr, err
 // GetListenPort generates a unique listen port for a client
 // This allows multiple servers to run simultaneously
 func GetListenPort(clientID int) uint16 {
-	// Use ports 51820 + clientID (51821, 51822, ...)
-	return uint16(51820 + clientID)
+	// Use ports 51820 + clientID (51821, 51822, ...). clientID is bounded to
+	// 1-254 by GenerateVPNNetwork, so this never exceeds 52074; routing through
+	// ToPort makes the bound explicit and removes the unchecked uint16
+	// conversion that gosec flags as G115.
+	p, err := shared.ToPort(int64(51820) + int64(clientID))
+	if err != nil {
+		return 51820 // unreachable for valid clientIDs; fall back to the base port
+	}
+	return p
 }
 
 // Error types

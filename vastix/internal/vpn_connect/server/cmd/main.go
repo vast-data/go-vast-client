@@ -12,13 +12,14 @@ import (
 	"strings"
 	"syscall"
 
+	shared "vastix/internal/common"
 	"vastix/internal/vpn_connect/common"
 	"vastix/internal/vpn_connect/server"
 )
 
 func main() {
 	// Command-line flags
-	port := flag.Uint("port", 51820, "VPN listen port")
+	port := flag.Int64("port", 51820, "VPN listen port")
 	serverIP := flag.String("server-ip", "", "Server VPN IP (e.g., 10.99.1.1)")
 	vpnNetwork := flag.String("vpn-network", "", "VPN network CIDR (e.g., 10.99.1.0/24)")
 	privateIPs := flag.String("private-ips", "", "Comma-separated list of private IPs to route (e.g., 172.21.101.10,172.21.101.11)")
@@ -52,7 +53,7 @@ func main() {
 		Level: logLevel,
 	}))
 
-	logger.Info("=== VPN Server Starting ===", slog.Uint64("port", uint64(*port)))
+	logger.Info("=== VPN Server Starting ===", slog.Int64("port", *port))
 
 	// Generate keys if not provided
 	var privKey, pubKey string
@@ -130,11 +131,20 @@ func main() {
 		logger.Info("Parsed private IPs", slog.Int("count", len(privateIPsList)))
 	}
 
+	// Validate the listen port through the single checked conversion. The flag
+	// is an int64 so the value reaches ToPort without a lossy cast; ToPort
+	// rejects anything outside [0, 65535] (gosec G115).
+	listenPort, err := shared.ToPort(*port)
+	if err != nil {
+		logger.Error("Invalid listen port", slog.Int64("port", *port), slog.Any("error", err))
+		os.Exit(1)
+	}
+
 	// Create server configuration
 	config := &common.ServerConfig{
 		PrivateKey: privKey,
 		PublicKey:  pubKey,
-		ListenPort: uint16(*port),
+		ListenPort: listenPort,
 		ServerIP:   srvIP,
 		VPNNetwork: vpnNet,
 		PrivateIPs: privateIPsList,
@@ -171,7 +181,7 @@ func main() {
 	logger.Info("Server configuration",
 		slog.String("public_key", pubKey),
 		slog.String("server_ip", srvIP.String()),
-		slog.Uint64("listen_port", uint64(*port)),
+		slog.Int64("listen_port", *port),
 		slog.String("vpn_network", vpnNet.String()),
 		slog.Int("private_ips_count", len(privateIPsList)),
 	)
