@@ -3,18 +3,22 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/netip"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"vastix/internal/vpn_connect/common"
 )
+
 
 // Client represents a VPN client instance
 type Client struct {
@@ -41,10 +45,7 @@ type ConnectionStats struct {
 func CheckWireGuardInstalled() error {
 	// Check for wg-quick
 	if _, err := exec.LookPath("wg-quick"); err != nil {
-		return fmt.Errorf("wg-quick not found. Please install WireGuard:\n" +
-			"  Ubuntu/Debian: sudo apt install wireguard-tools\n" +
-			"  RHEL/CentOS:   sudo yum install wireguard-tools\n" +
-			"  Arch:          sudo pacman -S wireguard-tools")
+		return errors.New(wireGuardInstallHints())
 	}
 
 	// Check for wg
@@ -123,48 +124,36 @@ PersistentKeepalive = 25
 		return fmt.Errorf("failed to get local hostname: %w", err)
 	}
 
-	// Create local work directory: /tmp/vastix/<hostname>/
-	localWorkDir := fmt.Sprintf("/tmp/vastix/%s", hostname)
-	if err := os.MkdirAll(localWorkDir, 0755); err != nil {
-		return fmt.Errorf("failed to create local work directory: %w", err)
+	// Use user cache dir to avoid stale root-owned files under /tmp/vastix from prior runs
+	localWorkDir, err := userWorkDir(hostname)
+	if err != nil {
+		return fmt.Errorf("failed to resolve local work directory: %w", err)
+	}
+	if err := ensureUserWorkDir(localWorkDir, sudoPassword); err != nil {
+		return fmt.Errorf("failed to prepare local work directory: %w", err)
 	}
 	c.writef("Local work directory: %s\n", localWorkDir)
 
-	// Write config to file in local work directory
-	// Use simple interface name to avoid 15-character Linux interface name limit
-	// Format: wgvastix.conf (8 chars interface name)
-	configPath := fmt.Sprintf("%s/wgvastix.conf", localWorkDir)
-	if err := os.WriteFile(configPath, []byte(wgConfig), 0600); err != nil {
+	// Keep a local copy for debugging
+	localConfigPath := filepath.Join(localWorkDir, wgInterfaceName+".conf")
+	if err := os.WriteFile(localConfigPath, []byte(wgConfig), 0600); err != nil {
 		return fmt.Errorf("failed to write config: %w", err)
 	}
 
-	// Clean up any existing wgvastix interface to avoid "File exists" errors
-	cleanupCmd := exec.Command("sudo", "-S", "ip", "link", "delete", "wgvastix")
-	cleanupCmd.Stdin = strings.NewReader(sudoPassword + "\n")
-	// Ignore errors - interface might not exist
-	cleanupCmd.Run()
-
-	c.writef("Bringing up WireGuard interface: sudo wg-quick up %s\n", configPath)
-
-	// Use sudo with -S to read password from stdin
-	cmd := exec.Command("sudo", "-S", "wg-quick", "up", configPath)
-
-	// Pass password via stdin
-	cmd.Stdin = strings.NewReader(sudoPassword + "\n")
-
-	// Send output to writer (which is already a multiwriter including auxlog and details)
-	if c.writer == nil {
-		panic("client writer is nil")
+	c.writef("Preparing local WireGuard environment...\n")
+	if err := PrepareLocalEnvironment(sudoPassword, c.writer); err != nil {
+		return fmt.Errorf("failed to prepare WireGuard environment: %w", err)
 	}
-	cmd.Stdout = c.writer
-	cmd.Stderr = c.writer
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to bring up WireGuard interface. Please ensure:\n"+
-			"  1. WireGuard is installed (wg-quick)\n"+
-			"  2. You have sudo privileges\n"+
-			"  3. The WireGuard kernel module is loaded\n"+
-			"Error: %w", err)
+	systemConfigDir := wireGuardSystemConfigDir()
+	systemConfigPath := filepath.Join(systemConfigDir, wgInterfaceName+".conf")
+	c.writef("Bringing up WireGuard interface: %s\n", wgInterfaceName)
+
+	script := buildConnectUpScript(systemConfigDir, localConfigPath, systemConfigPath)
+
+	if err := runSudoScript(sudoPassword, c.writer, script); err != nil {
+		return fmt.Errorf("failed to bring up WireGuard interface. Please ensure:\n%s\nError: %w",
+			connectFailureHints(), err)
 	}
 
 	c.mu.Lock()
@@ -217,28 +206,24 @@ func (c *Client) Disconnect(sudoPassword string) error {
 		return fmt.Errorf("failed to get local hostname: %w", err)
 	}
 
-	// Bring down WireGuard interface
-	// Use the same simple interface name as in Connect
-	localWorkDir := fmt.Sprintf("/tmp/vastix/%s", hostname)
-	configPath := fmt.Sprintf("%s/wgvastix.conf", localWorkDir)
+	// Bring down WireGuard interface (reads config from /etc/wireguard/)
+	localWorkDir, err := userWorkDir(hostname)
+	if err != nil {
+		return fmt.Errorf("failed to resolve local work directory: %w", err)
+	}
+	localConfigPath := filepath.Join(localWorkDir, wgInterfaceName+".conf")
 
-	// Use sudo with -S to read password from stdin (same as Connect)
-	cmd := exec.Command("sudo", "-S", "wg-quick", "down", configPath)
-
-	// Pass password via stdin (empty password works for passwordless sudo)
-	cmd.Stdin = strings.NewReader(sudoPassword + "\n")
-
-	// Send output to writer (which is already a multiwriter including auxlog and details)
-	cmd.Stdout = c.writer
-	cmd.Stderr = c.writer
-
-	if err := cmd.Run(); err != nil {
-		c.writef("Warning: Failed to bring down interface: %v\n", err)
-		// Don't fail disconnect if interface is already down
+	if err := runWgQuick(sudoPassword, c.writer, "down", wgInterfaceName); err != nil {
+		c.writef("Warning: Failed to bring down interface via wg-quick: %v\n", err)
 	}
 
-	// Remove config file
-	os.Remove(configPath)
+	// Best-effort cleanup if interface is still present (Linux only)
+	if cleanupScript := buildDisconnectCleanupScript(); cleanupScript != "" {
+		_ = runSudoScript(sudoPassword, c.writer, cleanupScript)
+	}
+
+	// Remove local config copy
+	os.Remove(localConfigPath)
 
 	c.mu.Lock()
 	c.connected = false
@@ -395,4 +380,28 @@ func (c *Client) CheckTunnelHealth() error {
 	}
 
 	return nil
+}
+
+func userWorkDir(hostname string) (string, error) {
+	baseDir, err := os.UserCacheDir()
+	if err != nil {
+		baseDir = os.TempDir()
+	}
+	return filepath.Join(baseDir, "vastix", hostname), nil
+}
+
+func ensureUserWorkDir(path, sudoPassword string) error {
+	uid := os.Getuid()
+	if info, err := os.Stat(path); err == nil {
+		if stat, ok := info.Sys().(*syscall.Stat_t); ok && int(stat.Uid) != uid {
+			if err := os.RemoveAll(path); err != nil {
+				cleanupCmd := exec.Command("sudo", "-S", "rm", "-rf", path)
+				cleanupCmd.Stdin = strings.NewReader(sudoPassword + "\n")
+				if cleanupErr := cleanupCmd.Run(); cleanupErr != nil {
+					return fmt.Errorf("failed to remove stale work directory %s: %w", path, err)
+				}
+			}
+		}
+	}
+	return os.MkdirAll(path, 0700)
 }
