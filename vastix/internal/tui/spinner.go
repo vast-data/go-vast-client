@@ -47,7 +47,7 @@ func generateRandomChars(count int) []rune {
 
 	result := make([]rune, count)
 	for i := 0; i < count; i++ {
-		result[i] = allCars[rand.Intn(len(allCars))]
+		result[i] = allCars[rand.Intn(len(allCars))] // #nosec G404 -- TUI spinner decoration, not crypto
 	}
 	return result
 }

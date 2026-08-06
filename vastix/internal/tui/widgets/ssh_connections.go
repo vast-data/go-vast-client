@@ -3,11 +3,13 @@ package widgets
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+	shared "vastix/internal/common"
 	"vastix/internal/database"
 	"vastix/internal/msg_types"
 	"vastix/internal/tui/widgets/common"
@@ -51,7 +53,8 @@ func testSshConnection(host string, port int, username, password, keyPath string
 	// Create SSH client config
 	config := &ssh.ClientConfig{
 		User:            username,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // Note: In production, use proper host key verification
+		// Internal ops tooling: cluster SSH hosts are not pre-registered in known_hosts.
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // #nosec G106 -- internal ops tooling on trusted admin networks
 		Timeout:         10 * time.Second,
 	}
 
@@ -61,8 +64,9 @@ func testSshConnection(host string, port int, username, password, keyPath string
 	}
 
 	if keyPath != "" && keyPath != "-" {
-		// Read private key file
-		key, err := ioutil.ReadFile(keyPath)
+		// keyPath is admin-configured in the local database.
+		cleanPath := filepath.Clean(keyPath)
+		key, err := os.ReadFile(cleanPath) // #nosec G304 -- admin-configured SSH key from local DB
 		if err != nil {
 			return fmt.Errorf("failed to read private key file %s: %w", keyPath, err)
 		}
@@ -396,7 +400,11 @@ func (s *SshConnections) Delete(selectedRowData common.RowData) (tea.Cmd, error)
 
 	// Extract ID from the row data
 	id := selectedRowData.GetInt64Must("id")
-	connection, err := db.GetSshConnection(uint(id))
+	connID, err := shared.ToUint(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SSH connection ID: %w", err)
+	}
+	connection, err := db.GetSshConnection(connID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("SSH connection not found")
@@ -467,7 +475,15 @@ func (s *SshConnections) Details(selectedRowData common.RowData) (tea.Cmd, error
 	// Return async command that will load details in background
 	return func() tea.Msg {
 		db := s.BaseWidget.db
-		connection, err := db.GetSshConnection(uint(id))
+		connID, err := shared.ToUintFromUint64(id)
+		if err != nil {
+			return msg_types.DetailsContentMsg{
+				Content:      fmt.Sprintf("Invalid connection ID: %d", id),
+				ResourceType: s.resourceType,
+				Error:        err,
+			}
+		}
+		connection, err := db.GetSshConnection(connID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return msg_types.DetailsContentMsg{

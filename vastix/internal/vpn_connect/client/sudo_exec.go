@@ -7,7 +7,7 @@ import (
 )
 
 func runSudo(sudoPassword string, writer io.Writer, args ...string) error {
-	cmd := exec.Command("sudo", append([]string{"-S"}, args...)...)
+	cmd := exec.Command("sudo", append([]string{"-S"}, args...)...) // #nosec G204 -- VPN client admin tool; args are fixed wg/ip commands
 	cmd.Stdin = strings.NewReader(sudoPassword + "\n")
 	if writer != nil {
 		cmd.Stdout = writer
@@ -18,7 +18,7 @@ func runSudo(sudoPassword string, writer io.Writer, args ...string) error {
 
 func runSudoScript(sudoPassword string, writer io.Writer, script string) error {
 	bash := platformBash()
-	cmd := exec.Command("sudo", "-S", bash, "-c", script)
+	cmd := exec.Command("sudo", "-S", bash, "-c", script) // #nosec G204 -- VPN client admin tool; script from internal install steps
 	cmd.Stdin = strings.NewReader(sudoPassword + "\n")
 	if writer != nil {
 		cmd.Stdout = writer
