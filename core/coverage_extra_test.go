@@ -98,11 +98,14 @@ func TestIsZeroValue_AllKinds(t *testing.T) {
 		{"bool true", true, false},
 		{"int zero", 0, true},
 		{"int nonzero", 1, false},
+		{"uint zero", uint(0), true},
 		{"string empty", "", true},
 		{"string value", "x", false},
 		{"ptr nil", (*int)(nil), true},
 		{"slice nil", []int(nil), true},
+		{"map nil", map[string]int(nil), true},
 		{"struct zero", struct{}{}, true},
+		{"struct nonzero", struct{ X int }{1}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -110,7 +113,13 @@ func TestIsZeroValue_AllKinds(t *testing.T) {
 			if got := isZeroValue(v); got != tc.zero {
 				t.Fatalf("isZeroValue(%v) = %v, want %v", tc.value, got, tc.zero)
 			}
+			if got := isZeroValueInterface(tc.value); got != tc.zero {
+				t.Fatalf("isZeroValueInterface(%v) = %v, want %v", tc.value, got, tc.zero)
+			}
 		})
+	}
+	if !isZeroValueInterface(nil) {
+		t.Fatal("isZeroValueInterface(nil) should be true")
 	}
 }
 
@@ -205,16 +214,6 @@ func TestDoAfterRequest_AfterRequestFnError(t *testing.T) {
 	_, err := resource.GetById(1)
 	if err == nil {
 		t.Fatal("expected after-request error")
-	}
-}
-
-func TestDefaultResponseMutations_RecordSet(t *testing.T) {
-	got, err := defaultResponseMutations(RecordSet{{"id": 1}})
-	if err != nil {
-		t.Fatalf("defaultResponseMutations: %v", err)
-	}
-	if len(got.(RecordSet)) != 1 {
-		t.Fatal("expected record set passthrough")
 	}
 }
 

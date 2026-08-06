@@ -739,3 +739,39 @@ func TestIterator_String(t *testing.T) {
 		t.Error("Expected String() to show empty brackets for empty current")
 	}
 }
+
+func TestIterator_AllWhenAlreadyInitialized(t *testing.T) {
+	page := Record{
+		"results": []any{
+			map[string]any{"id": float64(1), "name": "only"},
+		},
+		"count": float64(1),
+	}
+	mockSession := &mockSessionForIterator{
+		responses: map[string]Renderable{
+			"https://test.example.com:443/api/v1/resources/?page_size=10": page,
+		},
+	}
+	mockRest := &DummyRest{ctx: context.Background(), Session: mockSession}
+	mockResource := &mockResourceForIterator{
+		VastResource: &VastResource{
+			resourcePath: "resources",
+			resourceType: "TestResource",
+			Rest:         mockRest,
+		},
+		mockSession: mockSession,
+	}
+
+	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 10)
+	if _, err := iter.Next(); err != nil {
+		t.Fatalf("Next: %v", err)
+	}
+
+	all, err := iter.All()
+	if err != nil {
+		t.Fatalf("All: %v", err)
+	}
+	if len(all) != 1 {
+		t.Fatalf("expected 1 record, got %d", len(all))
+	}
+}

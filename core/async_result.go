@@ -126,8 +126,8 @@ func (ar *AsyncResult) Wait(timeout time.Duration) (Record, error) {
 // MaybeAsyncResultFromRecord attempts to extract an async task ID from a record and create an AsyncResult.
 //
 // This function handles two common patterns in VAST API responses:
-//  1. Direct task response: The record itself has a ResourceTypeKey and represents the task
-//  2. Nested task response: The record has an "async_task" field containing the task information
+//  1. Direct task response: conventional vtasks self URL on the record
+//  2. Nested task response: the record has an "async_task" field containing the task information
 //
 // If the record doesn't contain any task information, or if the task ID cannot be extracted,
 // this function returns nil.
@@ -149,24 +149,16 @@ func MaybeAsyncResultFromRecord(ctx context.Context, record Record, rest VastRes
 		return nil
 	}
 
-	// Check if the record itself is a task (has ResourceTypeKey)
-	if resourceType, ok := record[ResourceTypeKey]; ok {
-		if resourceType != VTaskKey {
-			return nil
-		}
-
-		// Only call RecordID if "id" field exists to avoid panic
+	// Check if the record itself is a task (conventional vtasks URL).
+	if isVTaskRecord(record) {
 		if _, hasId := record["id"]; hasId {
 			taskId = record.RecordID()
 		}
-	} else {
-		// Check for nested async_task field
-		if asyncTask, ok := record["async_task"]; ok {
-			var m map[string]any
-			if m, ok = asyncTask.(map[string]any); ok {
-				if _, hasId := m["id"]; hasId {
-					taskId = ToRecord(m).RecordID()
-				}
+	} else if asyncTask, ok := record["async_task"]; ok {
+		var m map[string]any
+		if m, ok = asyncTask.(map[string]any); ok {
+			if _, hasId := m["id"]; hasId {
+				taskId = ToRecord(m).RecordID()
 			}
 		}
 	}

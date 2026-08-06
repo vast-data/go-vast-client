@@ -67,17 +67,9 @@ func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable) 
 	session := e.Session()
 	config := session.GetConfig()
 	resourceType := e.GetResourceType()
-	isDummyResource := resourceType == "Dummy"
 	resourceCaller, ok := e.Rest.GetResourceMap()[resourceType]
 	if !ok {
 		panic(fmt.Sprintf("resource not found in resourceMap for %s", e.GetResourceType()))
-	}
-	if !isDummyResource {
-		// Pre-normalization: attach @resourceType so resource hooks and user AfterRequestFn
-		// can rely on it for formatting/logging/branching even if later mutations change shape.
-		if err = setResourceKey(response, resourceType); err != nil {
-			return nil, err
-		}
 	}
 	if logLevel != "" {
 		afterRequestLog(response)
@@ -95,42 +87,7 @@ func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable) 
 			return nil, err
 		}
 	}
-	// Common VAST Response mutations (may unwrap pagination or otherwise replace the value)
-	mutated, err := defaultResponseMutations(response)
-	if err != nil {
-		return nil, err
-	}
-	// Post-normalization: re-attach @resourceType, because mutations can produce new
-	// Record/RecordSet instances which won't carry the earlier key.
-	if !isDummyResource {
-		if err = setResourceKey(mutated, resourceType); err != nil {
-			return nil, err
-		}
-	}
-	return mutated, nil
-}
-
-// defaultResponseMutations A set of common response transformations in the VAST REST API
-// that can be universally applied across all resource types.
-func defaultResponseMutations(response Renderable) (Renderable, error) {
-	switch typed := response.(type) {
-	case Record:
-		// Case when VAST Response returns Async Task instead of actual response is very common in VAST API so can be applied here
-		// NOTE: This mutation just normalizes response so you can retrieve id and wait for task to be completed.
-		//       Waiting is not accomplished here.
-		if raw, ok := response.(Record)["async_task"]; ok {
-			var m map[string]any
-			if m, ok = raw.(map[string]any); ok {
-				m[ResourceTypeKey] = "VTask"
-				return ToRecord(m), nil
-			}
-			return nil, fmt.Errorf("expected map[string]any under 'async_task', got %T", raw)
-		}
-		return response, nil
-	case RecordSet:
-		return typed, nil
-	}
-	return nil, fmt.Errorf("unsupported type %T for result", response)
+	return response, nil
 }
 
 // ######################################################
@@ -200,17 +157,16 @@ func afterRequestLogInfo(response Renderable) {
 
 	switch resp := response.(type) {
 	case Record:
-		if resourceType, ok := resp[ResourceTypeKey].(string); ok && resourceType != "" {
-			responseStr = fmt.Sprintf("Record of type: %s", resourceType)
+		if displayName := recordDisplayName(resp); displayName != "" {
+			responseStr = fmt.Sprintf("Record of type: %s", displayName)
 		} else {
 			responseStr = "Record received"
 		}
 	case RecordSet:
 		count := len(resp)
 		if count > 0 {
-			firstRecord := resp[0]
-			if resourceType, ok := firstRecord[ResourceTypeKey].(string); ok && resourceType != "" {
-				responseStr = fmt.Sprintf("RecordSet with %d record(s) of type: %s", count, resourceType)
+			if displayName := recordDisplayName(resp[0]); displayName != "" {
+				responseStr = fmt.Sprintf("RecordSet with %d record(s) of type: %s", count, displayName)
 			} else {
 				responseStr = fmt.Sprintf("RecordSet with %d record(s)", count)
 			}
@@ -232,8 +188,8 @@ func afterRequestLogDebug(response Renderable) {
 
 	switch resp := response.(type) {
 	case Record:
-		if resourceType, ok := resp[ResourceTypeKey].(string); ok && resourceType != "" {
-			header = fmt.Sprintf("response |")
+		if displayName := recordDisplayName(resp); displayName != "" {
+			header = "response |"
 		} else {
 			header = "response | Record received"
 		}
@@ -241,9 +197,8 @@ func afterRequestLogDebug(response Renderable) {
 	case RecordSet:
 		count := len(resp)
 		if count > 0 {
-			firstRecord := resp[0]
-			if resourceType, ok := firstRecord[ResourceTypeKey].(string); ok && resourceType != "" {
-				header = fmt.Sprintf("response | RecordSet with %d record(s) of type: %s", count, resourceType)
+			if displayName := recordDisplayName(resp[0]); displayName != "" {
+				header = fmt.Sprintf("response | RecordSet with %d record(s) of type: %s", count, displayName)
 			} else {
 				header = fmt.Sprintf("response | RecordSet with %d record(s)", count)
 			}

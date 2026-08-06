@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.156.0
+
+ENHANCEMENTS:
+
+* **Record Display Names**: Human-readable resource names (e.g. `View`, `VTask`) are inferred from record `url` fields for table output and pluralization.
+
 ## 0.150.0
 
 BREAKING CHANGES:
