@@ -37,7 +37,7 @@ func GetVastixDir() (string, error) {
 
 	// Create .vastix directory in user home
 	vastixDir := filepath.Join(homeDir, ".vastix")
-	if err := os.MkdirAll(vastixDir, 0755); err != nil {
+	if err := os.MkdirAll(vastixDir, 0750); err != nil {
 		return "", fmt.Errorf("failed to create .vastix directory: %v", err)
 	}
 
@@ -58,7 +58,7 @@ func New() (*Service, func(), error) {
 
 	// Create logs directory within .vastix
 	logsDir := filepath.Join(vastixDir, "logs")
-	if err := os.MkdirAll(logsDir, 0755); err != nil {
+	if err := os.MkdirAll(logsDir, 0750); err != nil {
 		return nil, nil, fmt.Errorf("failed to create logs directory: %v", err)
 	}
 
@@ -126,8 +126,12 @@ func New() (*Service, func(), error) {
 	}
 
 	return logInstance, func() {
-		logger.Sync()
-		auxLogFile.Close()
+		if err := logger.Sync(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to sync logger: %v\n", err)
+		}
+		if err := auxLogFile.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to close aux log: %v\n", err)
+		}
 	}, nil
 }
 
@@ -254,7 +258,7 @@ func LogPanic() {
 			panicLogPath := filepath.Join(logsDir, "panic.log")
 
 			// Open panic log file in append mode
-			if f, err := os.OpenFile(panicLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			if f, err := os.OpenFile(panicLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600); err == nil { // #nosec G304 -- panic log under ~/.vastix/logs
 				timestamp := time.Now().Format("2006-01-02 15:04:05")
 				panicInfo := fmt.Sprintf("\n"+
 					"================================================================================\n"+
@@ -265,8 +269,12 @@ func LogPanic() {
 					"================================================================================\n\n",
 					timestamp, r, stackTrace)
 
-				f.WriteString(panicInfo)
-				f.Close()
+				if _, err := f.WriteString(panicInfo); err != nil {
+					fmt.Fprintf(os.Stderr, "failed to write panic log: %v\n", err)
+				}
+				if err := f.Close(); err != nil {
+					fmt.Fprintf(os.Stderr, "failed to close panic log: %v\n", err)
+				}
 
 				// Print to stderr where the panic log was saved
 				fmt.Fprintf(os.Stderr, "\nPanic details saved to: %s\n\n", panicLogPath)
@@ -279,7 +287,7 @@ func LogPanic() {
 				zap.Any("panic", r),
 				zap.String("stack_trace", stackTrace),
 			)
-			globalLogger.Sync() // Flush logs before crash
+			globalLogger.Sync() // #nosec G104 -- best-effort flush before crash
 		}
 
 		// Also log to aux logger if available

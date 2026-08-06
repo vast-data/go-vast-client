@@ -123,7 +123,7 @@ func (s *Server) Start(ctx context.Context) error {
 
 	// Open log file
 	logPath := filepath.Join(s.configDir, "server.log")
-	s.logFile, err = os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+	s.logFile, err = os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600) // #nosec G304 -- server log under managed config dir
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -144,23 +144,25 @@ func (s *Server) Start(ctx context.Context) error {
 		// we explicitly delete it in Stop().
 		s.logger.Info("Creating WireGuard interface via kernel module", slog.String("interface", ifaceName))
 		if err := s.createKernelInterface(ifaceName); err != nil {
-			s.logFile.Close()
+			s.closeLogFile()
 			return fmt.Errorf("failed to create WireGuard interface: %w", err)
 		}
 		if err := s.configureInterface(ifaceName, configPath); err != nil {
-			s.deleteInterface(ifaceName) //nolint:errcheck
-			s.logFile.Close()
+			if delErr := s.deleteInterface(ifaceName); delErr != nil {
+				s.logger.Warn("failed to delete interface during cleanup", slog.Any("error", delErr))
+			}
+			s.closeLogFile()
 			return fmt.Errorf("failed to configure interface: %w", err)
 		}
 		// No subprocess PID to track in kernel mode.
 	} else {
 		// ── wireguard-go userspace path ──────────────────────────────────────
-		s.process = exec.CommandContext(ctxWithCancel, wgCmd, "-f", ifaceName)
+		s.process = exec.CommandContext(ctxWithCancel, wgCmd, "-f", ifaceName) // #nosec G204 -- VPN admin tool; iface name from server config
 		s.process.Stdout = io.MultiWriter(s.logFile, logWriter{s.logger, slog.LevelInfo})
 		s.process.Stderr = io.MultiWriter(s.logFile, logWriter{s.logger, slog.LevelError})
 
 		if err := s.process.Start(); err != nil {
-			s.logFile.Close()
+			s.closeLogFile()
 			return fmt.Errorf("failed to start wireguard-go: %w", err)
 		}
 
@@ -168,7 +170,9 @@ func (s *Server) Start(ctx context.Context) error {
 		time.Sleep(500 * time.Millisecond)
 
 		if err := s.configureInterface(ifaceName, configPath); err != nil {
-			s.Stop()
+			if stopErr := s.Stop(); stopErr != nil {
+				s.logger.Warn("failed to stop server during cleanup", slog.Any("error", stopErr))
+			}
 			return fmt.Errorf("failed to configure interface: %w", err)
 		}
 
@@ -256,12 +260,12 @@ func (s *Server) Stop() error {
 	s.wg.Wait()
 
 	// Close log file
-	if s.logFile != nil {
-		s.logFile.Close()
-	}
+	s.closeLogFile()
 
 	// Remove PID file
-	os.Remove(s.pidFile)
+	if err := os.Remove(s.pidFile); err != nil && !os.IsNotExist(err) {
+		s.logger.Warn("Failed to remove PID file", slog.Any("error", err))
+	}
 
 	s.mu.Lock()
 	s.running = false
@@ -367,10 +371,19 @@ AllowedIPs = %s
 	return os.WriteFile(path, []byte(config), 0600)
 }
 
-// createKernelInterface creates a WireGuard network interface using the kernel
+// closeLogFile closes the server log file if open.
+func (s *Server) closeLogFile() {
+	if s.logFile != nil {
+		if err := s.logFile.Close(); err != nil {
+			s.logger.Warn("Failed to close log file", slog.Any("error", err))
+		}
+		s.logFile = nil
+	}
+}
+
 // module.  This is equivalent to `ip link add <name> type wireguard`.
 func (s *Server) createKernelInterface(ifaceName string) error {
-	cmd := exec.Command("ip", "link", "add", ifaceName, "type", "wireguard")
+	cmd := exec.Command("ip", "link", "add", ifaceName, "type", "wireguard") // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("ip link add %s type wireguard: %w\nOutput: %s", ifaceName, err, string(output))
 	}
@@ -380,19 +393,19 @@ func (s *Server) createKernelInterface(ifaceName string) error {
 // configureInterface configures the WireGuard interface
 func (s *Server) configureInterface(ifaceName, configPath string) error {
 	// Set interface configuration
-	cmd := exec.Command("wg", "setconf", ifaceName, configPath)
+	cmd := exec.Command("wg", "setconf", ifaceName, configPath) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to set interface config: %w\nOutput: %s", err, string(output))
 	}
 
 	// Bring interface up
-	cmd = exec.Command("ip", "link", "set", "up", "dev", ifaceName)
+	cmd = exec.Command("ip", "link", "set", "up", "dev", ifaceName) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to bring interface up: %w\nOutput: %s", err, string(output))
 	}
 
 	// Add IP address
-	cmd = exec.Command("ip", "address", "add", "dev", ifaceName, s.config.ServerIP.String()+"/24")
+	cmd = exec.Command("ip", "address", "add", "dev", ifaceName, s.config.ServerIP.String()+"/24") // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		// Ignore error if address already exists
 		if !strings.Contains(string(output), "File exists") {
@@ -401,7 +414,7 @@ func (s *Server) configureInterface(ifaceName, configPath string) error {
 	}
 
 	// Enable IP forwarding
-	cmd = exec.Command("sysctl", "-w", "net.ipv4.ip_forward=1")
+	cmd = exec.Command("sysctl", "-w", "net.ipv4.ip_forward=1") // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		s.logger.Warn("Failed to enable IP forwarding", slog.String("output", string(output)))
 	}
@@ -416,7 +429,7 @@ func (s *Server) configureInterface(ifaceName, configPath string) error {
 		}
 
 		for _, rule := range rules {
-			cmd := exec.Command(rule[0], rule[1:]...)
+			cmd := exec.Command(rule[0], rule[1:]...) // #nosec G204
 			if output, err := cmd.CombinedOutput(); err != nil {
 				// Ignore if rule already exists
 				if !strings.Contains(string(output), "File exists") && !strings.Contains(string(output), "already") {
@@ -447,7 +460,7 @@ func (s *Server) deleteInterface(ifaceName string) error {
 			// Keep deleting until the rule no longer exists (handles duplicates)
 			deletedCount := 0
 			for {
-				cmd := exec.Command(rule[0], rule[1:]...)
+				cmd := exec.Command(rule[0], rule[1:]...) // #nosec G204
 				if _, err := cmd.CombinedOutput(); err != nil {
 					// Rule doesn't exist anymore, move to next rule
 					if deletedCount > 0 {
@@ -467,7 +480,7 @@ func (s *Server) deleteInterface(ifaceName string) error {
 	}
 
 	// Delete the interface
-	cmd := exec.Command("ip", "link", "delete", ifaceName)
+	cmd := exec.Command("ip", "link", "delete", ifaceName) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		// Check if interface doesn't exist - that's ok
 		if strings.Contains(string(output), "Cannot find device") || strings.Contains(string(output), "does not exist") {
@@ -491,7 +504,7 @@ func (s *Server) applyClientConfig(publicKey string, clientIP netip.Addr, allowe
 		allowedIPsStr[i] = ip.String()
 	}
 
-	cmd := exec.Command("wg", "set", ifaceName,
+	cmd := exec.Command("wg", "set", ifaceName, // #nosec G204
 		"peer", publicKey,
 		"allowed-ips", strings.Join(allowedIPsStr, ","))
 
@@ -507,7 +520,7 @@ func (s *Server) removeClientConfig(publicKey string) error {
 	// Use last 2 digits of port for interface name (e.g., port 51821 → wg21)
 	ifaceName := fmt.Sprintf("wg%d", s.config.ListenPort%100)
 
-	cmd := exec.Command("wg", "set", ifaceName, "peer", publicKey, "remove")
+	cmd := exec.Command("wg", "set", ifaceName, "peer", publicKey, "remove") // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to remove client: %w\nOutput: %s", err, string(output))
 	}
@@ -544,7 +557,7 @@ func (s *Server) monitorHeartbeat(ctx context.Context, heartbeatFile string) {
 			return
 		case <-ticker.C:
 			// Check heartbeat file
-			data, err := os.ReadFile(heartbeatFile)
+			data, err := os.ReadFile(heartbeatFile) // #nosec G304 -- heartbeat path set by server admin config
 			if err != nil {
 				// Heartbeat file doesn't exist yet - wait for first heartbeat
 				if os.IsNotExist(err) {
@@ -626,7 +639,7 @@ func (s *Server) GetConfigDir() string {
 func (s *Server) ReadLogs(lines int) ([]string, error) {
 	logPath := filepath.Join(s.configDir, "server.log")
 
-	file, err := os.Open(logPath)
+	file, err := os.Open(logPath) // #nosec G304 -- server log under managed config dir
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -658,7 +671,7 @@ func (s *Server) ReadLogs(lines int) ([]string, error) {
 
 // DetectExternalInterface attempts to detect the external network interface
 func DetectExternalInterface() (string, error) {
-	cmd := exec.Command("ip", "route", "show", "default")
+	cmd := exec.Command("ip", "route", "show", "default") // #nosec G204
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get default route: %w", err)
@@ -679,7 +692,7 @@ func DetectExternalInterface() (string, error) {
 func GetNextAvailablePort(basePort uint16) (uint16, error) {
 	for port := basePort; port < basePort+100; port++ {
 		// Check if port is in use
-		cmd := exec.Command("ss", "-tuln")
+		cmd := exec.Command("ss", "-tuln") // #nosec G204
 		output, err := cmd.Output()
 		if err != nil {
 			return 0, fmt.Errorf("failed to check ports: %w", err)

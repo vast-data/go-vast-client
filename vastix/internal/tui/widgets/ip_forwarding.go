@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	shared "vastix/internal/common"
 	"vastix/internal/database"
 	"vastix/internal/msg_types"
 	"vastix/internal/tui/widgets/common"
@@ -268,7 +269,9 @@ func (w *IpForwarding) getSudoPassword() error {
 		}
 		// Invalid password, delete it
 		w.auxlog.Printf("Stored sudo password invalid, removing from database")
-		w.db.DeleteSudoPassword()
+		if err := w.db.DeleteSudoPassword(); err != nil {
+			w.auxlog.Printf("Failed to remove invalid sudo password: %v", err)
+		}
 	}
 
 	// No valid password available
@@ -386,8 +389,13 @@ func (w *IpForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 		return nil, fmt.Errorf("failed to get SSH connection ID: %w", err)
 	}
 
+	sshConnIDUint, err := shared.ToUint(sshConnID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SSH connection ID: %w", err)
+	}
+
 	// Fetch full SSH connection details from database
-	sshConn, err := w.db.GetSshConnection(uint(sshConnID))
+	sshConn, err := w.db.GetSshConnection(sshConnIDUint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get SSH connection details: %w", err)
 	}
@@ -900,7 +908,9 @@ func (w *IpForwarding) checkHealth() {
 
 			// Automatically clean up local resources when connection is lost
 			w.auxlog.Printf("Automatically cleaning up local VPN interface due to connection loss...")
-			w.Disconnect()
+			if err := w.Disconnect(); err != nil {
+				w.auxlog.Printf("Failed to disconnect after SSH loss: %v", err)
+			}
 
 			return
 		}
@@ -916,7 +926,9 @@ func (w *IpForwarding) checkHealth() {
 
 			// Automatically clean up local resources when tunnel is lost
 			w.auxlog.Printf("Automatically cleaning up local VPN interface due to tunnel failure...")
-			w.Disconnect()
+			if err := w.Disconnect(); err != nil {
+				w.auxlog.Printf("Failed to disconnect after SSH loss: %v", err)
+			}
 
 			return
 		}

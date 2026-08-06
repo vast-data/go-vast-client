@@ -2,6 +2,7 @@ package widgets
 
 import (
 	"vastix/internal/colors"
+	shared "vastix/internal/common"
 	"context"
 	"fmt"
 	"strings"
@@ -78,7 +79,13 @@ func (w *ApiTokensFromLocalDb) SetListData() tea.Msg {
 	ownerIDMap := make(map[uint]bool)
 	for _, token := range apiTokens {
 		if token.OwnerID != 0 && !ownerIDMap[token.OwnerID] {
-			allOwnerIDs = append(allOwnerIDs, int64(token.OwnerID))
+			ownerID, err := shared.Int64FromUint(token.OwnerID)
+			if err != nil {
+				return msg_types.ErrorMsg{
+					Err: fmt.Errorf("invalid token owner ID: %w", err),
+				}
+			}
+			allOwnerIDs = append(allOwnerIDs, ownerID)
 			ownerIDMap[token.OwnerID] = true
 		}
 	}
@@ -108,7 +115,11 @@ func (w *ApiTokensFromLocalDb) SetListData() tea.Msg {
 		for _, manager := range managers {
 			if idVal, exists := manager["id"]; exists {
 				if id, ok := idVal.(float64); ok { // JSON numbers are float64
-					existingOwnerIDs[uint(id)] = true
+					ownerUID, err := shared.UintFromFloat64(id)
+					if err != nil {
+						continue
+					}
+					existingOwnerIDs[ownerUID] = true
 				}
 			}
 		}
@@ -305,8 +316,14 @@ func (w *ApiTokensFromLocalDb) Delete(selectedRowData common.RowData) (tea.Cmd, 
 
 	// Return async command that will delete the API token from database
 	return func() tea.Msg {
+		tokenIDUint, err := shared.ToUint(tokenId)
+		if err != nil {
+			return msg_types.ErrorMsg{
+				Err: fmt.Errorf("invalid API token ID: %w", err),
+			}
+		}
 		// Delete the API token from database
-		err := w.db.DeleteApiToken(uint(tokenId))
+		err = w.db.DeleteApiToken(tokenIDUint)
 		if err != nil {
 			return msg_types.ErrorMsg{
 				Err: fmt.Errorf("failed to delete API token: %w", err),

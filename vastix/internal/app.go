@@ -908,7 +908,7 @@ func Run(appVersion string) error {
 					logsDir := filepath.Join(vastixDir, "logs")
 					panicLogPath := filepath.Join(logsDir, "panic.log")
 
-					if f, fileErr := os.OpenFile(panicLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); fileErr == nil {
+					if f, fileErr := os.OpenFile(panicLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600); fileErr == nil { // #nosec G304 -- panic log under ~/.vastix/logs
 						timestamp := time.Now().Format("2006-01-02 15:04:05")
 						panicInfo := fmt.Sprintf("\n"+
 							"================================================================================\n"+
@@ -920,8 +920,12 @@ func Run(appVersion string) error {
 							"================================================================================\n\n",
 							timestamp, err)
 
-						f.WriteString(panicInfo)
-						f.Close()
+						if _, writeErr := f.WriteString(panicInfo); writeErr != nil {
+							fmt.Fprintf(os.Stderr, "failed to write panic log: %v\n", writeErr)
+						}
+						if closeErr := f.Close(); closeErr != nil {
+							fmt.Fprintf(os.Stderr, "failed to close panic log: %v\n", closeErr)
+						}
 
 						fmt.Fprintf(os.Stderr, "\n  Panic details saved to: %s\n", panicLogPath)
 						fmt.Fprintf(os.Stderr, "Check terminal output above for full stack trace.\n\n")

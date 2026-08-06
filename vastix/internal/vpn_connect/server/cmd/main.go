@@ -40,7 +40,7 @@ func main() {
 	// Determine log output
 	logOutput := os.Stdout
 	if *logFile != "" {
-		f, err := os.OpenFile(*logFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		f, err := os.OpenFile(*logFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to open log file %s: %v\n", *logFile, err)
 			os.Exit(1)
