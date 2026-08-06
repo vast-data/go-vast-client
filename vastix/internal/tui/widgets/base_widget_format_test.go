@@ -19,6 +19,24 @@ func TestFormatSliceForDisplayEmpty(t *testing.T) {
 	}
 }
 
+func TestFormatSliceForDisplayIPRanges(t *testing.T) {
+	// API JSON shape: nested []interface{} with start/end pairs
+	got := formatSliceForDisplay(reflect.ValueOf([]interface{}{
+		[]interface{}{"10.0.0.1", "10.0.0.10"},
+	}))
+	if got != "[10.0.0.1 - 10.0.0.10]" {
+		t.Fatalf("got %q, want [10.0.0.1 - 10.0.0.10]", got)
+	}
+
+	got = formatSliceForDisplay(reflect.ValueOf([][]string{
+		{"192.168.1.1", "192.168.1.50"},
+		{"1.1.1.1"},
+	}))
+	if got != "[192.168.1.1 - 192.168.1.50, 1.1.1.1]" {
+		t.Fatalf("got %q, want [192.168.1.1 - 192.168.1.50, 1.1.1.1]", got)
+	}
+}
+
 func TestFormatSliceForDisplayComplex(t *testing.T) {
 	got := formatSliceForDisplay(reflect.ValueOf([]map[string]interface{}{{"a": 1}}))
 	if got != "[1 items]" {

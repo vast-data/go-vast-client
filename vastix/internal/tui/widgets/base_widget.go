@@ -516,7 +516,7 @@ func formatSliceForDisplay(sliceVal reflect.Value) string {
 
 	parts := make([]string, 0, sliceVal.Len())
 	for i := 0; i < sliceVal.Len(); i++ {
-		text, ok := scalarSliceElement(sliceVal.Index(i))
+		text, ok := formatSliceElement(sliceVal.Index(i))
 		if !ok {
 			return fmt.Sprintf("[%d items]", sliceVal.Len())
 		}
@@ -526,13 +526,58 @@ func formatSliceForDisplay(sliceVal reflect.Value) string {
 	return "[" + strings.Join(parts, ", ") + "]"
 }
 
-func scalarSliceElement(elem reflect.Value) (string, bool) {
-	if elem.Kind() == reflect.Interface {
+// formatSliceElement formats one list element: a scalar or a nested slice of scalars
+// (e.g. vippool ip_ranges pairs like ["10.0.0.1", "10.0.0.10"]).
+func formatSliceElement(elem reflect.Value) (string, bool) {
+	if text, ok := scalarSliceElement(elem); ok {
+		return text, true
+	}
+
+	elem = unwrapReflectValue(elem)
+	if elem.Kind() == reflect.Slice {
+		inner, ok := formatNestedScalarSlice(elem)
+		if !ok {
+			return "", false
+		}
+		return inner, true
+	}
+
+	return "", false
+}
+
+// formatNestedScalarSlice joins inner scalar slices; IP range pairs use "start - end".
+func formatNestedScalarSlice(sliceVal reflect.Value) (string, bool) {
+	if sliceVal.Len() == 0 {
+		return "[]", true
+	}
+
+	parts := make([]string, 0, sliceVal.Len())
+	for i := 0; i < sliceVal.Len(); i++ {
+		text, ok := scalarSliceElement(sliceVal.Index(i))
+		if !ok {
+			return "", false
+		}
+		parts = append(parts, text)
+	}
+
+	if len(parts) == 2 {
+		return parts[0] + " - " + parts[1], true
+	}
+	return strings.Join(parts, ", "), true
+}
+
+func unwrapReflectValue(elem reflect.Value) reflect.Value {
+	for elem.Kind() == reflect.Interface {
 		if elem.IsNil() {
-			return "<nil>", true
+			return elem
 		}
 		elem = elem.Elem()
 	}
+	return elem
+}
+
+func scalarSliceElement(elem reflect.Value) (string, bool) {
+	elem = unwrapReflectValue(elem)
 
 	switch elem.Kind() {
 	case reflect.String, reflect.Bool,
