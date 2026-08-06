@@ -61,17 +61,17 @@ func (d *Definition) parseArguments(args string, out reflect.Value) error {
 		if len(parts) == 2 {
 			method := strings.TrimSpace(parts[0])
 			path := strings.TrimSpace(parts[1])
-			
+
 			// Set Method field
 			if methodField := out.FieldByName("Method"); methodField.IsValid() {
 				methodField.SetString(method)
 			}
-			
+
 			// Set Path field
 			if pathField := out.FieldByName("Path"); pathField.IsValid() {
 				pathField.SetString(path)
 			}
-			
+
 			return nil
 		}
 	}

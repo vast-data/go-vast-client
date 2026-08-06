@@ -241,15 +241,15 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 			} else if extraMethod.Method == "POST" {
 				op = rawResp.Post
 			}
-		if op != nil {
-			if content := getSuccessContent(op); content != nil && content.Schema != nil && content.Schema.Value != nil {
-				if content.Schema.Value.Type != nil && (*content.Schema.Value.Type).Is("array") {
-					isBareArray = true
-					methodInfo.ReturnsArray = true
-					fmt.Printf("  ℹ️  Detected bare array response\n")
+			if op != nil {
+				if content := getSuccessContent(op); content != nil && content.Schema != nil && content.Schema.Value != nil {
+					if content.Schema.Value.Type != nil && (*content.Schema.Value.Type).Is("array") {
+						isBareArray = true
+						methodInfo.ReturnsArray = true
+						fmt.Printf("  ℹ️  Detected bare array response\n")
+					}
 				}
 			}
-		}
 		}
 	}
 
@@ -278,16 +278,16 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 			op = rawResp.Delete
 		}
 
-	if op != nil {
-		if content := getSuccessContent(op); content != nil && content.Schema != nil {
-			// Check if response references AsyncTaskInResponse
-			if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
-				// This is an async method - add timeout parameter
-				methodInfo.IsAsyncTask = true
-				fmt.Printf("  ℹ️  Async task method detected (will add timeout parameter)\n")
+		if op != nil {
+			if content := getSuccessContent(op); content != nil && content.Schema != nil {
+				// Check if response references AsyncTaskInResponse
+				if content.Schema.Ref == "#/components/schemas/AsyncTaskInResponse" {
+					// This is an async method - add timeout parameter
+					methodInfo.IsAsyncTask = true
+					fmt.Printf("  ℹ️  Async task method detected (will add timeout parameter)\n")
+				}
 			}
 		}
-	}
 	}
 
 	// Generate query parameter fields for ALL extra methods
@@ -979,12 +979,12 @@ type ResourceData struct {
 	UpdateSummary         string            // Summary for Update operation
 	DeleteSummary         string            // Summary for Delete operation
 	// Async task support for CRUD operations
-	UpdateIsAsync     bool     // True if Update operation returns AsyncTaskInResponse
-	DeleteIsAsync     bool     // True if Delete operation returns AsyncTaskInResponse
-	DeleteByIdIsAsync bool     // True if DeleteById operation returns AsyncTaskInResponse
+	UpdateIsAsync     bool // True if Update operation returns AsyncTaskInResponse
+	DeleteIsAsync     bool // True if Delete operation returns AsyncTaskInResponse
+	DeleteByIdIsAsync bool // True if DeleteById operation returns AsyncTaskInResponse
 	// Array response support for Create/Update operations
-	CreateReturnsArray bool // True if Create operation returns an array
-	UpdateReturnsArray bool // True if Update operation returns an array
+	CreateReturnsArray bool     // True if Create operation returns an array
+	UpdateReturnsArray bool     // True if Update operation returns an array
 	GenerationIssues   []string // List of issues encountered during generation
 }
 
@@ -1489,7 +1489,7 @@ func main() {
 						}
 					}
 				}
-				
+
 				// Check if response is a direct component reference (for alias optimization)
 				upsertSchemaRef, upsertSchemaErr := api.GetResponseModelSchemaUnresolved(createMethod, createURL)
 				if upsertSchemaErr == nil && upsertSchemaRef != nil {
@@ -1501,7 +1501,7 @@ func main() {
 							upsertSchemaRef = upsertSchemaRef.Value.Items
 						}
 					}
-					
+
 					if componentName := api.IsDirectComponentReference(upsertSchemaRef); componentName != "" {
 						// Verify the component is not ambiguous before aliasing
 						componentSchema, compErr := api.GetSchemaFromComponent(componentName)
@@ -2775,9 +2775,9 @@ func extractCommonSearchableFields(resource *vastparser.VastResource, registry *
 				}
 			}
 
-		field := Field{
-			Name:        toCamelCase(fieldName),
-			Type:        searchParamGoType(propRef.Value),
+			field := Field{
+				Name:        toCamelCase(fieldName),
+				Type:        searchParamGoType(propRef.Value),
 				JSONTag:     fieldName,
 				YAMLTag:     fieldName,
 				RequiredTag: isRequired,

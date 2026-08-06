@@ -174,7 +174,6 @@ func (t *TextInputWrapper) GetTextInput() *textinput.Model {
 type BoolInput struct {
 	value       bool
 	focused     bool
-	label       string
 	description string
 }
 

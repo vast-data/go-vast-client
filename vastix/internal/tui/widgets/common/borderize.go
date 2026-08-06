@@ -1,9 +1,9 @@
 package common
 
 import (
-	"vastix/internal/colors"
 	"fmt"
 	"strings"
+	"vastix/internal/colors"
 
 	"github.com/charmbracelet/lipgloss"
 )

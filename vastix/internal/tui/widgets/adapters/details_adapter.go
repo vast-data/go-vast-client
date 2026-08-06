@@ -1377,25 +1377,6 @@ func formatRecordAsJSON(record map[string]any) string {
 	return details.String()
 }
 
-// Minimal formatting helpers to avoid import cycles
-func adaptersFormatRecordAsJSON(record map[string]any) string {
-	if record == nil {
-		return "{}"
-	}
-	var b strings.Builder
-	b.WriteString("{ ")
-	i := 0
-	for k, v := range record {
-		if i > 0 {
-			b.WriteString(", ")
-		}
-		b.WriteString(fmt.Sprintf("\"%s\": %v", k, v))
-		i++
-	}
-	b.WriteString(" }")
-	return b.String()
-}
-
 // formatRecordSetAsJSON formats a RecordSet (array of records) as a JSON array with syntax highlighting
 func formatRecordSetAsJSON(recordSet vast_client.RecordSet) string {
 	if len(recordSet) == 0 {
@@ -1448,8 +1429,4 @@ func formatRecordSetAsJSON(recordSet vast_client.RecordSet) string {
 	result.WriteString(leftMargin + bracketColor.Render("]"))
 
 	return result.String()
-}
-
-func adaptersRecordPretty(record map[string]any) string {
-	return adaptersFormatRecordAsJSON(record)
 }

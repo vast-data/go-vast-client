@@ -9,6 +9,7 @@ import (
 	"strings"
 	"vastix/internal/client"
 	"vastix/internal/colors"
+	shared "vastix/internal/common"
 	"vastix/internal/database"
 	log "vastix/internal/logging"
 	"vastix/internal/msg_types"
@@ -238,7 +239,11 @@ func (p *Profile) Select(selectedRowData common.RowData) (tea.Cmd, error) {
 
 	// Extract ID from the row data
 	id := selectedRowData.GetInt64Must("id")
-	if int64(activeProfile.ID) == id {
+	activeProfileID, err := shared.Int64FromUint(activeProfile.ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid active profile ID: %w", err)
+	}
+	if activeProfileID == id {
 		// If the selected profile is already active, do nothing
 		log.Debug("Profile already active, no action taken",
 			zap.Uint("profile_id", activeProfile.ID),
@@ -246,7 +251,11 @@ func (p *Profile) Select(selectedRowData common.RowData) (tea.Cmd, error) {
 		return nil, nil
 	}
 
-	profile, err := db.GetProfile(uint64(id))
+	profileID, err := shared.ToUint64(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid profile ID: %w", err)
+	}
+	profile, err := db.GetProfile(profileID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find profile: %w", err)
 	}
@@ -276,7 +285,9 @@ func (p *Profile) Select(selectedRowData common.RowData) (tea.Cmd, error) {
 		if err != nil {
 			log.Error("Failed to get VAST version from new active profile", zap.Error(err))
 			// Revert to previous active profile
-			db.SetActiveProfile(activeProfile.ID)
+			if revertErr := db.SetActiveProfile(activeProfile.ID); revertErr != nil {
+				log.Error("Failed to revert active profile after connection test", zap.Error(revertErr))
+			}
 			return msg_types.ErrorMsg{
 				Err: err,
 			}
@@ -394,7 +405,11 @@ func (p *Profile) Delete(selectedRowData common.RowData) (tea.Cmd, error) {
 
 	// Extract ID from the row data
 	id := selectedRowData.GetInt64Must("id")
-	profile, err := db.GetProfile(uint64(id))
+	profileID, err := shared.ToUint64(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid profile ID: %w", err)
+	}
+	profile, err := db.GetProfile(profileID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// No active profile found - return nil profile with no error

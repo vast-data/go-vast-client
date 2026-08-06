@@ -1,10 +1,10 @@
 package adapters
 
 import (
-	"vastix/internal/colors"
 	"fmt"
 	"sort"
 	"strings"
+	"vastix/internal/colors"
 	"vastix/internal/msg_types"
 	"vastix/internal/tui/widgets/common"
 
@@ -23,11 +23,11 @@ import (
 // Colors - use the same colors as the main TUI package
 var (
 	Blue      = colors.Blue      // Main TUI Blue for active state
-	White     = colors.White // Same as main TUI White
-	Black     = colors.Black // Same as main TUI Black
-	LightGrey = colors.LightGrey     // Same as main TUI LightGrey
-	DarkGrey  = colors.DarkGrey // Same as main TUI DarkGrey
-	Yellow    = colors.Yellow // Same as main TUI Yellow
+	White     = colors.White     // Same as main TUI White
+	Black     = colors.Black     // Same as main TUI Black
+	LightGrey = colors.LightGrey // Same as main TUI LightGrey
+	DarkGrey  = colors.DarkGrey  // Same as main TUI DarkGrey
+	Yellow    = colors.Yellow    // Same as main TUI Yellow
 )
 
 type ListAdapter struct {
@@ -388,8 +388,8 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 
 	// Create resource type label with styling - use same orange as original
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(colors.Orange). // Orange background (same as original)
-		Foreground(colors.BlackTerm)    // Black text
+		Background(colors.Orange).   // Orange background (same as original)
+		Foreground(colors.BlackTerm) // Black text
 
 	// Use predefined title if available, otherwise use resourceType
 	var titleText string
@@ -451,8 +451,8 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 
 			// Create server labels for each parameter
 			serverLabelStyle := lipgloss.NewStyle().
-				Background(colors.Orange). // Yellow background
-				Foreground(colors.BlackTerm)    // Black text
+				Background(colors.Orange).   // Yellow background
+				Foreground(colors.BlackTerm) // Black text
 
 			for _, paramStr := range paramStrings {
 				serverLabel := serverLabelStyle.Render(fmt.Sprintf(" %s ", paramStr))

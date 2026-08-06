@@ -36,7 +36,7 @@ go build -o vpn-client ./client/cmd
 VPN Server Deployed Successfully!
 ============================================================
 Remote Host:       10.27.14.107
-Server Public Key: G6irfdBQO8dVanH8L33Qm9hWGrVcCW5wIew8ucSR+lU=
+Server Public Key: G6irfdBQO8dVanH8L33Qm9hWGrVcCW5wIew8ucSR+lU=  # gitleaks:allow -- example WireGuard public key in docs
 Server VPN IP:     10.99.1.1
 VPN Port:          51821
 ============================================================
@@ -63,7 +63,7 @@ VPN Port:          51821
 ```bash
 ./vpn-client -mode connect \
   -server 10.27.14.107:51821 \
-  -server-key "G6irfdBQO8dVanH8L33Qm9hWGrVcCW5wIew8ucSR+lU=" \
+  -server-key "G6irfdBQO8dVanH8L33Qm9hWGrVcCW5wIew8ucSR+lU=" \  # gitleaks:allow -- example WireGuard public key in docs
   -client-ip 10.99.1.2 \
   -server-ip 10.99.1.1 \
   -private-network 172.21.101.0/24
@@ -73,7 +73,7 @@ VPN Port:          51821
 ```
 Connected successfully!
 
-Client Public Key: B+bKd/4IjwKOfPNfnqr/IkFZE3ufMrpM9t6WD7PmG08=
+Client Public Key: B+bKd/4IjwKOfPNfnqr/IkFZE3ufMrpM9t6WD7PmG08=  # gitleaks:allow -- example WireGuard public key in docs
 (Provide this to the server administrator to authorize your connection)
 ```
 

@@ -54,19 +54,19 @@ func installWireGuardLinux() error {
 
 	switch distro {
 	case "ubuntu", "debian":
-		cmd = exec.Command("sudo", "apt-get", "update")
+		cmd = exec.Command("sudo", "apt-get", "update") // #nosec G204 -- VPN admin installer; fixed package-manager argv
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to update package lists: %w", err)
 		}
-		cmd = exec.Command("sudo", "apt-get", "install", "-y", "wireguard")
+		cmd = exec.Command("sudo", "apt-get", "install", "-y", "wireguard") // #nosec G204 -- VPN admin installer; fixed package-manager argv
 
 	case "centos", "rhel", "fedora", "rocky":
 		// Try to install wireguard-tools via package manager first (available in RHEL 9+, Rocky 9+, Fedora)
 		// Fall back to wireguard-go if package manager installation fails
-		cmd = exec.Command("sudo", "dnf", "install", "-y", "wireguard-tools")
+		cmd = exec.Command("sudo", "dnf", "install", "-y", "wireguard-tools") // #nosec G204 -- VPN admin installer; fixed package-manager argv
 		if err := cmd.Run(); err != nil {
 			// Fallback: try yum for older systems
-			cmd = exec.Command("sudo", "yum", "install", "-y", "wireguard-tools")
+			cmd = exec.Command("sudo", "yum", "install", "-y", "wireguard-tools") // #nosec G204 -- VPN admin installer; fixed package-manager argv
 			if err := cmd.Run(); err != nil {
 				// If package manager fails, try wireguard-go (requires Go)
 				return installWireGuardGo()
@@ -75,7 +75,7 @@ func installWireGuardLinux() error {
 		return nil
 
 	case "arch":
-		cmd = exec.Command("sudo", "pacman", "-Sy", "--noconfirm", "wireguard-tools")
+		cmd = exec.Command("sudo", "pacman", "-Sy", "--noconfirm", "wireguard-tools") // #nosec G204 -- VPN admin installer; fixed package-manager argv
 
 	default:
 		// Fallback to wireguard-go for unknown distributions
@@ -97,7 +97,7 @@ func installWireGuardGo() error {
 	}
 
 	// Install wireguard-go
-	cmd := exec.Command("go", "install", "golang.zx2c4.com/wireguard/cmd/wireguard-go@latest")
+	cmd := exec.Command("go", "install", "golang.zx2c4.com/wireguard/cmd/wireguard-go@latest") // #nosec G204 -- installs wireguard-go from a fixed module path
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0")
 
 	if output, err := cmd.CombinedOutput(); err != nil {
@@ -110,7 +110,7 @@ func installWireGuardGo() error {
 // detectLinuxDistro detects the Linux distribution
 func detectLinuxDistro() (string, error) {
 	// Try reading /etc/os-release
-	data, err := os.ReadFile("/etc/os-release")
+	data, err := os.ReadFile("/etc/os-release") // #nosec G304 -- standard Linux distro identification path
 	if err != nil {
 		return "", err
 	}
@@ -139,7 +139,7 @@ func HasKernelWireGuard() bool {
 	}
 	// Try to load the module; the server runs as root so this is allowed.
 	// This is a safe no-op on kernels that don't have the module at all.
-	if err := exec.Command("modprobe", "wireguard").Run(); err == nil {
+	if err := exec.Command("modprobe", "wireguard").Run(); err == nil { // #nosec G204 -- fixed argv; probes kernel WireGuard module
 		return true
 	}
 	return false

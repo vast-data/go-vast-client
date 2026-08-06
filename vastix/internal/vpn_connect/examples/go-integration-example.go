@@ -30,7 +30,7 @@ func NewVPNManager() *VPNManager {
 	}))
 
 	return &VPNManager{
-		deployer: client.NewDeployer(nil, nil),
+		deployer: client.NewDeployer(os.Stdout),
 		logger:   logger,
 	}
 }
@@ -81,7 +81,7 @@ func (m *VPNManager) DeployAndConnect(ctx context.Context, clientID int, remoteH
 		ListenPort:     port,
 		ServerIP:       serverIP,
 		VPNNetwork:     vpnNetwork,
-		PrivateNetwork: netip.MustParsePrefix("172.21.101.0/24"),
+		PrivateIPs: []netip.Addr{netip.MustParseAddr("172.21.101.1")},
 	}
 
 	if err := m.deployer.Deploy(ctx, deployConfig, serverConfig); err != nil {
@@ -91,9 +91,12 @@ func (m *VPNManager) DeployAndConnect(ctx context.Context, clientID int, remoteH
 	m.logger.Info("Server deployed successfully")
 
 	// Step 4: Start server
-	if err := m.deployer.StartServer(deployConfig.RemoteWorkDir, port); err != nil {
-		return fmt.Errorf("failed to start server: %w", err)
-	}
+	go func() {
+		if err := m.deployer.StartServer(ctx, deployConfig.RemoteWorkDir, serverConfig); err != nil {
+			m.logger.Error("VPN server stopped", slog.Any("error", err))
+		}
+	}()
+	time.Sleep(3 * time.Second)
 
 	m.logger.Info("Server started successfully")
 
@@ -113,15 +116,15 @@ func (m *VPNManager) DeployAndConnect(ctx context.Context, clientID int, remoteH
 		ServerEndpoint:  fmt.Sprintf("%s:%d", remoteHost, port),
 		ClientIP:        clientIP,
 		ServerIP:        serverIP,
-		PrivateNetwork:  netip.MustParsePrefix("172.21.101.0/24"),
+		PrivateIPs:      []netip.Addr{netip.MustParseAddr("172.21.101.1")},
 	}
 
-	m.vpnClient, err = client.NewClient(clientConfig, nil, nil)
+	m.vpnClient, err = client.NewClient(clientConfig, os.Stdout)
 	if err != nil {
 		return fmt.Errorf("failed to create VPN client: %w", err)
 	}
 
-	if err := m.vpnClient.Connect(ctx); err != nil {
+	if err := m.vpnClient.Connect(""); err != nil {
 		return fmt.Errorf("failed to connect VPN client: %w", err)
 	}
 

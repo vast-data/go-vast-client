@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -7,6 +9,7 @@ import (
 	"net/netip"
 	"os"
 	"os/exec"
+	"time"
 
 	"vastix/internal/vpn_connect/client"
 	"vastix/internal/vpn_connect/common"
@@ -51,18 +54,18 @@ func main() {
 	}
 
 	port := common.GetListenPort(clientID)
-	privateNetwork := netip.MustParsePrefix("172.21.101.0/24")
+	privateIPs := []netip.Addr{netip.MustParseAddr("172.21.101.1")}
 
 	fmt.Printf("  VPN Network: %s\n", vpnNetwork)
 	fmt.Printf("  Server IP: %s\n", serverIP)
 	fmt.Printf("  Client IP: %s\n", clientIP)
 	fmt.Printf("  Port: %d\n", port)
-	fmt.Printf("  Private Network: %s\n", privateNetwork)
+	fmt.Printf("  Private IPs: %v\n", privateIPs)
 	fmt.Println()
 
 	// Step 2: Create deployer and connect via SSH
 	fmt.Println("Step 2: Connecting to remote host via SSH...")
-	deployer := client.NewDeployer(nil, nil)
+	deployer := client.NewDeployer(os.Stdout)
 
 	deployConfig := &client.DeploymentConfig{
 		Host:           remoteHost,
@@ -99,7 +102,7 @@ func main() {
 		ListenPort:     port,
 		ServerIP:       serverIP,
 		VPNNetwork:     vpnNetwork,
-		PrivateNetwork: privateNetwork,
+		PrivateIPs: privateIPs,
 	}
 
 	if err := deployer.Deploy(ctx, deployConfig, serverConfig); err != nil {
@@ -111,9 +114,12 @@ func main() {
 
 	// Step 5: Start server
 	fmt.Println("Step 5: Starting VPN server on remote...")
-	if err := deployer.StartServer(remoteWorkDir, serverConfig); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	go func() {
+		if err := deployer.StartServer(ctx, remoteWorkDir, serverConfig); err != nil {
+			log.Printf("VPN server stopped: %v", err)
+		}
+	}()
+	time.Sleep(3 * time.Second)
 
 	fmt.Println("  ✓ Server started successfully")
 	fmt.Println()
@@ -137,18 +143,19 @@ func main() {
 		ServerEndpoint:  fmt.Sprintf("%s:%d", remoteHost, port),
 		ClientIP:        clientIP,
 		ServerIP:        serverIP,
-		PrivateNetwork:  privateNetwork,
+		PrivateIPs:      privateIPs,
 	}
 
-	vpnClient, err := client.NewClient(clientConfig, nil, nil)
+	vpnClient, err := client.NewClient(clientConfig, os.Stdout)
 	if err != nil {
 		log.Fatalf("Failed to create VPN client: %v", err)
 	}
 
-	if err := vpnClient.Connect(ctx); err != nil {
+	sudoPassword := os.Getenv("VASTIX_SUDO_PASSWORD")
+	if err := vpnClient.Connect(sudoPassword); err != nil {
 		log.Fatalf("Failed to connect VPN client: %v", err)
 	}
-	defer vpnClient.Disconnect("") // Empty password for passwordless sudo in tests
+	defer vpnClient.Disconnect(sudoPassword)
 
 	fmt.Println("  ✓ VPN client connected successfully")
 	fmt.Println()
@@ -182,7 +189,7 @@ func main() {
 	fmt.Printf("Server endpoint: %s:%d\n", remoteHost, port)
 	fmt.Printf("VPN Network: %s\n", vpnNetwork)
 	fmt.Printf("Client IP: %s\n", clientIP)
-	fmt.Printf("Private Network: %s (accessible!)\n", privateNetwork)
+	fmt.Printf("Private IPs: %v (accessible!)\n", privateIPs)
 	fmt.Println()
 	fmt.Println("Press Ctrl+C to disconnect and exit...")
 
@@ -191,6 +198,6 @@ func main() {
 }
 
 func testPing(ip string) error {
-	cmd := exec.Command("ping", "-c", "3", "-W", "2", ip)
+	cmd := exec.Command("ping", "-c", "3", "-W", "2", ip) // #nosec G204 -- manual VPN e2e helper; dest is a typed IP
 	return cmd.Run()
 }

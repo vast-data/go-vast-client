@@ -101,7 +101,10 @@ type VMSSessionMethod func(context.Context, string, Params, []http.Header) (Rend
 func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
 	//Create a new session object
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: !config.SslVerify}
+	transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: !config.SslVerify, // #nosec G402 -- public SslVerify API; default verify-on. nosemgrep: go.lang.security.audit.crypto.insecure-skip-verify
+		MinVersion:         tls.VersionTLS12,
+	}
 	transport.MaxConnsPerHost = config.MaxConnections
 	transport.IdleConnTimeout = *config.Timeout
 	if config.RespectProxy {

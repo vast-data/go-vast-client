@@ -37,7 +37,7 @@ func PrepareLocalEnvironment(sudoPassword string, writer io.Writer) error {
 	if needsWireGuardKernelModule() {
 		writeStep(writer, "Loading WireGuard kernel module...")
 		modprobe := lookPathOr("modprobe", "/sbin/modprobe")
-		_ = runSudo(sudoPassword, writer, modprobe, "wireguard")
+		_ = runSudo(sudoPassword, writer, modprobe, "wireguard") // #nosec G104 -- best-effort module load; connect continues either way
 	}
 
 	return nil
@@ -70,7 +70,7 @@ func cleanupStaleWireGuardState(sudoPassword string, writer io.Writer) error {
 	hostname, err := os.Hostname()
 	if err == nil {
 		if workDir, err := userWorkDir(hostname); err == nil {
-			_ = ensureUserWorkDir(workDir, sudoPassword)
+			_ = ensureUserWorkDir(workDir, sudoPassword) // #nosec G104 -- best-effort cache dir after stale-state cleanup
 		}
 	}
 
@@ -97,7 +97,9 @@ func ensurePasswordlessWireGuardSudo(sudoPassword string, writer io.Writer) erro
 	defer os.Remove(tmpPath)
 
 	if _, err := tmpFile.WriteString(content); err != nil {
-		tmpFile.Close()
+		if closeErr := tmpFile.Close(); closeErr != nil {
+			return fmt.Errorf("%w (also failed to close temp file: %v)", err, closeErr)
+		}
 		return err
 	}
 	if err := tmpFile.Close(); err != nil {
@@ -134,7 +136,7 @@ func installWireGuardTools(sudoPassword string, writer io.Writer) error {
 
 func detectLinuxDistro() (string, error) {
 	for _, path := range []string{"/etc/os-release", "/usr/lib/os-release"} {
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) // #nosec G304 -- standard Linux distro identification paths
 		if err != nil {
 			continue
 		}

@@ -44,7 +44,7 @@ func New() *Service {
 
 	// Create .vastix directory in user home
 	vastixDir := filepath.Join(homeDir, ".vastix")
-	if err := os.MkdirAll(vastixDir, 0755); err != nil {
+	if err := os.MkdirAll(vastixDir, 0750); err != nil {
 		log.Fatalf("failed to create .vastix directory: %v", err)
 	}
 

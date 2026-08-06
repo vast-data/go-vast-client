@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"vastix/internal/colors"
 	"strings"
+	"vastix/internal/colors"
 
 	"vastix/internal/database"
 
@@ -14,7 +14,6 @@ var (
 	colorOrange    = colors.Orange
 	colorBlack     = colors.Black
 	colorLightGrey = colors.LightGrey
-	colorWhite     = colors.White
 	colorYellow    = colors.Yellow // Match key binding color
 	colorBlue      = colors.Blue
 	colorDarkGrey  = colors.DarkGrey

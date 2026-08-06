@@ -12,15 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// getRecordKeys returns all keys from a record for debugging
-func getRecordKeys(record vast_client.Record) []string {
-	keys := make([]string, 0, len(record))
-	for k := range record {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
 // createUserAccessKeyAfterCreateCallback creates a callback function that stores
 // newly created user access keys in the local database
 // The isNonLocal parameter indicates whether this callback is for non-local users

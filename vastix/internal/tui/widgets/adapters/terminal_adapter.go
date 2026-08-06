@@ -1,7 +1,6 @@
 package adapters
 
 import (
-	"vastix/internal/colors"
 	"bufio"
 	"fmt"
 	"io"
@@ -9,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"vastix/internal/colors"
 
 	"vastix/internal/database"
 	log "vastix/internal/logging"
@@ -108,7 +108,7 @@ func (t *TerminalAdapter) GetHeight() int {
 func (t *TerminalAdapter) RunCommand(name string, args ...string) tea.Cmd {
 	return func() tea.Msg {
 		t.mu.Lock()
-		t.cmd = exec.Command(name, args...)
+		t.cmd = exec.Command(name, args...) // #nosec G204 -- user-initiated shell command in TUI terminal adapter
 		t.running = true
 		t.finished = false
 		t.outputLines = []string{} // Clear previous output

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"syscall"
 
+	shared "vastix/internal/common"
 	"vastix/internal/vpn_connect/client"
 	"vastix/internal/vpn_connect/common"
 )
@@ -25,8 +26,9 @@ func main() {
 	serverPublicKey := flag.String("server-key", "", "Server public key")
 	clientIP := flag.String("client-ip", "", "Client VPN IP (e.g., 10.99.1.2)")
 	serverIP := flag.String("server-ip", "", "Server VPN IP (e.g., 10.99.1.1)")
-	privateNetwork := flag.String("private-network", "172.21.101.0/24", "Private network CIDR to access")
-	privateKey := flag.String("private-key", "", "Client private key (generate if empty)")
+	privateNetwork := flag.String("private-network", "172.21.101.0/24", "Private network CIDR; first host is routed as a /32")
+	privateKey := flag.String("private-key", "", "Client or server private key (generate if empty)")
+	sudoPassword := flag.String("sudo-password", "", "Local sudo password for wg-quick (empty if passwordless)")
 
 	// Deployment flags
 	remoteHost := flag.String("remote-host", "", "Remote host for deployment")
@@ -55,13 +57,13 @@ func main() {
 
 	switch *mode {
 	case "connect":
-		runConnectMode(logger, *serverEndpoint, *serverPublicKey, *clientIP, *serverIP, *privateNetwork, *privateKey)
+		runConnectMode(logger, *serverEndpoint, *serverPublicKey, *clientIP, *serverIP, *privateNetwork, *privateKey, *sudoPassword)
 
 	case "deploy":
 		runDeployMode(logger, *remoteHost, *remotePort, *remoteUser, *remotePassword, *remoteKeyFile, *remoteWorkDir, *vpnPort, *vpnServerIP, *vpnNetwork, *privateNetwork)
 
 	case "start-remote":
-		runStartRemoteMode(logger, *remoteHost, *remotePort, *remoteUser, *remotePassword, *remoteKeyFile, *remoteWorkDir, *vpnPort)
+		runStartRemoteMode(logger, *remoteHost, *remotePort, *remoteUser, *remotePassword, *remoteKeyFile, *remoteWorkDir, *vpnPort, *vpnServerIP, *vpnNetwork, *privateNetwork, *privateKey)
 
 	case "stop-remote":
 		runStopRemoteMode(logger, *remoteHost, *remotePort, *remoteUser, *remotePassword, *remoteKeyFile, *vpnPort)
@@ -76,7 +78,19 @@ func main() {
 	}
 }
 
-func runConnectMode(logger *slog.Logger, serverEndpoint, serverPublicKey, clientIPStr, serverIPStr, privateNetworkStr, privateKey string) {
+func prefixToPrivateIPs(p netip.Prefix) []netip.Addr {
+	return []netip.Addr{p.Addr().Next()}
+}
+
+func listenPort(vpnPort uint) uint16 {
+	p, err := shared.ToPort(int64(vpnPort))
+	if err != nil {
+		return 51820
+	}
+	return p
+}
+
+func runConnectMode(logger *slog.Logger, serverEndpoint, serverPublicKey, clientIPStr, serverIPStr, privateNetworkStr, privateKey, sudoPassword string) {
 	if serverEndpoint == "" || serverPublicKey == "" || clientIPStr == "" || serverIPStr == "" {
 		logger.Error("Missing required flags for connect mode")
 		fmt.Fprintf(os.Stderr, "Required flags: -server, -server-key, -client-ip, -server-ip\n")
@@ -130,11 +144,11 @@ func runConnectMode(logger *slog.Logger, serverEndpoint, serverPublicKey, client
 		ServerEndpoint:  serverEndpoint,
 		ClientIP:        clientIP,
 		ServerIP:        serverIP,
-		PrivateNetwork:  privNet,
+		PrivateIPs:      prefixToPrivateIPs(privNet),
 	}
 
 	// Create client
-	c, err := client.NewClient(config, nil, nil)
+	c, err := client.NewClient(config, os.Stdout)
 	if err != nil {
 		logger.Error("Failed to create client", slog.Any("error", err))
 		os.Exit(1)
@@ -156,20 +170,21 @@ func runConnectMode(logger *slog.Logger, serverEndpoint, serverPublicKey, client
 	// Connect
 	logger.Info("Connecting to VPN server", slog.String("endpoint", serverEndpoint))
 
-	if err := c.Connect(ctx); err != nil {
+	if err := c.Connect(sudoPassword); err != nil {
 		logger.Error("Failed to connect", slog.Any("error", err))
 		os.Exit(1)
 	}
 
 	logger.Info("Connected successfully!")
 	fmt.Println("\nClient Public Key:", pubKey)
-	fmt.Println("(Provide this to the server administrator to authorize your connection)\n")
+	fmt.Println("(Provide this to the server administrator to authorize your connection)")
+	fmt.Println()
 
 	// Wait for shutdown
 	<-ctx.Done()
 
 	// Disconnect
-	if err := c.Disconnect(); err != nil {
+	if err := c.Disconnect(sudoPassword); err != nil {
 		logger.Error("Failed to disconnect", slog.Any("error", err))
 		os.Exit(1)
 	}
@@ -218,15 +233,15 @@ func runDeployMode(logger *slog.Logger, host string, port int, user, password, k
 	serverConfig := &common.ServerConfig{
 		PrivateKey:     privKey,
 		PublicKey:      pubKey,
-		ListenPort:     uint16(vpnPort),
+		ListenPort:     listenPort(vpnPort),
 		ServerIP:       srvIP,
 		VPNNetwork:     vpnNet,
-		PrivateNetwork: privNet,
-		Interface:      "", // Will be auto-detected on remote
+		PrivateIPs: prefixToPrivateIPs(privNet),
+		Interface:  "", // Will be auto-detected on remote
 	}
 
 	// Create deployer
-	deployer := client.NewDeployer(nil, nil)
+	deployer := client.NewDeployer(os.Stdout)
 
 	deployConfig := &client.DeploymentConfig{
 		Host:           host,
@@ -267,13 +282,59 @@ func runDeployMode(logger *slog.Logger, host string, port int, user, password, k
 	fmt.Println()
 }
 
-func runStartRemoteMode(logger *slog.Logger, host string, port int, user, password, keyFile, workDir string, vpnPort uint) {
+func runStartRemoteMode(logger *slog.Logger, host string, port int, user, password, keyFile, workDir string, vpnPort uint, vpnServerIP, vpnNetwork, privateNetwork, privateKey string) {
 	if host == "" {
 		logger.Error("Remote host is required")
 		os.Exit(1)
 	}
+	if vpnServerIP == "" || vpnNetwork == "" {
+		logger.Error("VPN server IP and network are required to start the remote server")
+		fmt.Fprintf(os.Stderr, "Required flags: -vpn-server-ip, -vpn-network\n")
+		os.Exit(1)
+	}
 
-	deployer := client.NewDeployer(nil, nil)
+	srvIP, err := netip.ParseAddr(vpnServerIP)
+	if err != nil {
+		logger.Error("Invalid VPN server IP", slog.Any("error", err))
+		os.Exit(1)
+	}
+	vpnNet, err := netip.ParsePrefix(vpnNetwork)
+	if err != nil {
+		logger.Error("Invalid VPN network", slog.Any("error", err))
+		os.Exit(1)
+	}
+	privNet, err := netip.ParsePrefix(privateNetwork)
+	if err != nil {
+		logger.Error("Invalid private network", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	privKey, pubKey := privateKey, ""
+	if privKey == "" {
+		privKey, pubKey, err = common.GenerateKeyPair()
+		if err != nil {
+			logger.Error("Failed to generate keys", slog.Any("error", err))
+			os.Exit(1)
+		}
+		logger.Info("Generated new server key pair", slog.String("publicKey", pubKey))
+	} else {
+		pubKey, err = common.GetPublicKey(privKey)
+		if err != nil {
+			logger.Error("Failed to derive public key", slog.Any("error", err))
+			os.Exit(1)
+		}
+	}
+
+	serverConfig := &common.ServerConfig{
+		PrivateKey: privKey,
+		PublicKey:  pubKey,
+		ListenPort: listenPort(vpnPort),
+		ServerIP:   srvIP,
+		VPNNetwork: vpnNet,
+		PrivateIPs: prefixToPrivateIPs(privNet),
+	}
+
+	deployer := client.NewDeployer(os.Stdout)
 
 	deployConfig := &client.DeploymentConfig{
 		Host:           host,
@@ -291,12 +352,15 @@ func runStartRemoteMode(logger *slog.Logger, host string, port int, user, passwo
 	}
 	defer deployer.Disconnect()
 
-	if err := deployer.StartServer(workDir, uint16(vpnPort)); err != nil {
+	startCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	if err := deployer.StartServer(startCtx, workDir, serverConfig); err != nil {
 		logger.Error("Failed to start remote server", slog.Any("error", err))
 		os.Exit(1)
 	}
 
-	logger.Info("Remote server started successfully")
+	logger.Info("Remote server stopped")
 }
 
 func runStopRemoteMode(logger *slog.Logger, host string, port int, user, password, keyFile string, vpnPort uint) {
@@ -305,7 +369,7 @@ func runStopRemoteMode(logger *slog.Logger, host string, port int, user, passwor
 		os.Exit(1)
 	}
 
-	deployer := client.NewDeployer(nil, nil)
+	deployer := client.NewDeployer(os.Stdout)
 
 	deployConfig := &client.DeploymentConfig{
 		Host:           host,
@@ -322,7 +386,7 @@ func runStopRemoteMode(logger *slog.Logger, host string, port int, user, passwor
 	}
 	defer deployer.Disconnect()
 
-	if err := deployer.StopServer(uint16(vpnPort)); err != nil {
+	if err := deployer.StopServer(); err != nil {
 		logger.Error("Failed to stop remote server", slog.Any("error", err))
 		os.Exit(1)
 	}
@@ -336,7 +400,7 @@ func runStatusRemoteMode(logger *slog.Logger, host string, port int, user, passw
 		os.Exit(1)
 	}
 
-	deployer := client.NewDeployer(nil, nil)
+	deployer := client.NewDeployer(os.Stdout)
 
 	deployConfig := &client.DeploymentConfig{
 		Host:           host,
@@ -353,7 +417,7 @@ func runStatusRemoteMode(logger *slog.Logger, host string, port int, user, passw
 	}
 	defer deployer.Disconnect()
 
-	running, pid, err := deployer.GetServerStatus(uint16(vpnPort))
+	running, pid, err := deployer.GetServerStatus(listenPort(vpnPort))
 	if err != nil {
 		logger.Error("Failed to check server status", slog.Any("error", err))
 		os.Exit(1)

@@ -286,7 +286,10 @@ func (auth *JWTAuthenticator) authorize() error {
 
 	// Now make HTTP calls without holding the lock
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: !auth.SslVerify},
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: !auth.SslVerify, // #nosec G402 -- public SslVerify API; default verify-on. nosemgrep: go.lang.security.audit.crypto.insecure-skip-verify
+			MinVersion:         tls.VersionTLS12,
+		},
 	}
 	if auth.RespectProxy {
 		tr.Proxy = http.ProxyFromEnvironment

@@ -1,9 +1,9 @@
 package tui
 
 import (
-	"vastix/internal/colors"
 	"regexp"
 	"strings"
+	"vastix/internal/colors"
 	"vastix/internal/database"
 	log "vastix/internal/logging"
 
