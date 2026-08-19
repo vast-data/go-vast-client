@@ -616,9 +616,9 @@ func (w *WorkingZone) renderSpinnerOnly() string {
 	// Create all lines
 	lines := make([]string, innerHeight)
 
-	// Top zone: Render logs with left padding and gray color
-	leftPadding := "  "                                         // 2 spaces left padding
-	grayStyle := lipgloss.NewStyle().Foreground(colors.Grey240) // Gray color
+	// Top zone: Render logs with left padding
+	leftPadding := "  " // 2 spaces left padding
+	logStyle := lipgloss.NewStyle().Foreground(colors.LightGrey)
 
 	if logHeight > 0 && len(w.logBuffer) > 0 {
 		// Get the latest logs that fit in the log zone
@@ -629,7 +629,7 @@ func (w *WorkingZone) renderSpinnerOnly() string {
 
 		logLines := w.logBuffer[startIdx:]
 
-		// Render each log line with padding and gray color
+		// Render each log line with padding
 		for i := 0; i < logHeight; i++ {
 			if i < len(logLines) {
 				logLine := logLines[i]
@@ -643,8 +643,7 @@ func (w *WorkingZone) renderSpinnerOnly() string {
 					availableWidth = 1
 				}
 
-				// Apply gray color to the log line
-				styledLine := grayStyle.Render(cleanLine)
+				styledLine := logStyle.Render(cleanLine)
 
 				// Remove ANSI from styled line for width calculation
 				cleanStyled := regexp.MustCompile(`\x1b\[[0-9;]*m`).ReplaceAllString(styledLine, "")
@@ -653,7 +652,7 @@ func (w *WorkingZone) renderSpinnerOnly() string {
 					// Truncate to fit available width
 					// Find where to cut in styled line (approximate)
 					cutPoint := availableWidth
-					styledLine = grayStyle.Render(cleanLine[:cutPoint])
+					styledLine = logStyle.Render(cleanLine[:cutPoint])
 				}
 
 				// Add left padding and right padding to fill width

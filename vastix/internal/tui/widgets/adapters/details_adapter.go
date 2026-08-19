@@ -138,14 +138,14 @@ func (da *DetailsAdapter) wrapLine(line string, maxWidth int) []string {
 }
 
 // Write implements io.Writer interface for streaming logs to the viewport
-// Applies left padding and gray color styling to log lines
+// Applies left padding and light styling to log lines
 // Wraps long lines to fit within viewport width
 func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
 	text := string(p)
 
 	// Apply styling: left padding and gray color
 	leftPadding := "  "                                         // 2 spaces left padding
-	grayStyle := lipgloss.NewStyle().Foreground(colors.Grey240) // Gray color
+	logStyle := lipgloss.NewStyle().Foreground(colors.LightGrey)
 
 	// Calculate max line width (viewport width - padding - borders - small margin)
 	maxWidth := da.width - len(leftPadding) - 4 // 4 for borders and margin
@@ -164,8 +164,7 @@ func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
 			// Wrap long lines
 			wrappedLines := da.wrapLine(line, maxWidth)
 			for _, wrappedLine := range wrappedLines {
-				// Apply padding and gray color
-				styledLine := leftPadding + grayStyle.Render(wrappedLine)
+				styledLine := leftPadding + logStyle.Render(wrappedLine)
 				styledLines = append(styledLines, styledLine)
 			}
 		}
@@ -184,12 +183,12 @@ func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
 }
 
 // AppendContent appends a string to the current content
-// Applies left padding and gray color styling to log lines
+// Applies left padding and light styling to log lines
 // Wraps long lines to fit within viewport width
 func (da *DetailsAdapter) AppendContent(text string) {
 	// Apply styling: left padding and gray color
 	leftPadding := "  "                                         // 2 spaces left padding
-	grayStyle := lipgloss.NewStyle().Foreground(colors.Grey240) // Gray color
+	logStyle := lipgloss.NewStyle().Foreground(colors.LightGrey)
 
 	// Calculate max line width (viewport width - padding - borders - small margin)
 	maxWidth := da.width - len(leftPadding) - 4 // 4 for borders and margin
@@ -208,8 +207,7 @@ func (da *DetailsAdapter) AppendContent(text string) {
 			// Wrap long lines
 			wrappedLines := da.wrapLine(line, maxWidth)
 			for _, wrappedLine := range wrappedLines {
-				// Apply padding and gray color
-				styledLine := leftPadding + grayStyle.Render(wrappedLine)
+				styledLine := leftPadding + logStyle.Render(wrappedLine)
 				styledLines = append(styledLines, styledLine)
 			}
 		}

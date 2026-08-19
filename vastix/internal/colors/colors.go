@@ -161,6 +161,9 @@ var (
 
 	// Profile status colors
 	ProfileActiveColor = GreenTerm // Active profile indicator
+
+	// Splash screen
+	SplashVersion = lipgloss.Color("248") // Lighter than LightGrey (245) for the version line
 )
 
 // Gradient colors for logo and decorative elements

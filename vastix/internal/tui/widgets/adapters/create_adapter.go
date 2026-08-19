@@ -1670,32 +1670,25 @@ func (ca *CreateAdapter) ResetCreateForm() {
 }
 
 // resetInput recursively resets an input and all its nested children
+// back to the wrapper's InitialValue (empty string / placeholder when none was set).
 func (ca *CreateAdapter) resetInput(wrapper *common.InputWrapper) {
-	if wrapper.IsTextInput() {
-		wrapper.TextInput.SetValue("")
-		wrapper.TextInput.Blur()
-	} else if wrapper.IsBoolInput() {
-		wrapper.BoolInput.SetValue("false")
-		wrapper.BoolInput.Blur()
-	} else if wrapper.IsInt64Input() {
-		wrapper.Int64Input.SetValue("")
-		wrapper.Int64Input.Blur()
-	} else if wrapper.IsFloat64Input() {
-		wrapper.Float64Input.SetValue("")
-		wrapper.Float64Input.Blur()
-	} else if wrapper.IsComplexArrayInput() {
-		wrapper.ComplexArrayInput.SetValue("")
-		wrapper.ComplexArrayInput.Blur()
-	} else if wrapper.IsPrimitivesArrayInput() {
-		wrapper.PrimitivesArrayInput.SetValue("[]")
-		wrapper.PrimitivesArrayInput.Blur()
-	} else if wrapper.IsNestedInput() {
-		// Recursively reset all child inputs
+	if wrapper.IsNestedInput() {
 		childInputs := wrapper.NestedInput.GetInputs()
 		for i := range childInputs {
-			ca.resetInput(&childInputs[i]) // Take address of the value
+			ca.resetInput(&childInputs[i])
 		}
+		return
 	}
+
+	initial := wrapper.GetInitialValue()
+	if wrapper.IsPrimitivesArrayInput() && initial == "" {
+		initial = "[]"
+	}
+	if wrapper.IsBoolInput() && initial == "" {
+		initial = "false"
+	}
+	wrapper.SetValue(initial)
+	wrapper.Blur()
 }
 
 // Init returns initial command for text input blinking

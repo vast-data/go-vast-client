@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	vastixlog "vastix/internal/logging"
@@ -554,6 +555,22 @@ func (s *Service) GetAllSshConnections() ([]SshConnection, error) {
 	var connections []SshConnection
 	err = s.db.Where("profile_id = ?", activeProfile.ID).Find(&connections).Error
 	return connections, err
+}
+
+// GetFirstSshKeyPath returns the first non-empty SSH key path across all profiles.
+// Empty, whitespace-only, and "-" (local pseudo SSH) values are ignored.
+func (s *Service) GetFirstSshKeyPath() (string, error) {
+	var connections []SshConnection
+	if err := s.db.Order("id ASC").Find(&connections).Error; err != nil {
+		return "", err
+	}
+	for _, conn := range connections {
+		keyPath := strings.TrimSpace(conn.SshKey)
+		if keyPath != "" && keyPath != "-" {
+			return keyPath, nil
+		}
+	}
+	return "", nil
 }
 
 // GetSshConnection retrieves a specific SSH connection by ID

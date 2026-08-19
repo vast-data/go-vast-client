@@ -13,6 +13,7 @@ import (
 	"vastix/internal/database"
 	"vastix/internal/logging"
 	"vastix/internal/msg_types"
+	"vastix/internal/colors"
 	"vastix/internal/tui"
 	"vastix/internal/tui/widgets/common"
 
@@ -769,12 +770,9 @@ func (a *App) renderSplashScreen() string {
 	// Create version and spinner content for bottom left with margin
 	leftMargin := "    "
 
-	// Build version content with faded colors
 	versionContent := ""
 	if a.appVersion != "" {
-		versionStyle := lipgloss.NewStyle().
-			Foreground(tui.LightGrey)
-
+		versionStyle := lipgloss.NewStyle().Foreground(colors.SplashVersion)
 		versionText := "version: " + a.appVersion
 		versionContent = leftMargin + versionStyle.Render(versionText)
 	}

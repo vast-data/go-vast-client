@@ -69,19 +69,10 @@ func (k *KeybindingsZone) View() string {
 		return ""
 	}
 
-	// Styles for generic keybindings (different color)
-	genericKeyStyle := lipgloss.NewStyle().
-		Foreground(colors.LightBlue).
-		Bold(true)
-
-	// Styles for widget-specific keybindings (current colors)
-	widgetKeyStyle := lipgloss.NewStyle().
+	// All key hints use the same yellow. Generic and extra-action markers
+	// are kept for grouping / future styling, but they no longer change color.
+	keyStyle := lipgloss.NewStyle().
 		Foreground(colors.Yellow).
-		Bold(true)
-
-	// Styles for extra action numbered shortcuts (distinctive color)
-	extraActionKeyStyle := lipgloss.NewStyle().
-		Foreground(colors.HelpKeyExtra).
 		Bold(true)
 
 	widgetDescStyle := lipgloss.NewStyle().
@@ -144,24 +135,15 @@ func (k *KeybindingsZone) View() string {
 				Align(lipgloss.Left).
 				Render(kb.Key)
 
-			// Use different styles based on the type of keybinding
 			var item string
 			if kb.IsExtraAction {
-				// Extra action shortcuts (numbered 1-6) get distinctive color
 				item = lipgloss.JoinHorizontal(lipgloss.Left,
-					extraActionKeyStyle.Render(keyText),
+					keyStyle.Render(keyText),
 					renderExtraActionDesc(kb.Desc, widgetDescStyle, extraActionVerbStyle),
 				)
-			} else if kb.Generic {
-				// Generic keybindings
-				item = lipgloss.JoinHorizontal(lipgloss.Left,
-					genericKeyStyle.Render(keyText),
-					widgetDescStyle.Render(" "+kb.Desc),
-				)
 			} else {
-				// Widget-specific keybindings
 				item = lipgloss.JoinHorizontal(lipgloss.Left,
-					widgetKeyStyle.Render(keyText),
+					keyStyle.Render(keyText),
 					widgetDescStyle.Render(" "+kb.Desc),
 				)
 			}

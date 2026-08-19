@@ -27,10 +27,9 @@ func NewSshConnections(db *database.Service, msgChan chan tea.Msg) common.Widget
 	resourceType := "ssh_connections"
 	listHeaders := []string{"id", "name", "ssh_host", "ssh_user_name", "ssh_port", "auth_method"}
 
-	// Add VIP pool forwarding and IP forwarding extra widgets
+	// Combined IP / VIP pool forwarding extra widget
 	extraNav := []common.ExtraWidget{
 		NewVipPoolForwarding(db, msgChan),
-		NewIpForwarding(db, msgChan),
 	}
 
 	widget := &SshConnections{
@@ -146,11 +145,18 @@ func (s *SshConnections) SetListData() tea.Msg {
 func (s *SshConnections) GetInputs() (common.Inputs, error) {
 	inputs := make(common.Inputs, 0, 6)
 
+	defaultSshKey := ""
+	if keyPath, err := s.BaseWidget.db.GetFirstSshKeyPath(); err != nil {
+		s.log.Debug("Failed to load default SSH key path", zap.Error(err))
+	} else {
+		defaultSshKey = strings.TrimSpace(keyPath)
+	}
+
 	inputs.NewTextInput("name", "My SSH Connection", true, "")
 	inputs.NewTextInput("ssh_host", "192.168.1.100", true, "")
 	inputs.NewTextInput("ssh_user_name", "root", true, "")
 	inputs.NewSecretTextInput("ssh_password", "password123", false, "")
-	inputs.NewTextInput("ssh_key", "/path/to/private/key", false, "")
+	inputs.NewTextInput("ssh_key", "/path/to/private/key", false, defaultSshKey)
 	inputs.NewInt64Input("ssh_port", "22 (default)", false, 0)
 
 	// Get existing SSH key paths for suggestions
