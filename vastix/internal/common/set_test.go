@@ -91,4 +91,3 @@ func TestSet_Clear_ClearsOrder(t *testing.T) {
 		t.Errorf("After Clear(), ToOrderedSlice() length = %d, want 0", len(ordered))
 	}
 }
-

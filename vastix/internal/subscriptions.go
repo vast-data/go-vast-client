@@ -15,7 +15,6 @@ import (
 type SpinnerControl struct {
 	suspended chan bool
 	ctx       context.Context
-	cancel    context.CancelFunc
 }
 
 // NewSpinnerControl creates a new spinner control instance

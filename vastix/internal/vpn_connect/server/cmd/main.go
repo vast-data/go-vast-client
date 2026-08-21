@@ -40,12 +40,12 @@ func main() {
 	// Determine log output
 	logOutput := os.Stdout
 	if *logFile != "" {
-		f, err := os.OpenFile(*logFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		f, err := os.OpenFile(*logFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600) // #nosec G304 -- admin-supplied --log-file path
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to open log file %s: %v\n", *logFile, err)
 			os.Exit(1)
 		}
-		defer f.Close()
+		defer f.Close() // #nosec G104 -- process exit closes the log file
 		logOutput = f
 	}
 

@@ -157,7 +157,6 @@ func TestNotWrapperExactFallback(t *testing.T) {
 	has(t, p, "name__not_exact", "root")
 }
 
-
 // ---- unset / mixed / query string ----
 
 func TestUnsetFieldsOmitted(t *testing.T) {

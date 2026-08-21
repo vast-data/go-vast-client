@@ -135,7 +135,7 @@ func TestJWTAuthenticator_RefreshTokenErrors(t *testing.T) {
 	auth.setInitialized(true)
 
 	client := &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- httptest.NewTLSServer uses a self-signed cert
 	}}
 	if err := auth.refreshToken(client); err == nil {
 		t.Fatal("expected refresh error")
@@ -160,13 +160,13 @@ func TestJWTAuthenticator_AcquireTokenWithTenant(t *testing.T) {
 	auth := &JWTAuthenticator{
 		Host: host, Port: port, SslVerify: false,
 		Username: "admin", Password: "password",
-		Tenant:   "tenant-b",
-		Token:    &jwtToken{},
+		Tenant: "tenant-b",
+		Token:  &jwtToken{},
 	}
 	auth.authCond = sync.NewCond(&auth.mu)
 
 	client := &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- httptest.NewTLSServer uses a self-signed cert
 	}}
 	if err := auth.acquireToken(client); err != nil {
 		t.Fatalf("acquireToken: %v", err)

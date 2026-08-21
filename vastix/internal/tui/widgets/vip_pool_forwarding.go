@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math-random -- VIP pool connectivity check, not crypto
 	"net/netip"
 	"os"
 	"strings"
@@ -327,7 +327,7 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 	}
 
 	// Pick a random IP to test
-	randomIP := ips[rand.Intn(len(ips))]
+	randomIP := ips[rand.Intn(len(ips))] // #nosec G404 -- VIP pool connectivity check, not crypto
 	w.auxlog.Printf("Testing reachability of IP: %s via SSH ping", randomIP)
 
 	// Build SSH config
@@ -340,7 +340,7 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 
 	// Add public key authentication if provided
 	if sshConn.SshKey != "" {
-		key, err := os.ReadFile(sshConn.SshKey)
+		key, err := os.ReadFile(sshConn.SshKey) // #nosec G304 -- admin-configured SSH key from local DB
 		if err != nil {
 			return fmt.Errorf("failed to read SSH private key: %w", err)
 		}
@@ -356,7 +356,8 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 	sshConfig := &ssh.ClientConfig{
 		User:            sshConn.SshUserName,
 		Auth:            authMethods,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		// Internal ops tooling: VIP pool SSH targets are admin-managed, not known_hosts.
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // #nosec G106 -- internal ops tooling on trusted admin networks. nosemgrep: go.lang.security.audit.net.insecure-ssh-host-key-callback
 		Timeout:         60 * time.Second,
 	}
 
@@ -366,7 +367,7 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 	if err != nil {
 		return fmt.Errorf("failed to connect via SSH: %w", err)
 	}
-	defer client.Close()
+	defer client.Close() // #nosec G104 -- SSH client teardown after reachability check
 
 	// Run ping command (1 ping, 5 sec timeout)
 	pingCmd := fmt.Sprintf("ping -c 1 -W 5 %s", randomIP)
@@ -376,7 +377,7 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 	if err != nil {
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer session.Close() // #nosec G104 -- SSH session teardown after ping
 
 	// Capture output to auxlog for first ping
 	session.Stdout = w.auxlog.Writer()
@@ -419,7 +420,9 @@ func (w *VipPoolForwarding) getSudoPassword() error {
 		}
 		// Invalid password, delete it
 		w.auxlog.Printf("Stored sudo password invalid, removing from database")
-		w.db.DeleteSudoPassword()
+		if err := w.db.DeleteSudoPassword(); err != nil {
+			w.auxlog.Printf("Failed to remove invalid sudo password: %v", err)
+		}
 	}
 
 	// No valid password available
@@ -1182,7 +1185,9 @@ func (w *VipPoolForwarding) checkHealth() {
 
 			// Automatically clean up local resources when connection is lost
 			w.auxlog.Printf("Automatically cleaning up local VPN interface due to connection loss...")
-			w.Disconnect()
+			if err := w.Disconnect(); err != nil {
+				w.auxlog.Printf("Failed to disconnect after SSH loss: %v", err)
+			}
 
 			return
 		}
@@ -1198,7 +1203,9 @@ func (w *VipPoolForwarding) checkHealth() {
 
 			// Automatically clean up local resources when tunnel is lost
 			w.auxlog.Printf("Automatically cleaning up local VPN interface due to tunnel failure...")
-			w.Disconnect()
+			if err := w.Disconnect(); err != nil {
+				w.auxlog.Printf("Failed to disconnect after SSH loss: %v", err)
+			}
 
 			return
 		}

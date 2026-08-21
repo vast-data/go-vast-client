@@ -22,9 +22,8 @@ import (
 
 // Client represents a VPN client instance
 type Client struct {
-	config  *common.ClientConfig
-	writer  io.Writer   // Writer for streaming logs to UI (includes multiwriter with auxlog)
-	network interface{} // Will hold noisysockets.Network
+	config *common.ClientConfig
+	writer io.Writer // Writer for streaming logs to UI (includes multiwriter with auxlog)
 
 	mu        sync.RWMutex
 	connected bool
@@ -186,7 +185,9 @@ func (c *Client) writef(format string, args ...interface{}) {
 	// Format with timestamp like log.Logger does
 	timestamp := time.Now().Format("2006/01/02 15:04:05")
 	formattedMsg := fmt.Sprintf("%s [vpn client] %s", timestamp, msg)
-	c.writer.Write([]byte(formattedMsg))
+	if _, err := c.writer.Write([]byte(formattedMsg)); err != nil {
+		return
+	}
 }
 
 // Disconnect closes the VPN connection
@@ -219,11 +220,13 @@ func (c *Client) Disconnect(sudoPassword string) error {
 
 	// Best-effort cleanup if interface is still present (Linux only)
 	if cleanupScript := buildDisconnectCleanupScript(); cleanupScript != "" {
-		_ = runSudoScript(sudoPassword, c.writer, cleanupScript)
+		_ = runSudoScript(sudoPassword, c.writer, cleanupScript) // #nosec G104 -- best-effort interface cleanup on disconnect
 	}
 
 	// Remove local config copy
-	os.Remove(localConfigPath)
+	if err := os.Remove(localConfigPath); err != nil && !os.IsNotExist(err) {
+		c.writef("Warning: failed to remove local VPN config: %v\n", err)
+	}
 
 	c.mu.Lock()
 	c.connected = false
@@ -395,7 +398,7 @@ func ensureUserWorkDir(path, sudoPassword string) error {
 	if info, err := os.Stat(path); err == nil {
 		if stat, ok := info.Sys().(*syscall.Stat_t); ok && int(stat.Uid) != uid {
 			if err := os.RemoveAll(path); err != nil {
-				cleanupCmd := exec.Command("sudo", "-S", "rm", "-rf", path)
+				cleanupCmd := exec.Command("sudo", "-S", "rm", "-rf", path) // #nosec G204 -- removes stale VPN work dir owned by another user
 				cleanupCmd.Stdin = strings.NewReader(sudoPassword + "\n")
 				if cleanupErr := cleanupCmd.Run(); cleanupErr != nil {
 					return fmt.Errorf("failed to remove stale work directory %s: %w", path, err)

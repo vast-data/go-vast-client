@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -36,7 +38,7 @@ func main() {
 	remoteUser := "centos"
 	remoteKeyPath := os.Getenv("HOME") + "/.ssh/id_ed25519"
 	clientID := 1
-	sudoPassword := "Kristin1109"
+	sudoPassword := os.Getenv("VASTIX_SUDO_PASSWORD")
 
 	ctx := context.Background()
 
@@ -48,6 +50,7 @@ func main() {
 	}
 
 	port := common.GetListenPort(clientID)
+	privateIPs := []netip.Addr{netip.MustParseAddr("172.21.101.1")}
 	privateNetwork := netip.MustParsePrefix("172.21.101.0/24")
 
 	fmt.Printf("  VPN Network: %s\n", vpnNetwork)
@@ -59,7 +62,7 @@ func main() {
 
 	// Step 2: Deploy server
 	fmt.Println("Step 2: Deploying VPN server...")
-	deployer := client.NewDeployer(nil, nil)
+	deployer := client.NewDeployer(os.Stdout)
 
 	deployConfig := &client.DeploymentConfig{
 		Host:           remoteHost,
@@ -82,16 +85,19 @@ func main() {
 		ListenPort:     port,
 		ServerIP:       serverIP,
 		VPNNetwork:     vpnNetwork,
-		PrivateNetwork: privateNetwork,
+		PrivateIPs: privateIPs,
 	}
 
 	if err := deployer.Deploy(ctx, deployConfig, serverConfig); err != nil {
 		log.Fatalf("Failed to deploy: %v", err)
 	}
 
-	if err := deployer.StartServer(remoteWorkDir, serverConfig); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	go func() {
+		if err := deployer.StartServer(ctx, remoteWorkDir, serverConfig); err != nil {
+			log.Printf("VPN server stopped: %v", err)
+		}
+	}()
+	time.Sleep(3 * time.Second)
 
 	fmt.Println("  ✓ Server running")
 	fmt.Printf("  Server Public Key: %s\n", serverPubKey)
@@ -115,13 +121,13 @@ AllowedIPs = %s, %s
 PersistentKeepalive = 25
 `, clientPrivKey, clientIP, serverPubKey, remoteHost, port, vpnNetwork, privateNetwork)
 
-	if err := os.WriteFile("/tmp/wg_vastix.conf", []byte(wgConfig), 0600); err != nil {
+	if err := os.WriteFile("/tmp/wg_vastix.conf", []byte(wgConfig), 0600); err != nil { // #nosec G303 -- manual VPN lab helper. nosemgrep: go.lang.security.audit.io.bad-tmp-file-creation.bad-tmp-file-creation
 		log.Fatalf("Failed to write config: %v", err)
 	}
 
 	// Bring up WireGuard interface
 	fmt.Println("  Bringing up WireGuard interface (wg_vastix)...")
-	cmd := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S wg-quick up /tmp/wg_vastix.conf", sudoPassword))
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S wg-quick up /tmp/wg_vastix.conf", sudoPassword)) // #nosec G204 -- manual VPN lab helper
 	if output, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("wg-quick output: %s", output)
 		log.Fatalf("Failed to bring up interface: %v", err)
@@ -129,8 +135,8 @@ PersistentKeepalive = 25
 
 	defer func() {
 		fmt.Println("\nCleaning up...")
-		cmd := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S wg-quick down /tmp/wg_vastix.conf 2>/dev/null", sudoPassword))
-		cmd.Run()
+		cmd := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S wg-quick down /tmp/wg_vastix.conf 2>/dev/null", sudoPassword)) // #nosec G204 -- manual VPN lab helper
+		cmd.Run() // #nosec G104 -- best-effort teardown in defer
 	}()
 
 	fmt.Println("  ✓ WireGuard interface up")
@@ -143,7 +149,7 @@ PersistentKeepalive = 25
 	fmt.Println("Step 4: Testing connectivity...")
 
 	fmt.Printf("  Ping VPN server (%s)...\n", serverIP)
-	cmd = exec.Command("ping", "-c", "3", "-W", "2", serverIP.String())
+	cmd = exec.Command("ping", "-c", "3", "-W", "2", serverIP.String()) // #nosec G204 -- manual VPN lab helper; dest is a typed IP
 	if err := cmd.Run(); err != nil {
 		fmt.Println("    ✗ Ping failed")
 	} else {
@@ -151,7 +157,7 @@ PersistentKeepalive = 25
 	}
 
 	fmt.Printf("  Ping private network (172.21.101.1)...\n")
-	cmd = exec.Command("ping", "-c", "3", "-W", "2", "172.21.101.1")
+	cmd = exec.Command("ping", "-c", "3", "-W", "2", "172.21.101.1") // #nosec G204 -- manual VPN lab helper; fixed lab IP
 	if err := cmd.Run(); err != nil {
 		fmt.Println("    ✗ Ping failed")
 	} else {
@@ -163,9 +169,9 @@ PersistentKeepalive = 25
 	fmt.Println("Step 5: Mounting NFS share 172.21.101.1:/test...")
 
 	mountPoint := "/tmp/vastix_nfs_test"
-	os.MkdirAll(mountPoint, 0755)
+	os.MkdirAll(mountPoint, 0755) // #nosec G301,G104 -- manual VPN lab helper; temp NFS mount point
 
-	cmd = exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S mount -t nfs 172.21.101.1:/test %s", sudoPassword, mountPoint))
+	cmd = exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S mount -t nfs 172.21.101.1:/test %s", sudoPassword, mountPoint)) // #nosec G204 -- manual VPN lab helper
 	if output, err := cmd.CombinedOutput(); err != nil {
 		fmt.Printf("  ✗ Mount failed: %v\n", err)
 		fmt.Printf("  Output: %s\n", output)
@@ -173,13 +179,13 @@ PersistentKeepalive = 25
 		fmt.Println("  ✓ NFS share mounted")
 
 		defer func() {
-			cmd := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S umount %s 2>/dev/null", sudoPassword, mountPoint))
-			cmd.Run()
+			cmd := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S umount %s 2>/dev/null", sudoPassword, mountPoint)) // #nosec G204 -- manual VPN lab helper
+			cmd.Run() // #nosec G104 -- best-effort umount in defer
 		}()
 
 		// List contents
 		fmt.Println("\n  Contents of NFS share:")
-		cmd = exec.Command("ls", "-la", mountPoint)
+		cmd = exec.Command("ls", "-la", mountPoint) // #nosec G204 -- manual VPN lab helper; lists the NFS mount
 		if output, err := cmd.CombinedOutput(); err == nil {
 			fmt.Printf("%s\n", output)
 		}

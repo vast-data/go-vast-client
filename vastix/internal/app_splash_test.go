@@ -7,6 +7,8 @@ import (
 	"time"
 	"vastix/internal/logging"
 	"vastix/internal/msg_types"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func TestSplashScreenSpinner(t *testing.T) {
@@ -28,7 +30,7 @@ func TestSplashScreenSpinner(t *testing.T) {
 		tickerCtrl := NewTickerControl(ctx)
 
 		// Create app
-		app := NewApp("test-1.0.0", spinnerCtrl, tickerCtrl)
+		app := NewApp("test-1.0.0", spinnerCtrl, tickerCtrl, make(chan tea.Msg, 8))
 
 		// Test initial state
 		if app.spinnerActive {
@@ -84,7 +86,7 @@ func TestSplashScreenSpinner(t *testing.T) {
 		spinnerCtrl := NewSpinnerControl(ctx)
 		tickerCtrl := NewTickerControl(ctx)
 
-		app := NewApp("test-1.0.0", spinnerCtrl, tickerCtrl)
+		app := NewApp("test-1.0.0", spinnerCtrl, tickerCtrl, make(chan tea.Msg, 8))
 
 		// Simulate splash screen phase
 		app.spinnerActive = true
@@ -129,7 +131,7 @@ func TestSplashScreenSpinner(t *testing.T) {
 		spinnerCtrl := NewSpinnerControl(ctx)
 		tickerCtrl := NewTickerControl(ctx)
 
-		app := NewApp("test-1.0.0", spinnerCtrl, tickerCtrl)
+		app := NewApp("test-1.0.0", spinnerCtrl, tickerCtrl, make(chan tea.Msg, 8))
 
 		// Simulate splash screen phase with active operations
 		app.spinnerActive = true

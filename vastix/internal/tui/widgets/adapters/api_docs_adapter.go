@@ -9,10 +9,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/getkin/kin-openapi/openapi3"
+	api "github.com/vast-data/go-vast-client/openapi_schema"
 	"vastix/internal/colors"
 	"vastix/internal/database"
 	"vastix/internal/tui/widgets/common"
-	api "github.com/vast-data/go-vast-client/openapi_schema"
 )
 
 // ---------------------------------------------------------------------------
@@ -142,12 +142,12 @@ func (a *ApiDocsAdapter) buildItems() {
 					kind:    docItemSeparator,
 					display: "  parameters:",
 				})
-			for _, p := range params {
-				item := paramToItem(p)
-				item.depth = 1
-				a.selectIdx = append(a.selectIdx, len(a.items))
-				a.items = append(a.items, item)
-			}
+				for _, p := range params {
+					item := paramToItem(p)
+					item.depth = 1
+					a.selectIdx = append(a.selectIdx, len(a.items))
+					a.items = append(a.items, item)
+				}
 			}
 
 			// Request body
@@ -172,11 +172,11 @@ func (a *ApiDocsAdapter) buildItems() {
 				}
 				sort.Slice(props, func(i, j int) bool { return props[i].name < props[j].name })
 
-			for _, prop := range props {
-				item := schemaToItemAtDepth(prop.name, prop.ref, required[prop.name], "body", 1)
-				a.selectIdx = append(a.selectIdx, len(a.items))
-				a.items = append(a.items, item)
-			}
+				for _, prop := range props {
+					item := schemaToItemAtDepth(prop.name, prop.ref, required[prop.name], "body", 1)
+					a.selectIdx = append(a.selectIdx, len(a.items))
+					a.items = append(a.items, item)
+				}
 			}
 		}
 	}
@@ -252,7 +252,6 @@ func (a *ApiDocsAdapter) rebuildSelectIdx() {
 		a.cursor = len(a.selectIdx) - 1
 	}
 }
-
 
 // UpdateApiDocsPort handles scroll messages for the api docs view.
 func (a *ApiDocsAdapter) UpdateApiDocsPort(msg tea.Msg) tea.Cmd {
@@ -336,7 +335,7 @@ func (a *ApiDocsAdapter) ViewApiDocs(width, height int) string {
 	titleLabel := titleStyle.Render(fmt.Sprintf(" api docs: %s ", a.resourcePath))
 	scrollPct := fmt.Sprintf("%.0f%%", a.viewport.ScrollPercent()*100)
 	embeddedText := map[common.BorderPosition]string{
-		common.TopMiddleBorder:    titleLabel,
+		common.TopMiddleBorder:   titleLabel,
 		common.BottomRightBorder: scrollPct,
 	}
 
@@ -593,10 +592,6 @@ func paramToItem(p *openapi3.Parameter) docItem {
 	}
 }
 
-func schemaToItem(name string, ref *openapi3.SchemaRef, required bool, in string) docItem {
-	return schemaToItemAtDepth(name, ref, required, in, 0)
-}
-
 func schemaToItemAtDepth(name string, ref *openapi3.SchemaRef, required bool, in string, depth int) docItem {
 	typeName := "any"
 	desc := ""
@@ -725,21 +720,20 @@ func schemaTypeName(s *openapi3.Schema) string {
 	return "any"
 }
 
-
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
 
 var (
-	titleStyle        = lipgloss.NewStyle().Background(colors.Orange).Foreground(colors.BlackTerm).Bold(true)
-	sectionLabelStyle = lipgloss.NewStyle().Foreground(colors.LightGrey)
-	pathStyle    = lipgloss.NewStyle().Foreground(colors.White).Bold(true)
-	summaryStyle = lipgloss.NewStyle().Foreground(colors.VeryLightGrey)
-	typeStyle      = lipgloss.NewStyle().Foreground(colors.MediumCyan)
-	typeInnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f0a500"))
-	requiredStarStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f93e3e"))
-	fieldNameStyle      = lipgloss.NewStyle().Foreground(colors.White).Bold(true)
-	selectedNameStyle   = lipgloss.NewStyle().Foreground(colors.White).Bold(true).Background(colors.DarkGreenBlue)
+	titleStyle         = lipgloss.NewStyle().Background(colors.Orange).Foreground(colors.BlackTerm).Bold(true)
+	sectionLabelStyle  = lipgloss.NewStyle().Foreground(colors.LightGrey)
+	pathStyle          = lipgloss.NewStyle().Foreground(colors.White).Bold(true)
+	summaryStyle       = lipgloss.NewStyle().Foreground(colors.VeryLightGrey)
+	typeStyle          = lipgloss.NewStyle().Foreground(colors.MediumCyan)
+	typeInnerStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#f0a500"))
+	requiredStarStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#f93e3e"))
+	fieldNameStyle     = lipgloss.NewStyle().Foreground(colors.White).Bold(true)
+	selectedNameStyle  = lipgloss.NewStyle().Foreground(colors.White).Bold(true).Background(colors.DarkGreenBlue)
 	expandedArrowStyle = lipgloss.NewStyle().Foreground(colors.MediumCyan)
 )
 

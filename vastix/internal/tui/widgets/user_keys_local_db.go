@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	shared "vastix/internal/common"
 	"vastix/internal/database"
 	"vastix/internal/msg_types"
 	"vastix/internal/tui/widgets/common"
@@ -104,8 +105,16 @@ func (w *UserKeysFromLocalDb) Details(selectedRowData common.RowData) (tea.Cmd, 
 
 	// Return async command that will load details from database
 	return func() tea.Msg {
+		userKeyIDUint, err := shared.ToUint(userKeyId)
+		if err != nil {
+			return msg_types.DetailsContentMsg{
+				Content:      "Invalid user key ID",
+				ResourceType: w.resourceType,
+				Error:        err,
+			}
+		}
 		// Fetch the complete UserKey record from database including secret key
-		userKey, err := w.db.GetUserKey(uint(userKeyId))
+		userKey, err := w.db.GetUserKey(userKeyIDUint)
 		if err != nil {
 			return msg_types.DetailsContentMsg{
 				Content:      fmt.Sprintf("Failed to fetch user key details: %v", err),
@@ -154,8 +163,14 @@ func (w *UserKeysFromLocalDb) Delete(selectedRowData common.RowData) (tea.Cmd, e
 
 	// Return async command that will delete the user key from database
 	return func() tea.Msg {
+		userKeyIDUint, err := shared.ToUint(userKeyId)
+		if err != nil {
+			return msg_types.ErrorMsg{
+				Err: fmt.Errorf("invalid user key ID: %w", err),
+			}
+		}
 		// Delete the user key from database
-		err := w.db.DeleteUserKey(uint(userKeyId))
+		err = w.db.DeleteUserKey(userKeyIDUint)
 		if err != nil {
 			return msg_types.ErrorMsg{
 				Err: fmt.Errorf("failed to delete user key: %w", err),

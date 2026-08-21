@@ -1,0 +1,15 @@
+# Allowlist for documented example WireGuard public keys.
+# These are sample values from VPN tool docs, not live credentials.
+title = "go-vast-client"
+
+[allowlist]
+description = "Example WireGuard public keys in VPN documentation"
+regexTarget = "line"
+regexes = [
+  '''G6irfdBQO8dVanH8L33Qm9hWGrVcCW5wIew8ucSR\+lU=''',
+  '''B\+bKd/4IjwKOfPNfnqr/IkFZE3ufMrpM9t6WD7PmG08=''',
+]
+paths = [
+  '''vastix/internal/vpn_connect/QUICKSTART\.md''',
+  '''vastix/internal/vpn_connect/docs/CLI\.md''',
+]

@@ -478,6 +478,11 @@ func createApiTokenAfterCreateCallback(db *database.Service) common.AfterCreateF
 			}
 		}
 
+		ownerIDUint, err := shared.ToUint(ownerID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid owner ID: %w", err)
+		}
+
 		// Create local database record
 		apiToken := &database.ApiToken{
 			ProfileID:   activeProfile.ID,
@@ -485,7 +490,7 @@ func createApiTokenAfterCreateCallback(db *database.Service) common.AfterCreateF
 			Token:       token, // Use the actual token string from initial record
 			Name:        name,
 			Owner:       owner,
-			OwnerID:     uint(ownerID),
+			OwnerID:     ownerIDUint,
 			ExpireDate:  expireDate,
 			VastCreated: vastCreated,
 		}

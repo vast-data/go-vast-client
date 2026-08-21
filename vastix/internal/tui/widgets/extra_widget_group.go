@@ -134,15 +134,6 @@ func (eg *ExtraWidgetGroup) SetActiveWidget(resourceType string) {
 	}
 }
 
-// Helper function to debug available resource types
-func (eg *ExtraWidgetGroup) getAvailableResourceTypes() []string {
-	var types []string
-	for resourceType := range eg.entries {
-		types = append(types, resourceType)
-	}
-	return types
-}
-
 func (eg *ExtraWidgetGroup) Init() tea.Msg {
 	cmds := make([]tea.Cmd, 0, len(eg.entries))
 	for _, entry := range eg.entries {

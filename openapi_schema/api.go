@@ -64,8 +64,16 @@ func loadOpenAPIDocOnce() (*openapi3.T, error) {
 
 			if strings.HasSuffix(hdr.Name, "api.json") {
 				var buf bytes.Buffer
-				if _, err := io.Copy(&buf, tr); err != nil {
+				// Bound the extract: the archive is our embed, but a missing
+				// limit is a zip-bomb finding (G110). 32MiB is well above the
+				// current schema size and does not change load behavior.
+				const maxOpenAPIJSON = 32 << 20
+				if _, err := io.Copy(&buf, io.LimitReader(tr, maxOpenAPIJSON+1)); err != nil { // #nosec G110 -- extract capped above; archive is our embed. nosemgrep: go.lang.security.audit.compression.decompression-bomb.archive
 					openApiDocErr = fmt.Errorf("copy api.json from tar: %w", err)
+					return
+				}
+				if buf.Len() > maxOpenAPIJSON {
+					openApiDocErr = fmt.Errorf("api.json exceeds %d byte extract limit", maxOpenAPIJSON)
 					return
 				}
 

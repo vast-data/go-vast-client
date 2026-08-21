@@ -11,7 +11,7 @@ import (
 // CheckSudoNeedsPassword checks if sudo requires a password
 // Returns true if password is required, false otherwise
 func CheckSudoNeedsPassword() bool {
-	cmd := exec.Command("sudo", "-n", "true")
+	cmd := exec.Command("sudo", "-n", "true") // #nosec G204 -- fixed argv; checks whether sudo needs a password
 	err := cmd.Run()
 	// If command succeeds, no password needed
 	// If it fails, password is required
@@ -24,7 +24,7 @@ func CheckSudoNeedsPassword() bool {
 func CheckWgQuickNeedsPassword() bool {
 	// wg-quick exits 1 when invoked without arguments, so we cannot rely on exit code alone.
 	// Distinguish sudo authentication failure from wg-quick actually running.
-	cmd := exec.Command("sudo", "-n", "wg-quick")
+	cmd := exec.Command("sudo", "-n", "wg-quick") // #nosec G204 -- fixed argv; checks whether wg-quick is passwordless
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	err := cmd.Run()
@@ -46,7 +46,7 @@ func CheckWgQuickNeedsPassword() bool {
 // ValidateSudoPassword validates a sudo password by trying to run a simple command
 // Returns nil if password is valid, error otherwise
 func ValidateSudoPassword(password string) error {
-	cmd := exec.Command("sudo", "-S", "-k", "true")
+	cmd := exec.Command("sudo", "-S", "-k", "true") // #nosec G204 -- fixed argv; validates a sudo password
 
 	// Pass password via stdin
 	cmd.Stdin = strings.NewReader(password + "\n")

@@ -110,10 +110,10 @@ func TestRecord_DisplayAndAccessors(t *testing.T) {
 	record := Record{
 		"id":          float64(1),
 		"name":        "alice",
-		"guid": "g-1",
-		"tenant_id": 9,
+		"guid":        "g-1",
+		"tenant_id":   9,
 		"tenant_name": "tenant-a",
-		"extra": "value",
+		"extra":       "value",
 	}
 
 	if record.Empty() {

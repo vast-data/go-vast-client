@@ -809,18 +809,6 @@ func (bw *BaseWidget) GetInputs() (common.Inputs, error) {
 	return nil, nil
 }
 
-func (bw *BaseWidget) getInputs() common.Inputs {
-	// Use dynamic schema-based input generation
-	inputs, err := bw.formHints.GetInputsFromCreateSchemaWithCustom(false)
-	if err != nil {
-		panic(err)
-	}
-	bw.log.Debug("Generated dynamic inputs from OpenAPI schema",
-		zap.Int("input_count", len(inputs)))
-
-	return inputs
-}
-
 func (bw *BaseWidget) getInputsWithError() (common.Inputs, error) {
 	// Use dynamic schema-based input generation
 	inputs, err := bw.formHints.GetInputsFromCreateSchemaWithCustom(false)
