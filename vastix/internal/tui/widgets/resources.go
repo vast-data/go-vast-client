@@ -14,9 +14,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"go.uber.org/zap"
+
 	vast_client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/rest"
-	"go.uber.org/zap"
 )
 
 var customResources = shared.NewSet[string](

@@ -3,7 +3,7 @@ package tui
 import (
 	"context"
 	"fmt"
-	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math-random -- TUI spinner decoration, not crypto
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- TUI spinner decoration, not crypto
 	"strings"
 	"time"
 	"vastix/internal/msg_types"

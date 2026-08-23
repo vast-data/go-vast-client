@@ -116,7 +116,7 @@ func (p *UntypedResourceParser) parseTypeInfo(typeInfo *markers.TypeInfo) *Untyp
 }
 
 // addExtraMethod adds an extra method to the resource
-func (p *UntypedResourceParser) addExtraMethod(resource *UntypedResource, method string, waitTimeout string, values []interface{}) {
+func (p *UntypedResourceParser) addExtraMethod(resource *UntypedResource, method string, _ string, values []interface{}) {
 	for _, value := range values {
 		// The value should be a string path (e.g., "/users/{id}/tenant_data/")
 		if path, ok := value.(string); ok {

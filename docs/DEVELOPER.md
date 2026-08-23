@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Go 1.20 or later
+- Go 1.25 or later
 - golangci-lint (for linting)
 - git
 
@@ -77,7 +77,7 @@ Please ensure your code follows the existing style and includes appropriate test
 
 This project uses GitHub Actions for CI/CD:
 
-- **Tests**: Run on Go 1.20, 1.21, and 1.22
+- **Tests**: Run on Go 1.25 and 1.26
 - **Linting**: golangci-lint with comprehensive rules
 - **Security**: gosec and govulncheck
 - **Coverage**: Library coverage (core, rest, expr, openapi_schema) sent to Coveralls; threshold enforced in CI

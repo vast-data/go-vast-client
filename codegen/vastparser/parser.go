@@ -289,7 +289,7 @@ func parseExtraMethodOptions(markerName string) (cleanName string, waitTimeout s
 }
 
 // addTypedExtraMethod adds an extra method marker to the resource
-func (p *VastResourceParser) addTypedExtraMethod(resource *VastResource, method string, waitTimeout string, values []interface{}) {
+func (p *VastResourceParser) addTypedExtraMethod(resource *VastResource, method string, _ string, values []interface{}) {
 	for _, value := range values {
 		if path, ok := value.(string); ok {
 			resource.ExtraMethods = append(resource.ExtraMethods, apibuilder.ExtraMethod{
@@ -302,7 +302,7 @@ func (p *VastResourceParser) addTypedExtraMethod(resource *VastResource, method 
 
 // addUntypedExtraMethod adds an untyped extra method marker to the resource
 // This is used when apiall:extraMethod marker is specified
-func (p *VastResourceParser) addUntypedExtraMethod(resource *VastResource, method string, values []interface{}) {
+func (p *VastResourceParser) addUntypedExtraMethod(_ *VastResource, method string, values []interface{}) {
 	// For now, we add to the same ExtraMethods slice
 	// The untyped generator will parse files separately and use its own parser
 	// This function is a placeholder for future enhancement if needed

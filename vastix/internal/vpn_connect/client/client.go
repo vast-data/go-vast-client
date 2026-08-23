@@ -19,7 +19,6 @@ import (
 	"vastix/internal/vpn_connect/common"
 )
 
-
 // Client represents a VPN client instance
 type Client struct {
 	config *common.ClientConfig
@@ -272,7 +271,7 @@ func (c *Client) Ping(ctx context.Context, host string, timeout time.Duration) (
 	if err != nil {
 		return 0, fmt.Errorf("ping failed: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	latency := time.Since(start)
 	return latency, nil

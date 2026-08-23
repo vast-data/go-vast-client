@@ -15,10 +15,11 @@ import (
 	"vastix/internal/tui/widgets/common"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"go.uber.org/zap"
+
 	"github.com/vast-data/go-vast-client/core"
 	"github.com/vast-data/go-vast-client/openapi_schema"
 	"github.com/vast-data/go-vast-client/resources/untyped"
-	"go.uber.org/zap"
 )
 
 // WidgetFactory creates widgets based on resource introspection
@@ -218,10 +219,7 @@ func (f *WidgetFactory) createExtraWidgetsFromMethods(resourceType, resourcePath
 			shortcutNum = i + 1 // 1-based numbering
 		}
 
-		extraWidget := f.createExtraWidget(resourceType, method, shortcutNum)
-		if extraWidget != nil {
-			extraWidgets = append(extraWidgets, extraWidget)
-		}
+		extraWidgets = append(extraWidgets, f.createExtraWidget(resourceType, method, shortcutNum))
 	}
 
 	return extraWidgets
@@ -622,11 +620,8 @@ func (w *ExtraMethodWidget) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		return nil, fmt.Errorf("resource type '%s' not found in REST client", w.resourceType)
 	}
 
-	// Prepare the API path - replace {id} or {guid} with actual value from input field
-	apiPath := w.methodInfo.Path
-
-	// Only process ID replacement if the path contains {id} or {guid} placeholders
-	if strings.Contains(apiPath, "{id}") || strings.Contains(apiPath, "{guid}") {
+	// Only validate ID when the path contains {id} or {guid} placeholders.
+	if strings.Contains(w.methodInfo.Path, "{id}") || strings.Contains(w.methodInfo.Path, "{guid}") {
 		// Get the ID value from the "id" input field (user can modify it)
 		var idValue string
 		if idField := inputs.Field("id"); idField != nil {
@@ -651,10 +646,6 @@ func (w *ExtraMethodWidget) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		if idValue == "" {
 			return nil, fmt.Errorf("no ID value provided for path with {id} placeholder")
 		}
-
-		// Replace placeholders with actual value
-		apiPath = strings.ReplaceAll(apiPath, "{id}", idValue)
-		apiPath = strings.ReplaceAll(apiPath, "{guid}", idValue)
 	}
 	// For resourceless paths (no {id} or {guid}), use the path as-is
 

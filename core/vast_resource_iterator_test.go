@@ -7,6 +7,10 @@ import (
 	"testing"
 )
 
+type iteratorTestContextKey string
+
+const iteratorTestContextKeyValue iteratorTestContextKey = "test"
+
 // mockSessionForVastResourceIterator is a mock session for testing VastResource iterator methods
 type mockSessionForVastResourceIterator struct {
 	pageSize  int
@@ -95,7 +99,7 @@ func TestVastResource_GetIteratorWithContext(t *testing.T) {
 	resource := NewVastResource("/test", "TestResource", rest, 0, nil)
 
 	// Test with custom context
-	ctx := context.WithValue(context.Background(), "test", "value")
+	ctx := context.WithValue(context.Background(), iteratorTestContextKeyValue, "value")
 	iter := resource.GetIteratorWithContext(ctx, Params{}, 0)
 
 	if iter == nil {

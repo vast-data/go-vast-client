@@ -1,10 +1,11 @@
 package adapters
 
 import (
-	vast_client "github.com/vast-data/go-vast-client"
 	"vastix/internal/database"
 	log "vastix/internal/logging"
 	"vastix/internal/tui/widgets/common"
+
+	vast_client "github.com/vast-data/go-vast-client"
 )
 
 // SearchAdapter manages search functionality for widgets

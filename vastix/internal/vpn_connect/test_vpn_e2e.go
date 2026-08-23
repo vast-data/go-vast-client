@@ -97,11 +97,11 @@ func main() {
 	// Step 4: Deploy server
 	fmt.Println("Step 4: Deploying server binary to remote...")
 	serverConfig := &common.ServerConfig{
-		PrivateKey:     serverPrivKey,
-		PublicKey:      serverPubKey,
-		ListenPort:     port,
-		ServerIP:       serverIP,
-		VPNNetwork:     vpnNetwork,
+		PrivateKey: serverPrivKey,
+		PublicKey:  serverPubKey,
+		ListenPort: port,
+		ServerIP:   serverIP,
+		VPNNetwork: vpnNetwork,
 		PrivateIPs: privateIPs,
 	}
 

@@ -33,9 +33,9 @@ func TestRecordDisplayName_VTask(t *testing.T) {
 
 func TestRecordDisplayName_NonConventionalURL(t *testing.T) {
 	cases := []struct {
-		name  string
-		url   string
-		want  string
+		name string
+		url  string
+		want string
 	}{
 		{"extra method", "https://l101/api/v5/clusters/1/rpc/", ""},
 		{"missing url", "", ""},

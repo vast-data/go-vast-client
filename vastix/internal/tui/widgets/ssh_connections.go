@@ -51,9 +51,9 @@ func testSshConnection(host string, port int, username, password, keyPath string
 
 	// Create SSH client config
 	config := &ssh.ClientConfig{
-		User:            username,
+		User: username,
 		// Internal ops tooling: cluster SSH hosts are not pre-registered in known_hosts.
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // #nosec G106 -- internal ops tooling on trusted admin networks. nosemgrep: go.lang.security.audit.net.insecure-ssh-host-key-callback
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // #nosec G106 -- internal ops tooling on trusted admin networks. nosemgrep: go.lang.security.audit.crypto.insecure_ssh.avoid-ssh-insecure-ignore-host-key
 		Timeout:         10 * time.Second,
 	}
 
@@ -85,14 +85,14 @@ func testSshConnection(host string, port int, username, password, keyPath string
 	if err != nil {
 		return fmt.Errorf("failed to connect to SSH server %s: %w", address, err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Create SSH session
 	session, err := client.NewSession()
 	if err != nil {
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	// Execute a safe test command that should always succeed
 	output, err := session.CombinedOutput("echo 'connection test'")

@@ -68,6 +68,7 @@ func (c *Collector) ParseSource(filename string, src string) ([]MarkerValue, err
 // ParseDirectory parses all Go files in a directory and returns markers grouped by file.
 func (c *Collector) ParseDirectory(dir string) (map[string][]MarkerValue, error) {
 	fset := token.NewFileSet()
+	//lint:ignore SA1019 marker collection only needs comments, not build-tag-aware package loading
 	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse directory %s: %w", dir, err)
@@ -118,7 +119,7 @@ func (c *Collector) EachType(filename string, callback TypeCallback) error {
 }
 
 // parseFileAST parses markers from an AST file.
-func (c *Collector) parseFileAST(file *ast.File, fset *token.FileSet) []MarkerValue {
+func (c *Collector) parseFileAST(file *ast.File, _ *token.FileSet) []MarkerValue {
 	var markers []MarkerValue
 
 	// Collect markers by AST node

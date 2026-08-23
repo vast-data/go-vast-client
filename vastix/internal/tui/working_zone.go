@@ -15,8 +15,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/vast-data/go-vast-client/rest"
 	"go.uber.org/zap"
+
+	"github.com/vast-data/go-vast-client/rest"
 )
 
 // Initialize global spinner accessor for the common package

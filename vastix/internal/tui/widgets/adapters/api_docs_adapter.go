@@ -5,14 +5,16 @@ import (
 	"sort"
 	"strings"
 
+	"vastix/internal/colors"
+	"vastix/internal/database"
+	"vastix/internal/tui/widgets/common"
+
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/getkin/kin-openapi/openapi3"
+
 	api "github.com/vast-data/go-vast-client/openapi_schema"
-	"vastix/internal/colors"
-	"vastix/internal/database"
-	"vastix/internal/tui/widgets/common"
 )
 
 // ---------------------------------------------------------------------------
@@ -266,9 +268,9 @@ func (a *ApiDocsAdapter) UpdateApiDocsPort(msg tea.Msg) tea.Cmd {
 		case "down", "j":
 			a.cursorDown()
 		case "pgup":
-			a.viewport.HalfViewUp()
+			a.viewport.HalfPageUp()
 		case "pgdn":
-			a.viewport.HalfViewDown()
+			a.viewport.HalfPageDown()
 		case "home":
 			a.viewport.GotoTop()
 			a.cursor = 0

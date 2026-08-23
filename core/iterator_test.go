@@ -558,13 +558,13 @@ func TestIterator_Previous(t *testing.T) {
 	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 2)
 
 	// Move to page 1
-	records, err := iter.Next()
+	_, err := iter.Next()
 	if err != nil {
 		t.Fatalf("Expected first page, got error: %v", err)
 	}
 
 	// Move to page 2
-	records, err = iter.Next()
+	records, err := iter.Next()
 	if err != nil {
 		t.Fatalf("Expected second page, got error: %v", err)
 	}

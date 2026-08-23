@@ -10,9 +10,7 @@ import (
 // Parse parses a marker text into a typed value using the definition.
 func (d *Definition) Parse(markerText string) (interface{}, error) {
 	// Remove leading "+" if present
-	if strings.HasPrefix(markerText, "+") {
-		markerText = markerText[1:]
-	}
+	markerText = strings.TrimPrefix(markerText, "+")
 
 	// Split marker into name and arguments
 	name, args := d.splitMarker(markerText)

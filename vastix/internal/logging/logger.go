@@ -284,7 +284,7 @@ func LogPanic() {
 				zap.Any("panic", r),
 				zap.String("stack_trace", stackTrace),
 			)
-			globalLogger.Sync() // #nosec G104 -- best-effort flush before crash
+			_ = globalLogger.Sync() // best-effort flush before crash
 		}
 
 		// Also log to aux logger if available

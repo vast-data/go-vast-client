@@ -1141,7 +1141,7 @@ func (l *ComplexArrayInput) View() string {
 	controlsStyle := lipgloss.NewStyle().Foreground(colors.Grey240)
 
 	// Get array type information
-	var itemType string = "unknown"
+	itemType := "string"
 	if l.ItemDef != nil {
 		switch l.ItemDef.Type {
 		case "string":
@@ -1159,9 +1159,6 @@ func (l *ComplexArrayInput) View() string {
 		default:
 			itemType = l.ItemDef.Type
 		}
-	} else {
-		// Default to string for simple arrays without item definition
-		itemType = "string"
 	}
 
 	arrayTypeStyle := lipgloss.NewStyle().Foreground(colors.Grey240)
@@ -2200,10 +2197,8 @@ func (i *Inputs) RemoveField(label string) bool {
 func (iw *InputWrapper) String() string {
 	// For string types, use GetTypedValue, otherwise fallback to Value()
 	if iw.GetType() == InputTypeText {
-		if typed := iw.GetTypedValue(); typed != nil {
-			if str, ok := typed.(string); ok {
-				return str
-			}
+		if str, ok := iw.GetTypedValue().(string); ok {
+			return str
 		}
 	}
 	return iw.Value()
@@ -2213,10 +2208,8 @@ func (iw *InputWrapper) String() string {
 func (iw *InputWrapper) Bool() bool {
 	// First try GetTypedValue for bool inputs
 	if iw.GetType() == InputTypeBool {
-		if typed := iw.GetTypedValue(); typed != nil {
-			if b, ok := typed.(bool); ok {
-				return b
-			}
+		if b, ok := iw.GetTypedValue().(bool); ok {
+			return b
 		}
 	}
 
@@ -2229,10 +2222,8 @@ func (iw *InputWrapper) Bool() bool {
 func (iw *InputWrapper) Int64() int64 {
 	// First try GetTypedValue for int64 inputs
 	if iw.GetType() == InputTypeInt64 {
-		if typed := iw.GetTypedValue(); typed != nil {
-			if i, ok := typed.(int64); ok {
-				return i
-			}
+		if i, ok := iw.GetTypedValue().(int64); ok {
+			return i
 		}
 	}
 
@@ -2247,10 +2238,8 @@ func (iw *InputWrapper) Int64() int64 {
 func (iw *InputWrapper) Float64() float64 {
 	// First try GetTypedValue for float64 inputs
 	if iw.GetType() == InputTypeFloat64 {
-		if typed := iw.GetTypedValue(); typed != nil {
-			if f, ok := typed.(float64); ok {
-				return f
-			}
+		if f, ok := iw.GetTypedValue().(float64); ok {
+			return f
 		}
 	}
 
@@ -2265,10 +2254,8 @@ func (iw *InputWrapper) Float64() float64 {
 func (iw *InputWrapper) List() []string {
 	// First try GetTypedValue for array inputs
 	if iw.GetType() == InputTypeComplexArray || iw.GetType() == InputTypePrimitivesArray {
-		if typed := iw.GetTypedValue(); typed != nil {
-			if list, ok := typed.([]string); ok {
-				return list
-			}
+		if list, ok := iw.GetTypedValue().([]string); ok {
+			return list
 		}
 	}
 
@@ -2335,7 +2322,7 @@ func createInputFromDefinition(def InputDefinition, onlyPrimitives bool) (InputW
 			// Primitive array (strings, ints, bools, etc.) - use ArrayInput for simple inline editing
 
 			// Determine array type
-			var arrayType string = "array[string]"
+			var arrayType = "array[string]"
 			if def.Items != nil {
 				switch def.Items.Type {
 				case "string":
@@ -2848,33 +2835,32 @@ func (iw *InputWrapper) convertToTypedValue() interface{} {
 		}
 
 		// Get typed values and filter out empty ones
-		if typedValues := iw.ComplexArrayInput.TypedValue(); typedValues != nil {
-			if slice, ok := typedValues.([]string); ok {
-				// Filter out empty strings
-				result := make([]string, 0, len(slice))
-				for _, val := range slice {
-					if trimmed := strings.TrimSpace(val); trimmed != "" {
-						result = append(result, trimmed)
-					}
+		typedValues := iw.ComplexArrayInput.TypedValue()
+		if slice, ok := typedValues.([]string); ok {
+			// Filter out empty strings
+			result := make([]string, 0, len(slice))
+			for _, val := range slice {
+				if trimmed := strings.TrimSpace(val); trimmed != "" {
+					result = append(result, trimmed)
 				}
-				if len(result) == 0 {
-					return nil
-				}
-				return result
 			}
-			if slice, ok := typedValues.([]interface{}); ok {
-				// For complex objects, convert each one
-				result := make([]map[string]interface{}, 0, len(slice))
-				for _, val := range slice {
-					if converted := convertComplexValue(val); converted != nil {
-						result = append(result, converted)
-					}
-				}
-				if len(result) == 0 {
-					return nil
-				}
-				return result
+			if len(result) == 0 {
+				return nil
 			}
+			return result
+		}
+		if slice, ok := typedValues.([]interface{}); ok {
+			// For complex objects, convert each one
+			result := make([]map[string]interface{}, 0, len(slice))
+			for _, val := range slice {
+				if converted := convertComplexValue(val); converted != nil {
+					result = append(result, converted)
+				}
+			}
+			if len(result) == 0 {
+				return nil
+			}
+			return result
 		}
 		return nil
 
@@ -3086,25 +3072,24 @@ func (iw *InputWrapper) convertToJSONValue() interface{} {
 		}
 
 		// Get typed values
-		if typedValues := iw.ComplexArrayInput.TypedValue(); typedValues != nil {
-			if slice, ok := typedValues.([]string); ok {
-				result := make([]interface{}, 0, len(slice))
-				for _, val := range slice {
-					if trimmed := strings.TrimSpace(val); trimmed != "" {
-						result = append(result, trimmed)
-					}
+		typedValues := iw.ComplexArrayInput.TypedValue()
+		if slice, ok := typedValues.([]string); ok {
+			result := make([]interface{}, 0, len(slice))
+			for _, val := range slice {
+				if trimmed := strings.TrimSpace(val); trimmed != "" {
+					result = append(result, trimmed)
 				}
-				return result
 			}
-			if slice, ok := typedValues.([]interface{}); ok {
-				result := make([]interface{}, 0, len(slice))
-				for _, val := range slice {
-					if converted := convertComplexValueToJSON(val); converted != nil {
-						result = append(result, converted)
-					}
+			return result
+		}
+		if slice, ok := typedValues.([]interface{}); ok {
+			result := make([]interface{}, 0, len(slice))
+			for _, val := range slice {
+				if converted := convertComplexValueToJSON(val); converted != nil {
+					result = append(result, converted)
 				}
-				return result
 			}
+			return result
 		}
 		return []interface{}{}
 

@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+type crudTestContextKey struct{}
+
 func newCRUDTestResource(t *testing.T, server *httptest.Server, ops ResourceOps) *VastResource {
 	t.Helper()
 	session := newTestSession(t, server)
@@ -224,7 +226,7 @@ func TestVastResource_WithContextWrappers(t *testing.T) {
 	defer server.Close()
 
 	resource := newCRUDTestResource(t, server, NewResourceOps(R))
-	ctx := context.WithValue(context.Background(), struct{}{}, "ctx")
+	ctx := context.WithValue(context.Background(), crudTestContextKey{}, "ctx")
 
 	if _, err := resource.GetWithContext(ctx, Params{"name": "ctx"}); err != nil && !IsTooManyRecordsErr(err) {
 		// single object list may surface as too-many or succeed depending on response shape

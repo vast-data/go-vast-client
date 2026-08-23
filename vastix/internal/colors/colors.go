@@ -52,13 +52,13 @@ const (
 	Turquoise   = lipgloss.Color("86")
 
 	// Blues
-	DarkBlue      = lipgloss.Color("18") // Dark blue background
-	VeryDarkBlue  = lipgloss.Color("25") // Darker blue for spinner
-	DarkGreenBlue = lipgloss.Color("22") // Dark green-blue
-	DeepBlue      = lipgloss.Color("39")
-	MediumCyan    = lipgloss.Color("51") // Medium cyan for JSON keys
-	Blue          = lipgloss.Color("63")
-	LightishBlue  = lipgloss.Color("75")
+	DarkBlue           = lipgloss.Color("18") // Dark blue background
+	VeryDarkBlue       = lipgloss.Color("25") // Darker blue for spinner
+	DarkGreenBlue      = lipgloss.Color("22") // Dark green-blue
+	DeepBlue           = lipgloss.Color("39")
+	MediumCyan         = lipgloss.Color("51") // Medium cyan for JSON keys
+	Blue               = lipgloss.Color("63")
+	LightishBlue       = lipgloss.Color("75")
 	LightBlue          = lipgloss.Color("81")
 	FuzzySearchLabelBg = lipgloss.Color("#3D6FA8") // light blue panel; readable with white text
 

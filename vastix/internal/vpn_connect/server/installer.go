@@ -34,9 +34,9 @@ func InstallWireGuard() error {
 	case "linux":
 		return installWireGuardLinux()
 	case "darwin":
-		return fmt.Errorf("macOS installation not implemented. Please install WireGuard manually from https://www.wireguard.com/install/")
+		return fmt.Errorf("macOS installation not implemented: install WireGuard manually from https://www.wireguard.com/install/")
 	case "windows":
-		return fmt.Errorf("Windows installation not implemented. Please install WireGuard manually from https://www.wireguard.com/install/")
+		return fmt.Errorf("windows installation not implemented: install WireGuard manually from https://www.wireguard.com/install/")
 	default:
 		return fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
@@ -93,7 +93,7 @@ func installWireGuardLinux() error {
 func installWireGuardGo() error {
 	// Check if Go is installed
 	if _, err := exec.LookPath("go"); err != nil {
-		return fmt.Errorf("Go is not installed. Please install Go or WireGuard manually")
+		return fmt.Errorf("go is not installed: install Go or WireGuard manually")
 	}
 
 	// Install wireguard-go

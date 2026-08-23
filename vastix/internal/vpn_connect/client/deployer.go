@@ -7,7 +7,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
-	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math-random -- VIP pool connectivity check, not crypto
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- VIP pool connectivity check, not crypto
 	"net"
 	"net/netip"
 	"os"
@@ -108,7 +108,7 @@ func (d *Deployer) Connect(ctx context.Context, config *DeploymentConfig) error 
 		User: config.Username,
 		Auth: authMethods,
 		// Internal ops tooling: remote deploy targets are admin-managed, not known_hosts.
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // #nosec G106 -- internal ops tooling on trusted admin networks. nosemgrep: go.lang.security.audit.net.insecure-ssh-host-key-callback
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // #nosec G106 -- internal ops tooling on trusted admin networks. nosemgrep: go.lang.security.audit.crypto.insecure_ssh.avoid-ssh-insecure-ignore-host-key
 		Timeout:         60 * time.Second,
 	}
 
@@ -307,7 +307,8 @@ func (d *Deployer) StartServer(ctx context.Context, workDir string, config *comm
 	// Check 1: Test sudo access (without password)
 	d.writef("Checking sudo access...\n")
 	if err := d.runCommand("sudo -n true 2>/dev/null"); err != nil {
-		return fmt.Errorf(`sudo requires password authentication.
+		//lint:ignore ST1005 multi-line operator guidance for sudo setup
+		return fmt.Errorf(`sudo requires password authentication
 
 Please configure passwordless sudo for your user on the remote server:
   1. SSH to the remote: ssh %s
@@ -331,7 +332,7 @@ After configuring, try connecting again.`, d.sshHost, d.sshUser)
 	if err != nil {
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	// Note: VPN server needs root privileges to create TUN devices
 	// We preserve the PATH environment variable so wireguard-go can be found in /usr/local/bin
@@ -527,7 +528,7 @@ func (d *Deployer) runCommandWithOutput(cmd string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	output, err := session.CombinedOutput(cmd)
 	if err != nil {
@@ -543,7 +544,7 @@ func (d *Deployer) runCommandWithLogging(cmd string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	// Stream stdout and stderr to the writer (goes to TUI and auxlog)
 	session.Stdout = d.writer
@@ -573,7 +574,7 @@ func (d *Deployer) uploadContent(content, remotePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	// Use cat to write file
 	cmd := fmt.Sprintf("cat > %s", remotePath)
@@ -783,13 +784,13 @@ func (d *Deployer) installWireGuard(ctx context.Context) error {
 		}
 
 	default:
-		return fmt.Errorf(`WireGuard not found and OS not supported for auto-installation.
+		return fmt.Errorf(`WireGuard not found and OS not supported for auto-installation
 
 Please install WireGuard manually:
   • Installation guide: https://www.wireguard.com/install/
   • Supported OS: Ubuntu, Debian, CentOS, RHEL, Rocky Linux, macOS
 
-After installation, try connecting again.`)
+After installation, try connecting again`)
 	}
 
 	d.writef("Installing WireGuard on %s...\n", osName)
@@ -805,7 +806,7 @@ Please install WireGuard manually:
   • For %s, run:
     %s
 
-After installation, try connecting again.`, err, osName, installCmd)
+After installation, try connecting again`, err, osName, installCmd)
 	}
 
 	d.writef("--- Installation Complete ---\n")
@@ -996,7 +997,7 @@ func (d *Deployer) DownloadFile(remotePath, localPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	// Read remote file
 	var buf bytes.Buffer
@@ -1025,7 +1026,7 @@ func (d *Deployer) ExecuteInteractive(cmd string, stdout, stderr io.Writer) erro
 	if err != nil {
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	session.Stdout = stdout
 	session.Stderr = stderr
@@ -1202,7 +1203,7 @@ func (d *Deployer) CheckSSHHealth() error {
 			resultChan <- fmt.Errorf("SSH connection dead: %w", err)
 			return
 		}
-		defer session.Close() // #nosec G104 -- SSH session teardown after keepalive ping
+		defer func() { _ = session.Close() }() // #nosec G104 -- SSH session teardown after keepalive ping
 
 		// If we have VIP pool IPs, ping a random one to verify end-to-end connectivity
 		if len(d.vipPoolIPs) > 0 {

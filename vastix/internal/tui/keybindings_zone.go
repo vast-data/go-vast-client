@@ -85,7 +85,6 @@ func (k *KeybindingsZone) View() string {
 	currentKeyBindings := k.keyBindings
 	if k.getKeyBindings != nil {
 		currentKeyBindings = k.getKeyBindings()
-	} else {
 	}
 
 	// Separate keybindings into generic and widget-specific
@@ -156,16 +155,16 @@ func (k *KeybindingsZone) View() string {
 	// Join all columns horizontally with separators
 	if len(columns) == 0 {
 		return ""
-	} else if len(columns) == 1 {
-		return columns[0]
-	} else {
-		// Join with "    " separator between each column
-		result := columns[0]
-		for i := 1; i < len(columns); i++ {
-			result = lipgloss.JoinHorizontal(lipgloss.Top, result, "    ", columns[i])
-		}
-		return result
 	}
+	if len(columns) == 1 {
+		return columns[0]
+	}
+	// Join with "    " separator between each column
+	result := columns[0]
+	for i := 1; i < len(columns); i++ {
+		result = lipgloss.JoinHorizontal(lipgloss.Top, result, "    ", columns[i])
+	}
+	return result
 }
 
 // renderExtraActionDesc styles extra-action hints as "verb:path" with a lighter verb prefix.

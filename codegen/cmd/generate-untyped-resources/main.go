@@ -14,6 +14,7 @@ import (
 	"text/template"
 
 	"github.com/getkin/kin-openapi/openapi3"
+
 	"github.com/vast-data/go-vast-client/codegen/apibuilder"
 	"github.com/vast-data/go-vast-client/codegen/vastparser"
 	api "github.com/vast-data/go-vast-client/openapi_schema"

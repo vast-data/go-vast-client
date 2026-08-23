@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math-random -- VIP pool connectivity check, not crypto
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- VIP pool connectivity check, not crypto
 	"net/netip"
 	"os"
 	"strings"
 	"time"
+	shared "vastix/internal/common"
 	"vastix/internal/database"
 	"vastix/internal/msg_types"
 	"vastix/internal/tui/widgets/common"
@@ -354,10 +355,10 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 	}
 
 	sshConfig := &ssh.ClientConfig{
-		User:            sshConn.SshUserName,
-		Auth:            authMethods,
+		User: sshConn.SshUserName,
+		Auth: authMethods,
 		// Internal ops tooling: VIP pool SSH targets are admin-managed, not known_hosts.
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // #nosec G106 -- internal ops tooling on trusted admin networks. nosemgrep: go.lang.security.audit.net.insecure-ssh-host-key-callback
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // #nosec G106 -- internal ops tooling on trusted admin networks. nosemgrep: go.lang.security.audit.crypto.insecure_ssh.avoid-ssh-insecure-ignore-host-key
 		Timeout:         60 * time.Second,
 	}
 
@@ -367,7 +368,7 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 	if err != nil {
 		return fmt.Errorf("failed to connect via SSH: %w", err)
 	}
-	defer client.Close() // #nosec G104 -- SSH client teardown after reachability check
+	defer func() { _ = client.Close() }() // SSH client teardown after reachability check
 
 	// Run ping command (1 ping, 5 sec timeout)
 	pingCmd := fmt.Sprintf("ping -c 1 -W 5 %s", randomIP)
@@ -377,7 +378,7 @@ func (w *VipPoolForwarding) verifyIPReachability(sshConn *database.SshConnection
 	if err != nil {
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
-	defer session.Close() // #nosec G104 -- SSH session teardown after ping
+	defer func() { _ = session.Close() }() // SSH session teardown after ping
 
 	// Capture output to auxlog for first ping
 	session.Stdout = w.auxlog.Writer()
@@ -491,7 +492,13 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			return nil, fmt.Errorf("failed to get SSH connection ID: %w", err)
 		}
 
-		sshConn, err := w.db.GetSshConnection(uint(sshConnID))
+		connID, err := shared.ToUint(sshConnID)
+		if err != nil {
+			w.resetTargets()
+			return nil, fmt.Errorf("invalid SSH connection ID: %w", err)
+		}
+
+		sshConn, err := w.db.GetSshConnection(connID)
 		if err != nil {
 			w.resetTargets()
 			return nil, fmt.Errorf("failed to get SSH connection details: %w", err)
@@ -502,7 +509,7 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 			if err != nil {
 				w.auxlog.Printf("Error fetching VIP pool IPs: %v", err)
 				w.resetTargets()
-				return msg_types.ErrorMsg{Err: fmt.Errorf("Failed to fetch VIP pool IPs:\n%w", err)}
+				return msg_types.ErrorMsg{Err: fmt.Errorf("failed to fetch VIP pool IPs:\n%w", err)}
 			}
 
 			w.auxlog.Printf("Verifying VIP pool IP reachability via SSH...")
@@ -583,8 +590,13 @@ func (w *VipPoolForwarding) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		return nil, fmt.Errorf("failed to get SSH connection ID: %w", err)
 	}
 
+	connID, err := shared.ToUint(sshConnID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SSH connection ID: %w", err)
+	}
+
 	// Fetch full SSH connection details from database
-	sshConn, err := w.db.GetSshConnection(uint(sshConnID))
+	sshConn, err := w.db.GetSshConnection(connID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get SSH connection details: %w", err)
 	}

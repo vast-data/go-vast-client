@@ -80,11 +80,11 @@ func main() {
 	serverPrivKey, serverPubKey, _ := common.GenerateKeyPair()
 
 	serverConfig := &common.ServerConfig{
-		PrivateKey:     serverPrivKey,
-		PublicKey:      serverPubKey,
-		ListenPort:     port,
-		ServerIP:       serverIP,
-		VPNNetwork:     vpnNetwork,
+		PrivateKey: serverPrivKey,
+		PublicKey:  serverPubKey,
+		ListenPort: port,
+		ServerIP:   serverIP,
+		VPNNetwork: vpnNetwork,
 		PrivateIPs: privateIPs,
 	}
 
@@ -121,7 +121,7 @@ AllowedIPs = %s, %s
 PersistentKeepalive = 25
 `, clientPrivKey, clientIP, serverPubKey, remoteHost, port, vpnNetwork, privateNetwork)
 
-	if err := os.WriteFile("/tmp/wg_vastix.conf", []byte(wgConfig), 0600); err != nil { // #nosec G303 -- manual VPN lab helper. nosemgrep: go.lang.security.audit.io.bad-tmp-file-creation.bad-tmp-file-creation
+	if err := os.WriteFile("/tmp/wg_vastix.conf", []byte(wgConfig), 0600); err != nil { // #nosec G303 -- manual VPN lab helper. nosemgrep: go.lang.security.bad_tmp.bad-tmp-file-creation
 		log.Fatalf("Failed to write config: %v", err)
 	}
 
@@ -136,7 +136,7 @@ PersistentKeepalive = 25
 	defer func() {
 		fmt.Println("\nCleaning up...")
 		cmd := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S wg-quick down /tmp/wg_vastix.conf 2>/dev/null", sudoPassword)) // #nosec G204 -- manual VPN lab helper
-		cmd.Run() // #nosec G104 -- best-effort teardown in defer
+		cmd.Run()                                                                                                                         // #nosec G104 -- best-effort teardown in defer
 	}()
 
 	fmt.Println("  ✓ WireGuard interface up")
@@ -180,7 +180,7 @@ PersistentKeepalive = 25
 
 		defer func() {
 			cmd := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | sudo -S umount %s 2>/dev/null", sudoPassword, mountPoint)) // #nosec G204 -- manual VPN lab helper
-			cmd.Run() // #nosec G104 -- best-effort umount in defer
+			cmd.Run()                                                                                                             // #nosec G104 -- best-effort umount in defer
 		}()
 
 		// List contents

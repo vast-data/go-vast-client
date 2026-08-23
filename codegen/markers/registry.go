@@ -77,9 +77,7 @@ func (r *Registry) ListDefinitions() map[string]*Definition {
 // For example, "+vast:generate=config" -> "vast:generate"
 func (r *Registry) extractMarkerName(markerText string) string {
 	// Remove leading "+" if present
-	if strings.HasPrefix(markerText, "+") {
-		markerText = markerText[1:]
-	}
+	markerText = strings.TrimPrefix(markerText, "+")
 
 	// Split on "=" to separate name from arguments
 	parts := strings.SplitN(markerText, "=", 2)
@@ -118,12 +116,7 @@ func (r *Registry) analyzeOutputType(def *Definition) error {
 				argName = parts[0]
 			}
 
-			// Check for optional flag
-			for _, part := range parts[1:] {
-				if part == "optional" {
-					// Will be handled when creating the argument
-				}
-			}
+			// Remove no-op optional flag check; optional fields are handled via pointer/marker tags below.
 		}
 
 		argType, err := r.argumentFromType(field.Type)
