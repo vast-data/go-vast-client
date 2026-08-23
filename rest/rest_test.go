@@ -12,6 +12,8 @@ import (
 	"github.com/vast-data/go-vast-client/core"
 )
 
+type restTestContextKey struct{}
+
 type mockRESTSession struct {
 	config *core.VMSConfig
 	auth   core.Authenticator
@@ -99,7 +101,7 @@ func TestNewUntypedVMSRest_UsesProvidedContext(t *testing.T) {
 	defer server.Close()
 
 	cfg := testVMSConfig(t, server)
-	ctx := context.WithValue(context.Background(), struct{}{}, "test")
+	ctx := context.WithValue(context.Background(), restTestContextKey{}, "test")
 	cfg.Context = ctx
 
 	rest, err := NewUntypedVMSRest(cfg)
@@ -113,7 +115,7 @@ func TestNewUntypedVMSRest_UsesProvidedContext(t *testing.T) {
 
 func TestUntypedVMSRest_SetCtx(t *testing.T) {
 	rest := &UntypedVMSRest{}
-	ctx := context.WithValue(context.Background(), struct{}{}, "updated")
+	ctx := context.WithValue(context.Background(), restTestContextKey{}, "updated")
 	rest.SetCtx(ctx)
 	if rest.GetCtx() != ctx {
 		t.Fatal("SetCtx did not update context")
@@ -197,7 +199,7 @@ func TestNewTypedVMSRest_WiresResources(t *testing.T) {
 		t.Fatal("expected session from typed client")
 	}
 
-	ctx := context.WithValue(context.Background(), struct{}{}, "typed")
+	ctx := context.WithValue(context.Background(), restTestContextKey{}, "typed")
 	typed.SetCtx(ctx)
 	if typed.GetCtx() != ctx {
 		t.Fatal("typed SetCtx did not propagate to untyped client")

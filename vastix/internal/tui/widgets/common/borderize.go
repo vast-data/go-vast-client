@@ -81,7 +81,7 @@ func Borderize(content string, active bool, embeddedText map[BorderPosition]stri
 		return text
 	}
 
-	buildHorizontalBorder := func(leftText, middleText, rightText, leftCorner, inbetween, rightCorner string) string {
+	buildHorizontalBorder := func(leftText, middleText, rightText, leftCorner, separator, rightCorner string) string {
 		leftText = encloseInSquareBrackets(leftText)
 		middleText = encloseInSquareBrackets(middleText)
 		rightText = encloseInSquareBrackets(rightText)
@@ -91,9 +91,9 @@ func Borderize(content string, active bool, embeddedText map[BorderPosition]stri
 		rightBorderLen := max(0, remaining-leftBorderLen)
 		// Then construct border string
 		s := leftText +
-			style.Render(strings.Repeat(inbetween, leftBorderLen)) +
+			style.Render(strings.Repeat(separator, leftBorderLen)) +
 			middleText +
-			style.Render(strings.Repeat(inbetween, rightBorderLen)) +
+			style.Render(strings.Repeat(separator, rightBorderLen)) +
 			rightText
 		// Make it fit in the space available between the two corners.
 		s = lipgloss.NewStyle().
@@ -138,9 +138,3 @@ func BorderizeWithSpinnerCheck(content string, active bool, embeddedText map[Bor
 }
 
 // Helper function for max (for Go versions < 1.21)
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

@@ -148,19 +148,3 @@ type FieldInfo struct {
 
 // TypeCallback is called for each type found during parsing.
 type TypeCallback func(*TypeInfo)
-
-// markerComment represents a comment that contains a marker.
-type markerComment struct {
-	*ast.Comment
-	fromGodoc bool
-}
-
-// Text returns the marker text, stripped of comment prefix and whitespace.
-func (c markerComment) Text() string {
-	text := c.Comment.Text
-	if len(text) < 2 {
-		return ""
-	}
-	// Remove "//" prefix and trim whitespace
-	return text[2:]
-}

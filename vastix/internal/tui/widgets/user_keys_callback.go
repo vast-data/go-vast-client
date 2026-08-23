@@ -8,8 +8,9 @@ import (
 	"vastix/internal/tui/widgets/common"
 
 	tea "github.com/charmbracelet/bubbletea"
-	vast_client "github.com/vast-data/go-vast-client"
 	"go.uber.org/zap"
+
+	vast_client "github.com/vast-data/go-vast-client"
 )
 
 // createUserAccessKeyAfterCreateCallback creates a callback function that stores

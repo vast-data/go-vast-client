@@ -8,13 +8,13 @@ import (
 	"vastix/internal/msg_types"
 
 	"vastix/internal/database"
-	"vastix/internal/logging"
 	log "vastix/internal/logging"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	vast_client "github.com/vast-data/go-vast-client"
 	"go.uber.org/zap"
+
+	vast_client "github.com/vast-data/go-vast-client"
 )
 
 // ProfileZone represents the profile information zone
@@ -65,7 +65,7 @@ func (p *ProfileZone) SetData() tea.Msg {
 // SetDataWithContext fetches profile data with the provided context.
 // This allows callers to pass context with special flags (e.g., to skip interceptor logging for ticker updates).
 func (p *ProfileZone) SetDataWithContext(ctx context.Context) tea.Msg {
-	auxlog := logging.GetAuxLogger()
+	auxlog := log.GetAuxLogger()
 
 	// Try to get the active profile
 	activeProfile, err := p.db.GetActiveProfile()
@@ -74,35 +74,32 @@ func (p *ProfileZone) SetDataWithContext(ctx context.Context) tea.Msg {
 		log.Error("Failed to get active profile", zap.Error(err))
 		auxlog.Printf("ProfileZone.SetData: failed: %v", err)
 		return nil
-	} else if activeProfile != nil {
-		// Set basic profile info immediately (non-blocking)
-		p.profileName = activeProfile.ProfileName()
-		p.tenant = activeProfile.Tenant
-		p.userName = activeProfile.Username
-		p.token = activeProfile.Token
-
-		// Return async command to fetch space metrics
-		metrics, err := p.fetchSpaceMetricsWithContext(ctx, activeProfile)
-		if err != nil {
-			log.Error("Failed to fetch space metrics", zap.Error(err))
-			auxlog.Printf("ProfileZone.SetData() metrics fetch failed: %v", err)
-			return msg_types.ProfileDataMsg{
-				AvailableSpace: "n/a",
-				UsedSpace:      "n/a",
-				FreeSpace:      "n/a",
-			}
-		}
-		return *metrics
-	} else {
+	}
+	if activeProfile == nil {
 		// No active profile found
 		log.Debug("No active profile found")
 		auxlog.Println("ProfileZone.SetData: no active profile found")
 		return nil
 	}
-}
 
-func (p *ProfileZone) fetchSpaceMetrics(activeProfile *database.Profile) (*msg_types.ProfileDataMsg, error) {
-	return p.fetchSpaceMetricsWithContext(p.ctx, activeProfile)
+	// Set basic profile info immediately (non-blocking)
+	p.profileName = activeProfile.ProfileName()
+	p.tenant = activeProfile.Tenant
+	p.userName = activeProfile.Username
+	p.token = activeProfile.Token
+
+	// Return async command to fetch space metrics
+	metrics, err := p.fetchSpaceMetricsWithContext(ctx, activeProfile)
+	if err != nil {
+		log.Error("Failed to fetch space metrics", zap.Error(err))
+		auxlog.Printf("ProfileZone.SetData() metrics fetch failed: %v", err)
+		return msg_types.ProfileDataMsg{
+			AvailableSpace: "n/a",
+			UsedSpace:      "n/a",
+			FreeSpace:      "n/a",
+		}
+	}
+	return *metrics
 }
 
 // fetchSpaceMetricsWithContext fetches space metrics with the provided context

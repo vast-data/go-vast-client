@@ -5,7 +5,7 @@ Get started with VPN Connect in 5 minutes!
 ## What You Need
 
 - Remote server with SSH access (e.g., `10.27.14.107`)
-- Go 1.22+ installed locally
+- Go 1.25+ installed locally
 - Access credentials (SSH password or key)
 
 ## Step-by-Step Setup

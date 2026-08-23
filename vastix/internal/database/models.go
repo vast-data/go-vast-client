@@ -5,8 +5,9 @@ import (
 	"time"
 	"vastix/internal/client"
 
-	vast_client "github.com/vast-data/go-vast-client"
 	"gorm.io/gorm"
+
+	vast_client "github.com/vast-data/go-vast-client"
 )
 
 // Profile represents connection information for server access

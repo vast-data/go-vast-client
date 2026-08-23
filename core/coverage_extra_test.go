@@ -10,6 +10,8 @@ import (
 	"testing"
 )
 
+type testContextKey struct{}
+
 func TestVastResource_DeleteWithContext_Found(t *testing.T) {
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -57,7 +59,7 @@ func TestVastResource_EnsureWithContext_Existing(t *testing.T) {
 
 func TestDummyRest_SetCtx(t *testing.T) {
 	rest := &DummyRest{ctx: context.Background()}
-	ctx := context.WithValue(context.Background(), struct{}{}, "ctx")
+	ctx := context.WithValue(context.Background(), testContextKey{}, "ctx")
 	rest.SetCtx(ctx)
 	if rest.GetCtx() != ctx {
 		t.Fatal("SetCtx did not update DummyRest context")
@@ -81,7 +83,7 @@ func TestTypedVastResource_GetIteratorWithContext(t *testing.T) {
 	rest.resourceMap["User"] = untyped
 	typed := NewTypedVastResource("User", rest)
 
-	ctx := context.WithValue(context.Background(), struct{}{}, "iter")
+	ctx := context.WithValue(context.Background(), testContextKey{}, "iter")
 	iter := typed.GetIteratorWithContext(ctx, Params{}, 10)
 	if iter == nil {
 		t.Fatal("expected iterator")
@@ -218,7 +220,7 @@ func TestDoAfterRequest_AfterRequestFnError(t *testing.T) {
 }
 
 func TestParseToken_InvalidJSON(t *testing.T) {
-	rsp := createMockResponse("not-json", 200, 8)
+	rsp := createMockResponse(t, "not-json", 200, 8)
 	if _, err := parseToken(rsp); err == nil {
 		t.Fatal("expected parse error")
 	}

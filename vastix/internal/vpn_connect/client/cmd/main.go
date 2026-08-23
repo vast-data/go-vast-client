@@ -83,7 +83,11 @@ func prefixToPrivateIPs(p netip.Prefix) []netip.Addr {
 }
 
 func listenPort(vpnPort uint) uint16 {
-	p, err := shared.ToPort(int64(vpnPort))
+	port, err := shared.Int64FromUint(vpnPort)
+	if err != nil {
+		return 51820
+	}
+	p, err := shared.ToPort(port)
 	if err != nil {
 		return 51820
 	}
@@ -231,11 +235,11 @@ func runDeployMode(logger *slog.Logger, host string, port int, user, password, k
 	}
 
 	serverConfig := &common.ServerConfig{
-		PrivateKey:     privKey,
-		PublicKey:      pubKey,
-		ListenPort:     listenPort(vpnPort),
-		ServerIP:       srvIP,
-		VPNNetwork:     vpnNet,
+		PrivateKey: privKey,
+		PublicKey:  pubKey,
+		ListenPort: listenPort(vpnPort),
+		ServerIP:   srvIP,
+		VPNNetwork: vpnNet,
 		PrivateIPs: prefixToPrivateIPs(privNet),
 		Interface:  "", // Will be auto-detected on remote
 	}
@@ -258,7 +262,7 @@ func runDeployMode(logger *slog.Logger, host string, port int, user, password, k
 		logger.Error("Failed to connect to remote host", slog.Any("error", err))
 		os.Exit(1)
 	}
-	defer deployer.Disconnect()
+	defer func() { _ = deployer.Disconnect() }()
 
 	// Deploy
 	logger.Info("Deploying VPN server to remote host")
@@ -350,7 +354,7 @@ func runStartRemoteMode(logger *slog.Logger, host string, port int, user, passwo
 		logger.Error("Failed to connect to remote host", slog.Any("error", err))
 		os.Exit(1)
 	}
-	defer deployer.Disconnect()
+	defer func() { _ = deployer.Disconnect() }()
 
 	startCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -384,7 +388,7 @@ func runStopRemoteMode(logger *slog.Logger, host string, port int, user, passwor
 		logger.Error("Failed to connect to remote host", slog.Any("error", err))
 		os.Exit(1)
 	}
-	defer deployer.Disconnect()
+	defer func() { _ = deployer.Disconnect() }()
 
 	if err := deployer.StopServer(); err != nil {
 		logger.Error("Failed to stop remote server", slog.Any("error", err))
@@ -415,7 +419,7 @@ func runStatusRemoteMode(logger *slog.Logger, host string, port int, user, passw
 		logger.Error("Failed to connect to remote host", slog.Any("error", err))
 		os.Exit(1)
 	}
-	defer deployer.Disconnect()
+	defer func() { _ = deployer.Disconnect() }()
 
 	running, pid, err := deployer.GetServerStatus(listenPort(vpnPort))
 	if err != nil {

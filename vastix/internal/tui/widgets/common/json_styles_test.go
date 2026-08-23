@@ -4,8 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/charmbracelet/lipgloss"
 	"vastix/internal/colors"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 func TestContentLineFillsWidth(t *testing.T) {

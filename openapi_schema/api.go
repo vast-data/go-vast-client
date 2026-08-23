@@ -47,7 +47,7 @@ func loadOpenAPIDocOnce() (*openapi3.T, error) {
 			openApiDocErr = fmt.Errorf("gzip reader: %w", err)
 			return
 		}
-		defer gzr.Close()
+		defer func() { _ = gzr.Close() }()
 
 		tr := tar.NewReader(gzr)
 
@@ -68,7 +68,7 @@ func loadOpenAPIDocOnce() (*openapi3.T, error) {
 				// limit is a zip-bomb finding (G110). 32MiB is well above the
 				// current schema size and does not change load behavior.
 				const maxOpenAPIJSON = 32 << 20
-				if _, err := io.Copy(&buf, io.LimitReader(tr, maxOpenAPIJSON+1)); err != nil { // #nosec G110 -- extract capped above; archive is our embed. nosemgrep: go.lang.security.audit.compression.decompression-bomb.archive
+				if _, err := io.Copy(&buf, io.LimitReader(tr, maxOpenAPIJSON+1)); err != nil { // #nosec G110 -- extract capped above; archive is our embed. nosemgrep: go.lang.security.decompression_bomb.potential-dos-via-decompression-bomb
 					openApiDocErr = fmt.Errorf("copy api.json from tar: %w", err)
 					return
 				}

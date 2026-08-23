@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/getkin/kin-openapi/openapi3"
+
 	"github.com/vast-data/go-vast-client/openapi_schema"
 )
 
@@ -100,9 +101,7 @@ func NewSchemaReference(
 	createMethod, createPath string,
 	readMethod, readPath string,
 ) *SchemaReference {
-	var createRef *OpenAPIEndpointRef
-
-	createRef = &OpenAPIEndpointRef{
+	createRef := &OpenAPIEndpointRef{
 		Method: createMethod,
 		Path:   createPath,
 	}

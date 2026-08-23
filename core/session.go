@@ -48,12 +48,11 @@ func (e *ApiError) Error() string {
 			"%s request to %s returned status code %d"+
 				" — response body: %s", e.Method, e.URL, e.StatusCode, e.Body,
 		)
-	} else {
-		return fmt.Sprintf(
-			"%s request to %s returned status code %d"+
-				" — response body: %s\nResource details:\n%s", e.Method, e.URL, e.StatusCode, e.Body, e.hints,
-		)
 	}
+	return fmt.Sprintf(
+		"%s request to %s returned status code %d"+
+			" — response body: %s\nResource details:\n%s", e.Method, e.URL, e.StatusCode, e.Body, e.hints,
+	)
 
 }
 

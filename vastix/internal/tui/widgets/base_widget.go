@@ -15,9 +15,10 @@ import (
 	"vastix/internal/tui/widgets/common"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"go.uber.org/zap"
+
 	vast_client "github.com/vast-data/go-vast-client"
 	"github.com/vast-data/go-vast-client/resources/untyped"
-	"go.uber.org/zap"
 )
 
 type (
@@ -1628,7 +1629,7 @@ func (bw *BaseWidget) GetListKeyBindings() []common.KeyBinding {
 
 	for _, binding := range availableBindings {
 		strippedBinding := strings.Trim(binding.Key, "<>")
-		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+		if len(notAllowedKeys) == 0 {
 			bindings = append(bindings, binding)
 		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
 			bindings = append(bindings, binding)
@@ -1661,7 +1662,7 @@ func (bw *BaseWidget) GetCreateKeyBindings() []common.KeyBinding {
 
 	for _, binding := range availableBindings {
 		strippedBinding := strings.Trim(binding.Key, "<>")
-		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+		if len(notAllowedKeys) == 0 {
 			bindings = append(bindings, binding)
 		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
 			bindings = append(bindings, binding)
@@ -1690,7 +1691,7 @@ func (bw *BaseWidget) GetDeleteKeyBindings() []common.KeyBinding {
 
 	for _, binding := range availableBindings {
 		strippedBinding := strings.Trim(binding.Key, "<>")
-		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+		if len(notAllowedKeys) == 0 {
 			bindings = append(bindings, binding)
 		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
 			bindings = append(bindings, binding)
@@ -1721,7 +1722,7 @@ func (bw *BaseWidget) GetPromptKeyBindings() []common.KeyBinding {
 
 	for _, binding := range availableBindings {
 		strippedBinding := strings.Trim(binding.Key, "<>")
-		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+		if len(notAllowedKeys) == 0 {
 			bindings = append(bindings, binding)
 		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
 			bindings = append(bindings, binding)
@@ -1752,7 +1753,7 @@ func (bw *BaseWidget) GetDetailsKeyBindings() []common.KeyBinding {
 
 	for _, binding := range availableBindings {
 		strippedBinding := strings.Trim(binding.Key, "<>")
-		if notAllowedKeys == nil || len(notAllowedKeys) == 0 {
+		if len(notAllowedKeys) == 0 {
 			bindings = append(bindings, binding)
 		} else if _, ok := notAllowedKeys[strippedBinding]; !ok {
 			bindings = append(bindings, binding)

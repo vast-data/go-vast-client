@@ -17,8 +17,9 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	vast_client "github.com/vast-data/go-vast-client"
 	"go.uber.org/zap"
+
+	vast_client "github.com/vast-data/go-vast-client"
 )
 
 // DetailsAdapter handles the details view for widgets
@@ -144,7 +145,7 @@ func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
 	text := string(p)
 
 	// Apply styling: left padding and gray color
-	leftPadding := "  "                                         // 2 spaces left padding
+	leftPadding := "  " // 2 spaces left padding
 	logStyle := lipgloss.NewStyle().Foreground(colors.LightGrey)
 
 	// Calculate max line width (viewport width - padding - borders - small margin)
@@ -187,7 +188,7 @@ func (da *DetailsAdapter) Write(p []byte) (n int, err error) {
 // Wraps long lines to fit within viewport width
 func (da *DetailsAdapter) AppendContent(text string) {
 	// Apply styling: left padding and gray color
-	leftPadding := "  "                                         // 2 spaces left padding
+	leftPadding := "  " // 2 spaces left padding
 	logStyle := lipgloss.NewStyle().Foreground(colors.LightGrey)
 
 	// Calculate max line width (viewport width - padding - borders - small margin)
@@ -495,7 +496,7 @@ func isStruct(v any) bool {
 	}
 	t := reflect.TypeOf(v)
 	// Handle pointers to structs as well
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	return t.Kind() == reflect.Struct
@@ -639,7 +640,7 @@ func formatObjectRecursive(objStr string, nestLevel int) string {
 
 	// Calculate indentation for nested objects
 	baseIndent := common.IndentSpaces((nestLevel + 1) * 2)
-	fieldIndent := common.IndentSpaces((nestLevel + 1)*2 + 2)
+	fieldIndent := common.IndentSpaces((nestLevel+1)*2 + 2)
 
 	// Build nested object string with proper indentation and colors
 	var details strings.Builder

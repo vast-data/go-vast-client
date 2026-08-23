@@ -1224,7 +1224,7 @@ func (ca *CreateAdapter) renderInputWrapper(wrapper common.InputWrapper, depth i
 		switch wrapper.GetType() {
 		case common.InputTypeComplexArray:
 			// Get detailed array type information for complex arrays
-			var itemType string = "unknown"
+			var itemType string
 			if wrapper.ComplexArrayInput != nil && wrapper.ComplexArrayInput.ItemDef != nil {
 				switch wrapper.ComplexArrayInput.ItemDef.Type {
 				case "string":
@@ -1243,7 +1243,6 @@ func (ca *CreateAdapter) renderInputWrapper(wrapper common.InputWrapper, depth i
 					itemType = wrapper.ComplexArrayInput.ItemDef.Type
 				}
 			} else {
-				// Default to str for simple arrays without item definition
 				itemType = "str"
 			}
 			typeText = " [array[" + itemType + "]]"
@@ -1501,7 +1500,7 @@ func (ca *CreateAdapter) renderCollapsedObject(wrapper common.InputWrapper, bord
 		}
 	} else if wrapper.IsComplexArrayInput() {
 		// Get detailed array type information
-		var itemType string = "unknown"
+		var itemType string
 		if wrapper.ComplexArrayInput != nil && wrapper.ComplexArrayInput.ItemDef != nil {
 			switch wrapper.ComplexArrayInput.ItemDef.Type {
 			case "string":
@@ -1520,7 +1519,6 @@ func (ca *CreateAdapter) renderCollapsedObject(wrapper common.InputWrapper, bord
 				itemType = wrapper.ComplexArrayInput.ItemDef.Type
 			}
 		} else {
-			// Default to str for simple arrays without item definition
 			itemType = "str"
 		}
 		styledType = typeStyle.Render(" [array[" + itemType + "]]")
@@ -1539,7 +1537,7 @@ func (ca *CreateAdapter) renderCollapsedObject(wrapper common.InputWrapper, bord
 				rawTypeText = " [object]"
 			}
 		} else if wrapper.IsComplexArrayInput() {
-			var itemType string = "str" // default
+			itemType := "str" // default
 			if wrapper.ComplexArrayInput != nil && wrapper.ComplexArrayInput.ItemDef != nil {
 				switch wrapper.ComplexArrayInput.ItemDef.Type {
 				case "string":

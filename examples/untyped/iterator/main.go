@@ -21,6 +21,9 @@ func main() {
 
 	iter := rest.Views.GetIterator(client.Params{"name__contains": "view-1"}, 5)
 	result, err := iter.All()
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println(len(result))
 }

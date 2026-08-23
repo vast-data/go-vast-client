@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 	"vastix/internal/client"
+	"vastix/internal/colors"
 	"vastix/internal/database"
 	"vastix/internal/logging"
 	"vastix/internal/msg_types"
-	"vastix/internal/colors"
 	"vastix/internal/tui"
 	"vastix/internal/tui/widgets/common"
 

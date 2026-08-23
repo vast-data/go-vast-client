@@ -2,6 +2,7 @@ package common
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+
 	vast_client "github.com/vast-data/go-vast-client"
 )
 
@@ -321,11 +322,11 @@ func NewNavigatorKeyRestrictions(main, extra KeyRestrictions) NavigatorKeyRestri
 }
 
 // NewKeyRestrictions creates a KeyRestrictions with specified restrictions for each mode
-func NewKeyRestrictions(list, create, delete, details []string) KeyRestrictions {
+func NewKeyRestrictions(list, create, deleteKeys, details []string) KeyRestrictions {
 	return KeyRestrictions{
 		NotAllowedListKeys:    list,
 		NotAllowedCreateKeys:  create,
-		NotAllowedDeleteKeys:  delete,
+		NotAllowedDeleteKeys:  deleteKeys,
 		NotAllowedDetailsKeys: details,
 	}
 }

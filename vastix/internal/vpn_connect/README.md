@@ -252,7 +252,7 @@ vpn_connect/
 
 ### Client (Local Machine)
 - Linux, macOS, or Windows
-- Go 1.22+ (for building)
+- Go 1.25+ (for building)
 - Network access to server
 
 ## 🚦 Status

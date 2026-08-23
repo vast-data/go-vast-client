@@ -4,7 +4,8 @@ import (
 	"context"
 	"strings"
 
-	version "github.com/hashicorp/go-version"
+	"github.com/hashicorp/go-version"
+
 	"github.com/vast-data/go-vast-client/core"
 )
 

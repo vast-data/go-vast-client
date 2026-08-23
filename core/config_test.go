@@ -6,7 +6,7 @@ import (
 )
 
 func TestVMSConfig_Validate(t *testing.T) {
-	t.Run("valid config with all validators", func(t *testing.T) {
+	t.Run("valid config with all validators", func(_ *testing.T) {
 		config := &VMSConfig{
 			Host:     "localhost",
 			Port:     443,

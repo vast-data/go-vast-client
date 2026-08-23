@@ -8,14 +8,17 @@ import (
 	"testing"
 )
 
-// Helper function to create a mock HTTP response
-func createMockResponse(body string, statusCode int, contentLength int64) *http.Response {
-	return &http.Response{
+// Helper function to create a mock HTTP response.
+func createMockResponse(t testing.TB, body string, statusCode int, contentLength int64) *http.Response {
+	t.Helper()
+	resp := &http.Response{
 		StatusCode:    statusCode,
 		Body:          io.NopCloser(bytes.NewBufferString(body)),
 		ContentLength: contentLength,
 		Header:        make(http.Header),
 	}
+	t.Cleanup(func() { _ = resp.Body.Close() })
+	return resp
 }
 
 // TestUnmarshalToRecordUnion_ArrayOfObjects tests unmarshaling arrays of objects
@@ -52,7 +55,7 @@ func TestUnmarshalToRecordUnion_ArrayOfObjects(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := createMockResponse(tt.jsonBody, 200, int64(len(tt.jsonBody)))
+			resp := createMockResponse(t, tt.jsonBody, 200, int64(len(tt.jsonBody)))
 			result, err := unmarshalToRecordUnion(resp)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -106,7 +109,7 @@ func TestUnmarshalToRecordUnion_ArrayOfPrimitives(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := createMockResponse(tt.jsonBody, 200, int64(len(tt.jsonBody)))
+			resp := createMockResponse(t, tt.jsonBody, 200, int64(len(tt.jsonBody)))
 			result, err := unmarshalToRecordUnion(resp)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -133,7 +136,7 @@ func TestUnmarshalToRecordUnion_ArrayOfPrimitives(t *testing.T) {
 // Empty arrays are treated as RecordSet since we can't determine if they're arrays of objects or primitives
 func TestUnmarshalToRecordUnion_EmptyArray(t *testing.T) {
 	jsonBody := `[]`
-	resp := createMockResponse(jsonBody, 200, int64(len(jsonBody)))
+	resp := createMockResponse(t, jsonBody, 200, int64(len(jsonBody)))
 	result, err := unmarshalToRecordUnion(resp)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -176,7 +179,7 @@ func TestUnmarshalToRecordUnion_SingleObject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := createMockResponse(tt.jsonBody, 200, int64(len(tt.jsonBody)))
+			resp := createMockResponse(t, tt.jsonBody, 200, int64(len(tt.jsonBody)))
 			result, err := unmarshalToRecordUnion(resp)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -224,7 +227,7 @@ func TestUnmarshalToRecordUnion_EmptyResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := createMockResponse(tt.body, tt.statusCode, tt.length)
+			resp := createMockResponse(t, tt.body, tt.statusCode, tt.length)
 			result, err := unmarshalToRecordUnion(resp)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -268,7 +271,7 @@ func TestUnmarshalToRecordUnion_StringResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := createMockResponse(tt.jsonBody, 200, int64(len(tt.jsonBody)))
+			resp := createMockResponse(t, tt.jsonBody, 200, int64(len(tt.jsonBody)))
 			result, err := unmarshalToRecordUnion(resp)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -318,7 +321,7 @@ func TestUnmarshalToRecordUnion_InvalidJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := createMockResponse(tt.jsonBody, 200, int64(len(tt.jsonBody)))
+			resp := createMockResponse(t, tt.jsonBody, 200, int64(len(tt.jsonBody)))
 			_, err := unmarshalToRecordUnion(resp)
 			if err == nil {
 				t.Error("expected error for invalid JSON, got nil")
@@ -349,7 +352,7 @@ func TestUnmarshalToRecordUnion_UnsupportedFormat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := createMockResponse(tt.jsonBody, 200, int64(len(tt.jsonBody)))
+			resp := createMockResponse(t, tt.jsonBody, 200, int64(len(tt.jsonBody)))
 			_, err := unmarshalToRecordUnion(resp)
 			if err == nil {
 				t.Error("expected error for unsupported format, got nil")
@@ -365,7 +368,7 @@ func TestUnmarshalToRecordUnion_UnsupportedFormat(t *testing.T) {
 func TestUnmarshalToRecordUnion_RealWorldScenarios(t *testing.T) {
 	t.Run("NicPort related_nicports (array of integers)", func(t *testing.T) {
 		jsonBody := `[5, 8]`
-		resp := createMockResponse(jsonBody, 200, int64(len(jsonBody)))
+		resp := createMockResponse(t, jsonBody, 200, int64(len(jsonBody)))
 		result, err := unmarshalToRecordUnion(resp)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -393,7 +396,7 @@ func TestUnmarshalToRecordUnion_RealWorldScenarios(t *testing.T) {
 
 	t.Run("BigCatalogConfig columns (array of objects)", func(t *testing.T) {
 		jsonBody := `[{"id": 1, "name": "col1", "type": "int"}, {"id": 2, "name": "col2", "type": "string"}]`
-		resp := createMockResponse(jsonBody, 200, int64(len(jsonBody)))
+		resp := createMockResponse(t, jsonBody, 200, int64(len(jsonBody)))
 		result, err := unmarshalToRecordUnion(resp)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -415,7 +418,7 @@ func TestUnmarshalToRecordUnion_RealWorldScenarios(t *testing.T) {
 
 	t.Run("User list (array of objects)", func(t *testing.T) {
 		jsonBody := `[{"id": 1, "name": "alice"}, {"id": 2, "name": "bob"}]`
-		resp := createMockResponse(jsonBody, 200, int64(len(jsonBody)))
+		resp := createMockResponse(t, jsonBody, 200, int64(len(jsonBody)))
 		result, err := unmarshalToRecordUnion(resp)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -433,7 +436,7 @@ func TestUnmarshalToRecordUnion_RealWorldScenarios(t *testing.T) {
 
 	t.Run("Single user (object)", func(t *testing.T) {
 		jsonBody := `{"id": 1, "name": "alice", "email": "alice@example.com"}`
-		resp := createMockResponse(jsonBody, 200, int64(len(jsonBody)))
+		resp := createMockResponse(t, jsonBody, 200, int64(len(jsonBody)))
 		result, err := unmarshalToRecordUnion(resp)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -450,7 +453,7 @@ func TestUnmarshalToRecordUnion_RealWorldScenarios(t *testing.T) {
 	})
 
 	t.Run("DELETE operation returning 204 No Content", func(t *testing.T) {
-		resp := createMockResponse("", 204, 0)
+		resp := createMockResponse(t, "", 204, 0)
 		result, err := unmarshalToRecordUnion(resp)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	vast_client "github.com/vast-data/go-vast-client"
 )
 

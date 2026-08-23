@@ -76,11 +76,11 @@ func (m *VPNManager) DeployAndConnect(ctx context.Context, clientID int, remoteH
 
 	// Step 3: Deploy server
 	serverConfig := &common.ServerConfig{
-		PrivateKey:     serverPrivKey,
-		PublicKey:      serverPubKey,
-		ListenPort:     port,
-		ServerIP:       serverIP,
-		VPNNetwork:     vpnNetwork,
+		PrivateKey: serverPrivKey,
+		PublicKey:  serverPubKey,
+		ListenPort: port,
+		ServerIP:   serverIP,
+		VPNNetwork: vpnNetwork,
 		PrivateIPs: []netip.Addr{netip.MustParseAddr("172.21.101.1")},
 	}
 
