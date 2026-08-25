@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/bndr/gotabulate v1.1.2
-	github.com/getkin/kin-openapi v0.144.0
+	github.com/getkin/kin-openapi v0.147.0
 	github.com/hashicorp/go-version v1.9.0
 )
 
