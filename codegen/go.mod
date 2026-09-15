@@ -3,7 +3,7 @@ module github.com/vast-data/go-vast-client/codegen
 go 1.25.0
 
 require (
-	github.com/getkin/kin-openapi v0.144.0
+	github.com/getkin/kin-openapi v0.147.0
 	github.com/vast-data/go-vast-client v0.0.0
 )
 

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.160.0
+
+BUG FIXES:
+
+* **JWT Token Refresh Coalescing**: Concurrent `authorize()` calls that overlap an in-flight JWT acquire or refresh now wait for that request and reuse its token instead of issuing extra `/api/token/` or `/api/token/refresh/` calls.
+
 ## 0.156.0
 
 ENHANCEMENTS:

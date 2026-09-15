@@ -94,9 +94,10 @@ type JWTAuthenticator struct {
 	Token        *jwtToken
 	Tenant       string
 	initialized  bool
-	mu           sync.RWMutex // Protects Token and initialized
+	mu           sync.RWMutex // Protects Token, initialized, and generation
 	authorizing  bool         // Indicates authorization in progress
 	authCond     *sync.Cond   // Condition variable for waiting goroutines
+	generation   uint64       // Bumped on each successful authorize; used for coalescing
 }
 
 func parseToken(rsp *http.Response) (*jwtToken, error) {
@@ -228,7 +229,13 @@ func (auth *JWTAuthenticator) acquireToken(client *http.Client) error {
 //     - Wait() atomically: releases lock → sleeps → re-acquires lock when signaled
 //     - Broadcast() wakes all waiting goroutines when authorization completes
 //
-//  3. Token Clearing Strategy:
+//  3. Auth Generation (auth.generation):
+//     - Incremented on each successful authorization
+//     - Each call records the generation it observed on entry, before waiting, so a
+//       goroutine woken from Wait() can tell whether a peer succeeded in the meantime
+//       and reuse that token instead of clearing it and calling again
+//
+//  4. Token Clearing Strategy:
 //     - Before attempting authorization, we clear auth.Token.Access
 //     - This ensures waiting goroutines won't use stale/invalid tokens if authorization fails
 //     - If authorization succeeds, the new token is written; if it fails, token stays empty
@@ -241,35 +248,38 @@ func (auth *JWTAuthenticator) acquireToken(client *http.Client) error {
 //	  → Clears auth.Token.Access (invalidate old token)
 //	  → Releases lock
 //	  → Makes HTTP call to acquire/refresh token
-//	  → Sets auth.authorizing = false, Broadcast() to wake waiters
+//	  → Bumps generation, sets auth.authorizing = false, Broadcast()
 //
 //	Goroutines 2-N (arrive while G1 is working):
 //	  → Acquire lock
 //	  → See auth.authorizing = true
 //	  → Call authCond.Wait() - releases lock and sleeps
 //	  → Woken by Broadcast() when G1 completes
-//	  → Re-acquire lock and check if token is now available:
-//	     - If token exists → return (use G1's token)
-//	     - If token is empty → G2 tries authorization (G1 failed)
+//	  → Re-acquire lock and check whether the generation advanced with a usable token:
+//	     - If it did → return (use G1's token)
+//	     - If it did not → G2 tries authorization (G1 failed)
 //
 // This design ensures:
-//   - Only 1 HTTP call per authorization attempt (no thundering herd)
+//   - Only 1 HTTP call per authorization wave (no thundering herd)
 //   - Automatic retry on transient failures (next waiting goroutine tries)
 //   - Thread-safe access to shared auth.Token state
 func (auth *JWTAuthenticator) authorize() error {
 	// Acquire lock and check if authorization is already in progress
 	auth.mu.Lock()
 
+	// Generation observed before waiting; a change means a peer authorized since.
+	observedGeneration := auth.generation
+
 	// Wait while another goroutine is authorizing
-	if auth.authorizing {
-		for auth.authorizing {
-			auth.authCond.Wait() // Releases lock and waits, re-acquires when signaled
-		}
-		// We were waiting - check if token is now available
-		if auth.initialized && auth.Token != nil && auth.Token.Access != "" {
-			auth.mu.Unlock()
-			return nil // Another goroutine got the token while we waited
-		}
+	for auth.authorizing {
+		auth.authCond.Wait() // Releases lock and waits, re-acquires when signaled
+	}
+
+	// A peer authorized while we waited - reuse its token instead of refreshing again
+	if auth.generation != observedGeneration &&
+		auth.initialized && auth.Token != nil && auth.Token.Access != "" {
+		auth.mu.Unlock()
+		return nil
 	}
 
 	// We're the first - set authorizing flag and capture state
@@ -319,6 +329,7 @@ func (auth *JWTAuthenticator) authorize() error {
 	auth.mu.Lock()
 	if err == nil {
 		auth.initialized = true
+		auth.generation++
 	}
 	auth.authorizing = false
 	auth.authCond.Broadcast() // Wake up all waiting goroutines
