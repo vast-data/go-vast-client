@@ -28,6 +28,10 @@ func (m *MockRest) SetCtx(ctx context.Context) {
 	m.ctx = ctx
 }
 
+func (m *MockRest) GetApiRoot() string {
+	return ""
+}
+
 // TestResourceOpsValidation tests that ResourceOps correctly validates operations
 // Note: This test was simplified to test the has() method directly since
 // checkOperation is now a private method and operation validation happens

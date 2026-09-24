@@ -1,98 +1,27 @@
 package openapi_schema
 
 import (
-	"archive/tar"
-	"bytes"
-	"compress/gzip"
 	"embed"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
-	"sync"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
 var (
-	//go:embed api.tar.gz
-	FS             embed.FS
-	openApiDocOnce sync.Once
-	openApiDoc     *openapi3.T
-	openApiDocErr  error
-	shemaRelPath   = "api.tar.gz"
+	//go:embed api.tar.gz dataengine.tar.gz
+	FS embed.FS
 )
 
-// loadOpenAPIDocOnce loads and parses the OpenAPI v3 document from a .tar.gz archive exactly once.
-// It looks for a file named "openapi-v3.json" inside the archive located at "api/openapi-v3.tar.gz".
-// The document is parsed using the kin-openapi loader and cached for future calls.
-//
-// Returns:
-//   - *openapi3.T: the parsed OpenAPI document.
-//   - error: if the archive cannot be read, the JSON file is not found, or the document fails to parse.
-//
-// Notes:
-//   - This function is thread-safe and memoized via sync.Once to ensure the document is only loaded once.
-//   - Errors encountered during the initial load are also cached and returned on subsequent calls.
-func loadOpenAPIDocOnce() (*openapi3.T, error) {
-	openApiDocOnce.Do(func() {
-		data, err := FS.ReadFile(shemaRelPath)
-		if err != nil {
-			openApiDocErr = fmt.Errorf("read embedded tar.gz: %w", err)
-			return
-		}
-
-		gzr, err := gzip.NewReader(bytes.NewReader(data))
-		if err != nil {
-			openApiDocErr = fmt.Errorf("gzip reader: %w", err)
-			return
-		}
-		defer func() { _ = gzr.Close() }()
-
-		tr := tar.NewReader(gzr)
-
-		for {
-			hdr, err := tr.Next()
-			if err == io.EOF {
-				openApiDocErr = fmt.Errorf("api.json not found in embedded archive")
-				return
-			}
-			if err != nil {
-				openApiDocErr = fmt.Errorf("tar read error: %w", err)
-				return
-			}
-
-			if strings.HasSuffix(hdr.Name, "api.json") {
-				var buf bytes.Buffer
-				// Bound the extract: the archive is our embed, but a missing
-				// limit is a zip-bomb finding (G110). 32MiB is well above the
-				// current schema size and does not change load behavior.
-				const maxOpenAPIJSON = 32 << 20
-				if _, err := io.Copy(&buf, io.LimitReader(tr, maxOpenAPIJSON+1)); err != nil { // #nosec G110 -- extract capped above; archive is our embed. nosemgrep: go.lang.security.decompression_bomb.potential-dos-via-decompression-bomb
-					openApiDocErr = fmt.Errorf("copy api.json from tar: %w", err)
-					return
-				}
-				if buf.Len() > maxOpenAPIJSON {
-					openApiDocErr = fmt.Errorf("api.json exceeds %d byte extract limit", maxOpenAPIJSON)
-					return
-				}
-
-				loader := openapi3.NewLoader()
-				openApiDoc, openApiDocErr = loader.LoadFromData(buf.Bytes())
-				return
-			}
-		}
-	})
-
-	return openApiDoc, openApiDocErr
-}
-
-func GetOpenApiResource(resourcePath string) (*openapi3.PathItem, error) {
+// GetOpenApiResource returns the PathItem for resourcePath in the given pack.
+// Accepts paths with or without a trailing slash.
+func GetOpenApiResource(pack Pack, resourcePath string) (*openapi3.PathItem, error) {
 	// Accept both forms: with and without trailing slash
 	base := "/" + strings.Trim(resourcePath, "/")
 	withSlash := base + "/"
 
-	doc, err := loadOpenAPIDocOnce()
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}
@@ -117,8 +46,26 @@ func GetOpenApiResource(resourcePath string) (*openapi3.PathItem, error) {
 	)
 }
 
-func GetOpenApiComponents() (*openapi3.Components, error) {
-	doc, err := loadOpenAPIDocOnce()
+// ResolveCollectionItemPath finds the single-resource path for a collection
+// (e.g. /functions/{guid} or /users/{id}/). VMS uses {id}; DataEngine uses {guid}.
+func ResolveCollectionItemPath(pack Pack, collectionPath string) (string, error) {
+	base := "/" + strings.Trim(collectionPath, "/")
+	candidates := []string{
+		base + "/{id}",
+		base + "/{id}/",
+		base + "/{guid}",
+		base + "/{guid}/",
+	}
+	for _, c := range candidates {
+		if _, err := GetOpenApiResource(pack, c); err == nil {
+			return strings.TrimSuffix(c, "/"), nil
+		}
+	}
+	return "", fmt.Errorf("no item path ({id}|{guid}) for collection %q in pack %s", collectionPath, pack)
+}
+
+func GetOpenApiComponents(pack Pack) (*openapi3.Components, error) {
+	doc, err := loadOpenAPIDoc(pack)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI document: %w", err)
@@ -131,14 +78,14 @@ func GetOpenApiComponents() (*openapi3.Components, error) {
 	return doc.Components, nil
 }
 
-func GetOpenApiComponentSchema(ref string) (*openapi3.SchemaRef, error) {
+func GetOpenApiComponentSchema(pack Pack, ref string) (*openapi3.SchemaRef, error) {
 	parts := strings.Split(ref, "/")
 	if len(parts) > 0 {
 		ref = parts[len(parts)-1]
 	} else {
 		panic("invalid schema reference: " + ref)
 	}
-	components, err := GetOpenApiComponents()
+	components, err := GetOpenApiComponents(pack)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OpenAPI components: %w", err)
 	}
@@ -148,11 +95,11 @@ func GetOpenApiComponentSchema(ref string) (*openapi3.SchemaRef, error) {
 
 // GetSchema_FromComponents retrieves a schema from the OpenAPI components section
 // based on the provided resource path. It extracts the last part of the path as the component
-func GetSchema_FromComponents(resourcePath string) (*openapi3.SchemaRef, error) {
+func GetSchema_FromComponents(pack Pack, resourcePath string) (*openapi3.SchemaRef, error) {
 	parts := strings.Split(resourcePath, "/")
 	component := parts[len(parts)-1]
 
-	doc, err := loadOpenAPIDocOnce()
+	doc, err := loadOpenAPIDoc(pack)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI document: %w", err)
@@ -163,14 +110,14 @@ func GetSchema_FromComponents(resourcePath string) (*openapi3.SchemaRef, error) 
 		return nil, fmt.Errorf("component schema %q not found in OpenAPI document", component)
 	}
 
-	final := ResolveComposedSchema(ResolveAllRefs(content))
+	final := ResolveComposedSchema(pack, ResolveAllRefs(pack, content))
 	return &openapi3.SchemaRef{Value: final}, nil
 }
 
 // GetSchemaFromComponent retrieves a schema by component name (e.g., "ActiveDirectory")
 // Returns the RESOLVED schema (after resolving refs and compositions)
-func GetSchemaFromComponent(componentName string) (*openapi3.SchemaRef, error) {
-	doc, err := loadOpenAPIDocOnce()
+func GetSchemaFromComponent(pack Pack, componentName string) (*openapi3.SchemaRef, error) {
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}
@@ -180,7 +127,7 @@ func GetSchemaFromComponent(componentName string) (*openapi3.SchemaRef, error) {
 		return nil, fmt.Errorf("component schema %q not found in OpenAPI document", componentName)
 	}
 
-	final := ResolveComposedSchema(ResolveAllRefs(content))
+	final := ResolveComposedSchema(pack, ResolveAllRefs(pack, content))
 	return &openapi3.SchemaRef{Value: final}, nil
 }
 
@@ -192,8 +139,8 @@ type ComponentSchema struct {
 }
 
 // GetAllComponentSchemas retrieves all schemas from the OpenAPI components section
-func GetAllComponentSchemas() ([]ComponentSchema, error) {
-	doc, err := loadOpenAPIDocOnce()
+func GetAllComponentSchemas(pack Pack) ([]ComponentSchema, error) {
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}
@@ -205,7 +152,7 @@ func GetAllComponentSchemas() ([]ComponentSchema, error) {
 		}
 
 		// Resolve all refs and compositions
-		resolved := ResolveComposedSchema(ResolveAllRefs(schemaRef))
+		resolved := ResolveComposedSchema(pack, ResolveAllRefs(pack, schemaRef))
 
 		components = append(components, ComponentSchema{
 			Name:      name,
@@ -260,8 +207,8 @@ func IsDirectComponentReference(schemaRef *openapi3.SchemaRef) string {
 // Returns:
 //   - []*openapi3.Parameter: a slice of query parameter definitions.
 //   - error: if the resource cannot be retrieved.
-func GetQueryParameters(httpMethod, resourcePath string) ([]*openapi3.Parameter, error) {
-	resource, err := GetOpenApiResource(resourcePath)
+func GetQueryParameters(pack Pack, httpMethod, resourcePath string) ([]*openapi3.Parameter, error) {
+	resource, err := GetOpenApiResource(pack, resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OpenAPI resource %q: %w", resourcePath, err)
 	}
@@ -318,8 +265,8 @@ func GetQueryParameters(httpMethod, resourcePath string) ([]*openapi3.Parameter,
 // Returns:
 //   - *openapi3.SchemaRef: a schema representing all query parameters as an object.
 //   - error: if the resource cannot be found or parameters cannot be processed.
-func GetSchema_GET_QueryParams(resourcePath string) (*openapi3.SchemaRef, error) {
-	queryParams, err := GetQueryParameters("GET", resourcePath)
+func GetSchema_GET_QueryParams(pack Pack, resourcePath string) (*openapi3.SchemaRef, error) {
+	queryParams, err := GetQueryParameters(pack, "GET", resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get query parameters for %q: %w", resourcePath, err)
 	}
@@ -374,8 +321,8 @@ func extractSchemaFromResponse(resp *openapi3.ResponseRef) *openapi3.SchemaRef {
 
 // SearchableQueryParams returns only query parameters that are primitive types
 // (string, integer) from the GET operation of the given resource path.
-func SearchableQueryParams(resourcePath string) ([]string, error) {
-	params, err := GetQueryParameters("GET", resourcePath)
+func SearchableQueryParams(pack Pack, resourcePath string) ([]string, error) {
+	params, err := GetQueryParameters(pack, "GET", resourcePath)
 	if err != nil {
 		return nil, err
 	}
@@ -412,7 +359,7 @@ func isStringOrInteger(prop *openapi3.Schema) bool {
 }
 
 // ResolveComposedSchema resolves allOf/oneOf/anyOf compositions in an OpenAPI schema
-func ResolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
+func ResolveComposedSchema(pack Pack, schema *openapi3.Schema) *openapi3.Schema {
 	if schema == nil {
 		return nil
 	}
@@ -438,7 +385,7 @@ func ResolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
 		// Then, merge properties from allOf sub-schemas
 		for _, subRef := range schema.AllOf {
 			// Resolve refs and also compose nested allOf/anyOf/oneOf
-			sub := ResolveComposedSchema(ResolveAllRefs(subRef))
+			sub := ResolveComposedSchema(pack, ResolveAllRefs(pack, subRef))
 			if sub == nil {
 				continue
 			}
@@ -461,7 +408,7 @@ func ResolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
 	// Resolve oneOf or anyOf by picking the first resolvable schema with a type
 	for _, refList := range [][]*openapi3.SchemaRef{schema.OneOf, schema.AnyOf} {
 		for _, subRef := range refList {
-			sub := ResolveAllRefs(subRef)
+			sub := ResolveAllRefs(pack, subRef)
 			if sub != nil && sub.Type != nil && len(*sub.Type) > 0 {
 				return sub
 			}
@@ -470,15 +417,20 @@ func ResolveComposedSchema(schema *openapi3.Schema) *openapi3.Schema {
 	return schema
 }
 
-// ResolveAllRefs resolves all $ref references in an OpenAPI schema
-func ResolveAllRefs(ref *openapi3.SchemaRef) *openapi3.Schema {
+// ResolveAllRefs resolves all $ref references in an OpenAPI schema.
+// Returns nil if the reference chain cannot be resolved.
+func ResolveAllRefs(pack Pack, ref *openapi3.SchemaRef) *openapi3.Schema {
 	seen := map[string]bool{}
 	for ref != nil && ref.Ref != "" && !seen[ref.Ref] {
 		seen[ref.Ref] = true
-		ref, _ = GetOpenApiComponentSchema(ref.Ref)
+		next, err := GetOpenApiComponentSchema(pack, ref.Ref)
+		if err != nil || next == nil {
+			return nil
+		}
+		ref = next
 	}
 	if ref == nil || ref.Value == nil {
-		panic(fmt.Sprintf("cannot resolve final schema from ref: %+v", ref))
+		return nil
 	}
 	return ref.Value
 }
@@ -500,9 +452,9 @@ func ResolveAllRefs(ref *openapi3.SchemaRef) *openapi3.Schema {
 //
 // Example:
 //
-//	schema, err := GetRequestBodySchema("POST", "apitokens")
-func GetRequestBodySchema(httpMethod, resourcePath string) (*openapi3.SchemaRef, error) {
-	resource, err := GetOpenApiResource(resourcePath)
+//	schema, err := GetRequestBodySchema(PackVMS, "POST", "apitokens")
+func GetRequestBodySchema(pack Pack, httpMethod, resourcePath string) (*openapi3.SchemaRef, error) {
+	resource, err := GetOpenApiResource(pack, resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OpenAPI resource %q: %w", resourcePath, err)
 	}
@@ -540,14 +492,14 @@ func GetRequestBodySchema(httpMethod, resourcePath string) (*openapi3.SchemaRef,
 	}
 
 	// Resolve and compose if necessary
-	final := ResolveComposedSchema(ResolveAllRefs(content.Schema))
+	final := ResolveComposedSchema(pack, ResolveAllRefs(pack, content.Schema))
 	return &openapi3.SchemaRef{Value: final}, nil
 }
 
 // GetResponseModelSchemaUnresolved extracts the RAW response model schema (BEFORE resolving $refs)
 // This is useful for detecting if the schema is a direct component reference
-func GetResponseModelSchemaUnresolved(httpMethod, resourcePath string) (*openapi3.SchemaRef, error) {
-	resource, err := GetOpenApiResource(resourcePath)
+func GetResponseModelSchemaUnresolved(pack Pack, httpMethod, resourcePath string) (*openapi3.SchemaRef, error) {
+	resource, err := GetOpenApiResource(pack, resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OpenAPI resource %q: %w", resourcePath, err)
 	}
@@ -591,9 +543,15 @@ func GetResponseModelSchemaUnresolved(httpMethod, resourcePath string) (*openapi
 		rootSchema := content.Schema
 		if rootSchema.Value != nil && rootSchema.Value.Properties != nil {
 			if resultsRef, ok := rootSchema.Value.Properties["results"]; ok {
-				// Paginated response - return the items schema
+				// VMS DRF paginated response - return the items schema
 				if resultsRef.Value != nil && resultsRef.Value.Items != nil {
 					return resultsRef.Value.Items, nil
+				}
+			}
+			if dataRef, ok := rootSchema.Value.Properties["data"]; ok {
+				// DataEngine cursor-paginated response - return the items schema
+				if dataRef.Value != nil && dataRef.Value.Items != nil {
+					return dataRef.Value.Items, nil
 				}
 			}
 		}
@@ -630,14 +588,14 @@ func GetResponseModelSchemaUnresolved(httpMethod, resourcePath string) (*openapi
 //
 // Example:
 //
-//	schema, err := GetResponseModelSchema("GET", "apitokens")
+//	schema, err := GetResponseModelSchema(PackVMS, "GET", "apitokens")
 //
 // Notes:
 //   - For GET requests, it automatically handles paginated responses, arrays, and single objects
 //   - For other methods, it checks status codes 200, 201, 202 for content, and 204 for No Content
 //   - 204 No Content responses return an empty schema since there's no response body
-func GetResponseModelSchema(httpMethod, resourcePath string) (*openapi3.SchemaRef, error) {
-	resource, err := GetOpenApiResource(resourcePath)
+func GetResponseModelSchema(pack Pack, httpMethod, resourcePath string) (*openapi3.SchemaRef, error) {
+	resource, err := GetOpenApiResource(pack, resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OpenAPI resource %q: %w", resourcePath, err)
 	}
@@ -669,7 +627,7 @@ func GetResponseModelSchema(httpMethod, resourcePath string) (*openapi3.SchemaRe
 
 	// Special handling for GET to support paginated/array responses
 	if httpMethod == "GET" {
-		return getResponseModelSchemaForGET(resource, resourcePath)
+		return getResponseModelSchemaForGET(pack, resource, resourcePath)
 	}
 
 	// For non-GET methods, check status codes 200, 201, 202
@@ -677,7 +635,7 @@ func GetResponseModelSchema(httpMethod, resourcePath string) (*openapi3.SchemaRe
 		resp := operation.Responses.Status(code)
 		schemaRef := extractSchemaFromResponse(resp)
 		if schemaRef != nil {
-			final := ResolveComposedSchema(ResolveAllRefs(schemaRef))
+			final := ResolveComposedSchema(pack, ResolveAllRefs(pack, schemaRef))
 			return &openapi3.SchemaRef{Value: final}, nil
 		}
 	}
@@ -697,7 +655,7 @@ func GetResponseModelSchema(httpMethod, resourcePath string) (*openapi3.SchemaRe
 
 // getResponseModelSchemaForGET handles GET-specific logic for extracting response schemas.
 // It supports paginated (results[]), flat list ([]), and single-object responses.
-func getResponseModelSchemaForGET(resource *openapi3.PathItem, resourcePath string) (*openapi3.SchemaRef, error) {
+func getResponseModelSchemaForGET(pack Pack, resource *openapi3.PathItem, resourcePath string) (*openapi3.SchemaRef, error) {
 	if resource.Get == nil {
 		return &openapi3.SchemaRef{Value: &openapi3.Schema{}}, nil
 	}
@@ -712,14 +670,22 @@ func getResponseModelSchemaForGET(resource *openapi3.PathItem, resourcePath stri
 		return nil, fmt.Errorf("GET response missing or malformed schema")
 	}
 
-	rootSchema := ResolveComposedSchema(ResolveAllRefs(content.Schema))
+	rootSchema := ResolveComposedSchema(pack, ResolveAllRefs(pack, content.Schema))
 
-	// 1. Check if response is paginated with "results" field
+	// 1. Check if response is paginated with "results" field (VMS DRF)
 	if rootSchema.Type != nil && (*rootSchema.Type).Is("object") && rootSchema.Properties != nil {
 		if resultsRef, ok := rootSchema.Properties["results"]; ok {
-			resultsSchema := ResolveComposedSchema(ResolveAllRefs(resultsRef))
+			resultsSchema := ResolveComposedSchema(pack, ResolveAllRefs(pack, resultsRef))
 			if resultsSchema.Type != nil && (*resultsSchema.Type).Is("array") && resultsSchema.Items != nil {
-				itemSchema := ResolveComposedSchema(ResolveAllRefs(resultsSchema.Items))
+				itemSchema := ResolveComposedSchema(pack, ResolveAllRefs(pack, resultsSchema.Items))
+				return &openapi3.SchemaRef{Value: itemSchema}, nil
+			}
+		}
+		// 1b. DataEngine cursor-paginated response with "data" field
+		if dataRef, ok := rootSchema.Properties["data"]; ok {
+			dataSchema := ResolveComposedSchema(pack, ResolveAllRefs(pack, dataRef))
+			if dataSchema.Type != nil && (*dataSchema.Type).Is("array") && dataSchema.Items != nil {
+				itemSchema := ResolveComposedSchema(pack, ResolveAllRefs(pack, dataSchema.Items))
 				return &openapi3.SchemaRef{Value: itemSchema}, nil
 			}
 		}
@@ -727,7 +693,7 @@ func getResponseModelSchemaForGET(resource *openapi3.PathItem, resourcePath stri
 
 	// 2. Check if response is a flat array
 	if rootSchema.Type != nil && (*rootSchema.Type).Is("array") && rootSchema.Items != nil {
-		itemSchema := ResolveComposedSchema(ResolveAllRefs(rootSchema.Items))
+		itemSchema := ResolveComposedSchema(pack, ResolveAllRefs(pack, rootSchema.Items))
 		return &openapi3.SchemaRef{Value: itemSchema}, nil
 	}
 
@@ -757,8 +723,8 @@ type DeleteParams struct {
 	IdDescription string                   // Description of the id path parameter
 }
 
-func GetOperationSummary(httpMethod, resourcePath string) (string, error) {
-	doc, err := loadOpenAPIDocOnce()
+func GetOperationSummary(pack Pack, httpMethod, resourcePath string) (string, error) {
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return "", fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}
@@ -814,8 +780,8 @@ func GetOperationSummary(httpMethod, resourcePath string) (string, error) {
 // The returned map key is the raw path string from the spec (e.g. "/activedirectory/{id}/refresh/").
 // The value is a sorted slice of uppercase HTTP method strings (e.g. ["GET", "PATCH"]).
 // This is used by the code generator to auto-discover extra (non-CRUD) methods.
-func GetAllPaths() (map[string][]string, error) {
-	doc, err := loadOpenAPIDocOnce()
+func GetAllPaths(pack Pack) (map[string][]string, error) {
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}
@@ -852,8 +818,8 @@ func GetAllPaths() (map[string][]string, error) {
 
 // ValidateOperationExists checks if a specific HTTP method exists for a given path in the OpenAPI spec
 // Returns an error if the path or method doesn't exist
-func ValidateOperationExists(httpMethod, resourcePath string) error {
-	doc, err := loadOpenAPIDocOnce()
+func ValidateOperationExists(pack Pack, httpMethod, resourcePath string) error {
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}
@@ -1008,8 +974,8 @@ func filterPathsCaseInsensitive(paths []string, substring string) []string {
 }
 
 // GetDeleteParams extracts DELETE operation parameters (query params and body schema)
-func GetDeleteParams(resourcePath string) (*DeleteParams, error) {
-	doc, err := loadOpenAPIDocOnce()
+func GetDeleteParams(pack Pack, resourcePath string) (*DeleteParams, error) {
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}
@@ -1023,9 +989,18 @@ func GetDeleteParams(resourcePath string) (*DeleteParams, error) {
 		// Try without trailing slash
 		normalizedPath = strings.TrimSuffix(normalizedPath, "/")
 		pathItem = doc.Paths.Find(normalizedPath)
-		if pathItem == nil {
-			return nil, fmt.Errorf("path not found: %s", normalizedPath)
+	}
+	// DataEngine and other packs may use {guid} (or only the unsuffixed form).
+	if pathItem == nil {
+		if itemPath, rerr := ResolveCollectionItemPath(pack, resourcePath); rerr == nil {
+			if got, gerr := GetOpenApiResource(pack, itemPath); gerr == nil {
+				pathItem = got
+				normalizedPath = itemPath
+			}
 		}
+	}
+	if pathItem == nil {
+		return nil, fmt.Errorf("path not found: %s", normalizedPath)
 	}
 
 	if pathItem.Delete == nil {
@@ -1042,8 +1017,7 @@ func GetDeleteParams(resourcePath string) (*DeleteParams, error) {
 			if paramRef.Value.In == "query" {
 				// Query parameters
 				params.QueryParams = append(params.QueryParams, paramRef)
-			} else if paramRef.Value.In == "path" && paramRef.Value.Name == "id" {
-				// Path parameter 'id' - extract description
+			} else if paramRef.Value.In == "path" && (paramRef.Value.Name == "id" || paramRef.Value.Name == "guid") {
 				params.IdDescription = paramRef.Value.Description
 			}
 		}
@@ -1071,8 +1045,8 @@ func GetDeleteParams(resourcePath string) (*DeleteParams, error) {
 // Returns:
 //   - bool: true if the operation returns text/plain, false otherwise
 //   - error: if the OpenAPI document cannot be loaded or path/operation is not found
-func ReturnsTextPlain(httpMethod, resourcePath string) (bool, error) {
-	doc, err := loadOpenAPIDocOnce()
+func ReturnsTextPlain(pack Pack, httpMethod, resourcePath string) (bool, error) {
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return false, fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}
@@ -1180,8 +1154,8 @@ func ReturnsTextPlain(httpMethod, resourcePath string) (bool, error) {
 // Returns:
 //   - bool: true if the operation returns 204 No Content, false otherwise
 //   - error: if the OpenAPI document cannot be loaded or path/operation is not found
-func Returns204NoContent(httpMethod, resourcePath string) (bool, error) {
-	doc, err := loadOpenAPIDocOnce()
+func Returns204NoContent(pack Pack, httpMethod, resourcePath string) (bool, error) {
+	doc, err := loadOpenAPIDoc(pack)
 	if err != nil {
 		return false, fmt.Errorf("failed to load OpenAPI document: %w", err)
 	}

@@ -11,7 +11,7 @@ import (
 // helper: load doc and return it (uses package-private function)
 func mustLoadDoc(t *testing.T) *openapi3.T {
 	t.Helper()
-	doc, err := loadOpenAPIDocOnce()
+	doc, err := loadOpenAPIDoc(PackVMS)
 	if err != nil {
 		t.Fatalf("failed to load OpenAPI doc: %v", err)
 	}
@@ -22,7 +22,7 @@ func mustLoadDoc(t *testing.T) *openapi3.T {
 }
 
 func TestGetOpenApiComponents(t *testing.T) {
-	comps, err := GetOpenApiComponents()
+	comps, err := GetOpenApiComponents(PackVMS)
 	if err != nil {
 		t.Fatalf("GetOpenApiComponents error: %v", err)
 	}
@@ -43,11 +43,11 @@ func TestGetOpenApiResource_ValidAndInvalid(t *testing.T) {
 	}
 
 	// valid
-	if _, err := GetOpenApiResource(anyPath); err != nil {
+	if _, err := GetOpenApiResource(PackVMS, anyPath); err != nil {
 		t.Fatalf("GetOpenApiResource valid path %q: %v", anyPath, err)
 	}
 	// invalid
-	if _, err := GetOpenApiResource("/this/path/does/not/exist/"); err == nil {
+	if _, err := GetOpenApiResource(PackVMS, "/this/path/does/not/exist/"); err == nil {
 		t.Fatalf("expected error for invalid path, got nil")
 	}
 }
@@ -63,7 +63,7 @@ func TestGetOpenApiComponentSchema(t *testing.T) {
 		t.Skip("no components found in OpenAPI doc")
 	}
 	ref := "#/components/schemas/" + name
-	got, err := GetOpenApiComponentSchema(ref)
+	got, err := GetOpenApiComponentSchema(PackVMS, ref)
 	if err != nil {
 		t.Fatalf("GetOpenApiComponentSchema error: %v", err)
 	}
@@ -98,14 +98,14 @@ func TestGetRequestBodySchema_POST(t *testing.T) {
 	path := findPathWithOperation(t, "POST")
 	if path == "" {
 		// No POSTs in schema; ensure function returns empty schema without error
-		got, err := GetRequestBodySchema("POST", "/no/such/path/")
+		got, err := GetRequestBodySchema(PackVMS, "POST", "/no/such/path/")
 		if err == nil && got != nil {
 			// expected empty schema, Value not nil
 			return
 		}
 		t.Skip("no POST operation available; skipped")
 	}
-	if _, err := GetRequestBodySchema("POST", path); err != nil {
+	if _, err := GetRequestBodySchema(PackVMS, "POST", path); err != nil {
 		t.Fatalf("GetRequestBodySchema(POST, %s) error: %v", path, err)
 	}
 }
@@ -113,13 +113,13 @@ func TestGetRequestBodySchema_POST(t *testing.T) {
 func TestGetRequestBodySchema_PATCH(t *testing.T) {
 	path := findPathWithOperation(t, "PATCH")
 	if path == "" {
-		got, err := GetRequestBodySchema("PATCH", "/no/such/path/")
+		got, err := GetRequestBodySchema(PackVMS, "PATCH", "/no/such/path/")
 		if err == nil && got != nil {
 			return
 		}
 		t.Skip("no PATCH operation available; skipped")
 	}
-	if _, err := GetRequestBodySchema("PATCH", path); err != nil {
+	if _, err := GetRequestBodySchema(PackVMS, "PATCH", path); err != nil {
 		t.Fatalf("GetRequestBodySchema(PATCH, %s) error: %v", path, err)
 	}
 }
@@ -128,12 +128,12 @@ func TestGetResponseModelSchema_POST(t *testing.T) {
 	path := findPathWithOperation(t, "POST")
 	if path == "" {
 		// If absent, ensure graceful error
-		if _, err := GetResponseModelSchema("POST", "/no/such/path/"); err == nil {
+		if _, err := GetResponseModelSchema(PackVMS, "POST", "/no/such/path/"); err == nil {
 			t.Fatalf("expected error for missing POST schema")
 		}
 		t.Skip("no POST operation available; skipped")
 	}
-	if _, err := GetResponseModelSchema("POST", path); err != nil {
+	if _, err := GetResponseModelSchema(PackVMS, "POST", path); err != nil {
 		// Some POSTs may not have 200/201/202; accept error but still exercised
 		t.Logf("GetResponseModelSchema(POST, %s) returned: %v", path, err)
 	}
@@ -144,7 +144,7 @@ func TestGetResponseModelSchema_GET(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET operation available; skipped")
 	}
-	if _, err := GetResponseModelSchema("GET", path); err != nil {
+	if _, err := GetResponseModelSchema(PackVMS, "GET", path); err != nil {
 		t.Logf("GetResponseModelSchema(GET, %s) returned: %v", path, err)
 	}
 }
@@ -160,7 +160,7 @@ func TestGetSchema_FromComponents(t *testing.T) {
 		t.Skip("no components found in OpenAPI doc")
 	}
 	path := "/components/" + name
-	got, err := GetSchema_FromComponents(path)
+	got, err := GetSchema_FromComponents(PackVMS, path)
 	if err != nil {
 		t.Fatalf("GetSchema_FromComponents error: %v", err)
 	}
@@ -174,7 +174,7 @@ func TestQueryParametersGET_And_GetSchema_GET_QueryParams(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET operation available; skipped")
 	}
-	params, err := GetQueryParameters("GET", path)
+	params, err := GetQueryParameters(PackVMS, "GET", path)
 	if err != nil {
 		t.Fatalf("GetQueryParameters error: %v", err)
 	}
@@ -182,7 +182,7 @@ func TestQueryParametersGET_And_GetSchema_GET_QueryParams(t *testing.T) {
 	if params == nil {
 		t.Fatalf("params is nil")
 	}
-	schemaRef, err := GetSchema_GET_QueryParams(path)
+	schemaRef, err := GetSchema_GET_QueryParams(PackVMS, path)
 	if err != nil {
 		t.Fatalf("GetSchema_GET_QueryParams error: %v", err)
 	}
@@ -199,7 +199,7 @@ func TestSearchableQueryParams(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET operation available; skipped")
 	}
-	names, err := SearchableQueryParams(path)
+	names, err := SearchableQueryParams(PackVMS, path)
 	if err != nil {
 		t.Fatalf("SearchableQueryParams error: %v", err)
 	}
@@ -219,7 +219,7 @@ func TestGetSchemaFromComponent(t *testing.T) {
 		t.Skip("no components found in OpenAPI doc")
 	}
 
-	schema, err := GetSchemaFromComponent(name)
+	schema, err := GetSchemaFromComponent(PackVMS, name)
 	if err != nil {
 		t.Fatalf("GetSchemaFromComponent error: %v", err)
 	}
@@ -229,7 +229,7 @@ func TestGetSchemaFromComponent(t *testing.T) {
 }
 
 func TestGetAllComponentSchemas(t *testing.T) {
-	components, err := GetAllComponentSchemas()
+	components, err := GetAllComponentSchemas(PackVMS)
 	if err != nil {
 		t.Fatalf("GetAllComponentSchemas error: %v", err)
 	}
@@ -267,14 +267,14 @@ func TestResolveComposedSchema(t *testing.T) {
 			}},
 		},
 	}
-	resolved := ResolveComposedSchema(schema)
+	resolved := ResolveComposedSchema(PackVMS, schema)
 	if resolved == nil || len(resolved.Properties) < 2 {
 		t.Fatalf("expected merged properties, got %+v", resolved)
 	}
 }
 
 func TestGetAllPaths(t *testing.T) {
-	paths, err := GetAllPaths()
+	paths, err := GetAllPaths(PackVMS)
 	if err != nil {
 		t.Fatalf("GetAllPaths: %v", err)
 	}
@@ -288,10 +288,10 @@ func TestValidateOperationExists(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET operation available")
 	}
-	if err := ValidateOperationExists("GET", path); err != nil {
+	if err := ValidateOperationExists(PackVMS, "GET", path); err != nil {
 		t.Fatalf("ValidateOperationExists: %v", err)
 	}
-	if err := ValidateOperationExists("GET", "/definitely/missing/"); err == nil {
+	if err := ValidateOperationExists(PackVMS, "GET", "/definitely/missing/"); err == nil {
 		t.Fatal("expected error for missing path")
 	}
 }
@@ -301,7 +301,7 @@ func TestGetOperationSummary(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET operation available")
 	}
-	summary, err := GetOperationSummary("GET", path)
+	summary, err := GetOperationSummary(PackVMS, "GET", path)
 	if err != nil {
 		t.Fatalf("GetOperationSummary: %v", err)
 	}
@@ -325,7 +325,7 @@ func TestGetDeleteParams(t *testing.T) {
 		if base == "" {
 			continue
 		}
-		if _, err := GetDeleteParams(base); err != nil {
+		if _, err := GetDeleteParams(PackVMS, base); err != nil {
 			continue
 		}
 		deletePath = base
@@ -334,7 +334,7 @@ func TestGetDeleteParams(t *testing.T) {
 	if deletePath == "" {
 		t.Skip("no DELETE operation matching /{resource}/{id}/ pattern")
 	}
-	params, err := GetDeleteParams(deletePath)
+	params, err := GetDeleteParams(PackVMS, deletePath)
 	if err != nil {
 		t.Fatalf("GetDeleteParams(%q): %v", deletePath, err)
 	}
@@ -348,10 +348,10 @@ func TestReturnsFlags(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET operation available")
 	}
-	if _, err := ReturnsTextPlain("GET", path); err != nil {
+	if _, err := ReturnsTextPlain(PackVMS, "GET", path); err != nil {
 		t.Fatalf("ReturnsTextPlain: %v", err)
 	}
-	if _, err := Returns204NoContent("GET", path); err != nil {
+	if _, err := Returns204NoContent(PackVMS, "GET", path); err != nil {
 		t.Fatalf("Returns204NoContent: %v", err)
 	}
 }
@@ -359,7 +359,7 @@ func TestReturnsFlags(t *testing.T) {
 func TestResolveAllRefs(t *testing.T) {
 	doc := mustLoadDoc(t)
 	for _, schemaRef := range doc.Components.Schemas {
-		if resolved := ResolveAllRefs(schemaRef); resolved != nil {
+		if resolved := ResolveAllRefs(PackVMS, schemaRef); resolved != nil {
 			return
 		}
 	}
@@ -371,7 +371,7 @@ func TestGetResponseModelSchemaUnresolved(t *testing.T) {
 	if path == "" {
 		t.Skip("no POST operation available")
 	}
-	if _, err := GetResponseModelSchemaUnresolved("POST", path); err != nil {
+	if _, err := GetResponseModelSchemaUnresolved(PackVMS, "POST", path); err != nil {
 		t.Logf("GetResponseModelSchemaUnresolved returned: %v", err)
 	}
 }

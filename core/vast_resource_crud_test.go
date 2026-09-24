@@ -129,6 +129,38 @@ func TestVastResource_CreateUpdateDelete(t *testing.T) {
 	}
 }
 
+func TestVastResource_CreateWithQuery(t *testing.T) {
+	var gotQuery string
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotQuery = r.URL.RawQuery
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"id": 1, "name": "de"})
+	}))
+	defer server.Close()
+
+	resource := newCRUDTestResource(t, server, NewResourceOps(C))
+	_, err := resource.Create(
+		Params{"tenant_name": "de-lab"},
+		Params{"default_topic_name": "main"},
+	)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if gotQuery != "tenant_name=de-lab" {
+		t.Fatalf("query = %q, want tenant_name=de-lab", gotQuery)
+	}
+}
+
+func TestVastResource_CreateTooManyParams(t *testing.T) {
+	resource := newCRUDTestResource(t, httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not call server")
+	})), NewResourceOps(C))
+	_, err := resource.Create(Params{"a": 1}, Params{"b": 2}, Params{"c": 3})
+	if err == nil {
+		t.Fatal("expected error for >2 Params")
+	}
+}
+
 func TestVastResource_GetById(t *testing.T) {
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

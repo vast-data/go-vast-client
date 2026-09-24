@@ -73,6 +73,41 @@ make generate-typed    # Generate typed resources only
 make generate-untyped  # Generate untyped resources only
 ```
 
+## OpenAPI packs (VMS + DataEngine)
+
+The client embeds **two** OpenAPI archives under `openapi_schema/`:
+
+| Pack | Archive | Source | Make target |
+|------|---------|--------|-------------|
+| VMS | `api.tar.gz` | Swagger 2.0 → convert to OAS3 | `make gen-openapi-tar <swagger.yaml>` |
+| DataEngine | `dataengine.tar.gz` | OpenAPI 3.x as-is (skip conversion) | `make gen-openapi-tar-dataengine <openapi3.yaml>` |
+
+```bash
+# VMS (unchanged) — path is required
+make gen-openapi-tar /path/to/vms_swagger.yaml
+
+# DataEngine / serverless — path is required (no default location)
+make gen-openapi-tar-dataengine /path/to/provisioning.yaml
+make gen-openapi-tar-dataengine /path/to/provisioning.yaml --debug
+```
+
+Obtain the YAML from a DataEngine-enabled export or from an `orion/serverless` checkout
+(`api/spec/provisioning.yaml`). There is **no** hardcoded path inside this repo.
+
+OpenAPI 3.x inputs are detected automatically (`openapi: 3.x`); swagger2→v3 conversion is skipped.
+External `$ref`s (e.g. `common.yaml`) are internalized into the pack so the embed is self-contained.
+
+Runtime:
+
+- `openapi_schema.PackVMS` / `PackDataEngine`
+- `GetAllPaths(Pack…)`, `GetOpenApiResource(Pack…)`, …
+- Facades: nested rest `rest/dataengine` → `vms.DataEngine.*`
+- URL shape: `/api/{version}/serverless/{resource}/` (`apiRoot = "serverless"`; VMS rest uses empty `apiRoot`)
+- Untyped resources: `resources/untyped/dataengine`
+- Typed resources: `resources/typed/dataengine` (`make generate-typed PACK=dataengine`)
+- Pack for codegen is inferred from the rest file path (`rest/dataengine/` → DataEngine)
+- Use `PACK=vms|dataengine|all` with `make generate-typed` so VMS outputs are not rewritten when only DataEngine changed
+
 ## SearchParams and RawData
 
 All generated `SearchParams` structs include a special `RawData` field:

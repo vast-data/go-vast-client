@@ -13,20 +13,36 @@ import (
 type mockResourceForIterator struct {
 	*VastResource
 	mockSession *mockSessionForIterator
+	apiRoot     string
 }
 
 func (m *mockResourceForIterator) Session() RESTSession {
 	return m.mockSession
 }
 
+func (m *mockResourceForIterator) GetApiRoot() string {
+	if m.apiRoot != "" {
+		return m.apiRoot
+	}
+	return m.VastResource.GetApiRoot()
+}
+
 // mockSessionForIterator is a mock RESTSession for testing
 type mockSessionForIterator struct {
 	responses map[string]Renderable
 	getCount  int
+	getURLs   []string
+	// handler, if set, takes precedence over responses map (useful when query order varies).
+	handler func(url string) (Renderable, error)
 }
 
 func (m *mockSessionForIterator) Get(ctx context.Context, url string, params Params, headers []http.Header) (Renderable, error) {
 	m.getCount++
+	m.getURLs = append(m.getURLs, url)
+
+	if m.handler != nil {
+		return m.handler(url)
+	}
 
 	if response, ok := m.responses[url]; ok {
 		return response, nil
@@ -108,7 +124,7 @@ func TestIterator_PaginatedResponse(t *testing.T) {
 	}
 
 	// Create iterator
-	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 2)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{}, 2)
 
 	// First page
 	records, err := iter.Next()
@@ -188,7 +204,7 @@ func TestIterator_NonPaginatedResponse(t *testing.T) {
 	}
 
 	// Create iterator
-	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 10)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{}, 10)
 
 	// First (and only) page
 	records, err := iter.Next()
@@ -243,7 +259,7 @@ func TestIterator_CountAndResultsOnly(t *testing.T) {
 	}
 
 	// Create iterator with query params
-	iter := NewResourceIterator(context.Background(), mockResource, Params{"name": "vastdb-volume"}, 10)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{"name": "vastdb-volume"}, 10)
 
 	// Should return empty RecordSet, not error
 	records, err := iter.Next()
@@ -289,7 +305,7 @@ func TestIterator_CountAndResultsOnly(t *testing.T) {
 		mockSession: mockSession2,
 	}
 
-	iter2 := NewResourceIterator(context.Background(), mockResource2, Params{}, 10)
+	iter2 := NewVmsIterator(context.Background(), mockResource2, Params{}, 10)
 
 	records, err = iter2.Next()
 	if err != nil {
@@ -365,7 +381,7 @@ func TestIterator_All(t *testing.T) {
 	}
 
 	// Create iterator
-	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 2)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{}, 2)
 
 	// Fetch all pages
 	allRecords, err := iter.All()
@@ -430,7 +446,7 @@ func TestIterator_Reset(t *testing.T) {
 	}
 
 	// Create iterator
-	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 2)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{}, 2)
 
 	// Iterate through all pages
 	pageCount := 0
@@ -491,19 +507,19 @@ func TestIterator_PageSize(t *testing.T) {
 	}
 
 	// Test with explicit page size
-	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 50)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{}, 50)
 	if iter.PageSize() != 50 {
 		t.Errorf("Expected page size 50, got %d", iter.PageSize())
 	}
 
 	// Test with default page size (0 should remain 0 - no page_size param)
-	iter = NewResourceIterator(context.Background(), mockResource, Params{}, 0)
+	iter = NewVmsIterator(context.Background(), mockResource, Params{}, 0)
 	if iter.PageSize() != 0 {
 		t.Errorf("Expected default page size 0, got %d", iter.PageSize())
 	}
 
 	// Test with negative page size (should default to 0 - no page_size param)
-	iter = NewResourceIterator(context.Background(), mockResource, Params{}, -1)
+	iter = NewVmsIterator(context.Background(), mockResource, Params{}, -1)
 	if iter.PageSize() != 0 {
 		t.Errorf("Expected default page size 0 for negative input, got %d", iter.PageSize())
 	}
@@ -555,7 +571,7 @@ func TestIterator_Previous(t *testing.T) {
 	}
 
 	// Create iterator
-	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 2)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{}, 2)
 
 	// Move to page 1
 	_, err := iter.Next()
@@ -637,7 +653,7 @@ func BenchmarkIterator_Next(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		iter := NewResourceIterator(context.Background(), mockResource, Params{}, 10)
+		iter := NewVmsIterator(context.Background(), mockResource, Params{}, 10)
 		iter.Next()
 	}
 }
@@ -690,15 +706,15 @@ func TestIterator_String(t *testing.T) {
 	prevURL := "https://api.example.com/resources?page=1"
 
 	// Test uninitialized state
-	iter := &ResourceIterator{
+	iter := &VmsIterator{
 		pageSize:    50,
 		totalCount:  -1,
 		initialized: false,
 	}
 
 	str := iter.String()
-	if !strings.Contains(str, "ResourceIterator") {
-		t.Error("Expected String() to contain 'ResourceIterator'")
+	if !strings.Contains(str, "VmsIterator") {
+		t.Error("Expected String() to contain 'VmsIterator'")
 	}
 	if !strings.Contains(str, "Initialized:   false") {
 		t.Error("Expected String() to show uninitialized state")
@@ -762,7 +778,7 @@ func TestIterator_AllWhenAlreadyInitialized(t *testing.T) {
 		mockSession: mockSession,
 	}
 
-	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 10)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{}, 10)
 	if _, err := iter.Next(); err != nil {
 		t.Fatalf("Next: %v", err)
 	}
@@ -775,3 +791,209 @@ func TestIterator_AllWhenAlreadyInitialized(t *testing.T) {
 		t.Fatalf("expected 1 record, got %d", len(all))
 	}
 }
+
+func TestIterator_DataEngineCursorPagination(t *testing.T) {
+	page1 := Record{
+		"data": []any{
+			map[string]any{"guid": "g1", "name": "cred-1"},
+		},
+		"pagination": map[string]any{
+			"next_cursor":     "CURSOR_NEXT",
+			"previous_cursor": "CURSOR_PREV",
+		},
+	}
+	page2Empty := Record{
+		"data": []any{},
+		"pagination": map[string]any{
+			"next_cursor":     "CURSOR_NEXT2",
+			"previous_cursor": "CURSOR_PREV2",
+		},
+	}
+
+	mockSession := &mockSessionForIterator{
+		handler: func(url string) (Renderable, error) {
+			if !strings.Contains(url, "/api/v1/serverless/mtls-authentication-credentials/") {
+				return nil, fmt.Errorf("unexpected path: %s", url)
+			}
+			if strings.Contains(url, "cursor=CURSOR_NEXT") {
+				return page2Empty, nil
+			}
+			if !strings.Contains(url, "limit=1") {
+				return nil, fmt.Errorf("expected limit=1 in %s", url)
+			}
+			if strings.Contains(url, "page_size=") {
+				return nil, fmt.Errorf("serverless must not send page_size: %s", url)
+			}
+			return page1, nil
+		},
+	}
+
+	mockRest := &DummyRest{
+		ctx:     context.Background(),
+		Session: mockSession,
+	}
+	mockResource := &mockResourceForIterator{
+		VastResource: &VastResource{
+			resourcePath: "mtls-authentication-credentials",
+			resourceType: "MtlsAuthenticationCredential",
+			Rest:         mockRest,
+		},
+		mockSession: mockSession,
+		apiRoot:     "serverless",
+	}
+
+	iter := NewDataEngineIterator(context.Background(), mockResource, Params{"tenant_name": "de-lab"}, 1)
+
+	records, err := iter.Next()
+	if err != nil {
+		t.Fatalf("first Next: %v", err)
+	}
+	if len(records) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(records))
+	}
+	if records[0]["name"] != "cred-1" {
+		t.Fatalf("expected unwrapped item, got %#v", records[0])
+	}
+	if _, hasData := records[0]["data"]; hasData {
+		t.Fatal("envelope must not be returned as the record")
+	}
+	if iter.Count() != -1 {
+		t.Fatalf("DE count should be -1, got %d", iter.Count())
+	}
+	if !iter.HasNext() {
+		t.Fatal("expected HasNext after non-empty page with next_cursor")
+	}
+
+	records, err = iter.Next()
+	if err != nil {
+		t.Fatalf("second Next: %v", err)
+	}
+	if len(records) != 0 {
+		t.Fatalf("expected empty last page, got %d", len(records))
+	}
+	if iter.HasNext() {
+		t.Fatal("HasNext must be false after empty DE page")
+	}
+
+	foundCursorURL := false
+	for _, u := range mockSession.getURLs {
+		if strings.Contains(u, "cursor=CURSOR_NEXT") {
+			foundCursorURL = true
+			break
+		}
+	}
+	if !foundCursorURL {
+		t.Fatalf("expected a request with cursor=CURSOR_NEXT, got %v", mockSession.getURLs)
+	}
+}
+
+func TestIterator_DataEngineAllStops(t *testing.T) {
+	pages := 0
+	mockSession := &mockSessionForIterator{
+		handler: func(url string) (Renderable, error) {
+			pages++
+			if pages > 5 {
+				return nil, fmt.Errorf("infinite pagination loop")
+			}
+			if strings.Contains(url, "cursor=") {
+				return Record{
+					"data":       []any{},
+					"pagination": map[string]any{"next_cursor": "X", "previous_cursor": "Y"},
+				}, nil
+			}
+			return Record{
+				"data": []any{
+					map[string]any{"name": "a"},
+					map[string]any{"name": "b"},
+				},
+				"pagination": map[string]any{"next_cursor": "N1", "previous_cursor": "P1"},
+			}, nil
+		},
+	}
+	mockRest := &DummyRest{ctx: context.Background(), Session: mockSession}
+	mockResource := &mockResourceForIterator{
+		VastResource: &VastResource{
+			resourcePath: "topics",
+			resourceType: "Topic",
+			Rest:         mockRest,
+		},
+		mockSession: mockSession,
+		apiRoot:     "serverless",
+	}
+
+	iter := NewDataEngineIterator(context.Background(), mockResource, nil, 10)
+	all, err := iter.All()
+	if err != nil {
+		t.Fatalf("All: %v", err)
+	}
+	if len(all) != 2 {
+		t.Fatalf("expected 2 records, got %d", len(all))
+	}
+	if pages != 2 {
+		t.Fatalf("expected 2 fetches (page + empty), got %d", pages)
+	}
+}
+
+func TestNewDataEngineIterator_UsesLimit(t *testing.T) {
+	var gotURL string
+	mockSession := &mockSessionForIterator{
+		handler: func(url string) (Renderable, error) {
+			gotURL = url
+			return Record{"data": []any{}, "pagination": map[string]any{}}, nil
+		},
+	}
+	mockRest := &DummyRest{ctx: context.Background(), Session: mockSession}
+	mockResource := &mockResourceForIterator{
+		VastResource: &VastResource{
+			resourcePath: "functions",
+			resourceType: "Function",
+			Rest:         mockRest,
+		},
+		mockSession: mockSession,
+		apiRoot:     "serverless",
+	}
+
+	iter := NewDataEngineIterator(context.Background(), mockResource, nil, 25)
+	if _, err := iter.Next(); err != nil {
+		t.Fatalf("Next: %v", err)
+	}
+	if !strings.Contains(gotURL, "limit=25") {
+		t.Fatalf("expected limit=25, got %s", gotURL)
+	}
+	if strings.Contains(gotURL, "page_size=") {
+		t.Fatalf("did not expect page_size, got %s", gotURL)
+	}
+}
+
+func TestVastResource_PicksDataEngineIteratorForServerlessRest(t *testing.T) {
+	mockSession := &mockSessionForIterator{
+		handler: func(url string) (Renderable, error) {
+			return Record{
+				"data":       []any{map[string]any{"name": "from-de"}},
+				"pagination": map[string]any{},
+			}, nil
+		},
+	}
+	deRest := &serverlessDummyRest{
+		DummyRest: &DummyRest{ctx: context.Background(), Session: mockSession},
+	}
+	resource := NewVastResource("topics", "Topic", deRest, NewResourceOps(L), nil)
+	iter := resource.GetIteratorWithContext(context.Background(), nil, 10)
+	if _, ok := iter.(*DataEngineIterator); !ok {
+		t.Fatalf("expected *DataEngineIterator for serverless rest, got %T", iter)
+	}
+	records, err := iter.Next()
+	if err != nil {
+		t.Fatalf("Next: %v", err)
+	}
+	if len(records) != 1 || records[0]["name"] != "from-de" {
+		t.Fatalf("unexpected records: %#v", records)
+	}
+}
+
+// serverlessDummyRest reports apiRoot "serverless" so NewVastResource binds DataEngineIterator.
+type serverlessDummyRest struct {
+	*DummyRest
+}
+
+func (r *serverlessDummyRest) GetApiRoot() string { return "serverless" }

@@ -13,6 +13,44 @@ import (
 // (e.g. name__contains=foo) without core needing to import the expr package.
 var exprSerializeField func(v any, key string) (map[string]any, bool)
 
+// splitQueryBody interprets variadic Params for Create/Update/Ensure-style calls.
+// Matches core.Request argument order (query, body):
+//
+//	0 args → nil query, nil body
+//	1 arg  → nil query, body          (backward-compatible with Create(body))
+//	2 args → query, body
+//	3+     → error
+//
+// Example: CreateWithContext(ctx, Params{"tenant_name": "de-lab"}, body).
+func splitQueryBody(params []Params) (query, body Params, err error) {
+	switch len(params) {
+	case 0:
+		return nil, nil, nil
+	case 1:
+		return nil, params[0], nil
+	case 2:
+		return params[0], params[1], nil
+	default:
+		return nil, nil, fmt.Errorf("expected at most 2 Params (optional query, body), got %d", len(params))
+	}
+}
+
+// optionalQuery interprets variadic Params for GetById-style calls (query only, no body).
+//
+//	0 args → nil query
+//	1 arg  → query
+//	2+     → error
+func optionalQuery(params []Params) (Params, error) {
+	switch len(params) {
+	case 0:
+		return nil, nil
+	case 1:
+		return params[0], nil
+	default:
+		return nil, fmt.Errorf("expected at most 1 Params (optional query), got %d", len(params))
+	}
+}
+
 var pathPlaceholderPattern = regexp.MustCompile(`\{[^}]+\}`)
 
 func toInt(val any) (int64, error) {

@@ -32,7 +32,7 @@ func isExcludedInternalQueryParam(name string) bool {
 
 // HasUserFacingQueryParams reports whether the operation has query params that belong in the TUI form.
 func HasUserFacingQueryParams(httpMethod, path string) bool {
-	params, err := openapi_schema.GetQueryParameters(httpMethod, path)
+	params, err := openapi_schema.GetQueryParameters(openapi_schema.PackVMS, httpMethod, path)
 	if err != nil {
 		return false
 	}
@@ -140,7 +140,7 @@ func (sr *SchemaReference) getSchemaFromReadRef() (*openapi3.SchemaRef, error) {
 
 	switch method {
 	case http.MethodGet:
-		if schemaRef, err = openapi_schema.GetResponseModelSchema(http.MethodGet, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetResponseModelSchema(openapi_schema.PackVMS, http.MethodGet, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get schema for GET %q: %w", resourcePath, err)
 		}
 	default:
@@ -166,23 +166,23 @@ func (sr *SchemaReference) getSchemaFromCreateRef() (*openapi3.SchemaRef, error)
 
 	switch method {
 	case http.MethodPost:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodPost, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodPost, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get POST schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodGet:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodGet, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodGet, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get GET schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPatch:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodPatch, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodPatch, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get PATCH schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPut:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodPut, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodPut, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get PUT schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodDelete:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(http.MethodDelete, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodDelete, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get DELETE schema for resource %q: %w", resourcePath, err)
 		}
 	default:
@@ -207,7 +207,7 @@ func (sr *SchemaReference) getSchemaFromQueryParamsRef() (*openapi3.SchemaRef, e
 	}
 
 	// Create a schema from query parameters for the specified HTTP method
-	queryParams, err := openapi_schema.GetQueryParameters(method, resourcePath)
+	queryParams, err := openapi_schema.GetQueryParameters(openapi_schema.PackVMS, method, resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get query parameters for %s %q: %w", method, resourcePath, err)
 	}
@@ -275,7 +275,7 @@ func (sr *SchemaReference) getInputDefinitionsFromSchema(from InputDefinitionFro
 		return []InputDefinition{}, nil
 	}
 
-	resolvedSchema := openapi_schema.ResolveComposedSchema(schema.Value)
+	resolvedSchema := openapi_schema.ResolveComposedSchema(openapi_schema.PackVMS, schema.Value)
 	if resolvedSchema == nil || resolvedSchema.Properties == nil {
 		return []InputDefinition{}, nil
 	}
@@ -294,7 +294,7 @@ func (sr *SchemaReference) getInputDefinitionsFromSchema(from InputDefinitionFro
 			continue
 		}
 
-		propSchema := openapi_schema.ResolveComposedSchema(openapi_schema.ResolveAllRefs(propSchemaRef))
+		propSchema := openapi_schema.ResolveComposedSchema(openapi_schema.PackVMS, openapi_schema.ResolveAllRefs(openapi_schema.PackVMS, propSchemaRef))
 		if propSchema == nil {
 			continue
 		}
@@ -449,7 +449,7 @@ func convertSchemaToInputDefinition(name string, schema *openapi3.Schema, requir
 			inputDef.Type = "array"
 			// Handle array items recursively
 			if schema.Items != nil && schema.Items.Value != nil {
-				itemSchema := openapi_schema.ResolveComposedSchema(openapi_schema.ResolveAllRefs(schema.Items))
+				itemSchema := openapi_schema.ResolveComposedSchema(openapi_schema.PackVMS, openapi_schema.ResolveAllRefs(openapi_schema.PackVMS, schema.Items))
 				if itemSchema != nil {
 					itemDef := convertSchemaToInputDefinition("item", itemSchema, false)
 					inputDef.Items = &itemDef
@@ -473,7 +473,7 @@ func convertSchemaToInputDefinition(name string, schema *openapi3.Schema, requir
 						continue
 					}
 
-					propSchema := openapi_schema.ResolveComposedSchema(openapi_schema.ResolveAllRefs(propSchemaRef))
+					propSchema := openapi_schema.ResolveComposedSchema(openapi_schema.PackVMS, openapi_schema.ResolveAllRefs(openapi_schema.PackVMS, propSchemaRef))
 					if propSchema == nil || propSchema.ReadOnly {
 						continue
 					}

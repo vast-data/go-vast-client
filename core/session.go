@@ -168,7 +168,7 @@ func RequestWithHeaders[T RecordUnion](
 	if params != nil {
 		query = params.ToQuery()
 	}
-	url, err := buildUrl(session, path, query, session.GetConfig().ApiVersion)
+	url, err := buildUrl(session, path, query, session.GetConfig().ApiVersion, r.GetApiRoot())
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func (s *VMSSession) Delete(ctx context.Context, url string, body Params, header
 
 // fetchSchema retrieves the OpenAPI schema using Basic Auth and custom headers
 func (s *VMSSession) fetchSchema(ctx context.Context) (Renderable, error) {
-	url, err := buildUrl(s, "", "", s.config.ApiVersion)
+	url, err := buildUrl(s, "", "", s.config.ApiVersion, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to build URL for OpenAPI schema: %w", err)
 	}

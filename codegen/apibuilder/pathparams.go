@@ -69,10 +69,11 @@ func AnalyzePathBuild(path string) PathBuildInfo {
 	return info
 }
 
-// PathHasIDParam reports whether the path has a /{id}/ path parameter segment.
+// PathHasIDParam reports whether the path has a primary resource id segment
+// ({id} for VMS, {guid} for DataEngine).
 func PathHasIDParam(path string) bool {
 	for _, param := range ExtractPathParams(path) {
-		if param.Name == "id" {
+		if param.Name == "id" || param.Name == "guid" {
 			return true
 		}
 	}
@@ -80,7 +81,7 @@ func PathHasIDParam(path string) bool {
 }
 
 func pathParamToGoName(name string) string {
-	if name == "id" {
+	if name == "id" || name == "guid" {
 		return "id"
 	}
 

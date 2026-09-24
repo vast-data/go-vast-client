@@ -147,7 +147,7 @@ func TestIterator_UninitializedHasNext(t *testing.T) {
 		VastResource: &VastResource{resourcePath: "resources", resourceType: "TestResource", Rest: mockRest},
 		mockSession:  mockSession,
 	}
-	iter := NewResourceIterator(context.Background(), mockResource, Params{}, 10)
+	iter := NewVmsIterator(context.Background(), mockResource, Params{}, 10)
 	if !iter.HasNext() {
 		t.Fatal("uninitialized iterator should report HasNext=true")
 	}

@@ -28,10 +28,13 @@ type Authenticator interface {
 
 // createAuthenticator creates a new Authenticator instance based on the provided VMSConfig.
 // Each session gets its own authenticator instance to avoid global state issues.
+//
+// Priority: ApiToken > BasicAuth > JWT.
+// JWT login defaults to POST /api/token/ with optional X-Tenant-Name when Tenant is set.
+// When UseTenantTokenPath is true with Tenant, login uses POST /api/token/{tenant}/ instead.
 func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 	var authenticator Authenticator
 
-	// Priority: ApiToken > BasicAuth > JWT
 	if config.ApiToken != "" {
 		authenticator = &ApiRTokenAuthenticator{
 			Host:      config.Host,
@@ -59,6 +62,9 @@ func createAuthenticator(config *VMSConfig) (Authenticator, error) {
 			Password:     config.Password,
 			Tenant:       config.Tenant,
 			Token:        &jwtToken{},
+		}
+		if config.UseTenantTokenPath && config.Tenant != "" {
+			jwtAuth.useTenantTokenPath = true
 		}
 		jwtAuth.authCond = sync.NewCond(&jwtAuth.mu)
 		authenticator = jwtAuth
@@ -93,11 +99,13 @@ type JWTAuthenticator struct {
 	Password     string
 	Token        *jwtToken
 	Tenant       string
-	initialized  bool
-	mu           sync.RWMutex // Protects Token, initialized, and generation
-	authorizing  bool         // Indicates authorization in progress
-	authCond     *sync.Cond   // Condition variable for waiting goroutines
-	generation   uint64       // Bumped on each successful authorize; used for coalescing
+	// useTenantTokenPath selects POST /api/token/{tenant}/ instead of X-Tenant-Name on /api/token/.
+	useTenantTokenPath bool
+	initialized        bool
+	mu                 sync.RWMutex // Protects Token, initialized, and generation
+	authorizing        bool         // Indicates authorization in progress
+	authCond           *sync.Cond   // Condition variable for waiting goroutines
+	generation         uint64       // Bumped on each successful authorize; used for coalescing
 }
 
 func parseToken(rsp *http.Response) (*jwtToken, error) {
@@ -172,10 +180,16 @@ func (auth *JWTAuthenticator) acquireToken(client *http.Client) error {
 	if err != nil {
 		return err
 	}
+	// Default: POST /api/token/ (+ X-Tenant-Name when Tenant is set).
+	// Opt-in (useTenantTokenPath): POST /api/token/{tenant}/ without the header.
+	tokenPath := "api/token/"
+	if auth.useTenantTokenPath && auth.Tenant != "" {
+		tokenPath = "api/token/" + url.PathEscape(auth.Tenant) + "/"
+	}
 	path := url.URL{
 		Scheme: "https",
 		Host:   server,
-		Path:   "api/token/",
+		Path:   tokenPath,
 	}
 
 	req, err := http.NewRequest(http.MethodPost, path.String(), bytes.NewBuffer(body))
@@ -183,7 +197,7 @@ func (auth *JWTAuthenticator) acquireToken(client *http.Client) error {
 		return err
 	}
 	req.Header.Set(HeaderContentType, ContentTypeJSON)
-	if auth.Tenant != "" {
+	if !auth.useTenantTokenPath && auth.Tenant != "" {
 		req.Header.Set(HeaderXTenantName, auth.Tenant)
 	}
 
@@ -358,6 +372,7 @@ func (auth *JWTAuthenticator) equal(other Authenticator) bool {
 		auth.Host == otherAuth.Host &&
 		auth.Port == otherAuth.Port &&
 		auth.Tenant == otherAuth.Tenant &&
+		auth.useTenantTokenPath == otherAuth.useTenantTokenPath &&
 		auth.SslVerify == otherAuth.SslVerify
 }
 

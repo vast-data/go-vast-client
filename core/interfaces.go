@@ -12,15 +12,24 @@ type VastResourceAPI interface {
 	Session() RESTSession
 	GetResourceType() string
 	GetResourcePath() string // normalized path to the resource in OpenAPI format
+	// GetApiRoot returns the path segment after /api/{version}/ (empty for VMS; e.g. "serverless").
+	GetApiRoot() string
 
 	List(Params) (RecordSet, error)
-	Create(Params) (Record, error)
-	Update(any, Params) (Record, error)
+	// Create accepts optional query via variadic Params (same order as Request):
+	//   Create(body) or Create(query, body).
+	Create(...Params) (Record, error)
+	// Update accepts optional query via variadic Params after id:
+	//   Update(id, body) or Update(id, query, body).
+	Update(any, ...Params) (Record, error)
 	Delete(Params, Params) (Record, error)
 	DeleteById(any, Params, Params) (Record, error)
-	Ensure(Params, Params) (Record, error)
+	// Ensure accepts searchParams plus createParams (body or query+body):
+	//   Ensure(search, body) or Ensure(search, query, body).
+	Ensure(Params, ...Params) (Record, error)
 	Get(Params) (Record, error)
-	GetById(any) (Record, error)
+	// GetById accepts an optional query Params: GetById(id) or GetById(id, query).
+	GetById(any, ...Params) (Record, error)
 	Exists(Params) (bool, error)
 	MustExists(Params) bool
 	GetIterator(Params, int) Iterator
@@ -32,13 +41,14 @@ type VastResourceAPI interface {
 type VastResourceAPIWithContext interface {
 	VastResourceAPI
 	ListWithContext(context.Context, Params) (RecordSet, error)
-	CreateWithContext(context.Context, Params) (Record, error)
-	UpdateWithContext(context.Context, any, Params) (Record, error)
+	CreateWithContext(context.Context, ...Params) (Record, error)
+	UpdateWithContext(context.Context, any, ...Params) (Record, error)
 	DeleteWithContext(context.Context, Params, Params, Params) (Record, error)
 	DeleteByIdWithContext(context.Context, any, Params, Params) (Record, error)
-	EnsureWithContext(context.Context, Params, Params) (Record, error)
+	// EnsureWithContext(ctx, search, createParams...) — createParams same as Create.
+	EnsureWithContext(context.Context, Params, ...Params) (Record, error)
 	GetWithContext(context.Context, Params) (Record, error)
-	GetByIdWithContext(context.Context, any) (Record, error)
+	GetByIdWithContext(context.Context, any, ...Params) (Record, error)
 	ExistsWithContext(context.Context, Params) (bool, error)
 	MustExistsWithContext(context.Context, Params) bool
 	GetIteratorWithContext(context.Context, Params, int) Iterator
@@ -105,4 +115,40 @@ type VastRest interface {
 	GetResourceMap() map[string]VastResourceAPIWithContext
 	GetCtx() context.Context
 	SetCtx(context.Context)
+	// GetApiRoot returns the rest-level path segment after /api/{version}/.
+	// Empty for the main VMS rest; nested rests set their own (e.g. "serverless").
+	GetApiRoot() string
+}
+
+// Iterator provides an interface for iterating over paginated or non-paginated API results.
+// It abstracts away the differences between pagination models (VMS DRF links, DataEngine
+// cursors, or future strategies). Implementations are internal; callers use GetIterator.
+type Iterator interface {
+	// Next advances to the next page and returns the records and any error.
+	// Returns empty RecordSet when there are no more pages.
+	Next() (RecordSet, error)
+
+	// Previous moves to the previous page and returns the records and any error.
+	// Returns empty RecordSet when there is no previous page.
+	Previous() (RecordSet, error)
+
+	// HasNext returns true if there is a next page available.
+	HasNext() bool
+
+	// HasPrevious returns true if there is a previous page available.
+	HasPrevious() bool
+
+	// Count returns the total count of items (if available from pagination metadata).
+	// Returns -1 if count information is not available.
+	Count() int
+
+	// PageSize returns the current page size.
+	PageSize() int
+
+	// Reset resets the iterator to the first page and returns the first page records.
+	Reset() (RecordSet, error)
+
+	// All fetches all remaining pages and returns all records as a single RecordSet.
+	// This should be used with caution for large datasets.
+	All() (RecordSet, error)
 }

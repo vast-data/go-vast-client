@@ -269,6 +269,7 @@ func TestBuildUrl(t *testing.T) {
 		path    string
 		query   string
 		apiVer  string
+		apiRoot string
 		want    string
 		wantErr bool
 	}{
@@ -277,6 +278,7 @@ func TestBuildUrl(t *testing.T) {
 			path:    "users",
 			query:   "",
 			apiVer:  "",
+			apiRoot: "",
 			want:    "https://test.example.com:8443/api/v5/users/",
 			wantErr: false,
 		},
@@ -285,6 +287,7 @@ func TestBuildUrl(t *testing.T) {
 			path:    "users",
 			query:   "name=test&limit=10",
 			apiVer:  "",
+			apiRoot: "",
 			want:    "https://test.example.com:8443/api/v5/users/?name=test&limit=10",
 			wantErr: false,
 		},
@@ -293,6 +296,7 @@ func TestBuildUrl(t *testing.T) {
 			path:    "users",
 			query:   "",
 			apiVer:  "v6",
+			apiRoot: "",
 			want:    "https://test.example.com:8443/api/v6/users/",
 			wantErr: false,
 		},
@@ -301,7 +305,17 @@ func TestBuildUrl(t *testing.T) {
 			path:    "/users/",
 			query:   "",
 			apiVer:  "",
+			apiRoot: "",
 			want:    "https://test.example.com:8443/api/v5/users/",
+			wantErr: false,
+		},
+		{
+			name:    "nested serverless api root",
+			path:    "container-registries",
+			query:   "",
+			apiVer:  "",
+			apiRoot: "serverless",
+			want:    "https://test.example.com:8443/api/v5/serverless/container-registries/",
 			wantErr: false,
 		},
 		{
@@ -309,6 +323,7 @@ func TestBuildUrl(t *testing.T) {
 			path:    "",
 			query:   "",
 			apiVer:  "",
+			apiRoot: "",
 			want:    "https://test.example.com:8443/api/v5/",
 			wantErr: false,
 		},
@@ -316,7 +331,7 @@ func TestBuildUrl(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := buildUrl(mockSession, tt.path, tt.query, tt.apiVer)
+			got, err := buildUrl(mockSession, tt.path, tt.query, tt.apiVer, tt.apiRoot)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("buildUrl() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -84,7 +84,7 @@ func (a *ApiDocsAdapter) Load(resourcePath string) {
 
 // buildItems fetches swagger paths and constructs the flat item list.
 func (a *ApiDocsAdapter) buildItems() {
-	allPaths, err := api.GetAllPaths()
+	allPaths, err := api.GetAllPaths(api.PackVMS)
 	if err != nil {
 		a.items = []docItem{{kind: docItemSection, display: fmt.Sprintf("Error loading API schema: %v", err)}}
 		return
@@ -129,7 +129,7 @@ func (a *ApiDocsAdapter) buildItems() {
 			}
 			first = false
 
-			summary, _ := api.GetOperationSummary(method, path)
+			summary, _ := api.GetOperationSummary(api.PackVMS, method, path)
 			a.items = append(a.items, docItem{
 				kind:    docItemSection,
 				method:  method,
@@ -138,7 +138,7 @@ func (a *ApiDocsAdapter) buildItems() {
 			})
 
 			// Query parameters
-			params, _ := api.GetQueryParameters(method, path)
+			params, _ := api.GetQueryParameters(api.PackVMS, method, path)
 			if len(params) > 0 {
 				a.items = append(a.items, docItem{
 					kind:    docItemSeparator,
@@ -153,7 +153,7 @@ func (a *ApiDocsAdapter) buildItems() {
 			}
 
 			// Request body
-			bodySchema, err := api.GetRequestBodySchema(method, path)
+			bodySchema, err := api.GetRequestBodySchema(api.PackVMS, method, path)
 			if err == nil && bodySchema != nil && bodySchema.Value != nil {
 				a.items = append(a.items, docItem{
 					kind:    docItemSeparator,

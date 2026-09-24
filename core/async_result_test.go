@@ -28,6 +28,8 @@ func (m *mockVastRest) GetCtx() context.Context {
 
 func (m *mockVastRest) SetCtx(ctx context.Context) {}
 
+func (m *mockVastRest) GetApiRoot() string { return "" }
+
 type mockVastResourceAPI struct {
 	getByIdFunc func(ctx context.Context, id any) (Record, error)
 	getFunc     func(ctx context.Context, params Params) (Record, error)
@@ -36,14 +38,15 @@ type mockVastResourceAPI struct {
 func (m *mockVastResourceAPI) Session() RESTSession                           { return nil }
 func (m *mockVastResourceAPI) GetResourceType() string                        { return VTaskKey }
 func (m *mockVastResourceAPI) GetResourcePath() string                        { return "/vtasks/" }
-func (m *mockVastResourceAPI) List(Params) (RecordSet, error)                 { return nil, nil }
-func (m *mockVastResourceAPI) Create(Params) (Record, error)                  { return nil, nil }
-func (m *mockVastResourceAPI) Update(any, Params) (Record, error)             { return nil, nil }
-func (m *mockVastResourceAPI) Delete(Params, Params) (Record, error)          { return nil, nil }
-func (m *mockVastResourceAPI) DeleteById(any, Params, Params) (Record, error) { return nil, nil }
-func (m *mockVastResourceAPI) Ensure(Params, Params) (Record, error)          { return nil, nil }
-func (m *mockVastResourceAPI) Get(Params) (Record, error)                     { return nil, nil }
-func (m *mockVastResourceAPI) GetById(any) (Record, error)                    { return nil, nil }
+func (m *mockVastResourceAPI) GetApiRoot() string                             { return "" }
+	func (m *mockVastResourceAPI) List(Params) (RecordSet, error)                 { return nil, nil }
+	func (m *mockVastResourceAPI) Create(...Params) (Record, error)               { return nil, nil }
+	func (m *mockVastResourceAPI) Update(any, ...Params) (Record, error)          { return nil, nil }
+	func (m *mockVastResourceAPI) Delete(Params, Params) (Record, error)          { return nil, nil }
+	func (m *mockVastResourceAPI) DeleteById(any, Params, Params) (Record, error) { return nil, nil }
+	func (m *mockVastResourceAPI) Ensure(Params, ...Params) (Record, error)       { return nil, nil }
+	func (m *mockVastResourceAPI) Get(Params) (Record, error)                     { return nil, nil }
+	func (m *mockVastResourceAPI) GetById(any, ...Params) (Record, error)         { return nil, nil }
 func (m *mockVastResourceAPI) Exists(Params) (bool, error)                    { return false, nil }
 func (m *mockVastResourceAPI) MustExists(Params) bool                         { return false }
 func (m *mockVastResourceAPI) GetIterator(Params, int) Iterator               { return nil }
@@ -52,10 +55,10 @@ func (m *mockVastResourceAPI) Lock(...any) func()                             { 
 func (m *mockVastResourceAPI) ListWithContext(context.Context, Params) (RecordSet, error) {
 	return nil, nil
 }
-func (m *mockVastResourceAPI) CreateWithContext(context.Context, Params) (Record, error) {
+func (m *mockVastResourceAPI) CreateWithContext(context.Context, ...Params) (Record, error) {
 	return nil, nil
 }
-func (m *mockVastResourceAPI) UpdateWithContext(context.Context, any, Params) (Record, error) {
+func (m *mockVastResourceAPI) UpdateWithContext(context.Context, any, ...Params) (Record, error) {
 	return nil, nil
 }
 func (m *mockVastResourceAPI) DeleteWithContext(context.Context, Params, Params, Params) (Record, error) {
@@ -64,7 +67,7 @@ func (m *mockVastResourceAPI) DeleteWithContext(context.Context, Params, Params,
 func (m *mockVastResourceAPI) DeleteByIdWithContext(context.Context, any, Params, Params) (Record, error) {
 	return nil, nil
 }
-func (m *mockVastResourceAPI) EnsureWithContext(context.Context, Params, Params) (Record, error) {
+func (m *mockVastResourceAPI) EnsureWithContext(context.Context, Params, ...Params) (Record, error) {
 	return nil, nil
 }
 func (m *mockVastResourceAPI) GetWithContext(ctx context.Context, params Params) (Record, error) {
@@ -73,7 +76,7 @@ func (m *mockVastResourceAPI) GetWithContext(ctx context.Context, params Params)
 	}
 	return nil, nil
 }
-func (m *mockVastResourceAPI) GetByIdWithContext(ctx context.Context, id any) (Record, error) {
+func (m *mockVastResourceAPI) GetByIdWithContext(ctx context.Context, id any, _ ...Params) (Record, error) {
 	if m.getByIdFunc != nil {
 		return m.getByIdFunc(ctx, id)
 	}

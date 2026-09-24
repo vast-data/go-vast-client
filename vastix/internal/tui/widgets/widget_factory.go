@@ -260,7 +260,7 @@ func (f *WidgetFactory) createExtraWidget(parentResourceType string, method core
 	displayName := fmt.Sprintf("%s:%s", strings.ToLower(method.HTTPVerb), cleanPath)
 
 	// Fetch and cache summary from OpenAPI schema
-	summary, err := openapi_schema.GetOperationSummary(method.HTTPVerb, method.Path)
+	summary, err := openapi_schema.GetOperationSummary(openapi_schema.PackVMS, method.HTTPVerb, method.Path)
 	if err != nil || summary == "" {
 		// Fallback to formatted display name if summary not found
 		summary = displayName
@@ -525,7 +525,7 @@ func (w *ExtraMethodWidget) InitialExtraMode() common.ExtraNavigatorMode {
 	hasInputs := false
 
 	// Check for request body parameters
-	schema, err := openapi_schema.GetRequestBodySchema(w.methodInfo.HTTPVerb, w.methodInfo.Path)
+	schema, err := openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, w.methodInfo.HTTPVerb, w.methodInfo.Path)
 	if err == nil && schema != nil && schema.Value != nil {
 		// Check if schema has any properties (non-empty request body)
 		hasInputs = len(schema.Value.Properties) > 0
@@ -671,7 +671,7 @@ func (w *ExtraMethodWidget) CreateFromInputs(inputs common.Inputs) (tea.Cmd, err
 		bodyParams := make(core.Params)
 
 		// Get query parameters from OpenAPI schema
-		queryParamDefs, queryErr := openapi_schema.GetQueryParameters(w.methodInfo.HTTPVerb, w.methodInfo.Path)
+		queryParamDefs, queryErr := openapi_schema.GetQueryParameters(openapi_schema.PackVMS, w.methodInfo.HTTPVerb, w.methodInfo.Path)
 		if queryErr == nil && queryParamDefs != nil {
 			// Build a set of query parameter names for fast lookup
 			queryParamNames := make(map[string]bool)

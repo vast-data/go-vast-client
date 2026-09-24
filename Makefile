@@ -128,10 +128,10 @@ autogen: ## Generate all typed and untyped resources
 	@echo "All code generation completed!"
 	@echo "========================================="
 
-generate-typed: ## Generate all typed resources from apityped markers
-	@echo "Generating typed resources..."
+generate-typed: ## Generate typed resources (PACK=all|vms|dataengine)
+	@echo "Generating typed resources (PACK=$(or $(PACK),all))..."
 	cd $(MAKEFILE_DIR)codegen && go build -tags tools -o bin/generate-typed-resources ./cmd/generate-typed-resources
-	cd $(MAKEFILE_DIR)codegen && ./bin/generate-typed-resources
+	cd $(MAKEFILE_DIR)codegen && ./bin/generate-typed-resources -pack=$(or $(PACK),all)
 	@echo "Typed resources generated successfully!"
 
 generate-untyped: ## Generate extra methods for untyped resources from apiuntyped markers
@@ -150,6 +150,11 @@ ifeq (gen-openapi-tar, $(firstword $(MAKECMDGOALS)))
   $(foreach arg,$(runargs),$(eval $(arg):;@true))
 endif
 
+ifeq (gen-openapi-tar-dataengine, $(firstword $(MAKECMDGOALS)))
+  runargs := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
+  $(foreach arg,$(runargs),$(eval $(arg):;@true))
+endif
+
 ifeq (validate-api, $(firstword $(MAKECMDGOALS)))
   runargs := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
   $(foreach arg,$(runargs),$(eval $(arg):;@true))
@@ -159,9 +164,9 @@ endif
 #
 #   This target uses the enhanced Python converter that:
 #     - Validates Swagger schemas and identifies common issues
-#     - Automatically fixes known problems (null properties, missing types)  
+#     - Automatically fixes known problems (null properties, missing types)
 #     - Provides detailed debugging information
-#     - Converts to OpenAPI v3 using the Go converter
+#     - Converts Swagger 2.0 → OpenAPI v3 (or packs OpenAPI 3.x as-is)
 #     - Creates final output in openapi_schema/: api.tar.gz
 #
 #   Usage:
@@ -174,6 +179,7 @@ endif
 #     --debug        - Enable detailed debugging output
 #     --no-auto-fix  - Disable automatic fixes (validation only)
 #     --output-dir   - Custom output directory for intermediate files
+#     --pack-name    - Tarball basename (default: api → api.tar.gz)
 #
 #   Examples:
 #     make gen-openapi-tar ./specs/swagger.yaml
@@ -187,13 +193,57 @@ gen-openapi-tar: ## Convert Swagger/OpenAPI YAML to tarball with validation & au
 	if [ -z "$$args" ]; then \
 		echo "❌ Usage: make gen-openapi-tar <path> [options]"; \
 		echo "   Example: make gen-openapi-tar /path/to/swagger.yaml --debug"; \
-		echo "   Options: --debug --no-auto-fix --output-dir /custom/dir"; \
+		echo "   Options: --debug --no-auto-fix --output-dir /custom/dir --pack-name api"; \
 		exit 1; \
 	fi; \
 	echo "🚀 Running enhanced OpenAPI conversion with validation and auto-fixes..."; \
 	rm -f $(OPENAPI_SCHEMA_DIR)/api.tar.gz; \
-	python3 $(CURDIR)/codegen/misc/convert_swagger.py $$args --dest-dir $(OPENAPI_SCHEMA_DIR); \
+	python3 $(CURDIR)/codegen/misc/convert_swagger.py $$args --pack-name api --dest-dir $(OPENAPI_SCHEMA_DIR); \
 	echo "✅ Enhanced conversion completed! Outputs: $(OPENAPI_SCHEMA_DIR)/api.tar.gz"
+
+# Pack DataEngine (serverless) OpenAPI 3.x into openapi_schema/dataengine.tar.gz
+#
+#   Detects openapi: 3.x and skips swagger2→v3 conversion. Resolves/internalizes
+#   external $refs so the embed is self-contained. Does NOT touch api.tar.gz.
+#
+#   Usage:
+#     make gen-openapi-tar-dataengine <path-to-openapi3.yaml> [options]
+#
+#   Arguments:
+#     <path> - Required. Path to the DataEngine OpenAPI 3.x YAML
+#              (e.g. orion/serverless/api/spec/provisioning.yaml from a local checkout).
+#
+#   Options:
+#     --debug        - Enable detailed debugging output
+#     --output-dir   - Custom output directory for intermediate files
+#
+#   Examples:
+#     make gen-openapi-tar-dataengine /path/to/provisioning.yaml
+#     make gen-openapi-tar-dataengine ./provisioning.openapi.yaml --debug
+gen-openapi-tar-dataengine: ## Pack DataEngine OpenAPI 3.x → openapi_schema/dataengine.tar.gz
+	@set -e; \
+	args="$(runargs)"; \
+	if [ -z "$$args" ]; then \
+		echo "❌ Usage: make gen-openapi-tar-dataengine <path-to-openapi3.yaml> [options]"; \
+		echo "   Example: make gen-openapi-tar-dataengine /path/to/provisioning.yaml"; \
+		echo "   Options: --debug --output-dir /custom/dir"; \
+		echo "   Note: pass an explicit path; there is no default OpenAPI location."; \
+		exit 1; \
+	fi; \
+	spec="$$(echo $$args | awk '{print $$1}')"; \
+	if [ ! -f "$$spec" ]; then \
+		echo "❌ DataEngine OpenAPI not found: $$spec"; \
+		echo "   Pass a real path to an OpenAPI 3.x YAML (e.g. provisioning.yaml)."; \
+		exit 1; \
+	fi; \
+	echo "🚀 Packing DataEngine OpenAPI 3.x → dataengine.tar.gz"; \
+	echo "   Source: $$spec"; \
+	rm -f $(OPENAPI_SCHEMA_DIR)/dataengine.tar.gz; \
+	python3 $(CURDIR)/codegen/misc/convert_swagger.py $$args \
+		--pack-name dataengine \
+		--output-dir /tmp/apiconv-dataengine \
+		--dest-dir $(OPENAPI_SCHEMA_DIR); \
+	echo "✅ DataEngine pack completed! Outputs: $(OPENAPI_SCHEMA_DIR)/dataengine.tar.gz"
 
 # Validate Swagger/OpenAPI schema
 #

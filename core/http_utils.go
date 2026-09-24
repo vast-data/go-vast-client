@@ -89,21 +89,28 @@ func pathToUrl(s RESTSession, input string) (string, error) {
 	return fullURL.String(), nil
 }
 
-func buildUrl(s RESTSession, path, query, apiVer string) (string, error) {
+func buildUrl(s RESTSession, path, query, apiVer, apiRoot string) (string, error) {
 	config := s.GetConfig()
 	if apiVer == "" {
 		apiVer = config.ApiVersion
 	}
 
-	// Always force trailing slash
 	path = strings.Trim(path, "/")
+	apiRoot = strings.Trim(apiRoot, "/")
 
-	joinedPath, err := urlpkg.JoinPath("api", apiVer, path)
+	var (
+		joinedPath string
+		err        error
+	)
+	if apiRoot == "" {
+		joinedPath, err = urlpkg.JoinPath("api", apiVer, path)
+	} else {
+		joinedPath, err = urlpkg.JoinPath("api", apiVer, apiRoot, path)
+	}
 	if err != nil {
 		return "", err
 	}
 
-	// Append trailing slash if not present
 	if !strings.HasSuffix(joinedPath, "/") {
 		joinedPath += "/"
 	}

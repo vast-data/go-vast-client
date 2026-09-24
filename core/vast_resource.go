@@ -35,6 +35,10 @@ func (rest *DummyRest) SetCtx(ctx context.Context) {
 	rest.ctx = ctx
 }
 
+func (rest *DummyRest) GetApiRoot() string {
+	return ""
+}
+
 func NewDummy(ctx context.Context, session RESTSession) *Dummy {
 	dummy := &Dummy{
 		VastResource: &VastResource{
@@ -63,6 +67,8 @@ type VastResource struct {
 	mu           *KeyLocker
 	resourceOps  ResourceOps
 	parent       any // Reference to the parent resource that embeds this VastResource
+	// newIterator selects the pagination model for this resource.
+	newIterator newIteratorFn
 }
 
 func NewVastResource(resourcePath string, resourceType string, rest VastRest, resourceOps ResourceOps, parent any) *VastResource {
@@ -73,7 +79,25 @@ func NewVastResource(resourcePath string, resourceType string, rest VastRest, re
 		mu:           NewKeyLocker(),
 		resourceOps:  resourceOps,
 		parent:       parent,
+		newIterator:  iteratorForRest(rest),
 	}
+}
+
+// iteratorForRest picks an internal Iterator implementation from the owning rest.
+func iteratorForRest(rest VastRest) newIteratorFn {
+	if rest != nil && strings.Trim(rest.GetApiRoot(), "/") == "serverless" {
+		return NewDataEngineIterator
+	}
+	return NewVmsIterator
+}
+
+// GetApiRoot returns the API root segment after /api/{version}/ from the owning Rest.
+// Empty for main VMS rest; e.g. "serverless" for DataEngine.
+func (e *VastResource) GetApiRoot() string {
+	if e.Rest != nil {
+		return strings.Trim(e.Rest.GetApiRoot(), "/")
+	}
+	return ""
 }
 
 // Session returns the current VMSSession associated with the resource.
@@ -105,8 +129,16 @@ func (e *VastResource) ListWithContext(ctx context.Context, params Params) (Reco
 }
 
 // CreateWithContext creates a new resource using the provided parameters and context.
-func (e *VastResource) CreateWithContext(ctx context.Context, body Params) (Record, error) {
-	result, err := Request[Record](ctx, e, http.MethodPost, e.resourcePath, nil, body)
+//
+// Variadic Params (backward compatible; same order as Request):
+//   - CreateWithContext(ctx, body)
+//   - CreateWithContext(ctx, query, body)
+func (e *VastResource) CreateWithContext(ctx context.Context, params ...Params) (Record, error) {
+	query, body, err := splitQueryBody(params)
+	if err != nil {
+		return nil, err
+	}
+	result, err := Request[Record](ctx, e, http.MethodPost, e.resourcePath, query, body)
 	if !e.resourceOps.has(C) && ExpectStatusCodes(err, http.StatusNotFound) {
 		err.(*ApiError).hints = e.describeResourceFrom(e)
 	}
@@ -114,9 +146,17 @@ func (e *VastResource) CreateWithContext(ctx context.Context, body Params) (Reco
 }
 
 // UpdateWithContext updates an existing resource by its ID using the provided parameters and context.
-func (e *VastResource) UpdateWithContext(ctx context.Context, id any, body Params) (Record, error) {
+//
+// Variadic Params (backward compatible; same order as Request):
+//   - UpdateWithContext(ctx, id, body)
+//   - UpdateWithContext(ctx, id, query, body)
+func (e *VastResource) UpdateWithContext(ctx context.Context, id any, params ...Params) (Record, error) {
+	query, body, err := splitQueryBody(params)
+	if err != nil {
+		return nil, err
+	}
 	path := BuildResourcePathWithID(e.resourcePath, id)
-	result, err := Request[Record](ctx, e, http.MethodPatch, path, nil, body)
+	result, err := Request[Record](ctx, e, http.MethodPatch, path, query, body)
 	if !e.resourceOps.has(U) && ExpectStatusCodes(err, http.StatusNotFound) {
 		err.(*ApiError).hints = e.describeResourceFrom(e)
 	}
@@ -155,14 +195,19 @@ func (e *VastResource) DeleteByIdWithContext(ctx context.Context, id any, queryP
 	return result, err
 }
 
-// EnsureWithContext ensures a resource matching the search parameters exists. If not, it creates it using the body.
+// EnsureWithContext ensures a resource matching the search parameters exists. If not, it creates it.
 // All operations are performed within the given context.
+//
+// Variadic createParams after searchParams (backward compatible; same order as Request/Create):
+//   - EnsureWithContext(ctx, search, body)
+//   - EnsureWithContext(ctx, search, query, body) — query is used only on create
+//
 // Note: This method calls GetWithContext (requires R) and CreateWithContext (requires C) internally,
 // which will validate permissions automatically.
-func (e *VastResource) EnsureWithContext(ctx context.Context, searchParams Params, body Params) (Record, error) {
+func (e *VastResource) EnsureWithContext(ctx context.Context, searchParams Params, createParams ...Params) (Record, error) {
 	result, err := e.GetWithContext(ctx, searchParams)
 	if IsNotFoundErr(err) {
-		return e.CreateWithContext(ctx, body)
+		return e.CreateWithContext(ctx, createParams...)
 	} else if err != nil {
 		return nil, err
 	}
@@ -205,9 +250,16 @@ func (e *VastResource) GetWithContext(ctx context.Context, params Params) (Recor
 // Not all VAST resources have strictly numeric IDs; some may use UUIDs, names, or other formats.
 // Therefore, this method accepts a generic 'id' parameter and dynamically formats the request path
 // to handle both numeric and non-numeric identifiers.
-func (e *VastResource) GetByIdWithContext(ctx context.Context, id any) (Record, error) {
+//
+// An optional query Params may be supplied: GetByIdWithContext(ctx, id) or
+// GetByIdWithContext(ctx, id, Params{"tenant_name": "de-lab"}).
+func (e *VastResource) GetByIdWithContext(ctx context.Context, id any, params ...Params) (Record, error) {
+	query, err := optionalQuery(params)
+	if err != nil {
+		return nil, err
+	}
 	path := BuildResourcePathWithID(e.resourcePath, id)
-	record, err := Request[Record](ctx, e, http.MethodGet, path, nil, nil)
+	record, err := Request[Record](ctx, e, http.MethodGet, path, query, nil)
 	if !e.resourceOps.has(R) && ExpectStatusCodes(err, http.StatusNotFound) {
 		err.(*ApiError).hints = e.describeResourceFrom(e)
 	}
@@ -240,13 +292,15 @@ func (e *VastResource) List(params Params) (RecordSet, error) {
 }
 
 // Create creates a new resource using the provided parameters and the bound REST context.
-func (e *VastResource) Create(params Params) (Record, error) {
-	return e.CreateWithContext(e.Rest.GetCtx(), params)
+// See CreateWithContext for variadic query/body Params.
+func (e *VastResource) Create(params ...Params) (Record, error) {
+	return e.CreateWithContext(e.Rest.GetCtx(), params...)
 }
 
 // Update updates a resource by its ID using the provided parameters and the bound REST context.
-func (e *VastResource) Update(id any, params Params) (Record, error) {
-	return e.UpdateWithContext(e.Rest.GetCtx(), id, params)
+// See UpdateWithContext for variadic query/body Params.
+func (e *VastResource) Update(id any, params ...Params) (Record, error) {
+	return e.UpdateWithContext(e.Rest.GetCtx(), id, params...)
 }
 
 // Delete deletes a resource found with searchParams using deleteParams and the bound REST context.
@@ -260,10 +314,10 @@ func (e *VastResource) DeleteById(id any, queryParams, deleteParams Params) (Rec
 	return e.DeleteByIdWithContext(e.Rest.GetCtx(), id, queryParams, deleteParams)
 }
 
-// Ensure ensures a resource exists matching the searchParams. Creates it with body if not found.
-// Uses the bound REST context.
-func (e *VastResource) Ensure(searchParams, body Params) (Record, error) {
-	return e.EnsureWithContext(e.Rest.GetCtx(), searchParams, body)
+// Ensure ensures a resource exists matching the searchParams. Creates it if not found.
+// See EnsureWithContext for variadic createParams (body or query+body).
+func (e *VastResource) Ensure(searchParams Params, createParams ...Params) (Record, error) {
+	return e.EnsureWithContext(e.Rest.GetCtx(), searchParams, createParams...)
 }
 
 // Get retrieves a single resource matching the given parameters using the bound REST context.
@@ -273,8 +327,9 @@ func (e *VastResource) Get(params Params) (Record, error) {
 }
 
 // GetById retrieves a resource by its ID using the bound REST context.
-func (e *VastResource) GetById(id any) (Record, error) {
-	return e.GetByIdWithContext(e.Rest.GetCtx(), id)
+// See GetByIdWithContext for an optional query Params.
+func (e *VastResource) GetById(id any, params ...Params) (Record, error) {
+	return e.GetByIdWithContext(e.Rest.GetCtx(), id, params...)
 }
 
 // Exists checks if any resource matches the given parameters using the bound REST context.
@@ -312,7 +367,7 @@ func (e *VastResource) MustExists(params Params) bool {
 //	    // Process records
 //	}
 func (e *VastResource) GetIteratorWithContext(ctx context.Context, params Params, pageSize int) Iterator {
-	return NewResourceIterator(ctx, e, params, pageSize)
+	return e.newIterator(ctx, e, params, pageSize)
 }
 
 // GetIterator creates a new iterator for paginated results using the bound REST context.

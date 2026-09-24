@@ -25,7 +25,7 @@ func TestFilterPathsCaseInsensitive(t *testing.T) {
 }
 
 func TestValidateOperationExists_ErrorPaths(t *testing.T) {
-	if err := ValidateOperationExists("GET", "/this/path/absolutely/does/not/exist/"); err == nil {
+	if err := ValidateOperationExists(PackVMS, "GET", "/this/path/absolutely/does/not/exist/"); err == nil {
 		t.Fatal("expected missing path error")
 	}
 
@@ -37,10 +37,10 @@ func TestValidateOperationExists_ErrorPaths(t *testing.T) {
 	if getOnly == "" {
 		t.Skip("no GET-only path")
 	}
-	if err := ValidateOperationExists("PATCH", getOnly); err == nil {
+	if err := ValidateOperationExists(PackVMS, "PATCH", getOnly); err == nil {
 		t.Fatal("expected missing method error")
 	}
-	if err := ValidateOperationExists("INVALID", path); err == nil {
+	if err := ValidateOperationExists(PackVMS, "INVALID", path); err == nil {
 		t.Fatal("expected unsupported method error")
 	}
 }
@@ -51,7 +51,7 @@ func TestGetQueryParameters_AllMethods(t *testing.T) {
 		t.Skip("no GET path")
 	}
 	for _, method := range []string{"GET", "POST", "PATCH", "PUT", "DELETE", "HEAD", "OPTIONS"} {
-		params, err := GetQueryParameters(method, path)
+		params, err := GetQueryParameters(PackVMS, method, path)
 		if err != nil {
 			t.Fatalf("%s: %v", method, err)
 		}
@@ -59,7 +59,7 @@ func TestGetQueryParameters_AllMethods(t *testing.T) {
 			t.Fatalf("%s: nil params", method)
 		}
 	}
-	if _, err := GetQueryParameters("TRACE", path); err == nil {
+	if _, err := GetQueryParameters(PackVMS, "TRACE", path); err == nil {
 		t.Fatal("expected unsupported method error")
 	}
 }
@@ -91,14 +91,14 @@ func TestResolveComposedSchema_OneOfAnyOf(t *testing.T) {
 			{Value: &openapi3.Schema{Type: &openapi3.Types{intType}}},
 		},
 	}
-	resolved := ResolveComposedSchema(schema)
+	resolved := ResolveComposedSchema(PackVMS, schema)
 	if resolved == nil || resolved.Type == nil || (*resolved.Type)[0] != stringType {
 		t.Fatalf("unexpected resolved schema: %+v", resolved)
 	}
 }
 
 func TestGetSchema_GET_QueryParams_InvalidPath(t *testing.T) {
-	if _, err := GetSchema_GET_QueryParams("/missing/path/"); err == nil {
+	if _, err := GetSchema_GET_QueryParams(PackVMS, "/missing/path/"); err == nil {
 		t.Fatal("expected error for missing path")
 	}
 }
@@ -109,11 +109,11 @@ func TestGetRequestBodySchema_AllMethods(t *testing.T) {
 		if path == "" {
 			continue
 		}
-		if _, err := GetRequestBodySchema(method, path); err != nil {
+		if _, err := GetRequestBodySchema(PackVMS, method, path); err != nil {
 			t.Fatalf("%s %s: %v", method, path, err)
 		}
 	}
-	if _, err := GetRequestBodySchema("TRACE", "/users/"); err == nil {
+	if _, err := GetRequestBodySchema(PackVMS, "TRACE", "/users/"); err == nil {
 		t.Fatal("expected unsupported method")
 	}
 }
@@ -124,7 +124,7 @@ func TestGetResponseModelSchema_AllMethods(t *testing.T) {
 		if path == "" {
 			continue
 		}
-		if _, err := GetResponseModelSchema(method, path); err != nil {
+		if _, err := GetResponseModelSchema(PackVMS, method, path); err != nil {
 			t.Logf("%s %s: %v", method, path, err)
 		}
 	}
@@ -135,7 +135,7 @@ func TestGetResponseModelSchemaUnresolved_GET(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET path")
 	}
-	if _, err := GetResponseModelSchemaUnresolved("GET", path); err != nil {
+	if _, err := GetResponseModelSchemaUnresolved(PackVMS, "GET", path); err != nil {
 		t.Fatalf("GetResponseModelSchemaUnresolved: %v", err)
 	}
 }
@@ -163,7 +163,7 @@ func TestReturnsTextPlain_And204(t *testing.T) {
 	}
 
 	if plainPath != "" {
-		ok, err := ReturnsTextPlain("GET", plainPath)
+		ok, err := ReturnsTextPlain(PackVMS, "GET", plainPath)
 		if err != nil {
 			t.Fatalf("ReturnsTextPlain: %v", err)
 		}
@@ -171,7 +171,7 @@ func TestReturnsTextPlain_And204(t *testing.T) {
 			t.Fatal("expected text/plain endpoint")
 		}
 	} else if path := findPrometheusLikePath(doc); path != "" {
-		ok, err := ReturnsTextPlain("GET", path)
+		ok, err := ReturnsTextPlain(PackVMS, "GET", path)
 		if err != nil {
 			t.Fatalf("ReturnsTextPlain heuristic: %v", err)
 		}
@@ -181,7 +181,7 @@ func TestReturnsTextPlain_And204(t *testing.T) {
 	}
 
 	if noContentPath != "" {
-		ok, err := Returns204NoContent("GET", noContentPath)
+		ok, err := Returns204NoContent(PackVMS, "GET", noContentPath)
 		if err != nil {
 			t.Fatalf("Returns204NoContent: %v", err)
 		}
@@ -204,14 +204,14 @@ func TestGetOperationSummary_AllMethods(t *testing.T) {
 		if path == "" {
 			continue
 		}
-		if _, err := GetOperationSummary(method, path); err != nil {
+		if _, err := GetOperationSummary(PackVMS, method, path); err != nil {
 			t.Fatalf("%s %s: %v", method, path, err)
 		}
 	}
 }
 
 func TestGetOpenApiComponentSchema_InvalidRef(t *testing.T) {
-	if ref, err := GetOpenApiComponentSchema("DefinitelyMissingComponentXYZ"); err != nil {
+	if ref, err := GetOpenApiComponentSchema(PackVMS, "DefinitelyMissingComponentXYZ"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	} else if ref != nil {
 		t.Fatal("expected nil schema ref for missing component")
@@ -238,12 +238,12 @@ func TestSearchableQueryParams_WithMatches(t *testing.T) {
 		if item.Get == nil {
 			continue
 		}
-		names, err := SearchableQueryParams(p)
+		names, err := SearchableQueryParams(PackVMS, p)
 		if err != nil {
 			t.Fatalf("SearchableQueryParams(%q): %v", p, err)
 		}
 		if len(names) > 0 {
-			schema, err := GetSchema_GET_QueryParams(p)
+			schema, err := GetSchema_GET_QueryParams(PackVMS, p)
 			if err != nil {
 				t.Fatalf("GetSchema_GET_QueryParams(%q): %v", p, err)
 			}
@@ -257,19 +257,19 @@ func TestSearchableQueryParams_WithMatches(t *testing.T) {
 }
 
 func TestReturns204NoContent_MissingPath(t *testing.T) {
-	if _, err := Returns204NoContent("GET", "/missing/path/"); err == nil {
+	if _, err := Returns204NoContent(PackVMS, "GET", "/missing/path/"); err == nil {
 		t.Fatal("expected error for missing path")
 	}
 }
 
 func TestReturnsTextPlain_MissingPath(t *testing.T) {
-	if _, err := ReturnsTextPlain("GET", "/missing/path/"); err == nil {
+	if _, err := ReturnsTextPlain(PackVMS, "GET", "/missing/path/"); err == nil {
 		t.Fatal("expected error for missing path")
 	}
 }
 
 func TestGetOperationSummary_MissingPath(t *testing.T) {
-	if _, err := GetOperationSummary("GET", "/missing/path/"); err == nil {
+	if _, err := GetOperationSummary(PackVMS, "GET", "/missing/path/"); err == nil {
 		t.Fatal("expected error for missing path")
 	}
 }
@@ -284,7 +284,7 @@ func TestGetDeleteParams_WithDetails(t *testing.T) {
 		if base == "" {
 			continue
 		}
-		params, err := GetDeleteParams(base)
+		params, err := GetDeleteParams(PackVMS, base)
 		if err != nil {
 			continue
 		}
@@ -302,20 +302,20 @@ func TestGetResponseModelSchemaUnresolved_AllMethods(t *testing.T) {
 		if path == "" {
 			continue
 		}
-		if _, err := GetResponseModelSchemaUnresolved(method, path); err != nil {
+		if _, err := GetResponseModelSchemaUnresolved(PackVMS, method, path); err != nil {
 			t.Fatalf("%s %s: %v", method, path, err)
 		}
 	}
 }
 
 func TestGetOpenApiResource_InvalidPathListsAvailable(t *testing.T) {
-	if _, err := GetOpenApiResource("/this/path/does/not/exist/"); err == nil {
+	if _, err := GetOpenApiResource(PackVMS, "/this/path/does/not/exist/"); err == nil {
 		t.Fatal("expected error for invalid path")
 	}
 }
 
 func TestGetQueryParameters_InvalidPath(t *testing.T) {
-	if _, err := GetQueryParameters("GET", "/this/path/does/not/exist/"); err == nil {
+	if _, err := GetQueryParameters(PackVMS, "GET", "/this/path/does/not/exist/"); err == nil {
 		t.Fatal("expected error for invalid path")
 	}
 }
@@ -349,7 +349,7 @@ func TestCompareSchemaValues_ObjectMismatch(t *testing.T) {
 }
 
 func TestGetDeleteParams_ErrorPaths(t *testing.T) {
-	if _, err := GetDeleteParams("/missing/resource/"); err == nil {
+	if _, err := GetDeleteParams(PackVMS, "/missing/resource/"); err == nil {
 		t.Fatal("expected error for missing path")
 	}
 
@@ -366,7 +366,7 @@ func TestGetDeleteParams_ErrorPaths(t *testing.T) {
 		if base == "" {
 			continue
 		}
-		_, err := GetDeleteParams(base)
+		_, err := GetDeleteParams(PackVMS, base)
 		if err == nil {
 			continue
 		}
@@ -378,13 +378,13 @@ func TestGetDeleteParams_ErrorPaths(t *testing.T) {
 }
 
 func TestGetSchemaFromComponent_Invalid(t *testing.T) {
-	if _, err := GetSchemaFromComponent("DefinitelyMissingComponentXYZ"); err == nil {
+	if _, err := GetSchemaFromComponent(PackVMS, "DefinitelyMissingComponentXYZ"); err == nil {
 		t.Fatal("expected error for missing component")
 	}
 }
 
 func TestGetSchema_FromComponents_Invalid(t *testing.T) {
-	if _, err := GetSchema_FromComponents("/DefinitelyMissingComponentXYZ/"); err == nil {
+	if _, err := GetSchema_FromComponents(PackVMS, "/DefinitelyMissingComponentXYZ/"); err == nil {
 		t.Fatal("expected error for missing component path")
 	}
 }
@@ -395,7 +395,7 @@ func TestValidateOperationExists_CaseInsensitivePath(t *testing.T) {
 		t.Skip("no GET path")
 	}
 	upper := strings.ToUpper(strings.Trim(path, "/"))
-	if err := ValidateOperationExists("GET", "/"+upper+"/"); err != nil {
+	if err := ValidateOperationExists(PackVMS, "GET", "/"+upper+"/"); err != nil {
 		t.Fatalf("case-insensitive path should match: %v", err)
 	}
 }
@@ -405,7 +405,7 @@ func TestReturnsTextPlain_UnsupportedMethod(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET path")
 	}
-	if _, err := ReturnsTextPlain("TRACE", path); err == nil {
+	if _, err := ReturnsTextPlain(PackVMS, "TRACE", path); err == nil {
 		t.Fatal("expected unsupported method error")
 	}
 }
@@ -415,7 +415,7 @@ func TestReturnsTextPlain_OperationMissing(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET-only path")
 	}
-	if _, err := ReturnsTextPlain("POST", path); err == nil {
+	if _, err := ReturnsTextPlain(PackVMS, "POST", path); err == nil {
 		t.Fatal("expected missing operation error")
 	}
 }
@@ -426,7 +426,7 @@ func TestReturnsTextPlain_PathWithoutTrailingSlash(t *testing.T) {
 		t.Skip("no GET path")
 	}
 	trimmed := strings.TrimSuffix(path, "/")
-	ok, err := ReturnsTextPlain("GET", trimmed)
+	ok, err := ReturnsTextPlain(PackVMS, "GET", trimmed)
 	if err != nil {
 		t.Fatalf("ReturnsTextPlain: %v", err)
 	}
@@ -438,7 +438,7 @@ func TestReturns204NoContent_UnsupportedMethod(t *testing.T) {
 	if path == "" {
 		t.Skip("no GET path")
 	}
-	if _, err := Returns204NoContent("INVALID", path); err == nil {
+	if _, err := Returns204NoContent(PackVMS, "INVALID", path); err == nil {
 		t.Fatal("expected unsupported method error")
 	}
 }
@@ -449,7 +449,7 @@ func TestGetResponseModelSchema_GETVariants(t *testing.T) {
 		if item.Get == nil {
 			continue
 		}
-		if _, err := GetResponseModelSchema("GET", p); err != nil {
+		if _, err := GetResponseModelSchema(PackVMS, "GET", p); err != nil {
 			t.Logf("GET %s: %v", p, err)
 			continue
 		}
@@ -464,7 +464,7 @@ func TestGetOpenApiComponentSchema_WithSlashRef(t *testing.T) {
 		t.Skip("no component schemas")
 	}
 	for name := range doc.Components.Schemas {
-		ref, err := GetOpenApiComponentSchema("components/schemas/" + name)
+		ref, err := GetOpenApiComponentSchema(PackVMS, "components/schemas/" + name)
 		if err != nil {
 			t.Fatalf("GetOpenApiComponentSchema: %v", err)
 		}
@@ -486,7 +486,7 @@ func TestGetDeleteParams_AllDeletePaths(t *testing.T) {
 		if base == "" {
 			continue
 		}
-		params, err := GetDeleteParams(base)
+		params, err := GetDeleteParams(PackVMS, base)
 		if err != nil {
 			continue
 		}
@@ -509,12 +509,12 @@ func TestSearchableQueryParams_ReadOnlySkipped(t *testing.T) {
 		if item.Get == nil {
 			continue
 		}
-		names, err := SearchableQueryParams(p)
+		names, err := SearchableQueryParams(PackVMS, p)
 		if err != nil {
 			t.Fatalf("SearchableQueryParams(%q): %v", p, err)
 		}
 		for _, name := range names {
-			params, err := GetQueryParameters("GET", p)
+			params, err := GetQueryParameters(PackVMS, "GET", p)
 			if err != nil {
 				t.Fatalf("GetQueryParameters: %v", err)
 			}
@@ -535,7 +535,7 @@ func TestGetResponseModelSchemaUnresolved_AllGETPaths(t *testing.T) {
 		if item.Get == nil {
 			continue
 		}
-		if _, err := GetResponseModelSchemaUnresolved("GET", p); err != nil {
+		if _, err := GetResponseModelSchemaUnresolved(PackVMS, "GET", p); err != nil {
 			t.Fatalf("GET %s: %v", p, err)
 		}
 	}
@@ -559,7 +559,7 @@ func TestReturnsTextPlain_PrometheusHeuristic(t *testing.T) {
 			desc = *resp.Value.Description
 		}
 		if strings.Contains(strings.ToLower(p), "prometheus") || strings.Contains(strings.ToLower(desc), "prometheus") {
-			ok, err := ReturnsTextPlain("GET", p)
+			ok, err := ReturnsTextPlain(PackVMS, "GET", p)
 			if err != nil {
 				t.Fatalf("ReturnsTextPlain(%q): %v", p, err)
 			}
@@ -577,28 +577,28 @@ func TestOpenAPISchema_AllPathOperations(t *testing.T) {
 	methods := []string{"GET", "POST", "PATCH", "PUT", "DELETE", "HEAD", "OPTIONS"}
 	for p, item := range doc.Paths.Map() {
 		for _, method := range methods {
-			_, _ = GetOperationSummary(method, p)
-			_, _ = ReturnsTextPlain(method, p)
-			_, _ = Returns204NoContent(method, p)
+			_, _ = GetOperationSummary(PackVMS, method, p)
+			_, _ = ReturnsTextPlain(PackVMS, method, p)
+			_, _ = Returns204NoContent(PackVMS, method, p)
 		}
 		if item.Get != nil {
-			_, _ = GetResponseModelSchema("GET", p)
-			_, _ = GetResponseModelSchemaUnresolved("GET", p)
-			_, _ = SearchableQueryParams(p)
-			_, _ = GetQueryParameters("GET", p)
-			_, _ = GetSchema_GET_QueryParams(p)
+			_, _ = GetResponseModelSchema(PackVMS, "GET", p)
+			_, _ = GetResponseModelSchemaUnresolved(PackVMS, "GET", p)
+			_, _ = SearchableQueryParams(PackVMS, p)
+			_, _ = GetQueryParameters(PackVMS, "GET", p)
+			_, _ = GetSchema_GET_QueryParams(PackVMS, p)
 		}
 		if item.Post != nil {
-			_, _ = GetRequestBodySchema("POST", p)
+			_, _ = GetRequestBodySchema(PackVMS, "POST", p)
 		}
 		if item.Patch != nil {
-			_, _ = GetRequestBodySchema("PATCH", p)
+			_, _ = GetRequestBodySchema(PackVMS, "PATCH", p)
 		}
 	}
 }
 
 func TestOpenAPISchema_GetAllPathsAndComponents(t *testing.T) {
-	paths, err := GetAllPaths()
+	paths, err := GetAllPaths(PackVMS)
 	if err != nil {
 		t.Fatalf("GetAllPaths: %v", err)
 	}
@@ -606,7 +606,7 @@ func TestOpenAPISchema_GetAllPathsAndComponents(t *testing.T) {
 		t.Fatal("expected paths")
 	}
 
-	schemas, err := GetAllComponentSchemas()
+	schemas, err := GetAllComponentSchemas(PackVMS)
 	if err != nil {
 		t.Fatalf("GetAllComponentSchemas: %v", err)
 	}
@@ -622,7 +622,7 @@ func TestGetResponseModelSchema_GETAllSuccessfulPaths(t *testing.T) {
 		if item.Get == nil {
 			continue
 		}
-		if _, err := GetResponseModelSchema("GET", p); err == nil {
+		if _, err := GetResponseModelSchema(PackVMS, "GET", p); err == nil {
 			success++
 		}
 	}
@@ -646,13 +646,13 @@ func TestGetResponseModelSchemaForGET_Variants(t *testing.T) {
 		if content == nil || content.Schema == nil {
 			continue
 		}
-		root := ResolveComposedSchema(ResolveAllRefs(content.Schema))
+		root := ResolveComposedSchema(PackVMS, ResolveAllRefs(PackVMS, content.Schema))
 		if root == nil || root.Type == nil {
 			continue
 		}
 		if (*root.Type).Is("object") && root.Properties != nil {
 			if resultsRef, ok := root.Properties["results"]; ok {
-				results := ResolveComposedSchema(ResolveAllRefs(resultsRef))
+				results := ResolveComposedSchema(PackVMS, ResolveAllRefs(PackVMS, resultsRef))
 				if results != nil && results.Type != nil && (*results.Type).Is("array") {
 					paginated = p
 				}
@@ -666,17 +666,17 @@ func TestGetResponseModelSchemaForGET_Variants(t *testing.T) {
 	}
 
 	if paginated != "" {
-		if _, err := GetResponseModelSchema("GET", paginated); err != nil {
+		if _, err := GetResponseModelSchema(PackVMS, "GET", paginated); err != nil {
 			t.Fatalf("paginated GET %s: %v", paginated, err)
 		}
 	}
 	if flatArray != "" {
-		if _, err := GetResponseModelSchema("GET", flatArray); err != nil {
+		if _, err := GetResponseModelSchema(PackVMS, "GET", flatArray); err != nil {
 			t.Fatalf("array GET %s: %v", flatArray, err)
 		}
 	}
 	if singleObject != "" {
-		if _, err := GetResponseModelSchema("GET", singleObject); err != nil {
+		if _, err := GetResponseModelSchema(PackVMS, "GET", singleObject); err != nil {
 			t.Fatalf("object GET %s: %v", singleObject, err)
 		}
 	}
@@ -700,7 +700,7 @@ func TestReturnsTextPlain_ExplicitContentType(t *testing.T) {
 						if op == item.Post {
 							method = "POST"
 						}
-						ok, err := ReturnsTextPlain(method, p)
+						ok, err := ReturnsTextPlain(PackVMS, method, p)
 						if err != nil {
 							t.Fatalf("ReturnsTextPlain(%s %s): %v", method, p, err)
 						}
@@ -726,7 +726,7 @@ func TestReturns204NoContent_ExplicitStatus(t *testing.T) {
 			if op == nil || op.Responses == nil || op.Responses.Status(204) == nil {
 				continue
 			}
-			ok, err := Returns204NoContent(method, p)
+			ok, err := Returns204NoContent(PackVMS, method, p)
 			if err != nil {
 				t.Fatalf("Returns204NoContent(%s %s): %v", method, p, err)
 			}
@@ -746,7 +746,7 @@ func TestSearchableQueryParams_AllGETPaths(t *testing.T) {
 		if item.Get == nil {
 			continue
 		}
-		params, err := SearchableQueryParams(p)
+		params, err := SearchableQueryParams(PackVMS, p)
 		if err != nil {
 			t.Fatalf("SearchableQueryParams(%s): %v", p, err)
 		}
@@ -762,12 +762,12 @@ func TestGetOperationSummary_AllPaths(t *testing.T) {
 	doc := mustLoadDoc(t)
 	for p, item := range doc.Paths.Map() {
 		if item.Get != nil {
-			if _, err := GetOperationSummary("GET", p); err != nil {
+			if _, err := GetOperationSummary(PackVMS, "GET", p); err != nil {
 				t.Fatalf("GetOperationSummary GET %s: %v", p, err)
 			}
 		}
 		if item.Post != nil {
-			if _, err := GetOperationSummary("POST", p); err != nil {
+			if _, err := GetOperationSummary(PackVMS, "POST", p); err != nil {
 				t.Fatalf("GetOperationSummary POST %s: %v", p, err)
 			}
 		}
@@ -780,7 +780,7 @@ func TestValidateOperationExists_NormalizesPath(t *testing.T) {
 		t.Skip("no GET path")
 	}
 	trimmed := strings.Trim(path, "/")
-	if err := ValidateOperationExists("GET", trimmed); err != nil {
+	if err := ValidateOperationExists(PackVMS, "GET", trimmed); err != nil {
 		t.Fatalf("ValidateOperationExists: %v", err)
 	}
 }

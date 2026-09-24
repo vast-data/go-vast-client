@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -17,6 +18,7 @@ type RestResourceConfig struct {
 	Name           string                   // Type name (e.g., "Alarm")
 	ResourcePath   string                   // API path (e.g., "alarms")
 	Operations     string                   // CRUD string (e.g., "RUD")
+	Pack           string                   // OpenAPI pack: "vms" (default) or "dataengine"
 	ExtraMethods   []apibuilder.ExtraMethod // Extra methods (manual +apiall: + auto-discovered)
 	ExcludeMethods []apibuilder.ExtraMethod // Exclusions from +apiexclude:extraMethod: annotations
 }
@@ -33,8 +35,9 @@ func NewRestParser() *RestParser {
 	}
 }
 
-// ParseRestFile parses rest/untyped_rest.go and extracts all newUntypedResource calls
-// and field markers from the UntypedVMSRest struct
+// ParseRestFile parses a rest untyped file and extracts NewUntypedResource calls
+// and field markers (+apiall / +apiexclude). OpenAPI pack is inferred from the
+// file path: paths under rest/dataengine/ → PackDataEngine; otherwise PackVMS.
 func (p *RestParser) ParseRestFile(filename string) error {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
@@ -42,13 +45,15 @@ func (p *RestParser) ParseRestFile(filename string) error {
 		return fmt.Errorf("failed to parse %s: %w", filename, err)
 	}
 
-	// First, parse field markers from UntypedVMSRest struct
+	pack := packForRestFile(filename)
+
+	// First, parse field markers from UntypedVMSRest / UntypedRest struct
 	p.parseFieldMarkers(file)
 
-	// Then, walk the AST to find newUntypedResource calls
+	// Then, walk the AST to find NewUntypedResource / newUntypedResource calls
 	ast.Inspect(file, func(n ast.Node) bool {
 		// Look for assignment statements like:
-		// rest.Alarms = newUntypedResource[untyped.Alarm](rest, "alarms", R, U, D)
+		// rest.Alarms = core.NewUntypedResource[untyped.Alarm](rest, "alarms", R, U, D)
 		assignStmt, ok := n.(*ast.AssignStmt)
 		if !ok {
 			return true
@@ -64,7 +69,7 @@ func (p *RestParser) ParseRestFile(filename string) error {
 			return true
 		}
 
-		// Check if the function is newUntypedResource with type parameters
+		// Check if the function is NewUntypedResource with type parameters
 		indexExpr, ok := callExpr.Fun.(*ast.IndexExpr)
 		if !ok {
 			// Try IndexListExpr for Go 1.18+ with multiple type parameters
@@ -78,9 +83,7 @@ func (p *RestParser) ParseRestFile(filename string) error {
 			}
 		}
 
-		// Check if function name is "newUntypedResource"
-		ident, ok := indexExpr.X.(*ast.Ident)
-		if !ok || ident.Name != "newUntypedResource" {
+		if !isNewUntypedResourceCall(indexExpr.X) {
 			return true
 		}
 
@@ -122,16 +125,18 @@ func (p *RestParser) ParseRestFile(filename string) error {
 
 		// Check if config already exists (from field markers parsing)
 		if existingConfig, exists := p.resourceConfigs[typeName]; exists {
-			// Merge: keep ExtraMethods, update Name/ResourcePath/Operations
+			// Merge: keep ExtraMethods, update Name/ResourcePath/Operations/Pack
 			existingConfig.Name = typeName
 			existingConfig.ResourcePath = resourcePath
 			existingConfig.Operations = opsString
+			existingConfig.Pack = pack
 		} else {
 			// Create new configuration
 			p.resourceConfigs[typeName] = &RestResourceConfig{
 				Name:         typeName,
 				ResourcePath: resourcePath,
 				Operations:   opsString,
+				Pack:         pack,
 				ExtraMethods: []apibuilder.ExtraMethod{},
 			}
 		}
@@ -140,6 +145,28 @@ func (p *RestParser) ParseRestFile(filename string) error {
 	})
 
 	return nil
+}
+
+// packForRestFile returns the OpenAPI pack for a rest source file.
+// Nested DataEngine rest lives under rest/dataengine/; everything else is VMS.
+func packForRestFile(filename string) string {
+	normalized := filepath.ToSlash(filename)
+	if strings.Contains(normalized, "/dataengine/") {
+		return string(api.PackDataEngine)
+	}
+	return string(api.PackVMS)
+}
+
+// isNewUntypedResourceCall reports whether expr is newUntypedResource or core.NewUntypedResource.
+func isNewUntypedResourceCall(expr ast.Expr) bool {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e.Name == "newUntypedResource" || e.Name == "NewUntypedResource"
+	case *ast.SelectorExpr:
+		return e.Sel.Name == "NewUntypedResource" || e.Sel.Name == "newUntypedResource"
+	default:
+		return false
+	}
 }
 
 // AutoDiscoverExtraMethods queries the embedded OpenAPI schema and, for each resource,
@@ -152,9 +179,13 @@ func (p *RestParser) ParseRestFile(filename string) error {
 //
 // Call this after ParseRestFile.
 func (p *RestParser) AutoDiscoverExtraMethods() error {
-	allPaths, err := api.GetAllPaths()
+	vmsPaths, err := api.GetAllPaths(api.PackVMS)
 	if err != nil {
-		return fmt.Errorf("failed to load OpenAPI paths for extra-method auto-discovery: %w", err)
+		return fmt.Errorf("failed to load VMS OpenAPI paths for extra-method auto-discovery: %w", err)
+	}
+	dePaths, err := api.GetAllPaths(api.PackDataEngine)
+	if err != nil {
+		return fmt.Errorf("failed to load DataEngine OpenAPI paths for extra-method auto-discovery: %w", err)
 	}
 
 	for _, config := range p.resourceConfigs {
@@ -162,9 +193,14 @@ func (p *RestParser) AutoDiscoverExtraMethods() error {
 			continue
 		}
 
-		collectionPath := config.ResourcePath // e.g. "activedirectory"
-		prefix := "/" + collectionPath + "/"
-		prefixNoSlash := "/" + collectionPath
+		allPaths := vmsPaths
+		if config.Pack == string(api.PackDataEngine) {
+			allPaths = dePaths
+		}
+
+		collectionPath := config.ResourcePath // e.g. "activedirectory" or "triggers/schedule"
+		prefix := "/" + strings.Trim(collectionPath, "/") + "/"
+		prefixNoSlash := "/" + strings.Trim(collectionPath, "/")
 
 		// Build lookup sets for dedup and exclusion, using normalized paths.
 		existingKeys := make(map[string]bool)
@@ -186,7 +222,7 @@ func (p *RestParser) AutoDiscoverExtraMethods() error {
 				continue
 			}
 
-			// Skip standard CRUD paths (/collection/ and /collection/{id}/).
+			// Skip standard CRUD paths (/collection/ and /collection/{id|guid}/).
 			if isStandardCRUDPath(rawPath, collectionPath) {
 				continue
 			}
@@ -228,17 +264,21 @@ func (p *RestParser) AutoDiscoverExtraMethods() error {
 }
 
 // isStandardCRUDPath returns true if the path is the standard collection list/create
-// path or the standard single-resource path (with {id}).
+// path or the standard single-resource path (with {id} or {guid} only).
+// Other single params (e.g. {access_key}) are treated as extra methods.
+// collectionPath may be nested (e.g. "triggers/schedule").
 func isStandardCRUDPath(path, collectionPath string) bool {
 	trimmed := strings.Trim(path, "/")
-	parts := strings.Split(trimmed, "/")
-	switch len(parts) {
-	case 1:
-		return parts[0] == collectionPath
-	case 2:
-		return parts[0] == collectionPath && parts[1] == "{id}"
+	col := strings.Trim(collectionPath, "/")
+	if trimmed == col {
+		return true
 	}
-	return false
+	prefix := col + "/"
+	if !strings.HasPrefix(trimmed, prefix) {
+		return false
+	}
+	rest := strings.TrimPrefix(trimmed, prefix)
+	return rest == "{id}" || rest == "{guid}"
 }
 
 // normalizeAPIPath ensures the path has a leading "/" and a trailing "/".
@@ -260,9 +300,9 @@ func (p *RestParser) GetAllConfigs() map[string]*RestResourceConfig {
 // parseFieldMarkers parses field comments from the UntypedVMSRest struct
 func (p *RestParser) parseFieldMarkers(file *ast.File) {
 	ast.Inspect(file, func(n ast.Node) bool {
-		// Look for struct declarations
+		// Look for struct declarations that carry resource field markers.
 		typeSpec, ok := n.(*ast.TypeSpec)
-		if !ok || typeSpec.Name.Name != "UntypedVMSRest" {
+		if !ok || (typeSpec.Name.Name != "UntypedVMSRest" && typeSpec.Name.Name != "UntypedRest") {
 			return true
 		}
 
@@ -388,7 +428,7 @@ func (config *RestResourceConfig) ConvertToOperations() *apibuilder.Operations {
 	}
 
 	return &apibuilder.Operations{
-		Operations: config.Operations,
+		Operations: strings.ToUpper(config.Operations),
 		URL:        config.ResourcePath,
 	}
 }
