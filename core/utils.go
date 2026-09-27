@@ -13,15 +13,19 @@ import (
 // (e.g. name__contains=foo) without core needing to import the expr package.
 var exprSerializeField func(v any, key string) (map[string]any, bool)
 
-// splitQueryBody interprets variadic Params for Create/Update/Ensure-style calls.
+// SplitQueryBody interprets variadic Params for Create/Update/Ensure/DeleteById-style calls.
 // Matches core.Request argument order (query, body):
 //
 //	0 args → nil query, nil body
-//	1 arg  → nil query, body          (backward-compatible with Create(body))
+//	1 arg  → nil query, body          (backward-compatible with Create(body) / Update(id, body))
 //	2 args → query, body
 //	3+     → error
 //
 // Example: CreateWithContext(ctx, Params{"tenant_name": "de-lab"}, body).
+func SplitQueryBody(params []Params) (query, body Params, err error) {
+	return splitQueryBody(params)
+}
+
 func splitQueryBody(params []Params) (query, body Params, err error) {
 	switch len(params) {
 	case 0:

@@ -120,12 +120,31 @@ func TestVastResource_CreateUpdateDelete(t *testing.T) {
 		t.Fatalf("unexpected update result: %v", updated)
 	}
 
-	deleted, err := resource.DeleteById(10, nil, nil)
+	deleted, err := resource.DeleteById(10)
 	if err != nil {
 		t.Fatalf("DeleteById: %v", err)
 	}
 	if deleted["id"] == nil {
 		t.Fatal("expected delete result")
+	}
+}
+
+func TestVastResource_UpdateUsesPutWhenConfigured(t *testing.T) {
+	var gotMethod string
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"id": 10, "name": "put-user"})
+	}))
+	defer server.Close()
+
+	resource := newCRUDTestResource(t, server, NewResourceOps(U))
+	setUpdateMethod(resource, http.MethodPut)
+	if _, err := resource.Update(10, Params{"name": "put-user"}); err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	if gotMethod != http.MethodPut {
+		t.Fatalf("method = %q, want PUT", gotMethod)
 	}
 }
 

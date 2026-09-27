@@ -201,7 +201,7 @@ func (r *Dtray) DeleteWithContext(ctx context.Context, req *DtraySearchParams) e
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func (r *Dtray) DeleteById(id any) error {
 
 // DeleteByIdWithContext deletes a dtray by ID using provided context
 func (r *Dtray) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

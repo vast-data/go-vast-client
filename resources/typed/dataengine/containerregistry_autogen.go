@@ -252,7 +252,7 @@ func (r *ContainerRegistry) DeleteWithContext(ctx context.Context, req *Containe
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (r *ContainerRegistry) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a containerregistry by ID using provided context
 // summary: Delete Container Registry by ID
 func (r *ContainerRegistry) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

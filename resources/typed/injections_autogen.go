@@ -150,7 +150,7 @@ func (r *Injections) DeleteWithContext(ctx context.Context, req *InjectionsSearc
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (r *Injections) DeleteById(id any) error {
 
 // DeleteByIdWithContext deletes a injections by ID using provided context
 func (r *Injections) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

@@ -226,7 +226,7 @@ func (r *LocalProvider) DeleteWithContext(ctx context.Context, req *LocalProvide
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -248,7 +248,7 @@ func (r *LocalProvider) DeleteById(id any) error {
 // Parameters:
 //   - id: Local Provider ID
 func (r *LocalProvider) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

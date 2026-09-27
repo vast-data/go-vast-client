@@ -211,7 +211,7 @@ func (r *ReplicationStream) DeleteWithContext(ctx context.Context, req *Replicat
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func (r *ReplicationStream) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a replicationstream by ID using provided context
 // summary: Delete a Replication Stream
 func (r *ReplicationStream) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

@@ -154,7 +154,7 @@ func (r *ScheduleTrigger) DeleteWithContext(ctx context.Context, req *ScheduleTr
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (r *ScheduleTrigger) DeleteById(id any) error {
 
 // DeleteByIdWithContext deletes a scheduletrigger by ID using provided context
 func (r *ScheduleTrigger) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

@@ -209,7 +209,7 @@ func (r *S3LifeCycleRule) DeleteWithContext(ctx context.Context, req *S3LifeCycl
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func (r *S3LifeCycleRule) DeleteById(id any) error {
 // Parameters:
 //   - id: The ID of an S3 lifecycle rule
 func (r *S3LifeCycleRule) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

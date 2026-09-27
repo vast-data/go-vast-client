@@ -87,6 +87,18 @@ func TestGetSchemaType(t *testing.T) {
 	if got := GetSchemaType(nil); got != "" {
 		t.Fatalf("GetSchemaType(nil) = %q", got)
 	}
+	multi := &openapi3.Schema{
+		Type: &openapi3.Types{openapi3.TypeString, openapi3.TypeObject},
+		Properties: map[string]*openapi3.SchemaRef{
+			"name": {Value: typeSchema(openapi3.TypeString)},
+		},
+	}
+	if got := GetSchemaType(multi); got != openapi3.TypeObject {
+		t.Fatalf("multi-type with props: GetSchemaType = %q, want object", got)
+	}
+	if !schemaHasType(multi, openapi3.TypeString) {
+		t.Fatal("string must remain in Type union")
+	}
 }
 
 func TestCompareSchemaValues(t *testing.T) {

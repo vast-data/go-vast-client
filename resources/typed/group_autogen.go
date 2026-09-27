@@ -231,7 +231,7 @@ func (r *Group) DeleteWithContext(ctx context.Context, req *GroupSearchParams) e
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (r *Group) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a group by ID using provided context
 // summary: Delete Group
 func (r *Group) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

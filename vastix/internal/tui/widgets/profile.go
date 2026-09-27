@@ -174,15 +174,15 @@ func (p *Profile) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 			}
 		}
 
-		// Test the connection by getting version
-		version, err := rest.Versions.GetVersionWithContext(context.Background())
+		// Probe Versions for display; 403 (tenant admin) → <n/a>, still activate.
+		vastVersion, err := client.FetchVastVersion(context.Background(), rest)
 		if err != nil {
 			return msg_types.ErrorMsg{
 				Err: err,
 			}
 		}
 
-		p.log.Info("Rest client initialized", zap.Any("VAST version", version))
+		p.log.Info("Rest client initialized", zap.String("VAST version", vastVersion))
 
 		// Create profile in database
 		profile := &database.Profile{
@@ -194,7 +194,7 @@ func (p *Profile) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 			Tenant:      tenant,
 			Port:        port,
 			SSLVerify:   sslVerify,
-			VastVersion: version.String(),
+			VastVersion: vastVersion,
 			ApiVersion:  apiVersion,
 		}
 
@@ -280,30 +280,28 @@ func (p *Profile) Select(selectedRowData common.RowData) (tea.Cmd, error) {
 			log.Error("Failed to get REST client from profile", zap.Error(err))
 			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to get REST client from profile: %w", err)}
 		}
-		// Test the connection by getting version
-		version, err := rest.Versions.GetVersionWithContext(context.Background())
+		// Probe Versions for display; 403 (tenant admin) → <n/a>, do not revert activation.
+		vastVersion, err := client.FetchVastVersion(context.Background(), rest)
 		if err != nil {
 			log.Error("Failed to get VAST version from new active profile", zap.Error(err))
-			// Revert to previous active profile
+			// Revert to previous active profile on hard failures (auth/network), not 403.
 			if revertErr := db.SetActiveProfile(activeProfile.ID); revertErr != nil {
 				log.Error("Failed to revert active profile after connection test", zap.Error(revertErr))
 			}
 			return msg_types.ErrorMsg{
 				Err: err,
 			}
-		} else {
-			if version.String() != newActiveProfile.VastVersion {
-				newActiveProfile.VastVersion = version.String()
-				if err := db.UpdateProfile(newActiveProfile); err != nil {
-					log.Error("Failed to update profile with new version", zap.Error(err))
-					return msg_types.ErrorMsg{Err: fmt.Errorf("failed to update profile with new version: %w", err)}
-				} else {
-					p.log.Info("Profile updated with new VAST version", zap.String("version", version.String()))
-				}
+		}
+		if vastVersion != newActiveProfile.VastVersion {
+			newActiveProfile.VastVersion = vastVersion
+			if err := db.UpdateProfile(newActiveProfile); err != nil {
+				log.Error("Failed to update profile with new version", zap.Error(err))
+				return msg_types.ErrorMsg{Err: fmt.Errorf("failed to update profile with new version: %w", err)}
 			}
+			p.log.Info("Profile updated with new VAST version", zap.String("version", vastVersion))
 		}
 
-		p.log.Info("Rest client initialized", zap.Any("VAST version", version))
+		p.log.Info("Rest client initialized", zap.String("VAST version", vastVersion))
 		return msg_types.UpdateProfileMsg{}
 	}
 

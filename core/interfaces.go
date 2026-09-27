@@ -16,14 +16,18 @@ type VastResourceAPI interface {
 	GetApiRoot() string
 
 	List(Params) (RecordSet, error)
-	// Create accepts optional query via variadic Params (same order as Request):
+	// Create accepts optional query via variadic Params:
 	//   Create(body) or Create(query, body).
 	Create(...Params) (Record, error)
-	// Update accepts optional query via variadic Params after id:
+	// Update accepts optional query via variadic Params:
 	//   Update(id, body) or Update(id, query, body).
-	Update(any, ...Params) (Record, error)
-	Delete(Params, Params) (Record, error)
-	DeleteById(any, Params, Params) (Record, error)
+	Update(id any, params ...Params) (Record, error)
+	// Delete accepts searchParams plus optional query/body via variadic deleteParams:
+	//   Delete(search), Delete(search, body), or Delete(search, query, body).
+	Delete(searchParams Params, deleteParams ...Params) (Record, error)
+	// DeleteById accepts optional query/body via variadic Params:
+	//   DeleteById(id), DeleteById(id, body), or DeleteById(id, query, body).
+	DeleteById(id any, params ...Params) (Record, error)
 	// Ensure accepts searchParams plus createParams (body or query+body):
 	//   Ensure(search, body) or Ensure(search, query, body).
 	Ensure(Params, ...Params) (Record, error)
@@ -41,13 +45,26 @@ type VastResourceAPI interface {
 type VastResourceAPIWithContext interface {
 	VastResourceAPI
 	ListWithContext(context.Context, Params) (RecordSet, error)
+	// CreateWithContext accepts optional query via variadic Params:
+	//   CreateWithContext(ctx, body) or CreateWithContext(ctx, query, body).
 	CreateWithContext(context.Context, ...Params) (Record, error)
-	UpdateWithContext(context.Context, any, ...Params) (Record, error)
-	DeleteWithContext(context.Context, Params, Params, Params) (Record, error)
-	DeleteByIdWithContext(context.Context, any, Params, Params) (Record, error)
-	// EnsureWithContext(ctx, search, createParams...) — createParams same as Create.
+	// UpdateWithContext accepts optional query via variadic Params:
+	//   UpdateWithContext(ctx, id, body) or UpdateWithContext(ctx, id, query, body).
+	UpdateWithContext(ctx context.Context, id any, params ...Params) (Record, error)
+	// DeleteWithContext accepts searchParams plus optional query/body via variadic deleteParams:
+	//   DeleteWithContext(ctx, search), DeleteWithContext(ctx, search, body),
+	//   or DeleteWithContext(ctx, search, query, body).
+	DeleteWithContext(ctx context.Context, searchParams Params, deleteParams ...Params) (Record, error)
+	// DeleteByIdWithContext accepts optional query/body via variadic Params:
+	//   DeleteByIdWithContext(ctx, id), DeleteByIdWithContext(ctx, id, body),
+	//   or DeleteByIdWithContext(ctx, id, query, body).
+	DeleteByIdWithContext(ctx context.Context, id any, params ...Params) (Record, error)
+	// EnsureWithContext accepts searchParams plus createParams (body or query+body):
+	//   EnsureWithContext(ctx, search, body) or EnsureWithContext(ctx, search, query, body).
 	EnsureWithContext(context.Context, Params, ...Params) (Record, error)
 	GetWithContext(context.Context, Params) (Record, error)
+	// GetByIdWithContext accepts an optional query Params:
+	//   GetByIdWithContext(ctx, id) or GetByIdWithContext(ctx, id, query).
 	GetByIdWithContext(context.Context, any, ...Params) (Record, error)
 	ExistsWithContext(context.Context, Params) (bool, error)
 	MustExistsWithContext(context.Context, Params) bool

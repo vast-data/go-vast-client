@@ -327,6 +327,10 @@ func (rest *UntypedVMSRest) GetCtx() context.Context {
 
 func (rest *UntypedVMSRest) SetCtx(ctx context.Context) {
 	rest.ctx = ctx
+	// Nested rests keep their own ctx; keep them in sync with the parent.
+	if rest.DataEngine != nil {
+		rest.DataEngine.SetCtx(ctx)
+	}
 }
 
 func (rest *UntypedVMSRest) GetApiRoot() string {

@@ -345,17 +345,9 @@ func SearchableQueryParams(pack Pack, resourcePath string) ([]string, error) {
 	return result, nil
 }
 
-// isStringOrInteger returns true if the given OpenAPI schema represents string or integer
+// isStringOrInteger returns true if the given OpenAPI schema includes string or integer.
 func isStringOrInteger(prop *openapi3.Schema) bool {
-	if prop == nil || prop.Type == nil || len(*prop.Type) == 0 {
-		return false
-	}
-	switch (*prop.Type)[0] {
-	case openapi3.TypeString, openapi3.TypeInteger:
-		return true
-	default:
-		return false
-	}
+	return IsStringOrInteger(prop)
 }
 
 // ResolveComposedSchema resolves allOf/oneOf/anyOf compositions in an OpenAPI schema
@@ -405,16 +397,71 @@ func ResolveComposedSchema(pack Pack, schema *openapi3.Schema) *openapi3.Schema 
 		return schema
 	}
 
-	// Resolve oneOf or anyOf by picking the first resolvable schema with a type
+	// Resolve oneOf / anyOf by merging ALL branches (not picking the first).
+	// Each branch is fully composed first so allOf object bodies get properties + type.
+	// Types are unioned (including string), properties/required are merged.
+	// Common DataEngine pattern: oneOf[PipelineCreateInfo(object), raw YAML/JSON string].
 	for _, refList := range [][]*openapi3.SchemaRef{schema.OneOf, schema.AnyOf} {
+		if len(refList) == 0 {
+			continue
+		}
+		merged := &openapi3.Schema{
+			Properties:   map[string]*openapi3.SchemaRef{},
+			Required:     []string{},
+			Title:        schema.Title,
+			Description:  schema.Description,
+			ExternalDocs: schema.ExternalDocs,
+		}
+		var typeSet openapi3.Types
+		sawBranch := false
 		for _, subRef := range refList {
-			sub := ResolveAllRefs(pack, subRef)
-			if sub != nil && sub.Type != nil && len(*sub.Type) > 0 {
-				return sub
+			sub := ResolveComposedSchema(pack, ResolveAllRefs(pack, subRef))
+			if sub == nil {
+				continue
+			}
+			hasType := sub.Type != nil && len(*sub.Type) > 0
+			hasProps := len(sub.Properties) > 0
+			if !hasType && !hasProps && sub.Items == nil {
+				continue
+			}
+			sawBranch = true
+			for name, prop := range sub.Properties {
+				merged.Properties[name] = prop
+			}
+			merged.Required = append(merged.Required, sub.Required...)
+			if hasType {
+				for _, t := range *sub.Type {
+					typeSet = appendTypeUnique(typeSet, t)
+				}
+			} else if hasProps {
+				// Composed object without an explicit type (e.g. allOf-only branch).
+				typeSet = appendTypeUnique(typeSet, openapi3.TypeObject)
+			}
+			if sub.Items != nil && merged.Items == nil {
+				merged.Items = sub.Items
+			}
+			if merged.Description == "" && sub.Description != "" {
+				merged.Description = sub.Description
 			}
 		}
+		if !sawBranch {
+			continue
+		}
+		if len(typeSet) > 0 {
+			merged.Type = &typeSet
+		}
+		return merged
 	}
 	return schema
+}
+
+func appendTypeUnique(types openapi3.Types, t string) openapi3.Types {
+	for _, existing := range types {
+		if existing == t {
+			return types
+		}
+	}
+	return append(types, t)
 }
 
 // ResolveAllRefs resolves all $ref references in an OpenAPI schema.

@@ -20,7 +20,6 @@ type TypedRest struct {
 	ElementTriggers               *tde.ElementTrigger
 	Pipelines                     *tde.Pipeline
 	DataEngine                    *tde.DataEngine
-	Telemetries                   *tde.Telemetry
 }
 
 var _ core.VastRest = (*TypedRest)(nil)
@@ -40,7 +39,6 @@ func NewTyped(untyped *UntypedRest) *TypedRest {
 	rest.ElementTriggers = core.NewTypedResource[tde.ElementTrigger](rest.Untyped)
 	rest.Pipelines = core.NewTypedResource[tde.Pipeline](rest.Untyped)
 	rest.DataEngine = core.NewTypedResource[tde.DataEngine](rest.Untyped)
-	rest.Telemetries = core.NewTypedResource[tde.Telemetry](rest.Untyped)
 	return rest
 }
 

@@ -197,7 +197,7 @@ func (r *Nvram) DeleteWithContext(ctx context.Context, req *NvramSearchParams) e
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func (r *Nvram) DeleteById(id any) error {
 
 // DeleteByIdWithContext deletes a nvram by ID using provided context
 func (r *Nvram) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

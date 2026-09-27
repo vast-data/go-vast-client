@@ -234,7 +234,7 @@ func (r *EventBroker) DeleteWithContext(ctx context.Context, req *EventBrokerSea
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func (r *EventBroker) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a eventbroker by ID using provided context
 // summary: Delete external kafka broker configuration
 func (r *EventBroker) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

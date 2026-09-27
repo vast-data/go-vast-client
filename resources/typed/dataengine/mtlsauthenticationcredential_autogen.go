@@ -235,7 +235,7 @@ func (r *MtlsAuthenticationCredential) DeleteWithContext(ctx context.Context, re
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -251,7 +251,7 @@ func (r *MtlsAuthenticationCredential) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a mtlsauthenticationcredential by ID using provided context
 // summary: Delete Mtls Authentication Credential by ID
 func (r *MtlsAuthenticationCredential) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

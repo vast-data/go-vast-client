@@ -2,6 +2,7 @@ package dataengine
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
 	unde "github.com/vast-data/go-vast-client/resources/untyped/dataengine"
@@ -28,7 +29,7 @@ type UntypedRest struct {
 	ctx         context.Context
 	Session     core.RESTSession
 	resourceMap map[string]core.VastResourceAPIWithContext
-	apiRoot string
+	apiRoot     string
 
 	ContainerRegistries           *unde.ContainerRegistry
 	KubernetesClusters            *unde.KubernetesCluster
@@ -39,7 +40,6 @@ type UntypedRest struct {
 	ElementTriggers               *unde.ElementTrigger
 	Pipelines                     *unde.Pipeline
 	DataEngine                    *unde.DataEngine
-	Telemetries                   *unde.Telemetry
 }
 
 var _ core.VastRest = (*UntypedRest)(nil)
@@ -56,16 +56,21 @@ func NewUntyped(session core.RESTSession, ctx context.Context) *UntypedRest {
 		apiRoot:     ApiRoot,
 	}
 
+	// ResourceOps match PackDataEngine OpenAPI (collection vs {guid} verbs).
 	de.ContainerRegistries = core.NewUntypedResource[unde.ContainerRegistry](de, "container-registries", C, L, R, U, D)
 	de.KubernetesClusters = core.NewUntypedResource[unde.KubernetesCluster](de, "kubernetes-clusters", C, L, R, U, D)
-	de.KubernetesSecrets = core.NewUntypedResource[unde.KubernetesSecret](de, "kubernetes-secrets", C, L, R, U, D)
+	de.KubernetesSecrets = core.NewUntypedResource[unde.KubernetesSecret](de, "kubernetes-secrets", C, D)
 	de.MtlsAuthenticationCredentials = core.NewUntypedResource[unde.MtlsAuthenticationCredential](de, "mtls-authentication-credentials", C, L, R, U, D)
 	de.Functions = core.NewUntypedResource[unde.Function](de, "functions", C, L, R, U, D)
+	// functions/{guid} is PUT-only (no PATCH)
+	setUpdateMethod(de.Functions.VastResource, http.MethodPut)
 	de.ScheduleTriggers = core.NewUntypedResource[unde.ScheduleTrigger](de, "triggers/schedule", C, L, R, U, D)
+	setUpdateMethod(de.ScheduleTriggers.VastResource, http.MethodPut)
 	de.ElementTriggers = core.NewUntypedResource[unde.ElementTrigger](de, "triggers/element", C, L, R, U, D)
+	setUpdateMethod(de.ElementTriggers.VastResource, http.MethodPut)
 	de.Pipelines = core.NewUntypedResource[unde.Pipeline](de, "pipelines", C, L, R, U, D)
-	de.DataEngine = core.NewUntypedResource[unde.DataEngine](de, "data-engine", C, L, R, D)
-	de.Telemetries = core.NewUntypedResource[unde.Telemetry](de, "telemetries", L, R)
+	// data-engine is a singleton collection (GET/POST/DELETE); no {guid} read.
+	de.DataEngine = core.NewUntypedResource[unde.DataEngine](de, "data-engine", C, L, D)
 
 	return de
 }

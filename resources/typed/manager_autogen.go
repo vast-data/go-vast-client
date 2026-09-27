@@ -236,7 +236,7 @@ func (r *Manager) DeleteWithContext(ctx context.Context, req *ManagerSearchParam
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func (r *Manager) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a manager by ID using provided context
 // summary: Delete Manager
 func (r *Manager) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

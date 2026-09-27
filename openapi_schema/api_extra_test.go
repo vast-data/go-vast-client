@@ -1,6 +1,7 @@
 package openapi_schema
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
@@ -92,8 +93,84 @@ func TestResolveComposedSchema_OneOfAnyOf(t *testing.T) {
 		},
 	}
 	resolved := ResolveComposedSchema(PackVMS, schema)
-	if resolved == nil || resolved.Type == nil || (*resolved.Type)[0] != stringType {
+	if resolved == nil || resolved.Type == nil {
 		t.Fatalf("unexpected resolved schema: %+v", resolved)
+	}
+	if !schemaHasType(resolved, stringType) || !schemaHasType(resolved, intType) {
+		t.Fatalf("expected both string and integer types, got %v", *resolved.Type)
+	}
+}
+
+func TestResolveComposedSchema_OneOfMergesObjectAndString(t *testing.T) {
+	stringType := openapi3.TypeString
+	objectType := openapi3.TypeObject
+	schema := &openapi3.Schema{
+		OneOf: []*openapi3.SchemaRef{
+			// String first (same order as DataEngine PipelineCreate historically had
+			// when string was the only typed branch before allOf composition).
+			{Value: &openapi3.Schema{
+				Type:        &openapi3.Types{stringType},
+				Description: "Raw manifest text (YAML or JSON)",
+			}},
+			// Object via allOf without top-level type until composed.
+			{Value: &openapi3.Schema{
+				AllOf: []*openapi3.SchemaRef{
+					{Value: &openapi3.Schema{
+						Type: &openapi3.Types{objectType},
+						Properties: map[string]*openapi3.SchemaRef{
+							"name": {Value: &openapi3.Schema{Type: &openapi3.Types{stringType}}},
+							"manifest": {Value: &openapi3.Schema{
+								Type: &openapi3.Types{objectType},
+							}},
+						},
+					}},
+				},
+			}},
+		},
+	}
+	resolved := ResolveComposedSchema(PackVMS, schema)
+	if resolved == nil {
+		t.Fatal("expected resolved schema")
+	}
+	if len(resolved.Properties) == 0 {
+		t.Fatalf("expected object properties, got type=%v props=%d", resolved.Type, len(resolved.Properties))
+	}
+	if _, ok := resolved.Properties["name"]; !ok {
+		t.Fatalf("expected name property, got %+v", resolved.Properties)
+	}
+	if !schemaHasType(resolved, stringType) {
+		t.Fatalf("string branch must be preserved in Type, got %v", resolved.Type)
+	}
+	if !schemaHasType(resolved, objectType) {
+		t.Fatalf("object branch must be preserved in Type, got %v", resolved.Type)
+	}
+	if GetSchemaType(resolved) != objectType {
+		t.Fatalf("GetSchemaType should prefer object when properties exist, got %q", GetSchemaType(resolved))
+	}
+}
+
+func TestGetRequestBodySchema_DataEnginePipelineCreateMergesOneOf(t *testing.T) {
+	schema, err := GetRequestBodySchema(PackDataEngine, http.MethodPost, "pipelines")
+	if err != nil {
+		t.Fatalf("GetRequestBodySchema: %v", err)
+	}
+	if schema == nil || schema.Value == nil {
+		t.Fatal("nil schema")
+	}
+	v := schema.Value
+	if GetSchemaType(v) == openapi3.TypeString && len(v.Properties) == 0 {
+		t.Fatalf("PipelineCreate oneOf resolved to string-only; want object props + string type")
+	}
+	for _, want := range []string{"name", "manifest", "namespace", "kubernetes_cluster_vrn"} {
+		if _, ok := v.Properties[want]; !ok {
+			t.Errorf("missing property %q (have %d props)", want, len(v.Properties))
+		}
+	}
+	if !schemaHasType(v, openapi3.TypeString) {
+		t.Errorf("expected string to remain in Type union, got %v", v.Type)
+	}
+	if !schemaHasType(v, openapi3.TypeObject) && len(v.Properties) == 0 {
+		t.Errorf("expected object type or properties, got type=%v props=%d", v.Type, len(v.Properties))
 	}
 }
 

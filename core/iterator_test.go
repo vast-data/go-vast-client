@@ -997,3 +997,262 @@ type serverlessDummyRest struct {
 }
 
 func (r *serverlessDummyRest) GetApiRoot() string { return "serverless" }
+
+func newDataEngineMockResource(t *testing.T, session *mockSessionForIterator, path string) *mockResourceForIterator {
+	t.Helper()
+	mockRest := &DummyRest{ctx: context.Background(), Session: session}
+	return &mockResourceForIterator{
+		VastResource: &VastResource{
+			resourcePath: path,
+			resourceType: "DataEngineTest",
+			Rest:         mockRest,
+		},
+		mockSession: session,
+		apiRoot:     "serverless",
+	}
+}
+
+func TestDataEngineIterator_PreviousResetStringAndEdges(t *testing.T) {
+	page1 := Record{
+		"data": []any{map[string]any{"name": "a"}},
+		"pagination": map[string]any{
+			"next_cursor":     "N1",
+			"previous_cursor": "",
+		},
+	}
+	page2 := Record{
+		"data": []any{map[string]any{"name": "b"}},
+		"pagination": map[string]any{
+			"next_cursor":     "",
+			"previous_cursor": "P1",
+		},
+	}
+	page1Again := Record{
+		"data": []any{map[string]any{"name": "a"}},
+		"pagination": map[string]any{
+			"next_cursor":     "N1",
+			"previous_cursor": "",
+		},
+	}
+
+	mockSession := &mockSessionForIterator{
+		handler: func(url string) (Renderable, error) {
+			switch {
+			case strings.Contains(url, "cursor=N1"):
+				return page2, nil
+			case strings.Contains(url, "cursor=P1"):
+				return page1Again, nil
+			default:
+				return page1, nil
+			}
+		},
+	}
+	mockResource := newDataEngineMockResource(t, mockSession, "functions")
+	iter := NewDataEngineIterator(context.Background(), mockResource, nil, 5)
+	de := iter.(*DataEngineIterator)
+
+	if de.PageSize() != 5 {
+		t.Fatalf("PageSize = %d, want 5", de.PageSize())
+	}
+	if de.HasPrevious() {
+		t.Fatal("HasPrevious before Next must be false")
+	}
+	if _, err := de.Previous(); err == nil {
+		t.Fatal("Previous before Next must error")
+	}
+
+	s := de.String()
+	if !strings.Contains(s, "DataEngineIterator") || !strings.Contains(s, "Initialized:   false") {
+		t.Fatalf("unexpected String before init: %s", s)
+	}
+
+	records, err := de.Next()
+	if err != nil || len(records) != 1 || records[0]["name"] != "a" {
+		t.Fatalf("first Next: records=%v err=%v", records, err)
+	}
+	if !de.HasNext() {
+		t.Fatal("expected HasNext after page1")
+	}
+	if de.HasPrevious() {
+		t.Fatal("page1 has empty previous_cursor")
+	}
+
+	records, err = de.Next()
+	if err != nil || len(records) != 1 || records[0]["name"] != "b" {
+		t.Fatalf("second Next: records=%v err=%v", records, err)
+	}
+	if !de.HasPrevious() {
+		t.Fatal("expected HasPrevious on page2")
+	}
+
+	s = de.String()
+	if !strings.Contains(s, "Initialized:   true") || !strings.Contains(s, "(1 items)") {
+		t.Fatalf("unexpected String after next: %s", s)
+	}
+	if !strings.Contains(s, "Previous URL:") || strings.Contains(s, "Previous URL:  <none>") {
+		t.Fatalf("expected previous URL in String: %s", s)
+	}
+
+	records, err = de.Previous()
+	if err != nil || len(records) != 1 || records[0]["name"] != "a" {
+		t.Fatalf("Previous: records=%v err=%v", records, err)
+	}
+
+	// No previous cursor on page1 → empty set, no error.
+	records, err = de.Previous()
+	if err != nil || len(records) != 0 {
+		t.Fatalf("Previous at start: records=%v err=%v", records, err)
+	}
+
+	resetRecords, err := de.Reset()
+	if err != nil || len(resetRecords) != 1 || resetRecords[0]["name"] != "a" {
+		t.Fatalf("Reset: records=%v err=%v", resetRecords, err)
+	}
+	if de.currentPage != 0 {
+		t.Fatalf("currentPage after Reset = %d, want 0", de.currentPage)
+	}
+}
+
+func TestDataEngineIterator_FlatRecordSetAndBareRecord(t *testing.T) {
+	t.Run("flat_record_set", func(t *testing.T) {
+		mockSession := &mockSessionForIterator{
+			handler: func(url string) (Renderable, error) {
+				return RecordSet{
+					{"name": "x"},
+					{"name": "y"},
+				}, nil
+			},
+		}
+		iter := NewDataEngineIterator(context.Background(), newDataEngineMockResource(t, mockSession, "pipelines"), nil, 0)
+		records, err := iter.Next()
+		if err != nil {
+			t.Fatalf("Next: %v", err)
+		}
+		if len(records) != 2 {
+			t.Fatalf("expected 2 flat records, got %d", len(records))
+		}
+		if iter.HasNext() || iter.HasPrevious() {
+			t.Fatal("flat RecordSet must clear next/previous")
+		}
+	})
+
+	t.Run("bare_record_without_data", func(t *testing.T) {
+		mockSession := &mockSessionForIterator{
+			handler: func(url string) (Renderable, error) {
+				return Record{"name": "singleton", "guid": "g1"}, nil
+			},
+		}
+		iter := NewDataEngineIterator(context.Background(), newDataEngineMockResource(t, mockSession, "data-engine"), nil, 0)
+		records, err := iter.Next()
+		if err != nil {
+			t.Fatalf("Next: %v", err)
+		}
+		if len(records) != 1 || records[0]["name"] != "singleton" {
+			t.Fatalf("unexpected records: %#v", records)
+		}
+		if iter.HasNext() {
+			t.Fatal("bare record must not set next")
+		}
+	})
+
+	t.Run("nil_pagination_map", func(t *testing.T) {
+		mockSession := &mockSessionForIterator{
+			handler: func(url string) (Renderable, error) {
+				return Record{
+					"data":       []any{map[string]any{"name": "z"}},
+					"pagination": nil,
+				}, nil
+			},
+		}
+		iter := NewDataEngineIterator(context.Background(), newDataEngineMockResource(t, mockSession, "functions"), nil, 0)
+		records, err := iter.Next()
+		if err != nil {
+			t.Fatalf("Next: %v", err)
+		}
+		if len(records) != 1 {
+			t.Fatalf("expected 1 record, got %d", len(records))
+		}
+		if iter.HasNext() || iter.HasPrevious() {
+			t.Fatal("nil pagination must clear cursors")
+		}
+		_ = iter.(*DataEngineIterator).String()
+	})
+
+	t.Run("invalid_data_field", func(t *testing.T) {
+		mockSession := &mockSessionForIterator{
+			handler: func(url string) (Renderable, error) {
+				return Record{"data": "not-a-list"}, nil
+			},
+		}
+		iter := NewDataEngineIterator(context.Background(), newDataEngineMockResource(t, mockSession, "functions"), nil, 0)
+		de := iter.(*DataEngineIterator)
+		if _, err := de.Next(); err == nil {
+			t.Fatal("expected error for invalid data field")
+		}
+		if !strings.Contains(de.String(), "Error:") {
+			t.Fatalf("String should include error, got %s", de.String())
+		}
+	})
+
+	t.Run("all_when_already_initialized", func(t *testing.T) {
+		pages := 0
+		mockSession := &mockSessionForIterator{
+			handler: func(url string) (Renderable, error) {
+				pages++
+				if strings.Contains(url, "cursor=") {
+					return Record{"data": []any{}, "pagination": map[string]any{}}, nil
+				}
+				return Record{
+					"data": []any{map[string]any{"name": "one"}},
+					"pagination": map[string]any{
+						"next_cursor": "N",
+					},
+				}, nil
+			},
+		}
+		iter := NewDataEngineIterator(context.Background(), newDataEngineMockResource(t, mockSession, "functions"), nil, 10)
+		if _, err := iter.Next(); err != nil {
+			t.Fatalf("Next: %v", err)
+		}
+		all, err := iter.All()
+		if err != nil {
+			t.Fatalf("All: %v", err)
+		}
+		if len(all) != 1 {
+			t.Fatalf("expected 1 record from already-initialized All, got %d", len(all))
+		}
+	})
+}
+
+func TestDataEngineIterator_FetchErrors(t *testing.T) {
+	t.Run("session_error", func(t *testing.T) {
+		mockSession := &mockSessionForIterator{
+			handler: func(url string) (Renderable, error) {
+				return nil, fmt.Errorf("boom")
+			},
+		}
+		iter := NewDataEngineIterator(context.Background(), newDataEngineMockResource(t, mockSession, "functions"), nil, 0)
+		if _, err := iter.Next(); err == nil {
+			t.Fatal("expected session error")
+		}
+	})
+
+	t.Run("unexpected_response_type", func(t *testing.T) {
+		mockSession := &mockSessionForIterator{
+			handler: func(url string) (Renderable, error) {
+				return &emptyRenderable{}, nil
+			},
+		}
+		iter := NewDataEngineIterator(context.Background(), newDataEngineMockResource(t, mockSession, "functions"), nil, 0)
+		if _, err := iter.Next(); err == nil || !strings.Contains(err.Error(), "unexpected response type") {
+			t.Fatalf("expected unexpected response type error, got %v", err)
+		}
+	})
+}
+
+// emptyRenderable satisfies Renderable but is neither Record nor RecordSet.
+type emptyRenderable struct{}
+
+func (emptyRenderable) PrettyTable() string                 { return "" }
+func (emptyRenderable) PrettyJson(indent ...string) string { return "" }
+

@@ -2,6 +2,7 @@ package widgets
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"reflect"
@@ -991,7 +992,6 @@ func (bw *BaseWidget) createFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 	if vastAPIGetter, ok = any(bw.parent).(common.VastAPIGetter); !ok {
 		panic("VastAPIGetter not implemented on parent widget")
 	}
-	api := vastAPIGetter.API(rest)
 
 	if err := inputs.Validate(); err != nil {
 		return nil, err
@@ -999,7 +999,52 @@ func (bw *BaseWidget) createFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 
 	// Convert inputs to API payload
 	payload := inputs.ToParams()
+	return bw.createFromPayload(rest, vastAPIGetter.API(rest), payload)
+}
 
+// CreateFromJSONDo submits the raw JSON editor body. Used when the form schema
+// omits fields (e.g. arrays of objects like kubernetes-secrets.entries) that the
+// user supplied in JSON mode — SaveJSONEdits alone cannot round-trip those.
+func (bw *BaseWidget) CreateFromJSONDo(_ common.CreateWidget) tea.Cmd {
+	return msg_types.ProcessWithSpinnerMust(bw.createFromJSON())
+}
+
+func (bw *BaseWidget) createFromJSON() (tea.Cmd, error) {
+	if bw.CreateAdapter == nil {
+		return nil, fmt.Errorf("create adapter not initialized")
+	}
+	jsonStr := strings.TrimSpace(bw.CreateAdapter.JSONEditValue())
+	if jsonStr == "" {
+		return nil, fmt.Errorf("JSON body is empty")
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(jsonStr), &payload); err != nil {
+		return nil, fmt.Errorf("invalid JSON: %w", err)
+	}
+
+	// Best-effort sync of fields that exist on the form (ignores unsupported ones).
+	_ = bw.CreateAdapter.ApplyJSONEdits(jsonStr)
+
+	rest, err := getActiveRest(bw.db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get REST client: %w", err)
+	}
+
+	vastAPIGetter, ok := any(bw.parent).(common.VastAPIGetter)
+	if !ok {
+		panic("VastAPIGetter not implemented on parent widget")
+	}
+	api := vastAPIGetter.API(rest)
+
+	bw.log.Info("Creating from JSON",
+		zap.String("resource", bw.resourceType),
+		zap.Any("payload", payload))
+
+	return bw.createFromPayload(rest, api, payload)
+}
+
+func (bw *BaseWidget) createFromPayload(rest *VMSRest, api VastResourceAPIWithContext, payload map[string]any) (tea.Cmd, error) {
 	bw.log.Debug("Payload prepared", zap.Any("payload", payload))
 
 	// Return async command to create the view

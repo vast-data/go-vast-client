@@ -31,8 +31,13 @@ func isExcludedInternalQueryParam(name string) bool {
 }
 
 // HasUserFacingQueryParams reports whether the operation has query params that belong in the TUI form.
-func HasUserFacingQueryParams(httpMethod, path string) bool {
-	params, err := openapi_schema.GetQueryParameters(openapi_schema.PackVMS, httpMethod, path)
+// Optional packs selects the OpenAPI pack (defaults to PackVMS).
+func HasUserFacingQueryParams(httpMethod, path string, packs ...openapi_schema.Pack) bool {
+	pack := openapi_schema.PackVMS
+	if len(packs) > 0 && packs[0] != "" {
+		pack = packs[0]
+	}
+	params, err := openapi_schema.GetQueryParameters(pack, httpMethod, path)
 	if err != nil {
 		return false
 	}
@@ -95,6 +100,8 @@ type SchemaReference struct {
 	// Create specifies the OpenAPI endpoint to use for extracting the creation schema (e.g., POST /volumes).
 	Create *OpenAPIEndpointRef
 	Read   *OpenAPIEndpointRef
+	// Pack selects which embedded OpenAPI document to read (vms or dataengine). Empty means PackVMS.
+	Pack openapi_schema.Pack
 }
 
 func NewSchemaReference(
@@ -114,7 +121,27 @@ func NewSchemaReference(
 	return &SchemaReference{
 		Create: createRef,
 		Read:   readRef,
+		Pack:   openapi_schema.PackVMS,
 	}
+}
+
+// WithPack sets the OpenAPI pack used for schema lookups and returns the same reference.
+func (sr *SchemaReference) WithPack(pack openapi_schema.Pack) *SchemaReference {
+	if sr == nil {
+		return nil
+	}
+	if pack == "" {
+		pack = openapi_schema.PackVMS
+	}
+	sr.Pack = pack
+	return sr
+}
+
+func (sr *SchemaReference) pack() openapi_schema.Pack {
+	if sr == nil || sr.Pack == "" {
+		return openapi_schema.PackVMS
+	}
+	return sr.Pack
 }
 
 func (sr *SchemaReference) GetCreatePath() string {
@@ -138,9 +165,10 @@ func (sr *SchemaReference) getSchemaFromReadRef() (*openapi3.SchemaRef, error) {
 		return nil, fmt.Errorf("HTTP method is empty for read schema")
 	}
 
+	pack := sr.pack()
 	switch method {
 	case http.MethodGet:
-		if schemaRef, err = openapi_schema.GetResponseModelSchema(openapi_schema.PackVMS, http.MethodGet, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetResponseModelSchema(pack, http.MethodGet, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get schema for GET %q: %w", resourcePath, err)
 		}
 	default:
@@ -164,25 +192,26 @@ func (sr *SchemaReference) getSchemaFromCreateRef() (*openapi3.SchemaRef, error)
 		return nil, fmt.Errorf("HTTP method is empty for create schema")
 	}
 
+	pack := sr.pack()
 	switch method {
 	case http.MethodPost:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodPost, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(pack, http.MethodPost, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get POST schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodGet:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodGet, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(pack, http.MethodGet, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get GET schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPatch:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodPatch, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(pack, http.MethodPatch, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get PATCH schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPut:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodPut, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(pack, http.MethodPut, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get PUT schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodDelete:
-		if schemaRef, err = openapi_schema.GetRequestBodySchema(openapi_schema.PackVMS, http.MethodDelete, resourcePath); err != nil {
+		if schemaRef, err = openapi_schema.GetRequestBodySchema(pack, http.MethodDelete, resourcePath); err != nil {
 			return nil, fmt.Errorf("failed to get DELETE schema for resource %q: %w", resourcePath, err)
 		}
 	default:
@@ -207,7 +236,7 @@ func (sr *SchemaReference) getSchemaFromQueryParamsRef() (*openapi3.SchemaRef, e
 	}
 
 	// Create a schema from query parameters for the specified HTTP method
-	queryParams, err := openapi_schema.GetQueryParameters(openapi_schema.PackVMS, method, resourcePath)
+	queryParams, err := openapi_schema.GetQueryParameters(sr.pack(), method, resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get query parameters for %s %q: %w", method, resourcePath, err)
 	}
@@ -275,7 +304,8 @@ func (sr *SchemaReference) getInputDefinitionsFromSchema(from InputDefinitionFro
 		return []InputDefinition{}, nil
 	}
 
-	resolvedSchema := openapi_schema.ResolveComposedSchema(openapi_schema.PackVMS, schema.Value)
+	pack := sr.pack()
+	resolvedSchema := openapi_schema.ResolveComposedSchema(pack, schema.Value)
 	if resolvedSchema == nil || resolvedSchema.Properties == nil {
 		return []InputDefinition{}, nil
 	}
@@ -294,7 +324,7 @@ func (sr *SchemaReference) getInputDefinitionsFromSchema(from InputDefinitionFro
 			continue
 		}
 
-		propSchema := openapi_schema.ResolveComposedSchema(openapi_schema.PackVMS, openapi_schema.ResolveAllRefs(openapi_schema.PackVMS, propSchemaRef))
+		propSchema := openapi_schema.ResolveComposedSchema(pack, openapi_schema.ResolveAllRefs(pack, propSchemaRef))
 		if propSchema == nil {
 			continue
 		}
@@ -309,7 +339,7 @@ func (sr *SchemaReference) getInputDefinitionsFromSchema(from InputDefinitionFro
 			continue
 		}
 
-		inputDef := convertSchemaToInputDefinition(propName, propSchema, requiredFields[propName])
+		inputDef := convertSchemaToInputDefinition(propName, propSchema, requiredFields[propName], pack)
 		inputDefs = append(inputDefs, inputDef)
 	}
 
@@ -408,7 +438,10 @@ func isAmbiguousObject(schema *openapi3.Schema) bool {
 }
 
 // convertSchemaToInputDefinition recursively converts an OpenAPI schema to an InputDefinition
-func convertSchemaToInputDefinition(name string, schema *openapi3.Schema, required bool) InputDefinition {
+func convertSchemaToInputDefinition(name string, schema *openapi3.Schema, required bool, pack openapi_schema.Pack) InputDefinition {
+	if pack == "" {
+		pack = openapi_schema.PackVMS
+	}
 	inputDef := InputDefinition{
 		Name:        name,
 		Required:    required,
@@ -449,9 +482,9 @@ func convertSchemaToInputDefinition(name string, schema *openapi3.Schema, requir
 			inputDef.Type = "array"
 			// Handle array items recursively
 			if schema.Items != nil && schema.Items.Value != nil {
-				itemSchema := openapi_schema.ResolveComposedSchema(openapi_schema.PackVMS, openapi_schema.ResolveAllRefs(openapi_schema.PackVMS, schema.Items))
+				itemSchema := openapi_schema.ResolveComposedSchema(pack, openapi_schema.ResolveAllRefs(pack, schema.Items))
 				if itemSchema != nil {
-					itemDef := convertSchemaToInputDefinition("item", itemSchema, false)
+					itemDef := convertSchemaToInputDefinition("item", itemSchema, false, pack)
 					inputDef.Items = &itemDef
 				}
 			}
@@ -473,7 +506,7 @@ func convertSchemaToInputDefinition(name string, schema *openapi3.Schema, requir
 						continue
 					}
 
-					propSchema := openapi_schema.ResolveComposedSchema(openapi_schema.PackVMS, openapi_schema.ResolveAllRefs(openapi_schema.PackVMS, propSchemaRef))
+					propSchema := openapi_schema.ResolveComposedSchema(pack, openapi_schema.ResolveAllRefs(pack, propSchemaRef))
 					if propSchema == nil || propSchema.ReadOnly {
 						continue
 					}
@@ -483,7 +516,7 @@ func convertSchemaToInputDefinition(name string, schema *openapi3.Schema, requir
 						continue
 					}
 
-					propDef := convertSchemaToInputDefinition(propName, propSchema, objectRequired[propName])
+					propDef := convertSchemaToInputDefinition(propName, propSchema, objectRequired[propName], pack)
 					inputDef.Properties[propName] = &propDef
 				}
 			}

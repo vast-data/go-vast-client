@@ -276,7 +276,7 @@ func (r *QosPolicy) DeleteWithContext(ctx context.Context, req *QosPolicySearchP
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -292,7 +292,7 @@ func (r *QosPolicy) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a qospolicy by ID using provided context
 // summary: Delete QoS Policy
 func (r *QosPolicy) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

@@ -55,6 +55,7 @@ type docItem struct {
 type ApiDocsAdapter struct {
 	db           *database.Service
 	resourcePath string // e.g. "topics"
+	pack         api.Pack
 
 	items         []docItem
 	selectIdx     []int // indices into items[] of selectable (param) rows
@@ -68,12 +69,17 @@ type ApiDocsAdapter struct {
 
 // NewApiDocsAdapter creates the adapter. Call Load() when the resource path is known.
 func NewApiDocsAdapter(db *database.Service) *ApiDocsAdapter {
-	return &ApiDocsAdapter{db: db}
+	return &ApiDocsAdapter{db: db, pack: api.PackVMS}
 }
 
 // Load (re-)builds the items list for a resource.
-func (a *ApiDocsAdapter) Load(resourcePath string) {
+// Optional packs selects the OpenAPI pack (defaults to PackVMS).
+func (a *ApiDocsAdapter) Load(resourcePath string, packs ...api.Pack) {
 	a.resourcePath = resourcePath
+	a.pack = api.PackVMS
+	if len(packs) > 0 && packs[0] != "" {
+		a.pack = packs[0]
+	}
 	a.items = nil
 	a.selectIdx = nil
 	a.cursor = 0
@@ -84,7 +90,7 @@ func (a *ApiDocsAdapter) Load(resourcePath string) {
 
 // buildItems fetches swagger paths and constructs the flat item list.
 func (a *ApiDocsAdapter) buildItems() {
-	allPaths, err := api.GetAllPaths(api.PackVMS)
+	allPaths, err := api.GetAllPaths(a.pack)
 	if err != nil {
 		a.items = []docItem{{kind: docItemSection, display: fmt.Sprintf("Error loading API schema: %v", err)}}
 		return
@@ -129,7 +135,7 @@ func (a *ApiDocsAdapter) buildItems() {
 			}
 			first = false
 
-			summary, _ := api.GetOperationSummary(api.PackVMS, method, path)
+			summary, _ := api.GetOperationSummary(a.pack, method, path)
 			a.items = append(a.items, docItem{
 				kind:    docItemSection,
 				method:  method,
@@ -138,7 +144,7 @@ func (a *ApiDocsAdapter) buildItems() {
 			})
 
 			// Query parameters
-			params, _ := api.GetQueryParameters(api.PackVMS, method, path)
+			params, _ := api.GetQueryParameters(a.pack, method, path)
 			if len(params) > 0 {
 				a.items = append(a.items, docItem{
 					kind:    docItemSeparator,
@@ -153,7 +159,7 @@ func (a *ApiDocsAdapter) buildItems() {
 			}
 
 			// Request body
-			bodySchema, err := api.GetRequestBodySchema(api.PackVMS, method, path)
+			bodySchema, err := api.GetRequestBodySchema(a.pack, method, path)
 			if err == nil && bodySchema != nil && bodySchema.Value != nil {
 				a.items = append(a.items, docItem{
 					kind:    docItemSeparator,

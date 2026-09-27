@@ -8,6 +8,12 @@ import (
 
 var apiVersionPattern = regexp.MustCompile(`^(?i)(v\d+|latest)$`)
 
+// knownNestedApiRoots are path segments after /api/{version}/ that host nested
+// resource collections (DataEngine serverless gateway).
+var knownNestedApiRoots = map[string]struct{}{
+	"serverless": {},
+}
+
 // knownResourceDisplayNames maps conventional API resource path segments to display names.
 var knownResourceDisplayNames = map[string]string{
 	"vtasks": "VTask",
@@ -41,7 +47,11 @@ func conventionalResourceSegmentFromRecord(r Record) (string, bool) {
 }
 
 // conventionalResourceSegment checks whether parsed is a conventional VAST resource URL:
-// /api/{version}/{resource}/{id}/ with version like v5 or latest.
+//
+//	/api/{version}/{resource}/{id}/
+//	/api/{version}/{apiRoot}/{resource}/{id}/   (e.g. serverless DataEngine)
+//
+// Version is like v5 or latest.
 func conventionalResourceSegment(parsed *url.URL) (string, bool) {
 	parts := strings.Split(strings.Trim(parsed.Path, "/"), "/")
 	apiIdx := -1
@@ -56,11 +66,21 @@ func conventionalResourceSegment(parsed *url.URL) (string, bool) {
 	}
 
 	rest := parts[apiIdx+1:]
-	if len(rest) != 3 {
+	var version, resource, id string
+	switch len(rest) {
+	case 3:
+		version, resource, id = rest[0], rest[1], rest[2]
+	case 4:
+		// Nested API root (e.g. /api/latest/serverless/functions/{guid}/).
+		root := strings.ToLower(strings.TrimSpace(rest[1]))
+		if _, ok := knownNestedApiRoots[root]; !ok {
+			return "", false
+		}
+		version, resource, id = rest[0], rest[2], rest[3]
+	default:
 		return "", false
 	}
 
-	version, resource, id := rest[0], rest[1], rest[2]
 	if !apiVersionPattern.MatchString(version) {
 		return "", false
 	}

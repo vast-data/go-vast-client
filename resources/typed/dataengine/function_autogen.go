@@ -252,7 +252,7 @@ func (r *Function) DeleteWithContext(ctx context.Context, req *FunctionSearchPar
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (r *Function) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a function by ID using provided context
 // summary: Delete Function by ID
 func (r *Function) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

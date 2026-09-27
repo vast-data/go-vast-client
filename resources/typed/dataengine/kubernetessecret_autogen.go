@@ -57,7 +57,7 @@ func (r *KubernetesSecret) DeleteWithContext(ctx context.Context, req *Kubernete
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (r *KubernetesSecret) DeleteById(id any) error {
 
 // DeleteByIdWithContext deletes a kubernetessecret by ID using provided context
 func (r *KubernetesSecret) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -82,4 +82,3 @@ func (r *KubernetesSecret) DeleteByIdWithContext(ctx context.Context, id any) er
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - CREATE operation excluded: POST kubernetes-secrets has no response schema and doesn't return 204 NO CONTENT
-//   - UPDATE operation excluded: PATCH/PUT /kubernetes-secrets/{id} has no response schema and doesn't return 204 NO CONTENT

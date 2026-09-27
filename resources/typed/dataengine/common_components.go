@@ -1040,6 +1040,17 @@ type Component_PipelineConfig struct {
 	Secrets              *[]string                                  `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
 }
 
+// Component_PipelineCreate represents the OpenAPI component schema
+// Component: #/components/schemas/PipelineCreate
+type Component_PipelineCreate struct {
+	Name                 string                  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
+	Description          string                  `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	KubernetesClusterVrn string                  `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	Manifest             PipelineCreate_Manifest `json:"manifest,omitempty" yaml:"manifest,omitempty" required:"false" doc:""`
+	Namespace            string                  `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
+	Tags                 *[]string               `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+}
+
 // Component_PipelineCreateInfo represents the OpenAPI component schema
 // Component: #/components/schemas/PipelineCreateInfo
 type Component_PipelineCreateInfo struct {
@@ -1360,7 +1371,60 @@ type Component_SearchResponse struct {
 
 // Component_SearchResultItem represents the OpenAPI component schema
 // Component: #/components/schemas/SearchResultItem
-type Component_SearchResultItem struct{}
+type Component_SearchResultItem struct {
+	Broker                       SearchResultItem_Broker                              `json:"broker,omitempty" yaml:"broker,omitempty" required:"true" doc:""`
+	CertificateAuthorityB64      string                                               `json:"certificate_authority_b64,omitempty" yaml:"certificate_authority_b64,omitempty" required:"true" doc:"Base64-encoded CA certificate used to verify the identity of the Kubernetes API server. It ensures that the client is communicating with the legitimate Kubernetes API server by validating the server's certificate."`
+	ClientCertificateB64         string                                               `json:"client_certificate_b64,omitempty" yaml:"client_certificate_b64,omitempty" required:"true" doc:"Base64-encoded X.509 certificate for the client. It works in conjunction with the client-key-data to authenticate the user to the Kubernetes API server. This certificate is typically issued by a trusted Certificate Authority (CA)."`
+	ClientKeyB64                 string                                               `json:"client_key_b64,omitempty" yaml:"client_key_b64,omitempty" required:"true" doc:"Base64-encoded private key associated with a client certificate. It is used by the Kubernetes client (e.g., kubectl) to prove its identity to the API server when making requests. This key must remain confidential and secure."`
+	KubeApiUrl                   string                                               `json:"kube_api_url,omitempty" yaml:"kube_api_url,omitempty" required:"true" doc:""`
+	MtlsCredentialsGuid          string                                               `json:"mtls_credentials_guid,omitempty" yaml:"mtls_credentials_guid,omitempty" required:"true" doc:"A GUID of the kubernetes credentials object created."`
+	Name                         string                                               `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
+	NameInBroker                 string                                               `json:"name_in_broker,omitempty" yaml:"name_in_broker,omitempty" required:"true" doc:"The name of the topic in the broker. (can different from the name of the Serverless Topic object)"`
+	Namespaces                   *[]string                                            `json:"namespaces,omitempty" yaml:"namespaces,omitempty" required:"true" doc:""`
+	PrimaryKubernetesCluster     SearchResultItem_PrimaryKubernetesCluster            `json:"primary_kubernetes_cluster,omitempty" yaml:"primary_kubernetes_cluster,omitempty" required:"true" doc:""`
+	ResourceType                 string                                               `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
+	Type                         string                                               `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
+	Url                          string                                               `json:"url,omitempty" yaml:"url,omitempty" required:"true" doc:"URL to the container registry."`
+	AdditionalKubernetesClusters *[]SearchResultItem_AdditionalKubernetesClustersItem `json:"additional_kubernetes_clusters,omitempty" yaml:"additional_kubernetes_clusters,omitempty" required:"false" doc:"List of Kubernetes clusters and namespaces where the container registry is replicated."`
+	AuthType                     string                                               `json:"auth_type,omitempty" yaml:"auth_type,omitempty" required:"false" doc:"Flag indincating login to the container registry requires user and password, secret name, or none"`
+	AutoGen                      bool                                                 `json:"auto_gen,omitempty" yaml:"auto_gen,omitempty" required:"false" doc:"Whether this stack was auto-generated by the system"`
+	Capability                   *[]string                                            `json:"capability,omitempty" yaml:"capability,omitempty" required:"false" doc:"List of capabilities supported by the service. defaults to all capabilities."`
+	Config                       string                                               `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:"Configuration specific to the trigger type"`
+	ContainerRegistryVrn         string                                               `json:"container_registry_vrn,omitempty" yaml:"container_registry_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	CreatedAt                    string                                               `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	Deadletter                   bool                                                 `json:"deadletter,omitempty" yaml:"deadletter,omitempty" required:"false" doc:"Flag indicating if the topic is the dead letter topic for the tenant. Setting a topic as dead letter will make it so that the previous dead letter topic is no longer the dlt."`
+	Default                      bool                                                 `json:"default,omitempty" yaml:"default,omitempty" required:"false" doc:"Flag indicating if the topic is the default topic for the tenant. Setting a topic as default will make it so that the previous default topic is no longer the default."`
+	DefaultRevisionNumber        int64                                                `json:"default_revision_number,omitempty" yaml:"default_revision_number,omitempty" required:"false" doc:"The default revision number. If not provided, the latest revision will be used."`
+	DeployedResourceVrns         *[]string                                            `json:"deployed_resource_vrns,omitempty" yaml:"deployed_resource_vrns,omitempty" required:"false" doc:"VRNs of pipelines and service deployments created by this stack"`
+	DeployedRevision             int64                                                `json:"deployed_revision,omitempty" yaml:"deployed_revision,omitempty" required:"false" doc:"The revision number that is currently deployed (if any)"`
+	Description                  string                                               `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Events                       *[]string                                            `json:"events,omitempty" yaml:"events,omitempty" required:"false" doc:""`
+	Guid                         string                                               `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Id                           int64                                                `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	IsAccessibleToDataEngine     bool                                                 `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the container registry and its images are accessible. Set to false if the registry is not reachable from the Data Engine (e.g., ECR with IRSA)."`
+	IsInternal                   bool                                                 `json:"is_internal,omitempty" yaml:"is_internal,omitempty" required:"false" doc:"Whether this is an internal VAST-managed cluster. Defaults to false (external cluster)."`
+	KubernetesClusterVrn         string                                               `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	LastDeployedRevisionNumber   int64                                                `json:"last_deployed_revision_number,omitempty" yaml:"last_deployed_revision_number,omitempty" required:"false" doc:"The latest deployed revision number, or null if no revisions have been deployed"`
+	LastPublishedRevisionNumber  int64                                                `json:"last_published_revision_number,omitempty" yaml:"last_published_revision_number,omitempty" required:"false" doc:"The latest published revision number, or null if no revisions have been published"`
+	LastRevisionNumber           int64                                                `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"Latest revision number"`
+	LatestRevision               string                                               `json:"latest_revision,omitempty" yaml:"latest_revision,omitempty" required:"false" doc:"An Agent Revision represents a specific version of an Agent"`
+	Namespace                    string                                               `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
+	Owner                        SearchResultItem_Owner                               `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	Reason                       string                                               `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for current status"`
+	Secret                       string                                               `json:"secret,omitempty" yaml:"secret,omitempty" required:"false" doc:"Secret name for logging in the container registry"`
+	SourceBucketName             string                                               `json:"source_bucket_name,omitempty" yaml:"source_bucket_name,omitempty" required:"false" doc:"The bucket name of a VMS View. Relevant for Element Trigger"`
+	SourceTypes                  *[]string                                            `json:"source_types,omitempty" yaml:"source_types,omitempty" required:"false" doc:"Source types from which we want to trigger events. Relevant for Element Trigger"`
+	StackGuid                    string                                               `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	StackRevisionNumber          int64                                                `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this pipeline (null if created directly)"`
+	Status                       string                                               `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of stack deployment"`
+	Tags                         *[]string                                            `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid                   string                                               `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Topic                        string                                               `json:"topic,omitempty" yaml:"topic,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	TopicName                    string                                               `json:"topic_name,omitempty" yaml:"topic_name,omitempty" required:"false" doc:"The name of the topic in the broker. Used with broker field for automatic topic creation."`
+	UpdatedAt                    string                                               `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	Vrn                          string                                               `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	WasPromoted                  bool                                                 `json:"was_promoted,omitempty" yaml:"was_promoted,omitempty" required:"false" doc:"Whether this stack has undergone a promotion attempt"`
+}
 
 // Component_Secret represents the OpenAPI component schema
 // Component: #/components/schemas/Secret
@@ -1995,7 +2059,26 @@ type Component_TriggerSearchResult struct {
 
 // Component_TypedTriggerResponse represents the OpenAPI component schema
 // Component: #/components/schemas/TypedTriggerResponse
-type Component_TypedTriggerResponse struct{}
+type Component_TypedTriggerResponse struct {
+	Name             string                      `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the trigger. Must contain only lowercase letters, numbers, and hyphens."`
+	Type             string                      `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
+	Broker           TypedTriggerResponse_Broker `json:"broker,omitempty" yaml:"broker,omitempty" required:"false" doc:""`
+	CreatedAt        string                      `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	Description      string                      `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Events           *[]string                   `json:"events,omitempty" yaml:"events,omitempty" required:"false" doc:""`
+	Guid             string                      `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Id               int64                       `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	Owner            TypedTriggerResponse_Owner  `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	SourceBucketName string                      `json:"source_bucket_name,omitempty" yaml:"source_bucket_name,omitempty" required:"false" doc:"The bucket name of a VMS View. Relevant for Element Trigger"`
+	SourceTypes      *[]string                   `json:"source_types,omitempty" yaml:"source_types,omitempty" required:"false" doc:"Source types from which we want to trigger events. Relevant for Element Trigger"`
+	Status           string                      `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Operational status of the object."`
+	Tags             *[]string                   `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid       string                      `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Topic            string                      `json:"topic,omitempty" yaml:"topic,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	TopicName        string                      `json:"topic_name,omitempty" yaml:"topic_name,omitempty" required:"false" doc:"The name of the topic in the broker. Used with broker field for automatic topic creation."`
+	UpdatedAt        string                      `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	Vrn              string                      `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+}
 
 // Component_TypedTriggersGetResponse represents the OpenAPI component schema
 // Component: #/components/schemas/TypedTriggersGetResponse
@@ -2972,6 +3055,93 @@ type PipelineCreateInfo_Manifest_TriggersItem struct {
 	Vrn  string `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"true" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
+// PipelineCreate_Manifest represents a nested type within components
+type PipelineCreate_Manifest struct {
+	Config              string                                             `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
+	FunctionDeployments *[]PipelineCreate_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
+	Links               *[]PipelineCreate_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Triggers            *[]PipelineCreate_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
+}
+
+// PipelineCreate_Manifest_FunctionDeploymentsItem represents a nested type within components
+type PipelineCreate_Manifest_FunctionDeploymentsItem struct {
+	FunctionVrn string                                                    `json:"function_vrn,omitempty" yaml:"function_vrn,omitempty" required:"true" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	Name        string                                                    `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Config      string                                                    `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
+	Resources   PipelineCreate_Manifest_FunctionDeploymentsItem_Resources `json:"resources,omitempty" yaml:"resources,omitempty" required:"false" doc:""`
+	Revision    int64                                                     `json:"revision,omitempty" yaml:"revision,omitempty" required:"false" doc:""`
+}
+
+// PipelineCreate_Manifest_FunctionDeploymentsItem_Resources represents a nested type within components
+type PipelineCreate_Manifest_FunctionDeploymentsItem_Resources struct {
+	Autoscaling                          PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling `json:"autoscaling,omitempty" yaml:"autoscaling,omitempty" required:"false" doc:"Autoscaling configuration for the function deployment. Defines how the function scales based on incoming requests or resource utilization. Three autoscaling metrics are supported: - concurrency: Scale based on concurrent requests per instance (default, supports scale-to-zero) - rps: Scale based on requests per second per instance (supports scale-to-zero) - resource: Scale based on CPU or memory utilization (does not support scale-to-zero) Only one of 'concurrency', 'rps', or 'resource' should be provided, matching the 'metric' field."`
+	AutoscalingConcurrencyOverloadFactor string                                                                `json:"autoscaling_concurrency_overload_factor,omitempty" yaml:"autoscaling_concurrency_overload_factor,omitempty" required:"false" doc:"Deprecated: Use 'autoscaling' field instead with type='kpa_concurrency'. Autoscaling concurrency overload factor (> 0.0). Determines when to scale based on concurrency overload beyond current processing capacity. When concurrency exceeds (capacity * (1 + overload_factor)), new function instances are created. For backward compatibility, if this field is set and 'autoscaling' is not provided, concurrency metric autoscaling will be used with target_utilization_percentage calculated from this value. Default: \"0.05\" (5% overload tolerance)"`
+	AutoscalingRpsFactor                 int64                                                                 `json:"autoscaling_rps_factor,omitempty" yaml:"autoscaling_rps_factor,omitempty" required:"false" doc:"Deprecated: This field is no longer used and will be removed in a future version. It is ignored if provided."`
+	MaxConcurrency                       int64                                                                 `json:"max_concurrency,omitempty" yaml:"max_concurrency,omitempty" required:"false" doc:"10"`
+	MaxConcurrentRequestsLimit           int64                                                                 `json:"max_concurrent_requests_limit,omitempty" yaml:"max_concurrent_requests_limit,omitempty" required:"false" doc:"Maximum number of concurrent requests the function can handle per instance. This represents how many requests can be processed simultaneously (in-flight) by a single function instance. Maps to Knative 'spec.containerConcurrency'. If omitted, the value is computed at deploy time as 'max(num_workers, batch_max_size)' (defaults: 'max(20, 1) = 20'). This ensures the queue-proxy enforces backpressure per pod so the autoscaler can scale out instead of all traffic piling on a single pod. Set explicitly to '0' for unlimited per-pod concurrency (queue-proxy does not throttle). Use with caution: with '0' the autoscaler cannot observe queue pressure and may keep traffic on a single instance. Setting this value below the actual function capacity will hurt performance. Set ONLY if you know an upper bound for the capacity; this applies backpressure on a loaded function instance and waits for autoscale instead of queueing requests, which can tune performance and avoid timed-out requests in the queue and retries. WARNING: If autoscaling is configured with concurrency metric (or the deprecated autoscaling_concurrency_overload_factor), this value must be GREATER THAN OR EQUAL TO the target value. Otherwise the effective target for autoscaling will be the MINIMUM of this value and the target value."`
+	MaxCpu                               string                                                                `json:"max_cpu,omitempty" yaml:"max_cpu,omitempty" required:"false" doc:""`
+	MaxMemory                            string                                                                `json:"max_memory,omitempty" yaml:"max_memory,omitempty" required:"false" doc:""`
+	MinConcurrency                       int64                                                                 `json:"min_concurrency,omitempty" yaml:"min_concurrency,omitempty" required:"false" doc:""`
+	MinCpu                               string                                                                `json:"min_cpu,omitempty" yaml:"min_cpu,omitempty" required:"false" doc:""`
+	MinMemory                            string                                                                `json:"min_memory,omitempty" yaml:"min_memory,omitempty" required:"false" doc:""`
+	NumWorkers                           int64                                                                 `json:"num_workers,omitempty" yaml:"num_workers,omitempty" required:"false" doc:"Number of worker threads per function instance. When event batching is enabled, the effective concurrency per instance is num_workers * batch_max_size, since each worker processes one batch at a time. Default: 20 (matches the default Python runtime worker threads) Maximum: 100"`
+	Storage                              string                                                                `json:"storage,omitempty" yaml:"storage,omitempty" required:"false" doc:""`
+	Timeout                              int64                                                                 `json:"timeout,omitempty" yaml:"timeout,omitempty" required:"false" doc:"Timeout in seconds for the function deployment."`
+}
+
+// PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling represents a nested type within components
+type PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling struct {
+	Metric      string                                                                         `json:"metric,omitempty" yaml:"metric,omitempty" required:"true" doc:"The metric used for autoscaling decisions. Determines which configuration object should be provided: - concurrency: Provide 'concurrency' configuration object - rps: Provide 'rps' configuration object - resource: Provide 'resource' configuration object"`
+	Concurrency string                                                                         `json:"concurrency,omitempty" yaml:"concurrency,omitempty" required:"false" doc:"Autoscaling configuration based on concurrent requests metric. Extends RequestAutoscalingConfig with concurrency-specific options."`
+	Resource    PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling_Resource `json:"resource,omitempty" yaml:"resource,omitempty" required:"false" doc:"Autoscaling configuration based on resource utilization (CPU or memory). Note: Resource-based autoscaling does not support scale-to-zero. Use concurrency or rps metrics if scale-to-zero is required."`
+	Rps         PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling_Rps      `json:"rps,omitempty" yaml:"rps,omitempty" required:"false" doc:"Common autoscaling configuration for request-based metrics (concurrency and RPS). This configuration supports scale-to-zero when there is no traffic."`
+}
+
+// PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling_Resource represents a nested type within components
+type PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling_Resource struct {
+	ResourceAutoscalingType string `json:"resource_autoscaling_type,omitempty" yaml:"resource_autoscaling_type,omitempty" required:"true" doc:"The resource type to use for autoscaling: - cpu: Scale based on CPU utilization percentage - memory: Scale based on memory utilization percentage"`
+	Target                  int64  `json:"target,omitempty" yaml:"target,omitempty" required:"true" doc:"Target value for the selected resource. For CPU, this is the target utilization percentage (e.g., 80 means 80% of CPU request). Note: The Knative documentation at https://knative.dev/docs/serving/autoscaling/autoscaling-metrics/ incorrectly states this is in millicores, but testing and Knative source code confirm it's a percentage. For memory, this is in Mi (e.g., 200 means 200Mi). The HPA will scale when actual usage exceeds this target."`
+	StableWindowSeconds     int64  `json:"stable_window_seconds,omitempty" yaml:"stable_window_seconds,omitempty" required:"false" doc:"Time window in seconds for stable autoscaling decisions (6 to 3600). This controls the HPA stabilization window for scale-down decisions. Larger values result in more smoothing and slower scale-down. Default: not set (uses Kubernetes HPA default of 300s)"`
+}
+
+// PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling_Rps represents a nested type within components
+type PipelineCreate_Manifest_FunctionDeploymentsItem_Resources_Autoscaling_Rps struct {
+	BurstThresholdPercentage    int64 `json:"burst_threshold_percentage,omitempty" yaml:"burst_threshold_percentage,omitempty" required:"false" doc:"Burst mode threshold as a percentage of current capacity (110-1000). Burst mode is triggered when traffic exceeds this percentage of what current instances can handle. For example, 200 means burst mode starts when traffic is 2x current capacity."`
+	BurstWindowPercentage       int64 `json:"burst_window_percentage,omitempty" yaml:"burst_window_percentage,omitempty" required:"false" doc:"Burst detection window as a percentage of stable window (1-100). Defines the shorter time window used to detect traffic bursts. Lower values make burst detection more sensitive."`
+	ScaleDownDelaySeconds       int64 `json:"scale_down_delay_seconds,omitempty" yaml:"scale_down_delay_seconds,omitempty" required:"false" doc:"Delay in seconds before scaling down after load decreases. Helps prevent thrashing during fluctuating traffic."`
+	ScaleToZeroDelaySeconds     int64 `json:"scale_to_zero_delay_seconds,omitempty" yaml:"scale_to_zero_delay_seconds,omitempty" required:"false" doc:"Minimum time in seconds to retain the last instance before scaling to zero. The instance is kept for at least this duration after the autoscaler decides to scale to zero."`
+	StableWindowSeconds         int64 `json:"stable_window_seconds,omitempty" yaml:"stable_window_seconds,omitempty" required:"false" doc:"Time window in seconds for stable autoscaling decisions (6 to 3600). Larger values result in more smoothing. When scaling to zero, the last instance is only removed after no traffic for the entire duration of this window."`
+	Target                      int64 `json:"target,omitempty" yaml:"target,omitempty" required:"false" doc:"Target value per instance. The autoscaler will try to maintain this level per instance. - For concurrency metric: target number of concurrent requests (default: 20, which matches the default number of worker threads in non-asyncio Python functions) - For RPS metric: target requests per second"`
+	TargetUtilizationPercentage int64 `json:"target_utilization_percentage,omitempty" yaml:"target_utilization_percentage,omitempty" required:"false" doc:"Target utilization percentage (1-100). Specifies what percentage of the target should actually be targeted by the autoscaler. This causes the autoscaler to scale up before the target is reached. For example, with target=10 and target_utilization_percentage=70, the autoscaler will create a new instance when average metric value reaches 7."`
+}
+
+// PipelineCreate_Manifest_LinksItem represents a nested type within components
+type PipelineCreate_Manifest_LinksItem struct {
+	Destination              *[]string                                                         `json:"destination,omitempty" yaml:"destination,omitempty" required:"true" doc:""`
+	Source                   *[]string                                                         `json:"source,omitempty" yaml:"source,omitempty" required:"true" doc:""`
+	ConditionalTriggerLabels *[]PipelineCreate_Manifest_LinksItem_ConditionalTriggerLabelsItem `json:"conditional_trigger_labels,omitempty" yaml:"conditional_trigger_labels,omitempty" required:"false" doc:"Conditional trigger labels for the link. These are used to conditionally trigger the link. | All labels must be set to the specified values to trigger the link (i.e. AND operation between labels) | Labels names must be up to 15 lowercase characters or digits, must start with a letter"`
+	Config                   PipelineCreate_Manifest_LinksItem_Config                          `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
+	Topic                    string                                                            `json:"topic,omitempty" yaml:"topic,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+}
+
+// PipelineCreate_Manifest_LinksItem_ConditionalTriggerLabelsItem represents a nested type within components
+type PipelineCreate_Manifest_LinksItem_ConditionalTriggerLabelsItem struct {
+	TriggerLabelName  string `json:"triggerLabelName,omitempty" yaml:"triggerLabelName,omitempty" required:"true" doc:""`
+	TriggerLabelValue string `json:"triggerLabelValue,omitempty" yaml:"triggerLabelValue,omitempty" required:"true" doc:""`
+}
+
+// PipelineCreate_Manifest_LinksItem_Config represents a nested type within components
+type PipelineCreate_Manifest_LinksItem_Config struct {
+	EventsOrder string `json:"events_order,omitempty" yaml:"events_order,omitempty" required:"false" doc:"Ordering of events for the trigger."`
+	Retries     int64  `json:"retries,omitempty" yaml:"retries,omitempty" required:"false" doc:"Number of retries for the trigger."`
+}
+
+// PipelineCreate_Manifest_TriggersItem represents a nested type within components
+type PipelineCreate_Manifest_TriggersItem struct {
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:""`
+	Vrn  string `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"true" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+}
+
 // PipelineDescribe_Manifest represents a nested type within components
 type PipelineDescribe_Manifest struct {
 	Config              string                                               `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
@@ -3305,6 +3475,33 @@ type ScheduleTriggerUpdate_Broker struct {
 // ScheduleTriggerUpdate_Config represents a nested type within components
 type ScheduleTriggerUpdate_Config struct {
 	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Cron schedule for a Schedule Trigger."`
+}
+
+// SearchResultItem_AdditionalKubernetesClustersItem represents a nested type within components
+type SearchResultItem_AdditionalKubernetesClustersItem struct {
+	KubernetesClusterVrn string `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	Namespace            string `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:""`
+}
+
+// SearchResultItem_Broker represents a nested type within components
+type SearchResultItem_Broker struct {
+	Name                     string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Broker name for external or Bucket (View) name for internal."`
+	Type                     string `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
+	IsAccessibleToDataEngine bool   `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the broker is accessible. Set to false if the broker is not reachable from the Data Engine (e.g., external brokers behind firewalls)."`
+	Url                      string `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Deprecated. The broker URL is now resolved from VMS by broker name. This field is ignored for VMS-registered brokers and only used as a legacy fallback for brokers not yet registered in VMS. It will be removed in a future release."`
+}
+
+// SearchResultItem_Owner represents a nested type within components
+type SearchResultItem_Owner struct {
+	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
+	IdType string `json:"id_type,omitempty" yaml:"id_type,omitempty" required:"true" doc:"The type of identifier for the owner."`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
+}
+
+// SearchResultItem_PrimaryKubernetesCluster represents a nested type within components
+type SearchResultItem_PrimaryKubernetesCluster struct {
+	KubernetesClusterVrn string `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	Namespace            string `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:""`
 }
 
 // SecretCreate_EntriesItem represents a nested type within components
@@ -4185,6 +4382,21 @@ type Trigger_Broker struct {
 
 // Trigger_Owner represents a nested type within components
 type Trigger_Owner struct {
+	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
+	IdType string `json:"id_type,omitempty" yaml:"id_type,omitempty" required:"true" doc:"The type of identifier for the owner."`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
+}
+
+// TypedTriggerResponse_Broker represents a nested type within components
+type TypedTriggerResponse_Broker struct {
+	Name                     string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Broker name for external or Bucket (View) name for internal."`
+	Type                     string `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
+	IsAccessibleToDataEngine bool   `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the broker is accessible. Set to false if the broker is not reachable from the Data Engine (e.g., external brokers behind firewalls)."`
+	Url                      string `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Deprecated. The broker URL is now resolved from VMS by broker name. This field is ignored for VMS-registered brokers and only used as a legacy fallback for brokers not yet registered in VMS. It will be removed in a future release."`
+}
+
+// TypedTriggerResponse_Owner represents a nested type within components
+type TypedTriggerResponse_Owner struct {
 	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
 	IdType string `json:"id_type,omitempty" yaml:"id_type,omitempty" required:"true" doc:"The type of identifier for the owner."`
 	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`

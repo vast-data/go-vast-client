@@ -289,7 +289,8 @@ func (rest *TypedVMSRest) GetCtx() context.Context {
 }
 
 func (rest *TypedVMSRest) SetCtx(ctx context.Context) {
-	rest.Untyped.ctx = ctx
+	// Delegate so nested rests (DataEngine) stay in sync via UntypedVMSRest.SetCtx.
+	rest.Untyped.SetCtx(ctx)
 }
 
 func (rest *TypedVMSRest) GetApiRoot() string {

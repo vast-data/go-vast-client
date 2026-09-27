@@ -98,6 +98,28 @@ Both typed and untyped clients support standard CRUD methods for each resource (
 - `Delete` / `DeleteWithContext` - Delete a resource
 - `Ensure` / `EnsureWithContext` - Create if doesn't exist, return if exists
 
+### Optional query Params (untyped, variadic)
+
+On the **untyped** client, `Create`, `Update`, `Ensure`, `Delete`, and `DeleteById` take optional URL query args via variadic `Params`. Argument order matches `core.Request` (query, then body). One `Params` means body only (backward compatible); two means query + body. `GetById` takes an optional query the same way.
+
+```go
+// Body only (unchanged)
+rest.Views.Create(body)
+rest.Views.Update(id, body)
+rest.Views.Ensure(search, body)
+rest.Views.Delete(search)          // or Delete(search, body)
+rest.Views.DeleteById(id)          // or DeleteById(id, body)
+rest.Views.GetById(id)
+
+// Optional query (e.g. DataEngine ?tenant_name=)
+rest.Views.Create(client.Params{"tenant_name": "de-lab"}, body)
+rest.Views.Update(id, client.Params{"tenant_name": "de-lab"}, body)
+rest.Views.Ensure(search, client.Params{"tenant_name": "de-lab"}, body) // query used on create only
+rest.Views.Delete(search, client.Params{"tenant_name": "de-lab"}, nil)  // query only: pass nil body
+rest.Views.DeleteById(id, client.Params{"tenant_name": "de-lab"}, nil)
+rest.Views.GetById(id, client.Params{"tenant_name": "de-lab"})
+```
+
 ### Context-Aware Methods
 
 All methods have `WithContext` variants that accept a `context.Context` as the first parameter. These are useful when you need to:

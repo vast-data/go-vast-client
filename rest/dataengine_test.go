@@ -1,6 +1,7 @@
 package rest_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/vast-data/go-vast-client/core"
@@ -62,5 +63,45 @@ func TestTypedDataEngineNestedRest(t *testing.T) {
 	}
 	if typed.DataEngine.Untyped != typed.Untyped.DataEngine {
 		t.Fatal("typed DataEngine must wrap the same untyped nested rest")
+	}
+	if got := typed.GetApiRoot(); got != "" {
+		t.Fatalf("TypedVMSRest.GetApiRoot() = %q, want empty VMS root", got)
+	}
+	if got := typed.DataEngine.GetApiRoot(); got != dataengine.ApiRoot {
+		t.Fatalf("typed DataEngine.GetApiRoot() = %q, want %q", got, dataengine.ApiRoot)
+	}
+}
+
+func TestSetCtxFansOutToDataEngine(t *testing.T) {
+	type ctxKey string
+	parent, err := rest.NewUntypedVMSRest(&core.VMSConfig{
+		Host:     "example.invalid",
+		Username: "u",
+		Password: "p",
+	})
+	if err != nil {
+		t.Fatalf("NewUntypedVMSRest: %v", err)
+	}
+	ctx := context.WithValue(context.Background(), ctxKey("de-test"), "ok")
+	parent.SetCtx(ctx)
+	if parent.GetCtx() != ctx {
+		t.Fatal("parent ctx not updated")
+	}
+	if parent.DataEngine.GetCtx() != ctx {
+		t.Fatal("DataEngine ctx must follow parent SetCtx")
+	}
+
+	typed, err := rest.NewTypedVMSRest(&core.VMSConfig{
+		Host:     "example.invalid",
+		Username: "u",
+		Password: "p",
+	})
+	if err != nil {
+		t.Fatalf("NewTypedVMSRest: %v", err)
+	}
+	typedCtx := context.WithValue(context.Background(), ctxKey("typed-de"), 1)
+	typed.SetCtx(typedCtx)
+	if typed.Untyped.DataEngine.GetCtx() != typedCtx {
+		t.Fatal("typed SetCtx must fan out to nested DataEngine via Untyped.SetCtx")
 	}
 }
