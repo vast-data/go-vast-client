@@ -11,14 +11,14 @@ import (
 
 // Mock implementations for testing
 type mockVastRest struct {
-	resourceMap map[string]VastResourceAPIWithContext
+	resourceMap map[string]ResourceEntry
 }
 
 func (m *mockVastRest) GetSession() RESTSession {
 	return nil
 }
 
-func (m *mockVastRest) GetResourceMap() map[string]VastResourceAPIWithContext {
+func (m *mockVastRest) GetResourceMap() map[string]ResourceEntry {
 	return m.resourceMap
 }
 
@@ -171,8 +171,8 @@ func TestAsyncResult_Wait_Completed(t *testing.T) {
 	}
 
 	rest := &mockVastRest{
-		resourceMap: map[string]VastResourceAPIWithContext{
-			VTaskKey: mockAPI,
+		resourceMap: map[string]ResourceEntry{
+			VTaskKey: ResourceEntry{VastResourceAPIWithContext: mockAPI},
 		},
 	}
 
@@ -210,8 +210,8 @@ func TestAsyncResult_Wait_FailedTask(t *testing.T) {
 	}
 
 	rest := &mockVastRest{
-		resourceMap: map[string]VastResourceAPIWithContext{
-			VTaskKey: mockAPI,
+		resourceMap: map[string]ResourceEntry{
+			VTaskKey: ResourceEntry{VastResourceAPIWithContext: mockAPI},
 		},
 	}
 
@@ -245,8 +245,8 @@ func TestAsyncResult_Wait_FailedTaskNoMessages(t *testing.T) {
 	}
 
 	rest := &mockVastRest{
-		resourceMap: map[string]VastResourceAPIWithContext{
-			VTaskKey: mockAPI,
+		resourceMap: map[string]ResourceEntry{
+			VTaskKey: ResourceEntry{VastResourceAPIWithContext: mockAPI},
 		},
 	}
 
@@ -292,8 +292,8 @@ func TestAsyncResult_Wait_RunningThenCompleted(t *testing.T) {
 	}
 
 	rest := &mockVastRest{
-		resourceMap: map[string]VastResourceAPIWithContext{
-			VTaskKey: mockAPI,
+		resourceMap: map[string]ResourceEntry{
+			VTaskKey: ResourceEntry{VastResourceAPIWithContext: mockAPI},
 		},
 	}
 

@@ -16,10 +16,10 @@ func newCRUDTestResource(t *testing.T, server *httptest.Server, ops ResourceOps)
 	rest := &DummyRest{
 		ctx:         context.Background(),
 		Session:     session,
-		resourceMap: make(map[string]VastResourceAPIWithContext),
+		resourceMap: make(map[string]ResourceEntry),
 	}
 	vr := NewVastResource("users", "User", rest, ops, nil)
-	rest.resourceMap["User"] = vr
+	rest.resourceMap["User"] = ResourceEntry{VastResourceAPIWithContext: vr}
 	return vr
 }
 
@@ -199,10 +199,12 @@ func TestVastResource_GetById(t *testing.T) {
 
 func TestVastResource_ExistsAndEnsure(t *testing.T) {
 	var created bool
+	var lastExistsFields string
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
+			lastExistsFields = r.URL.Query().Get("fields")
 			if created {
 				_ = json.NewEncoder(w).Encode(map[string]any{
 					"count":   1,
@@ -221,6 +223,9 @@ func TestVastResource_ExistsAndEnsure(t *testing.T) {
 	defer server.Close()
 
 	resource := newCRUDTestResource(t, server, NewResourceOps(C, L, R))
+	if resource.identityField != "id" {
+		t.Fatalf("expected identityField id for users, got %q", resource.identityField)
+	}
 
 	exists, err := resource.Exists(Params{"name": "ensure-me"})
 	if err != nil {
@@ -228,6 +233,9 @@ func TestVastResource_ExistsAndEnsure(t *testing.T) {
 	}
 	if exists {
 		t.Fatal("expected resource to not exist yet")
+	}
+	if lastExistsFields != "id" {
+		t.Fatalf("Exists should request fields=id, got %q", lastExistsFields)
 	}
 
 	record, err := resource.Ensure(Params{"name": "ensure-me"}, Params{"name": "ensure-me"})
@@ -240,6 +248,57 @@ func TestVastResource_ExistsAndEnsure(t *testing.T) {
 
 	if !resource.MustExists(Params{"name": "ensure-me"}) {
 		t.Fatal("expected MustExists to return true")
+	}
+	if lastExistsFields != "id" {
+		t.Fatalf("MustExists should request fields=id, got %q", lastExistsFields)
+	}
+
+	// Caller-supplied fields must be preserved.
+	exists, err = resource.Exists(Params{"name": "ensure-me", "fields": "name,guid"})
+	if err != nil {
+		t.Fatalf("Exists with caller fields: %v", err)
+	}
+	if !exists {
+		t.Fatal("expected resource to exist")
+	}
+	if lastExistsFields != "name,guid" {
+		t.Fatalf("caller fields should be preserved, got %q", lastExistsFields)
+	}
+}
+
+func TestVastResource_Exists_IdentityLessSkipsFields(t *testing.T) {
+	var gotFields string
+	var sawFields bool
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, sawFields = r.URL.Query()["fields"]
+		gotFields = r.URL.Query().Get("fields")
+		_ = json.NewEncoder(w).Encode(map[string]any{"count": 0, "results": []any{}})
+	}))
+	defer server.Close()
+
+	session := newTestSession(t, server)
+	rest := &DummyRest{
+		ctx:         context.Background(),
+		Session:     session,
+		resourceMap: make(map[string]ResourceEntry),
+	}
+	// Path with no OpenAPI item identity → empty identityField.
+	resource := NewVastResource("no-such-collection-xyz", "Orphan", rest, NewResourceOps(L, R), nil)
+	rest.resourceMap["Orphan"] = ResourceEntry{VastResourceAPIWithContext: resource}
+	if resource.identityField != "" {
+		t.Fatalf("expected empty identityField, got %q", resource.identityField)
+	}
+
+	exists, err := resource.Exists(Params{"name": "x"})
+	if err != nil {
+		t.Fatalf("Exists: %v", err)
+	}
+	if exists {
+		t.Fatal("expected not found")
+	}
+	if sawFields {
+		t.Fatalf("identity-less Exists must not set fields, got %q", gotFields)
 	}
 }
 
@@ -299,10 +358,10 @@ func TestTypedVastResource_Accessors(t *testing.T) {
 	rest := &DummyRest{
 		ctx:         context.Background(),
 		Session:     session,
-		resourceMap: make(map[string]VastResourceAPIWithContext),
+		resourceMap: make(map[string]ResourceEntry),
 	}
 	untyped := NewVastResource("users", "User", rest, NewResourceOps(L, R), nil)
-	rest.resourceMap["User"] = untyped
+	rest.resourceMap["User"] = ResourceEntry{VastResourceAPIWithContext: untyped}
 
 	typed := NewTypedVastResource("User", rest)
 	if typed.GetResourceType() != "User" {

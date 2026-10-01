@@ -280,7 +280,7 @@ func (rest *TypedVMSRest) GetSession() core.RESTSession {
 	return rest.Untyped.Session
 }
 
-func (rest *TypedVMSRest) GetResourceMap() map[string]core.VastResourceAPIWithContext {
+func (rest *TypedVMSRest) GetResourceMap() map[string]core.ResourceEntry {
 	return rest.Untyped.resourceMap
 }
 

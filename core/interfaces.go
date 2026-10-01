@@ -37,7 +37,7 @@ type VastResourceAPI interface {
 	Exists(Params) (bool, error)
 	MustExists(Params) bool
 	GetIterator(Params, int) Iterator
-	// Resource-level mutex lock for concurrent access control
+	// Lock Resource-level mutex lock for concurrent access control
 	Lock(...any) func()
 	// Internal methods
 }
@@ -129,12 +129,20 @@ type RequestInterceptor interface {
 
 type VastRest interface {
 	GetSession() RESTSession
-	GetResourceMap() map[string]VastResourceAPIWithContext
+	GetResourceMap() map[string]ResourceEntry
 	GetCtx() context.Context
 	SetCtx(context.Context)
 	// GetApiRoot returns the rest-level path segment after /api/{version}/.
 	// Empty for the main VMS rest; nested rests set their own (e.g. "serverless").
 	GetApiRoot() string
+}
+
+// ResourceEntry is the value stored in GetResourceMap.
+// The embedded API keeps method call sites working; IdentityField is "id", "guid",
+// or "" when the resource has no OpenAPI item path ({id}|{guid}).
+type ResourceEntry struct {
+	VastResourceAPIWithContext
+	IdentityField string
 }
 
 // Iterator provides an interface for iterating over paginated or non-paginated API results.

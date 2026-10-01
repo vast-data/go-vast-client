@@ -22,6 +22,7 @@ view, err := rest.Views.Get(searchParams)
 ```
 
 **Benefits:**
+
 - Compile-time type safety
 - IDE autocomplete for all fields
 - Clear struct definitions

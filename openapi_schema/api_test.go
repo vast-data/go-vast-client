@@ -375,3 +375,18 @@ func TestGetResponseModelSchemaUnresolved(t *testing.T) {
 		t.Logf("GetResponseModelSchemaUnresolved returned: %v", err)
 	}
 }
+
+func TestResolveIdentityField(t *testing.T) {
+	if got := ResolveIdentityField(PackVMS, "users"); got != "id" {
+		t.Fatalf("users: want id, got %q", got)
+	}
+	if got := ResolveIdentityField(PackDataEngine, "functions"); got != "guid" {
+		t.Fatalf("functions: want guid, got %q", got)
+	}
+	if got := ResolveIdentityField(PackDataEngine, "data-engine"); got != "" {
+		t.Fatalf("data-engine singleton: want empty, got %q", got)
+	}
+	if got := ResolveIdentityField(PackVMS, "no-such-collection-xyz"); got != "" {
+		t.Fatalf("missing collection: want empty, got %q", got)
+	}
+}

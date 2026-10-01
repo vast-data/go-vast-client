@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+
+	"github.com/vast-data/go-vast-client/openapi_schema"
 )
 
 // Dummy resource is used to support Request interceptors for "low level" session methods like GET, POST etc.
@@ -16,14 +18,14 @@ type Dummy struct {
 type DummyRest struct {
 	ctx         context.Context
 	Session     RESTSession
-	resourceMap map[string]VastResourceAPIWithContext
+	resourceMap map[string]ResourceEntry
 }
 
 func (rest *DummyRest) GetSession() RESTSession {
 	return rest.Session
 }
 
-func (rest *DummyRest) GetResourceMap() map[string]VastResourceAPIWithContext {
+func (rest *DummyRest) GetResourceMap() map[string]ResourceEntry {
 	return rest.resourceMap
 }
 
@@ -47,9 +49,11 @@ func NewDummy(ctx context.Context, session RESTSession) *Dummy {
 		},
 	}
 	rest := &DummyRest{
-		ctx:         ctx,
-		Session:     session,
-		resourceMap: map[string]VastResourceAPIWithContext{"Dummy": dummy},
+		ctx:     ctx,
+		Session: session,
+		resourceMap: map[string]ResourceEntry{
+			"Dummy": {VastResourceAPIWithContext: dummy},
+		},
 	}
 	dummy.Rest = rest
 	return dummy
@@ -72,18 +76,29 @@ type VastResource struct {
 	// updateMethod is the HTTP verb for Update/UpdateWithContext (default PATCH).
 	// Some APIs (e.g. DataEngine functions/{guid}) are PUT-only.
 	updateMethod string
+	// identityField is "id", "guid", or "" when the resource has no OpenAPI item path.
+	identityField string
 }
 
 func NewVastResource(resourcePath string, resourceType string, rest VastRest, resourceOps ResourceOps, parent any) *VastResource {
 	return &VastResource{
-		resourcePath: resourcePath,
-		resourceType: resourceType,
-		Rest:         rest,
-		mu:           NewKeyLocker(),
-		resourceOps:  resourceOps,
-		parent:       parent,
-		newIterator:  iteratorForRest(rest),
+		resourcePath:  resourcePath,
+		resourceType:  resourceType,
+		Rest:          rest,
+		mu:            NewKeyLocker(),
+		resourceOps:   resourceOps,
+		parent:        parent,
+		newIterator:   iteratorForRest(rest),
+		identityField: identityFieldForRest(rest, resourcePath),
 	}
+}
+
+func identityFieldForRest(rest VastRest, resourcePath string) string {
+	pack := openapi_schema.PackVMS
+	if rest != nil && strings.Trim(rest.GetApiRoot(), "/") == "serverless" {
+		pack = openapi_schema.PackDataEngine
+	}
+	return openapi_schema.ResolveIdentityField(pack, resourcePath)
 }
 
 // setUpdateMethod sets the HTTP verb used by Update/UpdateWithContext (e.g. http.MethodPut).
@@ -300,8 +315,13 @@ func (e *VastResource) GetByIdWithContext(ctx context.Context, id any, params ..
 }
 
 // ExistsWithContext checks if any resource matches the provided parameters within the given context.
-// Returns true if a match is found. Returns false if not found. Returns an error only if an unexpected failure occurs.
+// Returns true if a match is found. Returns false if not found. Returns an error only for unexpected failures.
+//
+// When params does not already set "fields" and this resource has an OpenAPI identity
+// field (id or guid), ExistsWithContext adds ?fields=<identity> so the list/get payload
+// stays small. Identity-less resources leave params unchanged.
 func (e *VastResource) ExistsWithContext(ctx context.Context, params Params) (bool, error) {
+	params = e.withExistsFields(params)
 	if _, err := e.GetWithContext(ctx, params); err != nil && !IsTooManyRecordsErr(err) {
 		if !IsNotFoundErr(err) {
 			return false, err
@@ -309,6 +329,22 @@ func (e *VastResource) ExistsWithContext(ctx context.Context, params Params) (bo
 		return false, nil
 	}
 	return true, nil
+}
+
+// withExistsFields returns params with a sparse "fields" query when appropriate.
+func (e *VastResource) withExistsFields(params Params) Params {
+	if _, hasFields := params["fields"]; hasFields {
+		return params
+	}
+	if e.identityField == "" {
+		return params
+	}
+	out := Params{}
+	for k, v := range params {
+		out[k] = v
+	}
+	out["fields"] = e.identityField
+	return out
 }
 
 // MustExistsWithContext checks if a resource exists using the provided context and parameters.

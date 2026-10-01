@@ -113,7 +113,7 @@ type VastResourceType interface {
 ```go
 type VMSRest struct {
 	Session     RESTSession
-	resourceMap map[string]VastResource
+	resourceMap map[string]ResourceEntry
 
 	Versions          *Version
 	VTasks            *VTask

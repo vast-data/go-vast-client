@@ -69,7 +69,10 @@ func NewUntypedResource[T any](rest VastRest, resourcePath string, resourceOps .
 	}
 
 	if res, ok := instance.(VastResourceAPIWithContext); ok {
-		rest.GetResourceMap()[resourceType] = res
+		rest.GetResourceMap()[resourceType] = ResourceEntry{
+			VastResourceAPIWithContext: res,
+			IdentityField:              resource.identityField,
+		}
 	}
 
 	if result, ok := instance.(*T); ok {

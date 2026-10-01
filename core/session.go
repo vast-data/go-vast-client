@@ -105,12 +105,17 @@ func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
 		MinVersion:         tls.VersionTLS12,
 	}
 	transport.MaxConnsPerHost = config.MaxConnections
-	transport.IdleConnTimeout = *config.Timeout
+	if config.Timeout != nil {
+		transport.IdleConnTimeout = *config.Timeout
+	}
 	if config.RespectProxy {
 		// Ensure proxy environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY) are respected
 		transport.Proxy = http.ProxyFromEnvironment
 	}
 	client := &http.Client{Transport: transport}
+	if config.Timeout != nil {
+		client.Timeout = *config.Timeout
+	}
 	authenticator, err := createAuthenticator(config)
 	if err != nil {
 		return nil, err

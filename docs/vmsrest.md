@@ -97,6 +97,9 @@ Both typed and untyped clients support standard CRUD methods for each resource (
 - `Update` / `UpdateWithContext` - Update an existing resource
 - `Delete` / `DeleteWithContext` - Delete a resource
 - `Ensure` / `EnsureWithContext` - Create if doesn't exist, return if exists
+- `Exists` / `ExistsWithContext` - Check whether a resource matching search params exists
+- `MustExists` / `MustExistsWithContext` - Same as Exists, panics on unexpected errors
+
 
 ### Optional query Params (untyped, variadic)
 

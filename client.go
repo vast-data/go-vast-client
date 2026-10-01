@@ -46,6 +46,9 @@ type (
 	// VastResourceAPIWithContext extends VastResourceAPI with context support.
 	VastResourceAPIWithContext = core.VastResourceAPIWithContext
 
+	// ResourceEntry is the value stored in GetResourceMap (API + IdentityField).
+	ResourceEntry = core.ResourceEntry
+
 	// InterceptableVastResourceAPI adds request/response interception to VastResourceAPIWithContext.
 	InterceptableVastResourceAPI = core.InterceptableVastResourceAPI
 )

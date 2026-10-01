@@ -43,7 +43,7 @@ func NewTyped(untyped *UntypedRest) *TypedRest {
 }
 
 func (rest *TypedRest) GetSession() core.RESTSession { return rest.Untyped.GetSession() }
-func (rest *TypedRest) GetResourceMap() map[string]core.VastResourceAPIWithContext {
+func (rest *TypedRest) GetResourceMap() map[string]core.ResourceEntry {
 	return rest.Untyped.GetResourceMap()
 }
 func (rest *TypedRest) GetCtx() context.Context {

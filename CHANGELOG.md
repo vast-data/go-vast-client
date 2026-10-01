@@ -6,17 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ENHANCEMENTS:
 
-* **Create/Update/Ensure/Delete/DeleteById Query Params**: Optional URL query via variadic `Params` (same order as `Request`: query then body). Existing body-only (or two-arg) call sites remain valid.
-  - `Create(body)` or `Create(query, body)`
-  - `Update(id, body)` or `Update(id, query, body)`
-  - `Ensure(search, body)` or `Ensure(search, query, body)`
-  - `Delete(search)`, `Delete(search, body)`, or `Delete(search, query, body)`
-  - `DeleteById(id)`, `DeleteById(id, body)`, or `DeleteById(id, query, body)`
-  Used for DataEngine `?tenant_name=`.
+* **Exists Sparse Fields**: `Exists` / `ExistsWithContext` request `?fields=id` or `?fields=guid` when the OpenAPI collection has an item path (`/{id}` or `/{guid}`). Identity-less resources omit `fields`. Caller-supplied `fields` are preserved.
+* **Create/Update/Ensure/Delete/DeleteById Query Params**: Optional URL query via variadic `Params`. Existing body-only (or two-arg) call sites remain valid.
 * **DataEngine Nested Rest**: `rest.UntypedVMSRest.DataEngine` / `rest.TypedVMSRest.DataEngine` expose serverless APIs under `/api/{version}/serverless/...` — resources: `container-registries`, `kubernetes-clusters`, `kubernetes-secrets`, `mtls-authentication-credentials`, `functions`, `pipelines`, `data-engine`, `triggers/schedule`, `triggers/element`.
 * **DataEngine Pagination**: Cursor-based iterators for serverless list endpoints.
-* **Record Display Names**: Conventional URL parsing recognizes `/api/{ver}/serverless/{resource}/{id}/` so DataEngine records get human-readable table/log names.
-* **Update HTTP Verb**: DataEngine `functions/{guid}`, `triggers/schedule/{guid}`, and `triggers/element/{guid}` updates use PUT (internal wiring; no new public VastResource API).
 
 NOTES:
 

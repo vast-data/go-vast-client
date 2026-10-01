@@ -64,6 +64,24 @@ func ResolveCollectionItemPath(pack Pack, collectionPath string) (string, error)
 	return "", fmt.Errorf("no item path ({id}|{guid}) for collection %q in pack %s", collectionPath, pack)
 }
 
+// ResolveIdentityField returns "id" or "guid" from the collection item path
+// (/users/{id}/ or /functions/{guid}), or "" if no item path exists.
+// Preference follows ResolveCollectionItemPath candidate order ({id} before {guid}).
+func ResolveIdentityField(pack Pack, collectionPath string) string {
+	itemPath, err := ResolveCollectionItemPath(pack, collectionPath)
+	if err != nil {
+		return ""
+	}
+	switch {
+	case strings.Contains(itemPath, "{id}"):
+		return "id"
+	case strings.Contains(itemPath, "{guid}"):
+		return "guid"
+	default:
+		return ""
+	}
+}
+
 func GetOpenApiComponents(pack Pack) (*openapi3.Components, error) {
 	doc, err := loadOpenAPIDoc(pack)
 

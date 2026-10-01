@@ -28,7 +28,7 @@ const (
 type UntypedRest struct {
 	ctx         context.Context
 	Session     core.RESTSession
-	resourceMap map[string]core.VastResourceAPIWithContext
+	resourceMap map[string]core.ResourceEntry
 	apiRoot     string
 
 	ContainerRegistries           *unde.ContainerRegistry
@@ -52,7 +52,7 @@ func NewUntyped(session core.RESTSession, ctx context.Context) *UntypedRest {
 	de := &UntypedRest{
 		ctx:         ctx,
 		Session:     session,
-		resourceMap: make(map[string]core.VastResourceAPIWithContext),
+		resourceMap: make(map[string]core.ResourceEntry),
 		apiRoot:     ApiRoot,
 	}
 
@@ -76,7 +76,7 @@ func NewUntyped(session core.RESTSession, ctx context.Context) *UntypedRest {
 }
 
 func (rest *UntypedRest) GetSession() core.RESTSession { return rest.Session }
-func (rest *UntypedRest) GetResourceMap() map[string]core.VastResourceAPIWithContext {
+func (rest *UntypedRest) GetResourceMap() map[string]core.ResourceEntry {
 	return rest.resourceMap
 }
 func (rest *UntypedRest) GetCtx() context.Context    { return rest.ctx }

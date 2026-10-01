@@ -23,7 +23,7 @@ const (
 type UntypedVMSRest struct {
 	ctx         context.Context
 	Session     core.RESTSession
-	resourceMap map[string]core.VastResourceAPIWithContext // Map to store resources by resourceType
+	resourceMap map[string]core.ResourceEntry // Map to store resources by resourceType
 	// apiRoot is empty for the main VMS rest (/api/{version}/...).
 	apiRoot string
 
@@ -176,7 +176,7 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	}
 	rest := &UntypedVMSRest{
 		Session:     session,
-		resourceMap: make(map[string]core.VastResourceAPIWithContext),
+		resourceMap: make(map[string]core.ResourceEntry),
 		apiRoot:     "", // main VMS rest
 	}
 
@@ -317,7 +317,7 @@ func (rest *UntypedVMSRest) GetSession() core.RESTSession {
 	return rest.Session
 }
 
-func (rest *UntypedVMSRest) GetResourceMap() map[string]core.VastResourceAPIWithContext {
+func (rest *UntypedVMSRest) GetResourceMap() map[string]core.ResourceEntry {
 	return rest.resourceMap
 }
 

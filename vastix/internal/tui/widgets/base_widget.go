@@ -1628,38 +1628,47 @@ func (bw *BaseWidget) GetListKeyBindings() []common.KeyBinding {
 		availableBindings = append(availableBindings, common.KeyBinding{Key: "<ctrl+d>", Desc: "delete"})
 	}
 
-	// Add details key binding only if Details mode is allowed and READ operations are supported
-	if supportsReadOps && bw.isModeAllowed(common.NavigatorModeDetails) {
-		availableBindings = append(availableBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
-	}
-
-	if bw.CanUseExtra() {
-		availableBindings = append(availableBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
-	}
-
 	// Add create key binding only if Create mode is allowed and inputs are available
 	inputs, err := bw.parent.GetInputs()
 	if err == nil && len(inputs) > 0 && bw.isModeAllowed(common.NavigatorModeCreate) {
 		availableBindings = append(availableBindings, common.KeyBinding{Key: "<n>", Desc: "new"})
 	}
 
-	// Collect shortcuts from all extra widgets (sorted by key for consistent display)
 	if bw.CanUseExtra() {
 		shortcuts := bw.ShortCuts()
-		// Extract and sort keys to ensure consistent ordering (1, 2, 3, etc.)
 		keys := make([]string, 0, len(shortcuts))
 		for key := range shortcuts {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
 
-		// Add shortcuts in sorted order
+		const maxKeybindingColumns = 2
+		const maxKeybindingRows = 7
+		remaining := maxKeybindingColumns*maxKeybindingRows - len(availableBindings)
+		if remaining < 0 {
+			remaining = 0
+		}
+
+		addedShortcut := false
 		for _, key := range keys {
+			if remaining <= 0 {
+				break
+			}
 			shortcut := shortcuts[key]
 			if keyBinding := shortcut.ShortCut(); keyBinding != nil {
 				availableBindings = append(availableBindings, *keyBinding)
+				remaining--
+				addedShortcut = true
 			}
 		}
+		if !addedShortcut {
+			if supportsReadOps && bw.isModeAllowed(common.NavigatorModeDetails) {
+				availableBindings = append(availableBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
+			}
+			availableBindings = append(availableBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
+		}
+	} else if supportsReadOps && bw.isModeAllowed(common.NavigatorModeDetails) {
+		availableBindings = append(availableBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
 	}
 
 	bindings := make([]common.KeyBinding, 0, len(availableBindings))

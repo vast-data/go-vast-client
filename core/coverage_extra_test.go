@@ -77,10 +77,10 @@ func TestTypedVastResource_GetIteratorWithContext(t *testing.T) {
 	rest := &DummyRest{
 		ctx:         context.Background(),
 		Session:     session,
-		resourceMap: make(map[string]VastResourceAPIWithContext),
+		resourceMap: make(map[string]ResourceEntry),
 	}
 	untyped := NewVastResource("users", "User", rest, NewResourceOps(L), nil)
-	rest.resourceMap["User"] = untyped
+	rest.resourceMap["User"] = ResourceEntry{VastResourceAPIWithContext: untyped}
 	typed := NewTypedVastResource("User", rest)
 
 	ctx := context.WithValue(context.Background(), testContextKey{}, "iter")

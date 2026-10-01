@@ -9,14 +9,14 @@ import (
 type MockRest struct {
 	ctx         context.Context
 	session     RESTSession
-	resourceMap map[string]VastResourceAPIWithContext
+	resourceMap map[string]ResourceEntry
 }
 
 func (m *MockRest) GetSession() RESTSession {
 	return m.session
 }
 
-func (m *MockRest) GetResourceMap() map[string]VastResourceAPIWithContext {
+func (m *MockRest) GetResourceMap() map[string]ResourceEntry {
 	return m.resourceMap
 }
 
