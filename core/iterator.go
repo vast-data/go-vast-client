@@ -6,50 +6,57 @@ import (
 	"strings"
 )
 
-// ######################################################
-//              ITERATOR INTERFACES
-// ######################################################
+// newIteratorFn is the rest-owned constructor signature for pagination iterators.
+type newIteratorFn func(ctx context.Context, resource VastResourceAPIWithContext, params Params, pageSize int) Iterator
 
-// Iterator provides an interface for iterating over paginated or non-paginated API results.
-// It abstracts away the differences between paginated resources (with next/previous links)
-// and non-paginated resources (flat lists).
-type Iterator interface {
-	// Next advances to the next page and returns the records and any error.
-	// Returns empty RecordSet when there are no more pages.
-	Next() (RecordSet, error)
+// recordSetFromListField converts a JSON list field ([]any or []map[string]any) to RecordSet.
+func recordSetFromListField(raw any, fieldName string) (RecordSet, error) {
+	if resultsMapList, ok := raw.([]map[string]any); ok {
+		return ToRecordSet(resultsMapList)
+	}
+	if resultsList, ok := raw.([]any); ok {
+		converted := make([]map[string]any, 0, len(resultsList))
+		for _, item := range resultsList {
+			if record, ok := item.(map[string]any); ok {
+				converted = append(converted, record)
+			} else {
+				return nil, fmt.Errorf("unexpected type in %s array: %T", fieldName, item)
+			}
+		}
+		return ToRecordSet(converted)
+	}
+	return nil, fmt.Errorf("unexpected type for %s field: %T", fieldName, raw)
+}
 
-	// Previous moves to the previous page and returns the records and any error.
-	// Returns empty RecordSet when there is no previous page.
-	Previous() (RecordSet, error)
+func optionalURLString(v any) *string {
+	if v == nil {
+		return nil
+	}
+	if s, ok := v.(string); ok && s != "" {
+		return &s
+	}
+	return nil
+}
 
-	// HasNext returns true if there is a next page available.
-	HasNext() bool
-
-	// HasPrevious returns true if there is a previous page available.
-	HasPrevious() bool
-
-	// Count returns the total count of items (if available from pagination metadata).
-	// Returns -1 if count information is not available.
-	Count() int
-
-	// PageSize returns the current page size.
-	PageSize() int
-
-	// Reset resets the iterator to the first page and returns the first page records.
-	Reset() (RecordSet, error)
-
-	// All fetches all remaining pages and returns all records as a single RecordSet.
-	// This should be used with caution for large datasets.
-	All() (RecordSet, error)
+// resolvePageSize returns pageSize, falling back to session config when <= 0.
+func resolvePageSize(resource VastResourceAPIWithContext, pageSize int) int {
+	if pageSize <= 0 {
+		return resource.Session().GetConfig().PageSize
+	}
+	return pageSize
 }
 
 // ######################################################
-//              RESOURCE ITERATOR IMPLEMENTATION
+//              VMS ITERATOR
 // ######################################################
 
-// ResourceIterator implements the Iterator interface for VAST API resources.
-// It makes raw HTTP requests to preserve pagination metadata from the API.
-type ResourceIterator struct {
+// VmsIterator implements Iterator for VMS (DRF-style) list responses:
+//
+//	{ "results": [...], "count": N, "next": "<url>|null", "previous": "<url>|null" }
+//
+// Non-paginated responses (flat RecordSet or a single Record) are also supported.
+// Selected internally for resources whose rest apiRoot is empty (main VMS).
+type VmsIterator struct {
 	resource     VastResourceAPIWithContext
 	ctx          context.Context
 	initialQuery Params
@@ -64,66 +71,49 @@ type ResourceIterator struct {
 	initialized bool
 }
 
-// NewResourceIterator creates an iterator that makes raw HTTP requests to preserve pagination metadata.
-// If pageSize is 0 or negative, uses the session's configured PageSize (default: 0 means no page_size param sent).
-func NewResourceIterator(ctx context.Context, resource VastResourceAPIWithContext, params Params, pageSize int) Iterator {
-	if pageSize <= 0 {
-		// Get default page size from session config
-		config := resource.Session().GetConfig()
-		pageSize = config.PageSize // May be 0, which means don't send page_size param
-	}
+// NewVmsIterator creates a VMS DRF pagination iterator.
+func NewVmsIterator(ctx context.Context, resource VastResourceAPIWithContext, params Params, pageSize int) Iterator {
+	pageSize = resolvePageSize(resource, pageSize)
 
 	if params == nil {
 		params = make(Params)
 	}
-	// Only add page_size to params if pageSize > 0
 	if _, exists := params["page_size"]; !exists && pageSize > 0 {
 		params["page_size"] = pageSize
 	}
 
-	return &ResourceIterator{
+	return &VmsIterator{
 		resource:     resource,
 		ctx:          ctx,
 		initialQuery: params,
 		pageSize:     pageSize,
 		totalCount:   -1,
-		currentPage:  0,
-		initialized:  false,
 	}
 }
 
-// fetchPage makes a raw HTTP request and processes the pagination envelope.
-func (it *ResourceIterator) fetchPage(url string, params Params) error {
+func (it *VmsIterator) fetchPage(url string, params Params) error {
 	session := it.resource.Session()
 
-	// Make raw HTTP request
 	var response Renderable
 	var err error
 
 	if url != "" {
-		// Use the full URL for next/previous navigation
 		response, err = session.Get(it.ctx, url, nil, nil)
 	} else {
-		// Use resource path with params for first request
 		resourcePath := it.resource.GetResourcePath()
-		query := params.ToQuery()
-		fullURL, buildErr := buildUrl(session, resourcePath, query, session.GetConfig().ApiVersion)
+		fullURL, buildErr := buildUrl(session, resourcePath, params.ToQuery(), session.GetConfig().ApiVersion, it.resource.GetApiRoot())
 		if buildErr != nil {
 			return buildErr
 		}
 		response, err = session.Get(it.ctx, fullURL, nil, nil)
 	}
-
 	if err != nil {
 		return err
 	}
 
-	// Check if response is a pagination envelope
 	if record, ok := response.(Record); ok {
-		return it.processPaginationEnvelope(record)
+		return it.processEnvelope(record)
 	}
-
-	// If it's already a RecordSet, it's been unwrapped - treat as non-paginated
 	if recordSet, ok := response.(RecordSet); ok {
 		it.current = recordSet
 		it.nextURL = nil
@@ -131,79 +121,32 @@ func (it *ResourceIterator) fetchPage(url string, params Params) error {
 		it.totalCount = len(recordSet)
 		return nil
 	}
-
 	return fmt.Errorf("unexpected response type: %T", response)
 }
 
-// processPaginationEnvelope extracts data from a pagination envelope using ToRecordSet.
-func (it *ResourceIterator) processPaginationEnvelope(envelope Record) error {
-	// Check if this is a pagination envelope
-	// Only results and count are required; next and previous are optional
+func (it *VmsIterator) processEnvelope(envelope Record) error {
 	_, hasResults := envelope["results"]
 	_, hasCount := envelope["count"]
-
 	if hasResults && hasCount {
-		// This is a paginated response - use ToRecordSet to convert results
-		if resultsRaw, ok := envelope["results"]; ok {
-			// Try []map[string]any first
-			if resultsMapList, ok := resultsRaw.([]map[string]any); ok {
-				recordSet, err := ToRecordSet(resultsMapList)
-				if err != nil {
-					return fmt.Errorf("failed to convert results to RecordSet: %w", err)
-				}
-				it.current = recordSet
-			} else if resultsList, ok := resultsRaw.([]any); ok {
-				// Convert []any to []map[string]any
-				converted := make([]map[string]any, 0, len(resultsList))
-				for _, item := range resultsList {
-					if record, ok := item.(map[string]any); ok {
-						converted = append(converted, record)
-					} else {
-						return fmt.Errorf("unexpected type in results array: %T", item)
-					}
-				}
-				recordSet, err := ToRecordSet(converted)
-				if err != nil {
-					return fmt.Errorf("failed to convert results to RecordSet: %w", err)
-				}
-				it.current = recordSet
-			} else {
-				return fmt.Errorf("unexpected type for results field: %T", resultsRaw)
-			}
+		recordSet, err := recordSetFromListField(envelope["results"], "results")
+		if err != nil {
+			return err
 		}
-
+		it.current = recordSet
 		if count, ok := envelope["count"]; ok {
-			if countFloat, ok := count.(float64); ok {
-				it.totalCount = int(countFloat)
-			} else if countInt, ok := count.(int); ok {
-				it.totalCount = countInt
+			switch c := count.(type) {
+			case float64:
+				it.totalCount = int(c)
+			case int:
+				it.totalCount = c
 			}
 		}
-
-		if next, ok := envelope["next"]; ok {
-			if next == nil {
-				it.nextURL = nil
-			} else if nextStr, ok := next.(string); ok && nextStr != "" {
-				it.nextURL = &nextStr
-			} else {
-				it.nextURL = nil
-			}
-		}
-
-		if prev, ok := envelope["previous"]; ok {
-			if prev == nil {
-				it.previousURL = nil
-			} else if prevStr, ok := prev.(string); ok && prevStr != "" {
-				it.previousURL = &prevStr
-			} else {
-				it.previousURL = nil
-			}
-		}
-
+		it.nextURL = optionalURLString(envelope["next"])
+		it.previousURL = optionalURLString(envelope["previous"])
 		return nil
 	}
 
-	// Not a pagination envelope - treat the record itself as the result
+	// Single object / non-list envelope
 	it.current = RecordSet{envelope}
 	it.nextURL = nil
 	it.previousURL = nil
@@ -211,8 +154,7 @@ func (it *ResourceIterator) processPaginationEnvelope(envelope Record) error {
 	return nil
 }
 
-// Next advances to the next page and returns the records and any error.
-func (it *ResourceIterator) Next() (RecordSet, error) {
+func (it *VmsIterator) Next() (RecordSet, error) {
 	if !it.initialized {
 		it.err = it.fetchPage("", it.initialQuery)
 		it.initialized = true
@@ -221,108 +163,51 @@ func (it *ResourceIterator) Next() (RecordSet, error) {
 		}
 		return it.current, nil
 	}
-
 	if !it.HasNext() {
 		return RecordSet{}, nil
 	}
-
 	it.err = it.fetchPage(*it.nextURL, nil)
 	if it.err != nil {
 		return RecordSet{}, it.err
 	}
-
 	it.currentPage++
 	return it.current, nil
 }
 
-// Previous moves to the previous page and returns the records and any error.
-func (it *ResourceIterator) Previous() (RecordSet, error) {
+func (it *VmsIterator) Previous() (RecordSet, error) {
 	if !it.initialized {
 		it.err = fmt.Errorf("iterator not initialized, call Next() first")
 		return RecordSet{}, it.err
 	}
-
 	if !it.HasPrevious() {
 		return RecordSet{}, nil
 	}
-
 	it.err = it.fetchPage(*it.previousURL, nil)
 	if it.err != nil {
 		return RecordSet{}, it.err
 	}
-
 	it.currentPage--
 	return it.current, nil
 }
 
-// HasNext returns true if there is a next page.
-func (it *ResourceIterator) HasNext() bool {
+func (it *VmsIterator) HasNext() bool {
 	if !it.initialized {
 		return true
 	}
 	return it.nextURL != nil && *it.nextURL != ""
 }
 
-// HasPrevious returns true if there is a previous page.
-func (it *ResourceIterator) HasPrevious() bool {
+func (it *VmsIterator) HasPrevious() bool {
 	if !it.initialized {
 		return false
 	}
 	return it.previousURL != nil && *it.previousURL != ""
 }
 
-// Count returns the total count of items.
-func (it *ResourceIterator) Count() int {
-	return it.totalCount
-}
+func (it *VmsIterator) Count() int    { return it.totalCount }
+func (it *VmsIterator) PageSize() int { return it.pageSize }
 
-// PageSize returns the page size.
-func (it *ResourceIterator) PageSize() int {
-	return it.pageSize
-}
-
-// String returns a formatted string representation of the iterator state.
-func (it *ResourceIterator) String() string {
-	var sb strings.Builder
-
-	sb.WriteString("ResourceIterator {\n")
-	sb.WriteString(fmt.Sprintf("  Initialized:   %v\n", it.initialized))
-	sb.WriteString(fmt.Sprintf("  Current Page:  %d\n", it.currentPage))
-	sb.WriteString(fmt.Sprintf("  Page Size:     %d\n", it.pageSize))
-	sb.WriteString(fmt.Sprintf("  Total Count:   %d\n", it.totalCount))
-
-	// Show current records with count
-	if len(it.current) > 0 {
-		sb.WriteString(fmt.Sprintf("  Current:       [... (%d items)]\n", len(it.current)))
-	} else {
-		sb.WriteString("  Current:       []\n")
-	}
-
-	// Show next URL
-	if it.nextURL != nil && *it.nextURL != "" {
-		sb.WriteString(fmt.Sprintf("  Next URL:      %s\n", *it.nextURL))
-	} else {
-		sb.WriteString("  Next URL:      <none>\n")
-	}
-
-	// Show previous URL
-	if it.previousURL != nil && *it.previousURL != "" {
-		sb.WriteString(fmt.Sprintf("  Previous URL:  %s\n", *it.previousURL))
-	} else {
-		sb.WriteString("  Previous URL:  <none>\n")
-	}
-
-	// Show error if any
-	if it.err != nil {
-		sb.WriteString(fmt.Sprintf("  Error:         %v\n", it.err))
-	}
-
-	sb.WriteString("}")
-	return sb.String()
-}
-
-// Reset resets the iterator to the first page and returns the first page records.
-func (it *ResourceIterator) Reset() (RecordSet, error) {
+func (it *VmsIterator) Reset() (RecordSet, error) {
 	it.initialized = false
 	it.current = nil
 	it.nextURL = nil
@@ -330,14 +215,11 @@ func (it *ResourceIterator) Reset() (RecordSet, error) {
 	it.currentPage = 0
 	it.err = nil
 	it.totalCount = -1
-
 	return it.Next()
 }
 
-// All fetches all pages and returns all records.
-func (it *ResourceIterator) All() (RecordSet, error) {
+func (it *VmsIterator) All() (RecordSet, error) {
 	var allRecords RecordSet
-
 	if !it.initialized {
 		records, err := it.Next()
 		if err != nil {
@@ -345,10 +227,8 @@ func (it *ResourceIterator) All() (RecordSet, error) {
 		}
 		allRecords = append(allRecords, records...)
 	} else {
-		// Include current page if already initialized
 		allRecords = append(allRecords, it.current...)
 	}
-
 	for it.HasNext() {
 		records, err := it.Next()
 		if err != nil {
@@ -356,6 +236,302 @@ func (it *ResourceIterator) All() (RecordSet, error) {
 		}
 		allRecords = append(allRecords, records...)
 	}
-
 	return allRecords, nil
+}
+
+func (it *VmsIterator) String() string {
+	var sb strings.Builder
+	sb.WriteString("VmsIterator {\n")
+	sb.WriteString(fmt.Sprintf("  Initialized:   %v\n", it.initialized))
+	sb.WriteString(fmt.Sprintf("  Current Page:  %d\n", it.currentPage))
+	sb.WriteString(fmt.Sprintf("  Page Size:     %d\n", it.pageSize))
+	sb.WriteString(fmt.Sprintf("  Total Count:   %d\n", it.totalCount))
+	if len(it.current) > 0 {
+		sb.WriteString(fmt.Sprintf("  Current:       [... (%d items)]\n", len(it.current)))
+	} else {
+		sb.WriteString("  Current:       []\n")
+	}
+	if it.nextURL != nil && *it.nextURL != "" {
+		sb.WriteString(fmt.Sprintf("  Next URL:      %s\n", *it.nextURL))
+	} else {
+		sb.WriteString("  Next URL:      <none>\n")
+	}
+	if it.previousURL != nil && *it.previousURL != "" {
+		sb.WriteString(fmt.Sprintf("  Previous URL:  %s\n", *it.previousURL))
+	} else {
+		sb.WriteString("  Previous URL:  <none>\n")
+	}
+	if it.err != nil {
+		sb.WriteString(fmt.Sprintf("  Error:         %v\n", it.err))
+	}
+	sb.WriteString("}")
+	return sb.String()
+}
+
+// ######################################################
+//              DATA ENGINE ITERATOR
+// ######################################################
+
+// DataEngineIterator implements Iterator for DataEngine (serverless) list responses:
+//
+//	{ "data": [...], "pagination": { "next_cursor": "...", "previous_cursor": "..." } }
+//
+// Next/previous navigation uses synthesized URLs with ?cursor=... (cursors are not absolute URLs).
+// An empty data page ends iteration even if cursors are still present.
+// Selected internally for resources whose rest apiRoot is "serverless".
+type DataEngineIterator struct {
+	resource     VastResourceAPIWithContext
+	ctx          context.Context
+	initialQuery Params
+	pageSize     int
+
+	current     RecordSet
+	nextURL     *string
+	previousURL *string
+	totalCount  int
+	currentPage int
+	err         error
+	initialized bool
+}
+
+// NewDataEngineIterator creates a DataEngine cursor pagination iterator.
+// When pageSize > 0, query param "limit" is set unless already present
+// (same in-place mutation behavior as the original ResourceIterator for page_size).
+func NewDataEngineIterator(ctx context.Context, resource VastResourceAPIWithContext, params Params, pageSize int) Iterator {
+	pageSize = resolvePageSize(resource, pageSize)
+
+	if params == nil {
+		params = make(Params)
+	}
+	if _, exists := params["limit"]; !exists && pageSize > 0 {
+		params["limit"] = pageSize
+	}
+
+	return &DataEngineIterator{
+		resource:     resource,
+		ctx:          ctx,
+		initialQuery: params,
+		pageSize:     pageSize,
+		totalCount:   -1,
+	}
+}
+
+func (it *DataEngineIterator) fetchPage(url string, params Params) error {
+	session := it.resource.Session()
+
+	var response Renderable
+	var err error
+
+	if url != "" {
+		response, err = session.Get(it.ctx, url, nil, nil)
+	} else {
+		resourcePath := it.resource.GetResourcePath()
+		fullURL, buildErr := buildUrl(session, resourcePath, params.ToQuery(), session.GetConfig().ApiVersion, it.resource.GetApiRoot())
+		if buildErr != nil {
+			return buildErr
+		}
+		response, err = session.Get(it.ctx, fullURL, nil, nil)
+	}
+	if err != nil {
+		return err
+	}
+
+	if record, ok := response.(Record); ok {
+		return it.processEnvelope(record)
+	}
+	if recordSet, ok := response.(RecordSet); ok {
+		// Unexpected for DE, but tolerate a flat list.
+		it.current = recordSet
+		it.nextURL = nil
+		it.previousURL = nil
+		it.totalCount = -1
+		return nil
+	}
+	return fmt.Errorf("unexpected response type: %T", response)
+}
+
+func (it *DataEngineIterator) processEnvelope(envelope Record) error {
+	if _, hasData := envelope["data"]; !hasData {
+		// Not a DE list envelope — treat as a single record.
+		it.current = RecordSet{envelope}
+		it.nextURL = nil
+		it.previousURL = nil
+		it.totalCount = -1
+		return nil
+	}
+
+	recordSet, err := recordSetFromListField(envelope["data"], "data")
+	if err != nil {
+		return err
+	}
+	it.current = recordSet
+	it.totalCount = -1
+
+	// Empty page means end of cursor walk (next_cursor may still be present).
+	if len(it.current) == 0 {
+		it.nextURL = nil
+		it.previousURL = nil
+		return nil
+	}
+
+	nextCursor, prevCursor := extractDataEngineCursors(envelope["pagination"])
+	it.nextURL, err = it.buildCursorURL(nextCursor)
+	if err != nil {
+		return err
+	}
+	it.previousURL, err = it.buildCursorURL(prevCursor)
+	return err
+}
+
+func extractDataEngineCursors(paginationRaw any) (next, prev string) {
+	pagination, ok := paginationRaw.(map[string]any)
+	if !ok || pagination == nil {
+		return "", ""
+	}
+	if v, ok := pagination["next_cursor"].(string); ok {
+		next = v
+	}
+	if v, ok := pagination["previous_cursor"].(string); ok {
+		prev = v
+	}
+	return next, prev
+}
+
+func (it *DataEngineIterator) buildCursorURL(cursor string) (*string, error) {
+	if cursor == "" {
+		return nil, nil
+	}
+	// Copy query for this page only so cursor is not left on initialQuery.
+	params := make(Params, len(it.initialQuery)+1)
+	for k, v := range it.initialQuery {
+		params[k] = v
+	}
+	params["cursor"] = cursor
+
+	session := it.resource.Session()
+	fullURL, err := buildUrl(
+		session,
+		it.resource.GetResourcePath(),
+		params.ToQuery(),
+		session.GetConfig().ApiVersion,
+		it.resource.GetApiRoot(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &fullURL, nil
+}
+
+func (it *DataEngineIterator) Next() (RecordSet, error) {
+	if !it.initialized {
+		it.err = it.fetchPage("", it.initialQuery)
+		it.initialized = true
+		if it.err != nil {
+			return RecordSet{}, it.err
+		}
+		return it.current, nil
+	}
+	if !it.HasNext() {
+		return RecordSet{}, nil
+	}
+	it.err = it.fetchPage(*it.nextURL, nil)
+	if it.err != nil {
+		return RecordSet{}, it.err
+	}
+	it.currentPage++
+	return it.current, nil
+}
+
+func (it *DataEngineIterator) Previous() (RecordSet, error) {
+	if !it.initialized {
+		it.err = fmt.Errorf("iterator not initialized, call Next() first")
+		return RecordSet{}, it.err
+	}
+	if !it.HasPrevious() {
+		return RecordSet{}, nil
+	}
+	it.err = it.fetchPage(*it.previousURL, nil)
+	if it.err != nil {
+		return RecordSet{}, it.err
+	}
+	it.currentPage--
+	return it.current, nil
+}
+
+func (it *DataEngineIterator) HasNext() bool {
+	if !it.initialized {
+		return true
+	}
+	return it.nextURL != nil && *it.nextURL != ""
+}
+
+func (it *DataEngineIterator) HasPrevious() bool {
+	if !it.initialized {
+		return false
+	}
+	return it.previousURL != nil && *it.previousURL != ""
+}
+
+func (it *DataEngineIterator) Count() int    { return it.totalCount }
+func (it *DataEngineIterator) PageSize() int { return it.pageSize }
+
+func (it *DataEngineIterator) Reset() (RecordSet, error) {
+	it.initialized = false
+	it.current = nil
+	it.nextURL = nil
+	it.previousURL = nil
+	it.currentPage = 0
+	it.err = nil
+	it.totalCount = -1
+	return it.Next()
+}
+
+func (it *DataEngineIterator) All() (RecordSet, error) {
+	var allRecords RecordSet
+	if !it.initialized {
+		records, err := it.Next()
+		if err != nil {
+			return nil, err
+		}
+		allRecords = append(allRecords, records...)
+	} else {
+		allRecords = append(allRecords, it.current...)
+	}
+	for it.HasNext() {
+		records, err := it.Next()
+		if err != nil {
+			return nil, err
+		}
+		allRecords = append(allRecords, records...)
+	}
+	return allRecords, nil
+}
+
+func (it *DataEngineIterator) String() string {
+	var sb strings.Builder
+	sb.WriteString("DataEngineIterator {\n")
+	sb.WriteString(fmt.Sprintf("  Initialized:   %v\n", it.initialized))
+	sb.WriteString(fmt.Sprintf("  Current Page:  %d\n", it.currentPage))
+	sb.WriteString(fmt.Sprintf("  Page Size:     %d\n", it.pageSize))
+	sb.WriteString(fmt.Sprintf("  Total Count:   %d\n", it.totalCount))
+	if len(it.current) > 0 {
+		sb.WriteString(fmt.Sprintf("  Current:       [... (%d items)]\n", len(it.current)))
+	} else {
+		sb.WriteString("  Current:       []\n")
+	}
+	if it.nextURL != nil && *it.nextURL != "" {
+		sb.WriteString(fmt.Sprintf("  Next URL:      %s\n", *it.nextURL))
+	} else {
+		sb.WriteString("  Next URL:      <none>\n")
+	}
+	if it.previousURL != nil && *it.previousURL != "" {
+		sb.WriteString(fmt.Sprintf("  Previous URL:  %s\n", *it.previousURL))
+	} else {
+		sb.WriteString("  Previous URL:  <none>\n")
+	}
+	if it.err != nil {
+		sb.WriteString(fmt.Sprintf("  Error:         %v\n", it.err))
+	}
+	sb.WriteString("}")
+	return sb.String()
 }

@@ -12,19 +12,32 @@ type VastResourceAPI interface {
 	Session() RESTSession
 	GetResourceType() string
 	GetResourcePath() string // normalized path to the resource in OpenAPI format
+	// GetApiRoot returns the path segment after /api/{version}/ (empty for VMS; e.g. "serverless").
+	GetApiRoot() string
 
 	List(Params) (RecordSet, error)
-	Create(Params) (Record, error)
-	Update(any, Params) (Record, error)
-	Delete(Params, Params) (Record, error)
-	DeleteById(any, Params, Params) (Record, error)
-	Ensure(Params, Params) (Record, error)
+	// Create accepts optional query via variadic Params:
+	//   Create(body) or Create(query, body).
+	Create(...Params) (Record, error)
+	// Update accepts optional query via variadic Params:
+	//   Update(id, body) or Update(id, query, body).
+	Update(id any, params ...Params) (Record, error)
+	// Delete accepts searchParams plus optional query/body via variadic deleteParams:
+	//   Delete(search), Delete(search, body), or Delete(search, query, body).
+	Delete(searchParams Params, deleteParams ...Params) (Record, error)
+	// DeleteById accepts optional query/body via variadic Params:
+	//   DeleteById(id), DeleteById(id, body), or DeleteById(id, query, body).
+	DeleteById(id any, params ...Params) (Record, error)
+	// Ensure accepts searchParams plus createParams (body or query+body):
+	//   Ensure(search, body) or Ensure(search, query, body).
+	Ensure(Params, ...Params) (Record, error)
 	Get(Params) (Record, error)
-	GetById(any) (Record, error)
+	// GetById accepts an optional query Params: GetById(id) or GetById(id, query).
+	GetById(any, ...Params) (Record, error)
 	Exists(Params) (bool, error)
 	MustExists(Params) bool
 	GetIterator(Params, int) Iterator
-	// Resource-level mutex lock for concurrent access control
+	// Lock Resource-level mutex lock for concurrent access control
 	Lock(...any) func()
 	// Internal methods
 }
@@ -32,13 +45,27 @@ type VastResourceAPI interface {
 type VastResourceAPIWithContext interface {
 	VastResourceAPI
 	ListWithContext(context.Context, Params) (RecordSet, error)
-	CreateWithContext(context.Context, Params) (Record, error)
-	UpdateWithContext(context.Context, any, Params) (Record, error)
-	DeleteWithContext(context.Context, Params, Params, Params) (Record, error)
-	DeleteByIdWithContext(context.Context, any, Params, Params) (Record, error)
-	EnsureWithContext(context.Context, Params, Params) (Record, error)
+	// CreateWithContext accepts optional query via variadic Params:
+	//   CreateWithContext(ctx, body) or CreateWithContext(ctx, query, body).
+	CreateWithContext(context.Context, ...Params) (Record, error)
+	// UpdateWithContext accepts optional query via variadic Params:
+	//   UpdateWithContext(ctx, id, body) or UpdateWithContext(ctx, id, query, body).
+	UpdateWithContext(ctx context.Context, id any, params ...Params) (Record, error)
+	// DeleteWithContext accepts searchParams plus optional query/body via variadic deleteParams:
+	//   DeleteWithContext(ctx, search), DeleteWithContext(ctx, search, body),
+	//   or DeleteWithContext(ctx, search, query, body).
+	DeleteWithContext(ctx context.Context, searchParams Params, deleteParams ...Params) (Record, error)
+	// DeleteByIdWithContext accepts optional query/body via variadic Params:
+	//   DeleteByIdWithContext(ctx, id), DeleteByIdWithContext(ctx, id, body),
+	//   or DeleteByIdWithContext(ctx, id, query, body).
+	DeleteByIdWithContext(ctx context.Context, id any, params ...Params) (Record, error)
+	// EnsureWithContext accepts searchParams plus createParams (body or query+body):
+	//   EnsureWithContext(ctx, search, body) or EnsureWithContext(ctx, search, query, body).
+	EnsureWithContext(context.Context, Params, ...Params) (Record, error)
 	GetWithContext(context.Context, Params) (Record, error)
-	GetByIdWithContext(context.Context, any) (Record, error)
+	// GetByIdWithContext accepts an optional query Params:
+	//   GetByIdWithContext(ctx, id) or GetByIdWithContext(ctx, id, query).
+	GetByIdWithContext(context.Context, any, ...Params) (Record, error)
 	ExistsWithContext(context.Context, Params) (bool, error)
 	MustExistsWithContext(context.Context, Params) bool
 	GetIteratorWithContext(context.Context, Params, int) Iterator
@@ -102,7 +129,51 @@ type RequestInterceptor interface {
 
 type VastRest interface {
 	GetSession() RESTSession
-	GetResourceMap() map[string]VastResourceAPIWithContext
+	GetResourceMap() map[string]ResourceEntry
 	GetCtx() context.Context
 	SetCtx(context.Context)
+	// GetApiRoot returns the rest-level path segment after /api/{version}/.
+	// Empty for the main VMS rest; nested rests set their own (e.g. "serverless").
+	GetApiRoot() string
+}
+
+// ResourceEntry is the value stored in GetResourceMap.
+// The embedded API keeps method call sites working; IdentityField is "id", "guid",
+// or "" when the resource has no OpenAPI item path ({id}|{guid}).
+type ResourceEntry struct {
+	VastResourceAPIWithContext
+	IdentityField string
+}
+
+// Iterator provides an interface for iterating over paginated or non-paginated API results.
+// It abstracts away the differences between pagination models (VMS DRF links, DataEngine
+// cursors, or future strategies). Implementations are internal; callers use GetIterator.
+type Iterator interface {
+	// Next advances to the next page and returns the records and any error.
+	// Returns empty RecordSet when there are no more pages.
+	Next() (RecordSet, error)
+
+	// Previous moves to the previous page and returns the records and any error.
+	// Returns empty RecordSet when there is no previous page.
+	Previous() (RecordSet, error)
+
+	// HasNext returns true if there is a next page available.
+	HasNext() bool
+
+	// HasPrevious returns true if there is a previous page available.
+	HasPrevious() bool
+
+	// Count returns the total count of items (if available from pagination metadata).
+	// Returns -1 if count information is not available.
+	Count() int
+
+	// PageSize returns the current page size.
+	PageSize() int
+
+	// Reset resets the iterator to the first page and returns the first page records.
+	Reset() (RecordSet, error)
+
+	// All fetches all remaining pages and returns all records as a single RecordSet.
+	// This should be used with caution for large datasets.
+	All() (RecordSet, error)
 }

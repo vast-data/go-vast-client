@@ -2,6 +2,7 @@ package widgets
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"reflect"
@@ -991,7 +992,6 @@ func (bw *BaseWidget) createFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 	if vastAPIGetter, ok = any(bw.parent).(common.VastAPIGetter); !ok {
 		panic("VastAPIGetter not implemented on parent widget")
 	}
-	api := vastAPIGetter.API(rest)
 
 	if err := inputs.Validate(); err != nil {
 		return nil, err
@@ -999,7 +999,52 @@ func (bw *BaseWidget) createFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 
 	// Convert inputs to API payload
 	payload := inputs.ToParams()
+	return bw.createFromPayload(rest, vastAPIGetter.API(rest), payload)
+}
 
+// CreateFromJSONDo submits the raw JSON editor body. Used when the form schema
+// omits fields (e.g. arrays of objects like kubernetes-secrets.entries) that the
+// user supplied in JSON mode — SaveJSONEdits alone cannot round-trip those.
+func (bw *BaseWidget) CreateFromJSONDo(_ common.CreateWidget) tea.Cmd {
+	return msg_types.ProcessWithSpinnerMust(bw.createFromJSON())
+}
+
+func (bw *BaseWidget) createFromJSON() (tea.Cmd, error) {
+	if bw.CreateAdapter == nil {
+		return nil, fmt.Errorf("create adapter not initialized")
+	}
+	jsonStr := strings.TrimSpace(bw.CreateAdapter.JSONEditValue())
+	if jsonStr == "" {
+		return nil, fmt.Errorf("JSON body is empty")
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(jsonStr), &payload); err != nil {
+		return nil, fmt.Errorf("invalid JSON: %w", err)
+	}
+
+	// Best-effort sync of fields that exist on the form (ignores unsupported ones).
+	_ = bw.CreateAdapter.ApplyJSONEdits(jsonStr)
+
+	rest, err := getActiveRest(bw.db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get REST client: %w", err)
+	}
+
+	vastAPIGetter, ok := any(bw.parent).(common.VastAPIGetter)
+	if !ok {
+		panic("VastAPIGetter not implemented on parent widget")
+	}
+	api := vastAPIGetter.API(rest)
+
+	bw.log.Info("Creating from JSON",
+		zap.String("resource", bw.resourceType),
+		zap.Any("payload", payload))
+
+	return bw.createFromPayload(rest, api, payload)
+}
+
+func (bw *BaseWidget) createFromPayload(rest *VMSRest, api VastResourceAPIWithContext, payload map[string]any) (tea.Cmd, error) {
 	bw.log.Debug("Payload prepared", zap.Any("payload", payload))
 
 	// Return async command to create the view
@@ -1583,38 +1628,47 @@ func (bw *BaseWidget) GetListKeyBindings() []common.KeyBinding {
 		availableBindings = append(availableBindings, common.KeyBinding{Key: "<ctrl+d>", Desc: "delete"})
 	}
 
-	// Add details key binding only if Details mode is allowed and READ operations are supported
-	if supportsReadOps && bw.isModeAllowed(common.NavigatorModeDetails) {
-		availableBindings = append(availableBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
-	}
-
-	if bw.CanUseExtra() {
-		availableBindings = append(availableBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
-	}
-
 	// Add create key binding only if Create mode is allowed and inputs are available
 	inputs, err := bw.parent.GetInputs()
 	if err == nil && len(inputs) > 0 && bw.isModeAllowed(common.NavigatorModeCreate) {
 		availableBindings = append(availableBindings, common.KeyBinding{Key: "<n>", Desc: "new"})
 	}
 
-	// Collect shortcuts from all extra widgets (sorted by key for consistent display)
 	if bw.CanUseExtra() {
 		shortcuts := bw.ShortCuts()
-		// Extract and sort keys to ensure consistent ordering (1, 2, 3, etc.)
 		keys := make([]string, 0, len(shortcuts))
 		for key := range shortcuts {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
 
-		// Add shortcuts in sorted order
+		const maxKeybindingColumns = 2
+		const maxKeybindingRows = 7
+		remaining := maxKeybindingColumns*maxKeybindingRows - len(availableBindings)
+		if remaining < 0 {
+			remaining = 0
+		}
+
+		addedShortcut := false
 		for _, key := range keys {
+			if remaining <= 0 {
+				break
+			}
 			shortcut := shortcuts[key]
 			if keyBinding := shortcut.ShortCut(); keyBinding != nil {
 				availableBindings = append(availableBindings, *keyBinding)
+				remaining--
+				addedShortcut = true
 			}
 		}
+		if !addedShortcut {
+			if supportsReadOps && bw.isModeAllowed(common.NavigatorModeDetails) {
+				availableBindings = append(availableBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
+			}
+			availableBindings = append(availableBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
+		}
+	} else if supportsReadOps && bw.isModeAllowed(common.NavigatorModeDetails) {
+		availableBindings = append(availableBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
 	}
 
 	bindings := make([]common.KeyBinding, 0, len(availableBindings))

@@ -343,6 +343,11 @@ func (ca *CreateAdapter) StartJSONEditing() {
 	log.Info("Started JSON editing mode")
 }
 
+// JSONEditValue returns the current contents of the JSON textarea.
+func (ca *CreateAdapter) JSONEditValue() string {
+	return ca.jsonTextarea.Value()
+}
+
 // SaveJSONEdits saves the edited JSON back to form inputs
 func (ca *CreateAdapter) SaveJSONEdits() error {
 	// Get the edited JSON from textarea

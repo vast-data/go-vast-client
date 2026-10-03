@@ -172,14 +172,20 @@ func (a *App) Init() tea.Cmd {
 				a.auxlog.Printf("[app.Init] - REST client creation failed: %v", err)
 				initError = err.Error()
 			} else {
-				// REST client created successfully - verify connectivity by getting versions
-				a.auxlog.Println("[app.Init] - verifying connectivity by getting versions")
-				if _, err := restClient.Versions.ListWithContext(a.ctx, nil); err != nil {
-					// Connectivity test failed
-					a.auxlog.Printf("[app.Init] - API connectivity test failed: %v", err)
+				// Probe Versions for display; 403 is OK for tenant admins (version shown as <n/a>).
+				a.auxlog.Println("[app.Init] - probing cluster version via Versions")
+				vastVersion, err := client.FetchVastVersion(a.ctx, restClient)
+				if err != nil {
+					a.auxlog.Printf("[app.Init] - version probe failed: %v", err)
 					initError = err.Error()
 				} else {
-					a.auxlog.Println("[app.Init] - API connectivity verified successfully")
+					a.auxlog.Printf("[app.Init] - cluster version: %s", vastVersion)
+					if profile.VastVersion != vastVersion {
+						profile.VastVersion = vastVersion
+						if updErr := a.db.UpdateProfile(profile); updErr != nil {
+							a.auxlog.Printf("[app.Init] - failed to persist version %q: %v", vastVersion, updErr)
+						}
+					}
 				}
 			}
 

@@ -231,7 +231,7 @@ func (r *Nis) DeleteWithContext(ctx context.Context, req *NisSearchParams) error
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (r *Nis) DeleteById(id any) error {
 // DeleteByIdWithContext deletes a nis by ID using provided context
 // summary: Delete NIS Configuration
 func (r *Nis) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

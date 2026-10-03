@@ -267,9 +267,14 @@ func (wn *ExtraWidgetNavigator) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 					}
 					return nil, true
 				case "ctrl+s":
-					// Submit from JSON mode - first save JSON to form, then submit
+					// Submit raw JSON body (preserves fields omitted from the form schema).
 					wn.auxlog.Println("Submit from JSON mode")
-					// Save JSON edits to form inputs first
+					if jsonCreator, ok := any(wn.widget).(interface {
+						CreateFromJSONDo(CreateWidget) tea.Cmd
+					}); ok {
+						wn.widget.ClearFuzzyDetailsSearch()
+						return jsonCreator.CreateFromJSONDo(wn.widget), true
+					}
 					if saveAdapter, ok := any(wn.widget).(interface{ SaveJSONEdits() error }); ok {
 						if err := saveAdapter.SaveJSONEdits(); err != nil {
 							wn.auxlog.Printf("Failed to save JSON edits: %v", err)
@@ -278,7 +283,6 @@ func (wn *ExtraWidgetNavigator) ExtraNavigate(msg tea.Msg) (tea.Cmd, bool) {
 							}, true
 						}
 					}
-					// Now submit the form
 					if adapter, ok := any(wn.widget).(CreateFromInputsAdapter); ok {
 						wn.widget.ClearFuzzyDetailsSearch()
 						cmd := adapter.CreateFromInputsDo(wn.widget)

@@ -41,7 +41,7 @@ func TestIterator_SetsResourceType(t *testing.T) {
 	}
 
 	viewResource := NewVastResource("/views", "View", mockRest, NewResourceOps(L), nil)
-	iter := NewResourceIterator(context.Background(), viewResource, Params{}, 10)
+	iter := NewVmsIterator(context.Background(), viewResource, Params{}, 10)
 
 	records, err := iter.Next()
 	if err != nil {
@@ -83,7 +83,7 @@ func TestIterator_SetsResourceType_TypedResults(t *testing.T) {
 	}
 
 	snapshotResource := NewVastResource("/snapshots", "Snapshot", mockRest, NewResourceOps(L), nil)
-	iter := NewResourceIterator(context.Background(), snapshotResource, Params{}, 5)
+	iter := NewVmsIterator(context.Background(), snapshotResource, Params{}, 5)
 
 	records, err := iter.Next()
 	if err != nil {
@@ -118,7 +118,7 @@ func TestIterator_SetsResourceType_NonPaginated(t *testing.T) {
 	}
 
 	tenantResource := NewVastResource("/tenants", "Tenant", mockRest, NewResourceOps(L), nil)
-	iter := NewResourceIterator(context.Background(), tenantResource, Params{}, 10)
+	iter := NewVmsIterator(context.Background(), tenantResource, Params{}, 10)
 
 	records, err := iter.Next()
 	if err != nil {
@@ -154,7 +154,7 @@ func TestIterator_SetsResourceType_SingleRecord(t *testing.T) {
 	}
 
 	itemResource := NewVastResource("/items", "Item", mockRest, NewResourceOps(L), nil)
-	iter := NewResourceIterator(context.Background(), itemResource, Params{}, 10)
+	iter := NewVmsIterator(context.Background(), itemResource, Params{}, 10)
 
 	records, err := iter.Next()
 	if err != nil {
@@ -202,7 +202,7 @@ func TestIterator_SetsResourceType_MultiplePages(t *testing.T) {
 	}
 
 	userResource := NewVastResource("/users", "User", mockRest, NewResourceOps(L), nil)
-	iter := NewResourceIterator(context.Background(), userResource, Params{}, 2)
+	iter := NewVmsIterator(context.Background(), userResource, Params{}, 2)
 
 	records1, err := iter.Next()
 	if err != nil {
@@ -263,7 +263,7 @@ func TestIterator_SetsResourceType_All(t *testing.T) {
 	}
 
 	quotaResource := NewVastResource("/quotas", "Quota", mockRest, NewResourceOps(L), nil)
-	iter := NewResourceIterator(context.Background(), quotaResource, Params{}, 1)
+	iter := NewVmsIterator(context.Background(), quotaResource, Params{}, 1)
 
 	allRecords, err := iter.All()
 	if err != nil {
@@ -301,7 +301,7 @@ func TestIterator_SetsResourceType_Reset(t *testing.T) {
 	}
 
 	policyResource := NewVastResource("/policies", "Policy", mockRest, NewResourceOps(L), nil)
-	iter := NewResourceIterator(context.Background(), policyResource, Params{}, 10)
+	iter := NewVmsIterator(context.Background(), policyResource, Params{}, 10)
 
 	if _, err := iter.Next(); err != nil {
 		t.Fatalf("Expected no error on first Next(), got: %v", err)
@@ -341,7 +341,7 @@ func TestIterator_DummyResourceNoType(t *testing.T) {
 	}
 
 	dummyResource := NewVastResource("/dummy", "Dummy", mockRest, 0, nil)
-	iter := NewResourceIterator(context.Background(), dummyResource, Params{}, 10)
+	iter := NewVmsIterator(context.Background(), dummyResource, Params{}, 10)
 
 	records, err := iter.Next()
 	if err != nil {

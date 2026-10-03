@@ -66,7 +66,7 @@ func TestVastResource_GetIterator(t *testing.T) {
 	rest := &DummyRest{
 		ctx:         ctx,
 		Session:     session,
-		resourceMap: make(map[string]VastResourceAPIWithContext),
+		resourceMap: make(map[string]ResourceEntry),
 	}
 
 	// Create a VastResource (note: resource path is relative, API version will be prepended)
@@ -93,7 +93,7 @@ func TestVastResource_GetIteratorWithContext(t *testing.T) {
 	rest := &DummyRest{
 		ctx:         context.Background(),
 		Session:     session,
-		resourceMap: make(map[string]VastResourceAPIWithContext),
+		resourceMap: make(map[string]ResourceEntry),
 	}
 
 	resource := NewVastResource("/test", "TestResource", rest, 0, nil)
@@ -122,7 +122,7 @@ func TestVastResource_GetIterator_DefaultPageSize(t *testing.T) {
 	rest := &DummyRest{
 		ctx:         context.Background(),
 		Session:     session,
-		resourceMap: make(map[string]VastResourceAPIWithContext),
+		resourceMap: make(map[string]ResourceEntry),
 	}
 
 	resource := NewVastResource("/test", "TestResource", rest, 0, nil)
@@ -159,7 +159,7 @@ func TestVastResource_ListUsesIterator(t *testing.T) {
 	rest := &DummyRest{
 		ctx:         context.Background(),
 		Session:     session,
-		resourceMap: make(map[string]VastResourceAPIWithContext),
+		resourceMap: make(map[string]ResourceEntry),
 	}
 
 	resource := NewVastResource("/test", "TestResource", rest, NewResourceOps(L), nil)

@@ -148,7 +148,7 @@ func (r *TlsCertificate) DeleteWithContext(ctx context.Context, req *TlsCertific
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (r *TlsCertificate) DeleteById(id any) error {
 
 // DeleteByIdWithContext deletes a tlscertificate by ID using provided context
 func (r *TlsCertificate) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

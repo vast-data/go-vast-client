@@ -12,20 +12,24 @@ import (
 
 // VMSConfig represents the configuration required to create a VMS session.
 type VMSConfig struct {
-	Host           string         // The hostname or IP address of the VMS API server.
-	Port           uint64         // The port to connect to on the VMS API server.
-	Username       string         // The username for authentication (used with Password).
-	Password       string         // The password for authentication (used with Username).
-	ApiToken       string         // Optional API token for authentication (alternative to Username/Password).
-	UseBasicAuth   bool           // If true, use HTTP Basic Authentication instead of JWT (requires Username/Password).
-	Tenant         string         // Optional tenant name for tenant scoped authentication (tenant admin).
-	SslVerify      bool           // Whether to verify SSL certificates.
-	RespectProxy   bool           // Whether to respect proxy environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY).
-	Timeout        *time.Duration // HTTP client timeout. If nil, a default is applied by validators.
-	MaxConnections int            // Maximum number of concurrent HTTP connections.
-	UserAgent      string         // Optional custom User-Agent header to use in HTTP requests. If empty, a default may be applied.
-	ApiVersion     string         // Optional API version
-	PageSize       int            // Default page size for iterators
+	Host         string // The hostname or IP address of the VMS API server.
+	Port         uint64 // The port to connect to on the VMS API server.
+	Username     string // The username for authentication (used with Password).
+	Password     string // The password for authentication (used with Username).
+	ApiToken     string // Optional API token for authentication (alternative to Username/Password).
+	UseBasicAuth bool   // If true, use HTTP Basic Authentication instead of JWT (requires Username/Password).
+	Tenant       string // Optional tenant name. Default JWT login uses POST /api/token/ with X-Tenant-Name.
+	// UseTenantTokenPath, when true with Tenant, obtains the JWT via POST /api/token/{tenant}/
+	// instead of sending X-Tenant-Name on /api/token/. VMS treats path and header as equivalent
+	// at login.
+	UseTenantTokenPath bool
+	SslVerify          bool           // Whether to verify SSL certificates.
+	RespectProxy       bool           // Whether to respect proxy environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY).
+	Timeout            *time.Duration // HTTP client timeout. If nil, a default is applied by validators.
+	MaxConnections     int            // Maximum number of concurrent HTTP connections.
+	UserAgent          string         // Optional custom User-Agent header to use in HTTP requests. If empty, a default may be applied.
+	ApiVersion         string         // Optional API version
+	PageSize           int            // Default page size for iterators
 	// Context is an optional external context for controlling HTTP request lifecycle.
 	// When provided, it will be used as the parent context for all HTTP requests made by the client.
 	Context context.Context

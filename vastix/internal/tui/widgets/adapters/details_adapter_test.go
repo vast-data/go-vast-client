@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 	"vastix/internal/database"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 func TestDetailsAdapter_NilRawContentHandling(t *testing.T) {
@@ -202,5 +204,34 @@ func TestDetailsAdapter_BasicOperations(t *testing.T) {
 
 	if adapter.ready {
 		t.Error("Expected adapter to not be ready after reset")
+	}
+}
+
+func TestFormatRecordAsJSON_WrapsLongStrings(t *testing.T) {
+	long := strings.Repeat("Ab", 200) // 400 chars
+	out := formatRecordAsJSON(map[string]any{
+		"certificate_authority_b64": long,
+		"name":                      "de-lab-mtls",
+	})
+	lines := strings.Split(out, "\n")
+	if len(lines) < 5 {
+		t.Fatalf("expected wrapped multi-line output, got %d lines:\n%s", len(lines), out)
+	}
+	for i, line := range lines {
+		// Strip ANSI for width check via rune count of visible-ish content; lipgloss in test
+		if len([]rune(line)) > 500 {
+			t.Fatalf("line %d still excessively long (%d runes)", i, len([]rune(line)))
+		}
+	}
+	if !strings.Contains(out, "de-lab-mtls") {
+		t.Fatalf("missing name field in output")
+	}
+}
+
+func TestFormatJSONStringValue_ShortUnchanged(t *testing.T) {
+	style := lipgloss.NewStyle()
+	got := formatJSONStringValue("hello", style, "  ")
+	if got != `"hello"` && !strings.Contains(got, "hello") {
+		t.Fatalf("got %q", got)
 	}
 }

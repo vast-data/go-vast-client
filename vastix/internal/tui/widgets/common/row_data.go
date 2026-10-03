@@ -46,8 +46,8 @@ func (rd RowData) GetString(key string) string {
 
 // GetID is a convenience method to get the ID field (commonly the first column)
 func (rd RowData) GetID() string {
-	// Try common ID field names
-	for _, idField := range []string{"id", "ID", "Id"} {
+	// Try common ID field names (VMS uses id; DataEngine uses guid)
+	for _, idField := range []string{"id", "ID", "Id", "guid", "GUID", "Guid"} {
 		if id := rd.GetString(idField); id != "" {
 			return id
 		}

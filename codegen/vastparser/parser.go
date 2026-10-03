@@ -14,6 +14,7 @@ import (
 // VastResource represents a parsed VastData resource with its APITyped markers
 type VastResource struct {
 	Name          string                   `json:"name"`
+	Pack          string                   `json:"pack,omitempty"` // OpenAPI pack: "vms" (default) or "dataengine"
 	Operations    *apibuilder.Operations   `json:"operations,omitempty"` // Unified ops marker (replaces Details + Upserts)
 	RequestURLs   []apibuilder.RequestURL  `json:"requestUrls,omitempty"`
 	ResponseURLs  []apibuilder.ResponseURL `json:"responseUrls,omitempty"`

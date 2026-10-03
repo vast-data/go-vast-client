@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.161.0
+
+ENHANCEMENTS:
+
+* **Exists Sparse Fields**: `Exists` / `ExistsWithContext` request `?fields=id` or `?fields=guid` when the OpenAPI collection has an item path (`/{id}` or `/{guid}`). Identity-less resources omit `fields`. Caller-supplied `fields` are preserved.
+* **Create/Update/Ensure/Delete/DeleteById Query Params**: Optional URL query via variadic `Params`. Existing body-only (or two-arg) call sites remain valid.
+* **DataEngine Nested Rest**: `rest.UntypedVMSRest.DataEngine` / `rest.TypedVMSRest.DataEngine` expose serverless APIs under `/api/{version}/serverless/...` — resources: `container-registries`, `kubernetes-clusters`, `kubernetes-secrets`, `mtls-authentication-credentials`, `functions`, `pipelines`, `data-engine`, `triggers/schedule`, `triggers/element`.
+* **DataEngine Pagination**: Cursor-based iterators for serverless list endpoints.
+
+NOTES:
+
+* Typed codegen still omits Pipeline Create/Update and KubernetesSecret Create when request-body schemas are ambiguous; untyped facades retain the OpenAPI verbs (`C`/`U` where applicable). Prefer untyped `Params` or follow-up OpenAPI/codegen fixes for those typed methods.
+
 ## 0.160.0
 
 BUG FIXES:

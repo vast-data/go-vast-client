@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,6 +21,57 @@ import (
 	"github.com/vast-data/go-vast-client/codegen/vastparser"
 	api "github.com/vast-data/go-vast-client/openapi_schema"
 )
+
+// activePack is the OpenAPI pack used by schema lookups while generating the
+// current resource. Set via setActivePack before processing each resource.
+var activePack = api.PackVMS
+
+func setActivePack(pack string) {
+	if pack == string(api.PackDataEngine) {
+		activePack = api.PackDataEngine
+		return
+	}
+	activePack = api.PackVMS
+}
+
+func packageForPack(pack string) string {
+	if pack == string(api.PackDataEngine) {
+		return "dataengine"
+	}
+	return "typed"
+}
+
+func outputDirForPack(base, pack string) string {
+	if pack == string(api.PackDataEngine) {
+		return filepath.Join(base, "dataengine")
+	}
+	return base
+}
+
+func includePack(pack, filter string) bool {
+	switch filter {
+	case "", "all":
+		return true
+	case "dataengine":
+		return pack == string(api.PackDataEngine)
+	case "vms":
+		return pack != string(api.PackDataEngine)
+	default:
+		return true
+	}
+}
+
+// collectionItemURL resolves /{collection}/{id|guid} for the active pack.
+func collectionItemURL(collectionURL string) string {
+	if collectionURL == "" {
+		return ""
+	}
+	if p, err := api.ResolveCollectionItemPath(activePack, collectionURL); err == nil {
+		return p
+	}
+	return "/" + strings.Trim(collectionURL, "/") + "/{id}"
+}
+
 
 // isAmbiguousArray checks if a schema represents an array of ambiguous objects
 func isAmbiguousArray(schema *openapi3.Schema) bool {
@@ -129,7 +181,7 @@ func (tr *TypeRegistry) GetTypes() []*NestedType {
 func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod) (ExtraMethodInfo, []*NestedType, error) {
 	// CRITICAL: Validate that the method exists in the OpenAPI schema FIRST
 	// This catches typos in markers (e.g., GET instead of PATCH, misspelled paths)
-	if err := api.ValidateOperationExists(extraMethod.Method, extraMethod.Path); err != nil {
+	if err := api.ValidateOperationExists(activePack, extraMethod.Method, extraMethod.Path); err != nil {
 		// This is a fatal error - the marker is incorrect and must be fixed
 		return ExtraMethodInfo{}, nil, fmt.Errorf("🔴 FATAL: Invalid marker for %s - %v. Please check the marker declaration and fix the method or path", resourceName, err)
 	}
@@ -143,7 +195,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	methodInfo.GoHTTPMethod = httpMethodToGoConstant(extraMethod.Method)
 
 	// Extract summary from OpenAPI spec
-	summary, err := api.GetOperationSummary(extraMethod.Method, extraMethod.Path)
+	summary, err := api.GetOperationSummary(activePack, extraMethod.Method, extraMethod.Path)
 	if err != nil {
 		// If summary not found, just log and continue
 		fmt.Printf("  ℹ️  No summary found for %s %s\n", extraMethod.Method, extraMethod.Path)
@@ -165,7 +217,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	if methodInfo.HasID {
 		idIndex := -1
 		for i, part := range pathParts {
-			if part == "{id}" {
+			if part == "{id}" || part == "{guid}" {
 				idIndex = i
 				break
 			}
@@ -223,7 +275,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	var allNestedTypes []*NestedType
 
 	// Check if method returns 204 No Content
-	returns204, err := api.Returns204NoContent(extraMethod.Method, extraMethod.Path)
+	returns204, err := api.Returns204NoContent(activePack, extraMethod.Method, extraMethod.Path)
 	if err != nil {
 		fmt.Printf("  ℹ️  Could not check 204 status for %s %s\n", extraMethod.Method, extraMethod.Path)
 	} else if returns204 {
@@ -235,7 +287,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	// (GetResponseModelSchema unwraps arrays for GET, so we need to check the raw schema first)
 	isBareArray := false
 	if extraMethod.Method == "GET" || extraMethod.Method == "POST" {
-		if rawResp, err := api.GetOpenApiResource(extraMethod.Path); err == nil && rawResp != nil {
+		if rawResp, err := api.GetOpenApiResource(activePack, extraMethod.Path); err == nil && rawResp != nil {
 			var op *openapi3.Operation
 			if extraMethod.Method == "GET" {
 				op = rawResp.Get
@@ -255,7 +307,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	}
 
 	// Check if method returns text/plain
-	returnsTextPlain, err := api.ReturnsTextPlain(extraMethod.Method, extraMethod.Path)
+	returnsTextPlain, err := api.ReturnsTextPlain(activePack, extraMethod.Method, extraMethod.Path)
 	if err != nil {
 		fmt.Printf("  ℹ️  Could not check text/plain for %s %s\n", extraMethod.Method, extraMethod.Path)
 	} else if returnsTextPlain {
@@ -264,7 +316,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	}
 
 	// Check if response is AsyncTaskInResponse - these are async methods that need timeout parameter
-	if rawResp, err := api.GetOpenApiResource(extraMethod.Path); err == nil && rawResp != nil {
+	if rawResp, err := api.GetOpenApiResource(activePack, extraMethod.Path); err == nil && rawResp != nil {
 		var op *openapi3.Operation
 		switch extraMethod.Method {
 		case "GET":
@@ -297,7 +349,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	var params []*openapi3.Parameter
 	var paramsErr error
 
-	params, paramsErr = api.GetQueryParameters(extraMethod.Method, extraMethod.Path)
+	params, paramsErr = api.GetQueryParameters(activePack, extraMethod.Method, extraMethod.Path)
 
 	if paramsErr != nil {
 		// No query parameters found
@@ -439,7 +491,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	//   - This is a bare array response (validation happens during field generation)
 	//   - This is a DELETE method (DELETE often returns success status without response body)
 	if !methodInfo.ReturnsNoContent && !methodInfo.ReturnsTextPlain && !methodInfo.IsAsyncTask && !isBareArray {
-		schema, schemaErr := api.GetResponseModelSchema(extraMethod.Method, extraMethod.Path)
+		schema, schemaErr := api.GetResponseModelSchema(activePack, extraMethod.Method, extraMethod.Path)
 
 		// CRITICAL: Skip if no response schema is defined at all
 		// EXCEPTION: DELETE methods are allowed without response schema (they return only error)
@@ -528,7 +580,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	if methodInfo.ReturnsArray {
 		// For GET requests, GetResponseModelSchema unwraps arrays, so we need the unwrapped item schema
 		// For POST/other methods, we need to extract items from the array schema
-		itemSchema, err := api.GetResponseModelSchema(extraMethod.Method, extraMethod.Path)
+		itemSchema, err := api.GetResponseModelSchema(activePack, extraMethod.Method, extraMethod.Path)
 		if err == nil && itemSchema != nil && itemSchema.Value != nil {
 			// Check if array item is a primitive type
 			if isPrimitive(itemSchema.Value) {
@@ -753,10 +805,10 @@ func pathHasIDParam(path string) bool {
 }
 
 // isNonIDPathParam reports whether a path segment is a path parameter other
-// than {id} (e.g. {tenant_id}, {key}). Used to preserve secondary param names
-// in generated method names, preventing collisions with collection-level paths.
+// than the primary resource id ({id} / {guid}). Used to preserve secondary
+// param names in generated method names.
 func isNonIDPathParam(part string) bool {
-	return len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' && part != "{id}"
+	return len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' && part != "{id}" && part != "{guid}"
 }
 
 // cleanPathPart removes {id} and other template variables from path part
@@ -881,7 +933,7 @@ func getSuccessContent(op *openapi3.Operation) *openapi3.MediaType {
 
 // returnsAsyncTaskInResponse checks if an operation returns AsyncTaskInResponse
 func returnsAsyncTaskInResponse(method, resourcePath string) bool {
-	rawResp, err := api.GetOpenApiResource(resourcePath)
+	rawResp, err := api.GetOpenApiResource(activePack, resourcePath)
 	if err != nil || rawResp == nil {
 		return false
 	}
@@ -936,6 +988,8 @@ func cleanIssueMessage(msg string) string {
 // ResourceData represents data for template generation
 type ResourceData struct {
 	Name                string
+	PackageName         string // Go package for generated file ("typed" or "dataengine")
+	Pack                string // OpenAPI pack name
 	LowerName           string
 	PluralName          string
 	SearchParamsFields  []Field
@@ -1005,20 +1059,51 @@ type TemplateData struct {
 }
 
 func main() {
+	packFlag := flag.String("pack", "all", "OpenAPI pack to generate: all, vms, or dataengine")
+	flag.Parse()
+	packFilter := strings.ToLower(strings.TrimSpace(*packFlag))
+	switch packFilter {
+	case "", "all", "vms", "dataengine":
+	default:
+		log.Fatalf("invalid -pack %q (want all, vms, or dataengine)", *packFlag)
+	}
+
 	// Hardcoded paths - this tool has one specific purpose
 	inputDir := "../resources/untyped"
 	outputDir := "../resources/typed"
 	restConfigFile := "../rest/untyped_rest.go"
 
-	// STEP 1: Parse rest/untyped_rest.go to get CRUD configurations
+	fmt.Printf("Typed resource generation pack filter: %s\n", packFilter)
+
+	// STEP 1: Parse rest/untyped_rest.go (+ dataengine.go) for CRUD configurations
 	fmt.Println("Parsing rest/untyped_rest.go for CRUD configurations...")
 	restParser := vastparser.NewRestParser()
 	if err := restParser.ParseRestFile(restConfigFile); err != nil {
 		log.Fatalf("Failed to parse rest configuration file: %v", err)
 	}
+	deRestFile := "../rest/dataengine/untyped.go"
+	if packFilter != "vms" {
+		if _, err := os.Stat(deRestFile); err == nil {
+			fmt.Println("Parsing rest/dataengine/untyped.go for DataEngine CRUD configurations...")
+			if err := restParser.ParseRestFile(deRestFile); err != nil {
+				log.Fatalf("Failed to parse DataEngine rest configuration file: %v", err)
+			}
+		}
+	} else {
+		fmt.Println("Skipping rest/dataengine/untyped.go (-pack=vms)")
+	}
 
 	configs := restParser.GetAllConfigs()
-	fmt.Printf("Found %d resource configurations in rest/untyped_rest.go\n", len(configs))
+	if packFilter != "all" && packFilter != "" {
+		filtered := make(map[string]*vastparser.RestResourceConfig, len(configs))
+		for name, config := range configs {
+			if includePack(config.Pack, packFilter) {
+				filtered[name] = config
+			}
+		}
+		configs = filtered
+	}
+	fmt.Printf("Found %d resource configurations in rest/*.go (pack=%s)\n", len(configs), packFilter)
 
 	// Auto-discover extra methods from the OpenAPI schema for every resource.
 	// This finds all non-CRUD paths (e.g. /activedirectory/{id}/refresh/) and adds
@@ -1052,6 +1137,7 @@ func main() {
 		if resource.Operations == nil {
 			if config, exists := configs[resource.Name]; exists {
 				resource.Operations = config.ConvertToOperations()
+				resource.Pack = config.Pack
 				usedConfigs[resource.Name] = true
 				fmt.Printf("  ✅ %s: Using CRUD config from rest/untyped_rest.go: %s\n", resource.Name, config.Operations)
 
@@ -1081,6 +1167,9 @@ func main() {
 			}
 		} else {
 			usedConfigs[resource.Name] = true
+			if config, exists := configs[resource.Name]; exists {
+				resource.Pack = config.Pack
+			}
 			fmt.Printf("  ✅ %s: Using ops marker: %s\n", resource.Name, resource.Operations.Operations)
 		}
 	}
@@ -1098,6 +1187,7 @@ func main() {
 			// Create a new resource from the rest config
 			newResource := vastparser.VastResource{
 				Name:         resourceName,
+				Pack:         config.Pack,
 				Operations:   config.ConvertToOperations(),
 				ExtraMethods: config.ExtraMethods, // Include extra methods from rest config
 			}
@@ -1133,6 +1223,8 @@ func main() {
 		if resource.Operations == nil {
 			continue
 		}
+
+		setActivePack(resource.Pack)
 
 		originalOps := resource.Operations.Operations
 		excludedOps := []string{}
@@ -1171,8 +1263,10 @@ func main() {
 		if resource.Operations.HasRead() {
 			readURL := resource.GetOperationsURL()
 			if readURL != "" {
-				// Add /{id}/ for the read by ID endpoint
 				readByIdURL := "/" + strings.Trim(readURL, "/") + "/{id}/"
+				if resource.Pack == string(api.PackDataEngine) {
+					readByIdURL = collectionItemURL(readURL)
+				}
 				// Check if READ returns ambiguous object
 				if isReadResponseAmbiguous(readByIdURL) {
 					// Remove R from operations
@@ -1188,8 +1282,10 @@ func main() {
 		if resource.Operations.HasUpdate() {
 			updateURL := resource.GetOperationsURL()
 			if updateURL != "" {
-				// Add /{id}/ for the update endpoint
 				updateByIdURL := "/" + strings.Trim(updateURL, "/") + "/{id}/"
+				if resource.Pack == string(api.PackDataEngine) {
+					updateByIdURL = collectionItemURL(updateURL)
+				}
 				// Check if PATCH/PUT has valid response schema or returns 204
 				if !isUpdateResponseValid(updateByIdURL) {
 					// Remove U from operations
@@ -1215,12 +1311,18 @@ func main() {
 
 	fmt.Printf("\nGenerating %d typed resources:\n", len(resources))
 	for _, resource := range resources {
-		fmt.Printf("  - %s (%s)\n", resource.Name, resource.Operations.Operations)
+		packLabel := resource.Pack
+		if packLabel == "" {
+			packLabel = string(api.PackVMS)
+		}
+		fmt.Printf("  - %s (%s) [%s]\n", resource.Name, resource.Operations.Operations, packLabel)
 	}
 
 	// Generate template data
 	templateData := TemplateData{}
 	for _, resource := range resources {
+		setActivePack(resource.Pack)
+
 		// Print resource header
 		fmt.Printf("\n%s:\n", resource.Name)
 
@@ -1231,10 +1333,12 @@ func main() {
 		}
 
 		resourceData := ResourceData{
-			Name:       resource.Name,
-			LowerName:  strings.ToLower(resource.Name),
-			PluralName: pluralize(resource.Name),
-			Resource:   &resource,
+			Name:        resource.Name,
+			PackageName: packageForPack(resource.Pack),
+			Pack:        resource.Pack,
+			LowerName:   strings.ToLower(resource.Name),
+			PluralName:  pluralize(resource.Name),
+			Resource:    &resource,
 		}
 
 		// Add excluded operations as generation issues
@@ -1294,7 +1398,7 @@ func main() {
 
 		if searchURL != "" {
 			// Check if the response is text/plain instead of JSON
-			isTextPlain, err := api.ReturnsTextPlain(searchMethod, searchURL)
+			isTextPlain, err := api.ReturnsTextPlain(activePack, searchMethod, searchURL)
 			if err != nil {
 				fmt.Printf("  ⚠️  Warning: Failed to check if response is text/plain for %s %s: %v\n", searchMethod, searchURL, err)
 			}
@@ -1306,12 +1410,12 @@ func main() {
 			} else if err == nil {
 				// Generate DetailsModel from details response schema (only for JSON responses)
 				// Check if response is a direct component reference (for alias optimization)
-				detailsSchemaRef, detailsSchemaErr := api.GetResponseModelSchemaUnresolved(searchMethod, searchURL)
+				detailsSchemaRef, detailsSchemaErr := api.GetResponseModelSchemaUnresolved(activePack, searchMethod, searchURL)
 				if detailsSchemaErr == nil && detailsSchemaRef != nil {
 					// Check for direct component reference
 					if componentName := api.IsDirectComponentReference(detailsSchemaRef); componentName != "" {
 						// Verify the component is not ambiguous before aliasing
-						componentSchema, compErr := api.GetSchemaFromComponent(componentName)
+						componentSchema, compErr := api.GetSchemaFromComponent(activePack, componentName)
 						if compErr == nil && componentSchema != nil && componentSchema.Value != nil {
 							if !isAmbiguousObject(componentSchema.Value) && !isPrimitive(componentSchema.Value) {
 								// Direct component reference to a valid (non-ambiguous) component - use type alias
@@ -1326,7 +1430,7 @@ func main() {
 						if (*detailsSchemaRef.Value.Type)[0] == "array" && detailsSchemaRef.Value.Items != nil {
 							if componentName := api.IsDirectComponentReference(detailsSchemaRef.Value.Items); componentName != "" {
 								// Verify the component is not ambiguous before aliasing
-								componentSchema, compErr := api.GetSchemaFromComponent(componentName)
+								componentSchema, compErr := api.GetSchemaFromComponent(activePack, componentName)
 								if compErr == nil && componentSchema != nil && componentSchema.Value != nil {
 									if !isAmbiguousObject(componentSchema.Value) && !isPrimitive(componentSchema.Value) {
 										// Array of component references - use type alias for the array item
@@ -1396,10 +1500,14 @@ func main() {
 						createMethod = "POST"
 						createURL = resource.GetOperationsURL()
 					} else {
-						// UPDATE-only (PATCH without CREATE) - use /{id}/ path
+						// UPDATE-only (no CREATE)
 						createMethod = "PATCH"
 						baseURL := resource.GetOperationsURL()
-						createURL = "/" + strings.Trim(baseURL, "/") + "/{id}/"
+						if resource.Pack == string(api.PackDataEngine) {
+							createURL = collectionItemURL(baseURL)
+						} else {
+							createURL = "/" + strings.Trim(baseURL, "/") + "/{id}/"
+						}
 					}
 				}
 			} else {
@@ -1458,7 +1566,7 @@ func main() {
 
 				// Generate UpsertModel (or EditModel for UPDATE-only) from upsert response schema
 				// First, check if the response is an array
-				if rawResp, err := api.GetOpenApiResource(createURL); err == nil && rawResp != nil {
+				if rawResp, err := api.GetOpenApiResource(activePack, createURL); err == nil && rawResp != nil {
 					var op *openapi3.Operation
 					switch createMethod {
 					case "POST":
@@ -1492,7 +1600,7 @@ func main() {
 				}
 
 				// Check if response is a direct component reference (for alias optimization)
-				upsertSchemaRef, upsertSchemaErr := api.GetResponseModelSchemaUnresolved(createMethod, createURL)
+				upsertSchemaRef, upsertSchemaErr := api.GetResponseModelSchemaUnresolved(activePack, createMethod, createURL)
 				if upsertSchemaErr == nil && upsertSchemaRef != nil {
 					// If array response, unwrap to get the item schema
 					if resourceData.CreateReturnsArray || resourceData.UpdateReturnsArray {
@@ -1505,7 +1613,7 @@ func main() {
 
 					if componentName := api.IsDirectComponentReference(upsertSchemaRef); componentName != "" {
 						// Verify the component is not ambiguous before aliasing
-						componentSchema, compErr := api.GetSchemaFromComponent(componentName)
+						componentSchema, compErr := api.GetSchemaFromComponent(activePack, componentName)
 						if compErr == nil && componentSchema != nil && componentSchema.Value != nil {
 							if !isAmbiguousObject(componentSchema.Value) && !isPrimitive(componentSchema.Value) {
 								// Direct component reference to a valid (non-ambiguous) component - use type alias
@@ -1530,7 +1638,7 @@ func main() {
 						// CRITICAL: Check if this is an UPDATE operation with missing response schema
 						// Missing schemas are only acceptable for 204 NO CONTENT responses
 						if createMethod == "PATCH" || createMethod == "PUT" {
-							returns204, checkErr := api.Returns204NoContent(createMethod, createURL)
+							returns204, checkErr := api.Returns204NoContent(activePack, createMethod, createURL)
 							if checkErr != nil || !returns204 {
 								// This is a broken UPDATE operation - response should have a schema but doesn't
 								issueMsg := fmt.Sprintf("UPDATE operation is broken for %s %s: Response schema is missing but status is not 204 NO CONTENT. UPDATE operations MUST return a valid response schema or 204 status. Error: %v", createMethod, createURL, err)
@@ -1639,41 +1747,65 @@ func main() {
 		// Extract summaries for main CRUD operations
 		if searchURL != "" {
 			// GET/List summary
-			if summary, err := api.GetOperationSummary("GET", searchURL); err == nil {
+			if summary, err := api.GetOperationSummary(activePack, "GET", searchURL); err == nil {
 				resourceData.GetSummary = summary
 			}
-			// GET by ID summary (use searchURL + /{id}/)
+			// GET by ID summary
 			getByIdPath := "/" + strings.Trim(searchURL, "/") + "/{id}/"
-			if summary, err := api.GetOperationSummary("GET", getByIdPath); err == nil {
+			if resource.Pack == string(api.PackDataEngine) {
+				getByIdPath = collectionItemURL(searchURL)
+			}
+			if summary, err := api.GetOperationSummary(activePack, "GET", getByIdPath); err == nil {
 				resourceData.GetByIdSummary = summary
 			}
 		}
 		if createURL != "" {
 			// Create summary (POST)
-			if summary, err := api.GetOperationSummary("POST", createURL); err == nil {
+			if summary, err := api.GetOperationSummary(activePack, "POST", createURL); err == nil {
 				resourceData.CreateSummary = summary
 			}
-			// Update summary (PATCH or PUT)
-			if resource.HasUpsert("PATCH") {
-				// For PATCH, use /{id}/ path
-				patchPath := "/" + strings.Trim(createURL, "/") + "/{id}/"
-				if summary, err := api.GetOperationSummary("PATCH", patchPath); err == nil {
+
+			if resource.Pack == string(api.PackDataEngine) {
+				itemPath := collectionItemURL(resource.GetOperationsURL())
+				if itemPath == "" {
+					itemPath = collectionItemURL(createURL)
+				}
+				if summary, err := api.GetOperationSummary(activePack, "PATCH", itemPath); err == nil {
+					resourceData.UpdateSummary = summary
+				} else if summary, err := api.GetOperationSummary(activePack, "PUT", itemPath); err == nil {
 					resourceData.UpdateSummary = summary
 				}
-			} else if resource.HasUpsert("PUT") {
-				putPath := "/" + strings.Trim(createURL, "/") + "/{id}/"
-				if summary, err := api.GetOperationSummary("PUT", putPath); err == nil {
-					resourceData.UpdateSummary = summary
+				if summary, err := api.GetOperationSummary(activePack, "DELETE", itemPath); err == nil {
+					resourceData.DeleteSummary = summary
 				}
-			}
-			// Delete summary and parameters
-			deletePath := "/" + strings.Trim(createURL, "/") + "/{id}/"
-			if summary, err := api.GetOperationSummary("DELETE", deletePath); err == nil {
-				resourceData.DeleteSummary = summary
+			} else {
+				// Historical VMS behavior: only fill UpdateSummary from legacy upsert markers,
+				// and always use /{id}/ paths (keeps committed VMS autogen stable).
+				if resource.HasUpsert("PATCH") {
+					patchPath := "/" + strings.Trim(createURL, "/") + "/{id}/"
+					if summary, err := api.GetOperationSummary(activePack, "PATCH", patchPath); err == nil {
+						resourceData.UpdateSummary = summary
+					}
+				} else if resource.HasUpsert("PUT") {
+					putPath := "/" + strings.Trim(createURL, "/") + "/{id}/"
+					if summary, err := api.GetOperationSummary(activePack, "PUT", putPath); err == nil {
+						resourceData.UpdateSummary = summary
+					}
+				}
+				deletePath := "/" + strings.Trim(createURL, "/") + "/{id}/"
+				if summary, err := api.GetOperationSummary(activePack, "DELETE", deletePath); err == nil {
+					resourceData.DeleteSummary = summary
+				}
 			}
 
 			// Extract DELETE parameters (query params and body params)
-			if deleteParams, err := api.GetDeleteParams(createURL); err == nil {
+			deleteParamsURL := createURL
+			if resource.Pack == string(api.PackDataEngine) {
+				if u := resource.GetOperationsURL(); u != "" {
+					deleteParamsURL = u
+				}
+			}
+			if deleteParams, err := api.GetDeleteParams(activePack, deleteParamsURL); err == nil {
 				// Store id parameter description
 				resourceData.DeleteIdDescription = deleteParams.IdDescription
 				if deleteParams.IdDescription != "" {
@@ -1752,14 +1884,27 @@ func main() {
 		templateData.Resources = append(templateData.Resources, resourceData)
 	}
 
-	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		log.Fatalf("Failed to create output directory: %v", err)
+	// Create output directories if they don't exist
+	writeVMS := includePack(string(api.PackVMS), packFilter)
+	writeDE := includePack(string(api.PackDataEngine), packFilter)
+	if writeVMS {
+		if err := os.MkdirAll(outputDir, 0755); err != nil {
+			log.Fatalf("Failed to create output directory: %v", err)
+		}
+	}
+	deOutDir := outputDirForPack(outputDir, string(api.PackDataEngine))
+	if writeDE {
+		if err := os.MkdirAll(deOutDir, 0755); err != nil {
+			log.Fatalf("Failed to create DataEngine output directory: %v", err)
+		}
 	}
 
 	// Generate separate files for each resource
 	var generatedFiles []string
 	for _, resourceData := range templateData.Resources {
+		if !includePack(resourceData.Pack, packFilter) {
+			continue
+		}
 		// Check if REQUEST BODY section has any content
 		hasRequestBodyNestedTypes := false
 		for _, nt := range resourceData.NestedTypes {
@@ -1770,31 +1915,47 @@ func main() {
 		}
 		resourceData.HasRequestBodyContent = hasRequestBodyNestedTypes || (len(resourceData.RequestBodyFields) > 0 && !resourceData.HasUpdateInlineParams)
 
-		resourceFile := filepath.Join(outputDir, strings.ToLower(resourceData.Name)+"_autogen.go")
+		outDir := outputDirForPack(outputDir, resourceData.Pack)
+		resourceFile := filepath.Join(outDir, strings.ToLower(resourceData.Name)+"_autogen.go")
 		if err := generateResourceFile(resourceFile, resourceData); err != nil {
 			log.Fatalf("Failed to generate %s: %v", resourceFile, err)
 		}
-		generatedFiles = append(generatedFiles, strings.ToLower(resourceData.Name)+"_autogen.go")
+		generatedFiles = append(generatedFiles, filepath.Join(filepath.Base(outDir), strings.ToLower(resourceData.Name)+"_autogen.go"))
 	}
 
-	fmt.Printf("Generated typed resources for %d resources in %s/\n", len(resources), outputDir)
+	fmt.Printf("Generated typed resources for %d resources under %s/ (pack=%s)\n", len(generatedFiles), outputDir, packFilter)
 	for _, file := range generatedFiles {
 		fmt.Printf("  - %s: Typed resource implementation\n", file)
 	}
 
-	// Generate common_components.go with all OpenAPI component schemas
-	fmt.Printf("\nGenerating common components from OpenAPI spec...\n")
-	componentsFile := filepath.Join(outputDir, "common_components.go")
-	if err := generateCommonComponentsFile(componentsFile); err != nil {
-		log.Fatalf("Failed to generate common_components.go: %v", err)
+	// Generate common_components.go with all OpenAPI component schemas (per selected pack)
+	fmt.Printf("\nGenerating common components from OpenAPI specs...\n")
+	var formatDirs []string
+	if writeVMS {
+		vmsComponentsFile := filepath.Join(outputDir, "common_components.go")
+		if err := generateCommonComponentsFile(vmsComponentsFile, api.PackVMS, "typed"); err != nil {
+			log.Fatalf("Failed to generate common_components.go: %v", err)
+		}
+		fmt.Printf("✅ Generated %s\n", vmsComponentsFile)
+		formatDirs = append(formatDirs, outputDir)
 	}
-	fmt.Printf("✅ Generated common_components.go with reusable OpenAPI schemas\n")
+
+	if writeDE {
+		deComponentsFile := filepath.Join(deOutDir, "common_components.go")
+		if err := generateCommonComponentsFile(deComponentsFile, api.PackDataEngine, "dataengine"); err != nil {
+			log.Fatalf("Failed to generate DataEngine common_components.go: %v", err)
+		}
+		fmt.Printf("✅ Generated %s\n", deComponentsFile)
+		formatDirs = append(formatDirs, deOutDir)
+	}
 
 	// Format all generated Go files
-	if err := formatGeneratedFiles(outputDir); err != nil {
-		log.Printf("Warning: Failed to format generated files: %v", err)
-	} else {
-		fmt.Printf("Formatted all generated Go files with go fmt\n")
+	for _, dir := range formatDirs {
+		if err := formatGeneratedFiles(dir); err != nil {
+			log.Printf("Warning: Failed to format generated files in %s: %v", dir, err)
+		} else {
+			fmt.Printf("Formatted generated Go files in %s\n", dir)
+		}
 	}
 }
 
@@ -1820,6 +1981,8 @@ func generateRestFile(filename string, data TemplateData) error {
 
 // generateResourceFile generates a single resource file with typed resource implementation
 func generateResourceFile(filename string, data ResourceData) error {
+	setActivePack(data.Pack)
+
 	// Choose template based on resource type
 	// Support both new Operations marker and legacy markers
 	var hasList, hasRead, hasCreate, hasUpdate, hasDelete bool
@@ -1876,30 +2039,46 @@ func generateResourceFile(filename string, data ResourceData) error {
 	// Check if Update/Delete operations return AsyncTaskInResponse
 	if hasUpdate {
 		updateURL := data.Resource.GetOperationsURL()
-		// Try PATCH first, then PUT
-		if returnsAsyncTaskInResponse("PATCH", updateURL) {
-			data.UpdateIsAsync = true
-			data.HasAsyncMethods = true
-			fmt.Printf("  ℹ️  Update operation returns AsyncTaskInResponse (async method with timeout parameter)\n")
-		} else if returnsAsyncTaskInResponse("PUT", updateURL) {
-			data.UpdateIsAsync = true
-			data.HasAsyncMethods = true
-			fmt.Printf("  ℹ️  Update operation returns AsyncTaskInResponse (async method with timeout parameter)\n")
+		// VMS historically checked the collection URL only. DataEngine updates live on
+		// /{collection}/{guid}, so resolve the item path for that pack.
+		candidates := []string{updateURL}
+		if data.Pack == string(api.PackDataEngine) {
+			if itemPath := collectionItemURL(updateURL); itemPath != "" {
+				candidates = append([]string{itemPath}, candidates...)
+			}
+		}
+		for _, path := range candidates {
+			if returnsAsyncTaskInResponse("PATCH", path) || returnsAsyncTaskInResponse("PUT", path) {
+				data.UpdateIsAsync = true
+				data.HasAsyncMethods = true
+				fmt.Printf("  ℹ️  Update operation returns AsyncTaskInResponse (async method with timeout parameter)\n")
+				break
+			}
 		}
 	}
 
 	if hasDelete {
 		deleteURL := data.Resource.GetOperationsURL()
-		// Check both DELETE /{id}/ and DELETE / endpoints
-		if returnsAsyncTaskInResponse("DELETE", deleteURL+"/{id}/") {
-			data.DeleteByIdIsAsync = true
-			data.HasAsyncMethods = true
-			fmt.Printf("  ℹ️  Delete by ID operation (DELETE %s/{id}/) returns AsyncTaskInResponse (async method with timeout parameter)\n", deleteURL)
+		candidates := []string{deleteURL + "/", deleteURL}
+		if data.Pack == string(api.PackDataEngine) {
+			if itemPath := collectionItemURL(deleteURL); itemPath != "" {
+				candidates = append([]string{itemPath}, candidates...)
+			}
+		} else {
+			// Preserve historical VMS check on /{id}/
+			candidates = append([]string{deleteURL + "/{id}/"}, candidates...)
 		}
-		if returnsAsyncTaskInResponse("DELETE", deleteURL+"/") {
-			data.DeleteIsAsync = true
+		for _, path := range candidates {
+			if !returnsAsyncTaskInResponse("DELETE", path) {
+				continue
+			}
+			if strings.Contains(path, "{id}") || strings.Contains(path, "{guid}") {
+				data.DeleteByIdIsAsync = true
+			} else {
+				data.DeleteIsAsync = true
+			}
 			data.HasAsyncMethods = true
-			fmt.Printf("  ℹ️  Delete operation (DELETE %s/) returns AsyncTaskInResponse (async method with timeout parameter)\n", deleteURL)
+			fmt.Printf("  ℹ️  Delete operation (DELETE %s) returns AsyncTaskInResponse (async method with timeout parameter)\n", path)
 		}
 	}
 
@@ -1974,8 +2153,8 @@ func generateResourceFile(filename string, data ResourceData) error {
 }
 
 // generateCommonComponentsFile generates common_components.go with all OpenAPI component schemas
-func generateCommonComponentsFile(filename string) error {
-	components, err := api.GetAllComponentSchemas()
+func generateCommonComponentsFile(filename string, pack api.Pack, packageName string) error {
+	components, err := api.GetAllComponentSchemas(pack)
 	if err != nil {
 		return fmt.Errorf("failed to get component schemas: %w", err)
 	}
@@ -1990,7 +2169,7 @@ func generateCommonComponentsFile(filename string) error {
 	fmt.Fprintln(file, "// Code generated by generate-typed-resources. DO NOT EDIT.")
 	fmt.Fprintln(file, "// This file contains all OpenAPI component schemas for reuse across resources.")
 	fmt.Fprintln(file, "")
-	fmt.Fprintln(file, "package typed")
+	fmt.Fprintf(file, "package %s\n", packageName)
 	fmt.Fprintln(file, "")
 
 	// Generate each component schema
@@ -2078,7 +2257,7 @@ func generateCommonComponentsFile(filename string) error {
 // generateRequestFields generates struct fields from GET query parameters
 func generateRequestFields(resourcePath string, registry *TypeRegistry) ([]Field, error) {
 	// Get query parameters schema from OpenAPI
-	schema, err := api.GetSchema_GET_QueryParams(resourcePath)
+	schema, err := api.GetSchema_GET_QueryParams(activePack, resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get query params schema: %w", err)
 	}
@@ -2088,7 +2267,8 @@ func generateRequestFields(resourcePath string, registry *TypeRegistry) ([]Field
 
 // toCamelCase converts snake_case to CamelCase
 func toCamelCase(s string) string {
-	// Replace hyphens with underscores first, then split on underscores
+	// Replace path/hyphen separators with underscores, then split
+	s = strings.ReplaceAll(s, "/", "_")
 	s = strings.ReplaceAll(s, "-", "_")
 	parts := strings.Split(s, "_")
 	for i, part := range parts {
@@ -2116,7 +2296,9 @@ func toSingularCamelCase(resourcePath string) string {
 
 // escapeQuotes escapes double quotes in strings to prevent breaking struct tags
 func escapeQuotes(s string) string {
-	// Escape quotes, backticks, and newlines for Go struct tags
+	// Escape backslashes first so committed VMS doc tags keep historical \\ sequences
+	// (e.g. BUILTIN\\Administrators), then quotes/backticks/newlines.
+	s = strings.ReplaceAll(s, `\`, `\\`)
 	s = strings.ReplaceAll(s, `"`, `\"`)
 	s = strings.ReplaceAll(s, "`", "'") // Replace backticks with single quotes
 	s = strings.ReplaceAll(s, "\n", " ")
@@ -2202,7 +2384,7 @@ func isMapObject(prop *openapi3.Schema) bool {
 // isCreateResponseValid checks if POST operation has valid response schema or returns 204
 func isCreateResponseValid(url string) bool {
 	// Get OpenAPI resource
-	resource, err := api.GetOpenApiResource(url)
+	resource, err := api.GetOpenApiResource(activePack, url)
 	if err != nil || resource == nil || resource.Post == nil {
 		return false
 	}
@@ -2240,7 +2422,7 @@ func isCreateResponseValid(url string) bool {
 // isListResponseAmbiguous checks if GET list operation returns array of ambiguous objects
 func isListResponseAmbiguous(url string) bool {
 	// Get OpenAPI resource
-	resource, err := api.GetOpenApiResource(url)
+	resource, err := api.GetOpenApiResource(activePack, url)
 	if err != nil || resource == nil || resource.Get == nil {
 		return false
 	}
@@ -2276,7 +2458,7 @@ func isListResponseAmbiguous(url string) bool {
 // isReadResponseAmbiguous checks if GET by ID operation returns ambiguous object
 func isReadResponseAmbiguous(url string) bool {
 	// Get OpenAPI resource
-	resource, err := api.GetOpenApiResource(url)
+	resource, err := api.GetOpenApiResource(activePack, url)
 	if err != nil || resource == nil || resource.Get == nil {
 		return false
 	}
@@ -2300,7 +2482,7 @@ func isReadResponseAmbiguous(url string) bool {
 // isUpdateResponseValid checks if PATCH/PUT operation has valid response schema or returns 204
 func isUpdateResponseValid(url string) bool {
 	// Get OpenAPI resource
-	resource, err := api.GetOpenApiResource(url)
+	resource, err := api.GetOpenApiResource(activePack, url)
 	if err != nil || resource == nil {
 		return false
 	}
@@ -2394,6 +2576,10 @@ func hasAmbiguousNestedObjects(schema *openapi3.Schema) bool {
 
 // excludeSearchParams contains common search parameters that should be excluded from typed search params
 var excludeSearchParams = []string{"page", "page_size", "sync", "created", "sync_time"}
+
+// excludeDataEngineSearchParams are pagination/iterator controls owned by GetIterator;
+// they must not appear on DataEngine *SearchParams (or typed GET query structs).
+var excludeDataEngineSearchParams = []string{"cursor", "limit"}
 
 // isPrimitive returns true if the given OpenAPI schema represents a primitive type
 // supported by search parameters (string, integer, number, or boolean).
@@ -2544,7 +2730,7 @@ func getGoTypeFromOpenAPI(schema *openapi3.Schema, usePointers bool) string {
 // generateResponseFields generates struct fields from POST response schema
 func generateResponseFields(resourcePath string, registry *TypeRegistry) ([]Field, error) {
 	// Get response schema from OpenAPI
-	schema, err := api.GetResponseModelSchema("POST", resourcePath)
+	schema, err := api.GetResponseModelSchema(activePack, "POST", resourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response schema: %w", err)
 	}
@@ -2558,7 +2744,7 @@ func generateSearchParamsFields(resourcePath, method string, registry *TypeRegis
 	switch method {
 	case http.MethodGet:
 		// For GET requests, get individual query parameters
-		params, err := api.GetQueryParameters("GET", resourcePath)
+		params, err := api.GetQueryParameters(activePack, "GET", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get GET query params for resource %q: %w", resourcePath, err)
 		}
@@ -2591,6 +2777,10 @@ func generateSearchParamsFromParameters(params []*openapi3.Parameter, resourcePa
 		name := p.Name
 		if contains(excludeSearchParams, name) {
 			fmt.Printf("    ⏭️  Skipping excluded search param '%s'\n", name)
+			continue
+		}
+		if activePack == api.PackDataEngine && contains(excludeDataEngineSearchParams, name) {
+			fmt.Printf("    ⏭️  Skipping DataEngine iterator search param '%s'\n", name)
 			continue
 		}
 
@@ -2637,22 +2827,22 @@ func generateRequestBodyFields(resourcePath, method string, registry *TypeRegist
 	// Use method-based switch like terraform provider (createSchemaRef pattern)
 	switch method {
 	case http.MethodPost:
-		schema, err = api.GetRequestBodySchema("POST", resourcePath)
+		schema, err = api.GetRequestBodySchema(activePack, "POST", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get POST request body schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPatch:
-		schema, err = api.GetRequestBodySchema("PATCH", resourcePath)
+		schema, err = api.GetRequestBodySchema(activePack, "PATCH", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get PATCH request body schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPut:
-		schema, err = api.GetRequestBodySchema("PUT", resourcePath)
+		schema, err = api.GetRequestBodySchema(activePack, "PUT", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get PUT request body schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodDelete:
-		schema, err = api.GetRequestBodySchema("DELETE", resourcePath)
+		schema, err = api.GetRequestBodySchema(activePack, "DELETE", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get DELETE request body schema for resource %q: %w", resourcePath, err)
 		}
@@ -2677,27 +2867,27 @@ func generateModelFields(resourcePath, method string, registry *TypeRegistry) ([
 	// Use method-based switch like terraform provider (modelSchemaRef pattern)
 	switch method {
 	case http.MethodPost:
-		schema, err = api.GetResponseModelSchema("POST", resourcePath)
+		schema, err = api.GetResponseModelSchema(activePack, "POST", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get POST response schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodGet:
-		schema, err = api.GetResponseModelSchema("GET", resourcePath)
+		schema, err = api.GetResponseModelSchema(activePack, "GET", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get GET response schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPatch:
-		schema, err = api.GetResponseModelSchema("PATCH", resourcePath)
+		schema, err = api.GetResponseModelSchema(activePack, "PATCH", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get PATCH response schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodPut:
-		schema, err = api.GetResponseModelSchema("PUT", resourcePath)
+		schema, err = api.GetResponseModelSchema(activePack, "PUT", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get PUT response schema for resource %q: %w", resourcePath, err)
 		}
 	case http.MethodDelete:
-		schema, err = api.GetResponseModelSchema("DELETE", resourcePath)
+		schema, err = api.GetResponseModelSchema(activePack, "DELETE", resourcePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get DELETE response schema for resource %q: %w", resourcePath, err)
 		}
@@ -2727,19 +2917,19 @@ func extractCommonSearchableFields(resource *vastparser.VastResource, registry *
 	// Get response body schema from Operations marker or legacy details marker
 	if resource.HasOperations() && resource.Operations.HasRead() {
 		responseURL := resource.GetOperationsURL()
-		responseSchema, err = api.GetResponseModelSchema("GET", responseURL)
+		responseSchema, err = api.GetResponseModelSchema(activePack, "GET", responseURL)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get GET response schema: %w", err)
 		}
 	} else if resource.HasDetails("GET") {
 		responseURL := resource.GetDetails("GET")
-		responseSchema, err = api.GetResponseModelSchema("GET", responseURL)
+		responseSchema, err = api.GetResponseModelSchema(activePack, "GET", responseURL)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get GET response schema: %w", err)
 		}
 	} else if resource.HasDetails("PATCH") {
 		responseURL := resource.GetDetails("PATCH")
-		responseSchema, err = api.GetResponseModelSchema("PATCH", responseURL)
+		responseSchema, err = api.GetResponseModelSchema(activePack, "PATCH", responseURL)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get PATCH response schema: %w", err)
 		}
@@ -2821,7 +3011,7 @@ func mergeSearchFields(existing, additional []Field) []Field {
 // generateSearchParamsFromSchema generates search params fields from a schema component
 func generateSearchParamsFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
 	// Get schema from components
-	schema, err := api.GetSchema_FromComponents(schemaName)
+	schema, err := api.GetSchema_FromComponents(activePack, schemaName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
@@ -2832,7 +3022,7 @@ func generateSearchParamsFromSchema(schemaName string, registry *TypeRegistry) (
 // generateRequestBodyFromSchema generates request body fields from a schema component
 func generateRequestBodyFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
 	// Get schema from components
-	schema, err := api.GetSchema_FromComponents(schemaName)
+	schema, err := api.GetSchema_FromComponents(activePack, schemaName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
@@ -2843,7 +3033,7 @@ func generateRequestBodyFromSchema(schemaName string, registry *TypeRegistry) ([
 // generateModelFromSchema generates model fields from a schema component
 func generateModelFromSchema(schemaName string, registry *TypeRegistry) ([]Field, error) {
 	// Get schema from components
-	schema, err := api.GetSchema_FromComponents(schemaName)
+	schema, err := api.GetSchema_FromComponents(activePack, schemaName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get schema from components: %w", err)
 	}
@@ -2874,7 +3064,7 @@ func getPropertyDescription(propRef *openapi3.SchemaRef, parentTypeName, propNam
 
 	// If propRef has a $ref, try to resolve and get description from referenced schema
 	if propRef != nil && propRef.Ref != "" {
-		resolvedSchema := api.ResolveAllRefs(propRef)
+		resolvedSchema := api.ResolveAllRefs(activePack, propRef)
 		if resolvedSchema != nil && resolvedSchema.Description != "" {
 			return resolvedSchema.Description
 		}

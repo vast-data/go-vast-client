@@ -444,7 +444,7 @@ func TestExtraMethodWidget_OpenAPIParameterSplitting(t *testing.T) {
 
 	t.Run("GetQueryParameters function exists", func(t *testing.T) {
 		// Verify the function exists and can be called
-		_, err := openapi_schema.GetQueryParameters("GET", "/some/path/")
+		_, err := openapi_schema.GetQueryParameters(openapi_schema.PackVMS, "GET", "/some/path/")
 		// We expect an error because the path doesn't exist, but that's fine
 		// We're just verifying the function signature is correct
 		if err == nil {

@@ -155,7 +155,7 @@ func (r *BigCatalogConfig) DeleteWithContext(ctx context.Context, req *BigCatalo
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (r *BigCatalogConfig) DeleteById(id any) error {
 // Parameters:
 //   - id: Vastcatalogconfig ID
 func (r *BigCatalogConfig) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

@@ -47,6 +47,9 @@ type ListAdapter struct {
 	// Column width configuration
 	narrowColumns map[string]bool // Columns that should have limited width (e.g., ID fields)
 
+	// skipRowFn, when set, marks rows that keyboard navigation must skip (e.g. section labels).
+	skipRowFn func(row []string) bool
+
 	// Database connection
 	db *database.Service
 }
@@ -105,6 +108,56 @@ func (lr *ListAdapter) SetPredefinedTitle(title string) {
 func (lr *ListAdapter) ClearListData() {
 	lr.data = make([][]string, 0)
 	lr.filteredData = make([][]string, 0)
+}
+
+// SetSkipRowFn configures which rows keyboard navigation should skip (e.g. section labels).
+func (lr *ListAdapter) SetSkipRowFn(fn func(row []string) bool) {
+	lr.skipRowFn = fn
+}
+
+func (lr *ListAdapter) shouldSkipRow(index int) bool {
+	if lr.skipRowFn == nil || index < 0 || index >= len(lr.filteredData) {
+		return false
+	}
+	return lr.skipRowFn(lr.filteredData[index])
+}
+
+// ensureSelectableSelection moves the cursor off a skipped row onto the nearest selectable one.
+func (lr *ListAdapter) ensureSelectableSelection() {
+	if len(lr.filteredData) == 0 || lr.skipRowFn == nil {
+		return
+	}
+	if !lr.shouldSkipRow(lr.selectedRow) {
+		lr.ensureSelectedVisible()
+		return
+	}
+	// Prefer the next selectable row, then previous.
+	for i := lr.selectedRow + 1; i < len(lr.filteredData); i++ {
+		if !lr.shouldSkipRow(i) {
+			lr.selectedRow = i
+			lr.ensureSelectedVisible()
+			return
+		}
+	}
+	for i := lr.selectedRow - 1; i >= 0; i-- {
+		if !lr.shouldSkipRow(i) {
+			lr.selectedRow = i
+			lr.ensureSelectedVisible()
+			return
+		}
+	}
+	// All rows are labels — leave cursor where it is.
+}
+
+func (lr *ListAdapter) ensureSelectedVisible() {
+	if lr.maxVisibleRows <= 0 {
+		return
+	}
+	if lr.selectedRow < lr.visibleStartRow {
+		lr.visibleStartRow = lr.selectedRow
+	} else if lr.selectedRow >= lr.visibleStartRow+lr.maxVisibleRows {
+		lr.visibleStartRow = lr.selectedRow - lr.maxVisibleRows + 1
+	}
 }
 
 // SetNarrowColumns configures which columns should have limited width
@@ -206,47 +259,66 @@ func (lr *ListAdapter) SetListData(data [][]string, fuzzySearchQuery string) {
 			lr.visibleStartRow = max(0, lr.selectedRow-lr.maxVisibleRows+1)
 		}
 	}
+	lr.ensureSelectableSelection()
 }
 
 // Navigation methods
 func (lr *ListAdapter) MoveUp() {
-	if lr.selectedRow > 0 {
-		lr.selectedRow--
-		// Scroll up if selected row is above visible area
+	for i := lr.selectedRow - 1; i >= 0; i-- {
+		if lr.shouldSkipRow(i) {
+			continue
+		}
+		lr.selectedRow = i
 		if lr.selectedRow < lr.visibleStartRow {
 			lr.visibleStartRow = lr.selectedRow
 		}
+		return
 	}
 }
 
 func (lr *ListAdapter) MoveDown() {
-	if lr.selectedRow < len(lr.filteredData)-1 {
-		lr.selectedRow++
-		// Scroll down if selected row is below visible area
-		if lr.selectedRow >= lr.visibleStartRow+lr.maxVisibleRows {
+	for i := lr.selectedRow + 1; i < len(lr.filteredData); i++ {
+		if lr.shouldSkipRow(i) {
+			continue
+		}
+		lr.selectedRow = i
+		if lr.maxVisibleRows > 0 && lr.selectedRow >= lr.visibleStartRow+lr.maxVisibleRows {
 			lr.visibleStartRow = lr.selectedRow - lr.maxVisibleRows + 1
 		}
+		return
 	}
 }
 
 func (lr *ListAdapter) MoveHome() {
 	lr.selectedRow = 0
 	lr.visibleStartRow = 0
+	lr.ensureSelectableSelection()
 }
 
 func (lr *ListAdapter) MoveEnd() {
+	if len(lr.filteredData) == 0 {
+		lr.selectedRow = 0
+		lr.visibleStartRow = 0
+		return
+	}
 	lr.selectedRow = len(lr.filteredData) - 1
 	lr.visibleStartRow = max(0, len(lr.filteredData)-lr.maxVisibleRows)
+	lr.ensureSelectableSelection()
 }
 
 func (lr *ListAdapter) PageUp() {
 	lr.selectedRow = max(0, lr.selectedRow-lr.maxVisibleRows)
 	lr.visibleStartRow = max(0, lr.visibleStartRow-lr.maxVisibleRows)
+	lr.ensureSelectableSelection()
 }
 
 func (lr *ListAdapter) PageDown() {
+	if len(lr.filteredData) == 0 {
+		return
+	}
 	lr.selectedRow = min(len(lr.filteredData)-1, lr.selectedRow+lr.maxVisibleRows)
 	lr.visibleStartRow = min(max(0, len(lr.filteredData)-lr.maxVisibleRows), lr.visibleStartRow+lr.maxVisibleRows)
+	lr.ensureSelectableSelection()
 }
 
 // ViewList renders the list view using the provided widget
@@ -277,7 +349,7 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 
 	for i, width := range columnWidths {
 		headerStyles[i] = lipgloss.NewStyle().
-			Foreground(Blue).
+			Foreground(White).
 			Bold(true).
 			Width(width).
 			Align(lipgloss.Left)
@@ -288,7 +360,7 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 			Align(lipgloss.Left)
 
 		selectedRowStyles[i] = lipgloss.NewStyle().
-			Foreground(Black).
+			Foreground(White).
 			Background(Blue).
 			Width(width).
 			Align(lipgloss.Left)
@@ -418,6 +490,7 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 					lr.visibleStartRow = max(0, lr.selectedRow-lr.maxVisibleRows+1)
 				}
 			}
+			lr.ensureSelectableSelection()
 
 			labelStyle := lipgloss.NewStyle().
 				Background(colors.FuzzySearchLabelBg).
@@ -428,6 +501,7 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 		} else {
 			// No fuzzy search active, use original data
 			lr.filteredData = lr.data
+			lr.ensureSelectableSelection()
 		}
 
 		// Add server filter label if active - get from widget
@@ -479,19 +553,49 @@ func (lr *ListAdapter) fuzzyFilter(data [][]string, query string) [][]string {
 		return data
 	}
 
-	var filtered [][]string
 	query = strings.ToLower(query)
+	matched := make([]bool, len(data))
 
-	for _, row := range data {
-		// Check if any cell in the row matches the query (fuzzy)
+	for i, row := range data {
 		for _, cell := range row {
 			if lr.fuzzyMatch(strings.ToLower(cell), query) {
-				filtered = append(filtered, row)
-				break // Found match in this row, move to next row
+				matched[i] = true
+				break
 			}
 		}
 	}
 
+	// Keep a preceding section-label row when one of its following children matches.
+	// Indented rows (leading whitespace) are treated as children of the nearest label above.
+	if lr.skipRowFn != nil {
+		for i := range matched {
+			if !matched[i] || lr.skipRowFn(data[i]) {
+				continue
+			}
+			for j := i - 1; j >= 0; j-- {
+				if lr.skipRowFn(data[j]) {
+					matched[j] = true
+					break
+				}
+				cell := ""
+				if len(data[j]) > 0 {
+					cell = data[j][0]
+				}
+				// Continue through indented siblings; stop at a top-level row.
+				if strings.TrimLeft(cell, " \t") != cell {
+					continue
+				}
+				break
+			}
+		}
+	}
+
+	var filtered [][]string
+	for i, row := range data {
+		if matched[i] {
+			filtered = append(filtered, row)
+		}
+	}
 	return filtered
 }
 

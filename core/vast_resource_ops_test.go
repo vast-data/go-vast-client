@@ -9,14 +9,14 @@ import (
 type MockRest struct {
 	ctx         context.Context
 	session     RESTSession
-	resourceMap map[string]VastResourceAPIWithContext
+	resourceMap map[string]ResourceEntry
 }
 
 func (m *MockRest) GetSession() RESTSession {
 	return m.session
 }
 
-func (m *MockRest) GetResourceMap() map[string]VastResourceAPIWithContext {
+func (m *MockRest) GetResourceMap() map[string]ResourceEntry {
 	return m.resourceMap
 }
 
@@ -26,6 +26,10 @@ func (m *MockRest) GetCtx() context.Context {
 
 func (m *MockRest) SetCtx(ctx context.Context) {
 	m.ctx = ctx
+}
+
+func (m *MockRest) GetApiRoot() string {
+	return ""
 }
 
 // TestResourceOpsValidation tests that ResourceOps correctly validates operations

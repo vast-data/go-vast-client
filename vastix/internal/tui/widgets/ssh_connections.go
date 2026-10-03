@@ -328,30 +328,46 @@ func (s *SshConnections) GetKeyBindings() []common.KeyBinding {
 			{Key: "</>", Desc: "search", Generic: true},
 			{Key: "<↑/↓>", Desc: "navigate"},
 			{Key: "<enter>", Desc: "details"},
-			{Key: "<d>", Desc: "describe"},
 			{Key: "<n>", Desc: "new"},
 			{Key: "<ctrl+d>", Desc: "delete"},
 		}
 
-		// Add extra widget hints if available (includes <x> and numbered shortcuts 1-7)
+		// Prefer numbered extra-action shortcuts in the 2-column hints zone.
 		if s.CanUseExtra() {
-			keyBindings = append(keyBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
-			// Add numbered shortcuts for extra actions (sorted for consistent display)
 			shortcuts := s.ShortCuts()
-			// Sort shortcut keys to ensure consistent ordering (1, 2, 3, etc.)
 			shortcutKeys := make([]string, 0, len(shortcuts))
 			for key := range shortcuts {
 				shortcutKeys = append(shortcutKeys, key)
 			}
 			sort.Strings(shortcutKeys)
 
-			// Add shortcuts in sorted order
+			const maxKeybindingColumns = 2
+			const maxKeybindingRows = 7
+			remaining := maxKeybindingColumns*maxKeybindingRows - len(keyBindings)
+			if remaining < 0 {
+				remaining = 0
+			}
+
+			addedShortcut := false
 			for _, key := range shortcutKeys {
+				if remaining <= 0 {
+					break
+				}
 				widget := shortcuts[key]
 				if shortcut := widget.ShortCut(); shortcut != nil {
 					keyBindings = append(keyBindings, *shortcut)
+					remaining--
+					addedShortcut = true
 				}
 			}
+			if !addedShortcut {
+				keyBindings = append(keyBindings,
+					common.KeyBinding{Key: "<d>", Desc: "describe"},
+					common.KeyBinding{Key: "<x>", Desc: "extra actions"},
+				)
+			}
+		} else {
+			keyBindings = append(keyBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
 		}
 	case common.NavigatorModeCreate:
 		keyBindings = []common.KeyBinding{

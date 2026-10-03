@@ -206,7 +206,7 @@ func (r *ProtectionPolicy) DeleteWithContext(ctx context.Context, req *Protectio
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func (r *ProtectionPolicy) DeleteById(id any) error {
 // Parameters:
 //   - id: Protection Policy ID
 func (r *ProtectionPolicy) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

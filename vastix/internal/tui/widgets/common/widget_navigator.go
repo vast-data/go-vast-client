@@ -305,9 +305,15 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 					}
 					return nil
 				case "ctrl+s":
-					// Submit from JSON mode - first save JSON to form, then submit
+					// Submit raw JSON body (preserves fields omitted from the form schema,
+					// e.g. arrays of objects). Do not round-trip through form inputs only.
 					logging.Debug("Submit from JSON mode")
-					// Save JSON edits to form inputs first
+					if jsonCreator, ok := any(wn.widget).(interface {
+						CreateFromJSONDo(CreateWidget) tea.Cmd
+					}); ok {
+						return jsonCreator.CreateFromJSONDo(wn.widget)
+					}
+					// Fallback: sync known form fields then submit
 					if saveAdapter, ok := any(wn.widget).(interface{ SaveJSONEdits() error }); ok {
 						if err := saveAdapter.SaveJSONEdits(); err != nil {
 							logging.Error("Failed to save JSON edits", zap.Error(err))
@@ -316,7 +322,6 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 							}
 						}
 					}
-					// Now submit the form
 					if adapter, ok := any(wn.widget).(CreateFromInputsAdapter); ok {
 						return adapter.CreateFromInputsDo(wn.widget)
 					}

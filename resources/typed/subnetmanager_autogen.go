@@ -57,7 +57,7 @@ func (r *SubnetManager) DeleteWithContext(ctx context.Context, req *SubnetManage
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (r *SubnetManager) DeleteById(id any) error {
 
 // DeleteByIdWithContext deletes a subnetmanager by ID using provided context
 func (r *SubnetManager) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

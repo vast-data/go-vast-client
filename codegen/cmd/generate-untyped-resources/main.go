@@ -67,11 +67,18 @@ func main() {
 	outputDir := "../resources/untyped"
 	restFilePath := "../rest/untyped_rest.go"
 
-	// Parse rest/untyped_rest.go to get resource configurations and extra methods
+	// Parse rest/untyped_rest.go and rest/dataengine/untyped.go for resource configurations
 	fmt.Println("Parsing rest/untyped_rest.go for resource configurations...")
 	restParser := vastparser.NewRestParser()
 	if err := restParser.ParseRestFile(restFilePath); err != nil {
 		log.Fatalf("Failed to parse rest file: %v", err)
+	}
+	deRestFile := "../rest/dataengine/untyped.go"
+	if _, err := os.Stat(deRestFile); err == nil {
+		fmt.Println("Parsing rest/dataengine/untyped.go for DataEngine resource configurations...")
+		if err := restParser.ParseRestFile(deRestFile); err != nil {
+			log.Fatalf("Failed to parse DataEngine rest file: %v", err)
+		}
 	}
 
 	configs := restParser.GetAllConfigs()
@@ -91,6 +98,12 @@ func main() {
 	for _, config := range configs {
 		// Skip resources without extra methods
 		if len(config.ExtraMethods) == 0 {
+			continue
+		}
+		// DataEngine extra-method codegen still needs pack-aware schema lookups in
+		// this generator; CRUD facades work today via rest.DataEngine.*.
+		if config.Pack == string(api.PackDataEngine) {
+			fmt.Printf("  skipping DataEngine resource %s (CRUD-only until pack-aware untyped codegen)\n", config.Name)
 			continue
 		}
 
@@ -188,7 +201,7 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	}
 
 	// Check if response is AsyncTaskInResponse - these are async methods that need timeout parameter
-	if rawResp, err := api.GetOpenApiResource(extraMethod.Path); err == nil && rawResp != nil {
+	if rawResp, err := api.GetOpenApiResource(api.PackVMS, extraMethod.Path); err == nil && rawResp != nil {
 		var op *openapi3.Operation
 		switch extraMethod.Method {
 		case "GET":
@@ -217,7 +230,7 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	methodInfo.GoHTTPMethod = httpMethodToGoConstant(extraMethod.Method)
 
 	// Extract summary from OpenAPI spec
-	summary, err := api.GetOperationSummary(extraMethod.Method, extraMethod.Path)
+	summary, err := api.GetOperationSummary(api.PackVMS, extraMethod.Method, extraMethod.Path)
 	if err != nil {
 		// If summary not found, just log and continue
 		fmt.Printf("  ℹ️  No summary found for %s %s\n", extraMethod.Method, extraMethod.Path)
@@ -226,7 +239,7 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	}
 
 	// Check if operation returns 204 No Content
-	returns204, err := api.Returns204NoContent(extraMethod.Method, extraMethod.Path)
+	returns204, err := api.Returns204NoContent(api.PackVMS, extraMethod.Method, extraMethod.Path)
 	if err == nil && returns204 {
 		methodInfo.ReturnsNoContent = true
 		fmt.Printf("  ℹ️  Method returns 204 No Content, using core.Record\n")
@@ -235,7 +248,7 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 	// Check if this is a bare array response BEFORE schema unwrapping
 	// (GetResponseModelSchema unwraps arrays for GET, so we need to check the raw schema first)
 	if extraMethod.Method == "GET" || extraMethod.Method == "POST" {
-		if rawResp, err := api.GetOpenApiResource(extraMethod.Path); err == nil && rawResp != nil {
+		if rawResp, err := api.GetOpenApiResource(api.PackVMS, extraMethod.Path); err == nil && rawResp != nil {
 			var op *openapi3.Operation
 			if extraMethod.Method == "GET" {
 				op = rawResp.Get
@@ -338,7 +351,7 @@ func generateMethodInfo(resourceName string, extraMethod apibuilder.ExtraMethod,
 
 	// Check if DELETE has a request body with properties in OpenAPI spec
 	if extraMethod.Method == "DELETE" {
-		schema, err := api.GetRequestBodySchema(extraMethod.Method, extraMethod.Path)
+		schema, err := api.GetRequestBodySchema(api.PackVMS, extraMethod.Method, extraMethod.Path)
 		if err == nil && schema != nil && schema.Value != nil {
 			// Check if body has actual properties
 			if schema.Value.Properties != nil && len(schema.Value.Properties) > 0 {
@@ -362,7 +375,7 @@ func extractBodyFields(httpMethod, path string) []BodyFieldInfo {
 	var bodyFields []BodyFieldInfo
 
 	// Get the request body schema from OpenAPI
-	schema, err := api.GetRequestBodySchema(httpMethod, path)
+	schema, err := api.GetRequestBodySchema(api.PackVMS, httpMethod, path)
 	if err != nil || schema == nil || schema.Value == nil {
 		return bodyFields
 	}
@@ -411,7 +424,7 @@ func extractQueryParams(httpMethod, path string) []BodyFieldInfo {
 	var paramsFields []BodyFieldInfo
 
 	// Get the query parameters from OpenAPI
-	params, err := api.GetQueryParameters(httpMethod, path)
+	params, err := api.GetQueryParameters(api.PackVMS, httpMethod, path)
 	if err != nil || len(params) == 0 {
 		return paramsFields
 	}

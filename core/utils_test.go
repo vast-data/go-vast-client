@@ -4,6 +4,40 @@ import (
 	"testing"
 )
 
+func TestSplitQueryBody(t *testing.T) {
+	q, b, err := splitQueryBody(nil)
+	if err != nil || q != nil || b != nil {
+		t.Fatalf("0 args: query=%v body=%v err=%v", q, b, err)
+	}
+	q, b, err = splitQueryBody([]Params{{"name": "x"}})
+	if err != nil || q != nil || b["name"] != "x" {
+		t.Fatalf("1 arg: query=%v body=%v err=%v", q, b, err)
+	}
+	q, b, err = splitQueryBody([]Params{{"tenant_name": "t"}, {"name": "x"}})
+	if err != nil || q["tenant_name"] != "t" || b["name"] != "x" {
+		t.Fatalf("2 args: query=%v body=%v err=%v", q, b, err)
+	}
+	_, _, err = splitQueryBody([]Params{{}, {}, {}})
+	if err == nil {
+		t.Fatal("expected error for 3 args")
+	}
+}
+
+func TestOptionalQuery(t *testing.T) {
+	q, err := optionalQuery(nil)
+	if err != nil || q != nil {
+		t.Fatalf("0 args: %v %v", q, err)
+	}
+	q, err = optionalQuery([]Params{{"tenant_name": "t"}})
+	if err != nil || q["tenant_name"] != "t" {
+		t.Fatalf("1 arg: %v %v", q, err)
+	}
+	_, err = optionalQuery([]Params{{}, {}})
+	if err == nil {
+		t.Fatal("expected error for 2 args")
+	}
+}
+
 func TestToBool(t *testing.T) {
 	tests := []struct {
 		name     string

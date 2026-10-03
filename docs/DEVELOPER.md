@@ -113,7 +113,7 @@ type VastResourceType interface {
 ```go
 type VMSRest struct {
 	Session     RESTSession
-	resourceMap map[string]VastResource
+	resourceMap map[string]ResourceEntry
 
 	Versions          *Version
 	VTasks            *VTask
@@ -157,7 +157,7 @@ result, err := rest.Users.EnsureByName("myUser", client.Params{"uid": 9999})
 Ensure `User` by search params (Get by search params or Create with body params):
 ```go
 searchParams := client.Params{"name": "test", "tenant_id": 1}
-result, err := rest.Users.EnsureByName(searchParams, client.Params{"uid": 9999})
+result, err := rest.Users.Ensure(searchParams, client.Params{"uid": 9999})
 ```
 
 Update `User`:
@@ -165,9 +165,11 @@ Update `User`:
 result, err := rest.Users.Update(1, client.Params{"uid": 10000})
 ```
 
+> **Optional query Params:** `Create` / `Update` / `Ensure` / `Delete` / `DeleteById` accept an optional URL query via variadic `Params` (`Create(body)` or `Create(query, body)`; same idea for `Update(id, …)`, `Ensure(search, …)`, `Delete(search, …)`, `DeleteById(id, …)`). `GetById(id)` or `GetById(id, query)`. See [REST Clients — Optional query Params](vmsrest.md#optional-query-params-untyped-variadic).
+
 Get `User`:
 ```go
-result, err := rest.User.Get(client.Params{"name": "myUser"})
+result, err := rest.Users.Get(client.Params{"name": "myUser"})
 ```
 
 Get `User` by id:
@@ -177,12 +179,12 @@ result, err := rest.Users.GetById(1)
 
 Delete `User` (Get user by search params and if found delete it. Not found is not error condition):
 ```go
-result, err := rest.Users.Delete(client.Params{"name": "myUser"}, nil)
+result, err := rest.Users.Delete(client.Params{"name": "myUser"})
 ```
 
 Delete `User` by id:
 ```go
-result, err := rest.Users.DeleteById(1, nil)
+result, err := rest.Users.DeleteById(1)
 ```
 
 !!! note

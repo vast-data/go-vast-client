@@ -6,6 +6,7 @@ import (
 	"vastix/internal/colors"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 )
 
 // JSONSyntaxStyles carries foreground colors for JSON detail views.
@@ -54,13 +55,18 @@ func ContentMuted() lipgloss.Style {
 	return lipgloss.NewStyle().Foreground(colors.LightGrey)
 }
 
-// ContentLine renders a line with optional width padding (no lipgloss background).
+// ContentLine renders a line clipped/padded to exactly width (no lipgloss background).
+// Long lines (e.g. base64 cert fields) must be truncated — otherwise Borderize expands
+// to the full line width and blows up the TUI layout.
 func ContentLine(width int, text string) string {
 	if width < 1 {
 		return text
 	}
 	w := lipgloss.Width(text)
-	if w >= width {
+	if w > width {
+		return ansi.Truncate(text, width, "")
+	}
+	if w == width {
 		return text
 	}
 	return text + strings.Repeat(" ", width-w)

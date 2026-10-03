@@ -271,7 +271,7 @@ func (r *ViewPolicy) DeleteWithContext(ctx context.Context, req *ViewPolicySearc
 	if err != nil {
 		return err
 	}
-	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params, nil, nil)
+	_, err = r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteWithContext(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -293,7 +293,7 @@ func (r *ViewPolicy) DeleteById(id any) error {
 // Parameters:
 //   - id: The ID of the view policy to delete
 func (r *ViewPolicy) DeleteByIdWithContext(ctx context.Context, id any) error {
-	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id, nil, nil)
+	_, err := r.Untyped.GetResourceMap()[r.GetResourceType()].DeleteByIdWithContext(ctx, id)
 	if err != nil {
 		return err
 	}

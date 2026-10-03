@@ -174,15 +174,15 @@ func (p *Profile) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 			}
 		}
 
-		// Test the connection by getting version
-		version, err := rest.Versions.GetVersionWithContext(context.Background())
+		// Probe Versions for display; 403 (tenant admin) → <n/a>, still activate.
+		vastVersion, err := client.FetchVastVersion(context.Background(), rest)
 		if err != nil {
 			return msg_types.ErrorMsg{
 				Err: err,
 			}
 		}
 
-		p.log.Info("Rest client initialized", zap.Any("VAST version", version))
+		p.log.Info("Rest client initialized", zap.String("VAST version", vastVersion))
 
 		// Create profile in database
 		profile := &database.Profile{
@@ -194,7 +194,7 @@ func (p *Profile) CreateFromInputs(inputs common.Inputs) (tea.Cmd, error) {
 			Tenant:      tenant,
 			Port:        port,
 			SSLVerify:   sslVerify,
-			VastVersion: version.String(),
+			VastVersion: vastVersion,
 			ApiVersion:  apiVersion,
 		}
 
@@ -280,30 +280,28 @@ func (p *Profile) Select(selectedRowData common.RowData) (tea.Cmd, error) {
 			log.Error("Failed to get REST client from profile", zap.Error(err))
 			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to get REST client from profile: %w", err)}
 		}
-		// Test the connection by getting version
-		version, err := rest.Versions.GetVersionWithContext(context.Background())
+		// Probe Versions for display; 403 (tenant admin) → <n/a>, do not revert activation.
+		vastVersion, err := client.FetchVastVersion(context.Background(), rest)
 		if err != nil {
 			log.Error("Failed to get VAST version from new active profile", zap.Error(err))
-			// Revert to previous active profile
+			// Revert to previous active profile on hard failures (auth/network), not 403.
 			if revertErr := db.SetActiveProfile(activeProfile.ID); revertErr != nil {
 				log.Error("Failed to revert active profile after connection test", zap.Error(revertErr))
 			}
 			return msg_types.ErrorMsg{
 				Err: err,
 			}
-		} else {
-			if version.String() != newActiveProfile.VastVersion {
-				newActiveProfile.VastVersion = version.String()
-				if err := db.UpdateProfile(newActiveProfile); err != nil {
-					log.Error("Failed to update profile with new version", zap.Error(err))
-					return msg_types.ErrorMsg{Err: fmt.Errorf("failed to update profile with new version: %w", err)}
-				} else {
-					p.log.Info("Profile updated with new VAST version", zap.String("version", version.String()))
-				}
+		}
+		if vastVersion != newActiveProfile.VastVersion {
+			newActiveProfile.VastVersion = vastVersion
+			if err := db.UpdateProfile(newActiveProfile); err != nil {
+				log.Error("Failed to update profile with new version", zap.Error(err))
+				return msg_types.ErrorMsg{Err: fmt.Errorf("failed to update profile with new version: %w", err)}
 			}
+			p.log.Info("Profile updated with new VAST version", zap.String("version", vastVersion))
 		}
 
-		p.log.Info("Rest client initialized", zap.Any("VAST version", version))
+		p.log.Info("Rest client initialized", zap.String("VAST version", vastVersion))
 		return msg_types.UpdateProfileMsg{}
 	}
 
@@ -320,30 +318,47 @@ func (p *Profile) GetKeyBindings() []common.KeyBinding {
 			{Key: "</>", Desc: "search", Generic: true},
 			{Key: "<↑/↓>", Desc: "navigate"},
 			{Key: "<enter>", Desc: "select"},
-			{Key: "<d>", Desc: "describe"},
 			{Key: "<n>", Desc: "new"},
 			{Key: "<ctrl+d>", Desc: "delete"},
 		}
-
-		// Add extra widget hints if available (includes <x> and numbered shortcuts 1-7)
+		// Prefer numbered extra-action shortcuts in the 2-column hints zone.
+		// When those are shown, omit describe / extra-actions so we do not spill
+		// into a third column; <d> and <x> still work.
 		if p.CanUseExtra() {
-			keyBindings = append(keyBindings, common.KeyBinding{Key: "<x>", Desc: "extra actions"})
-			// Add numbered shortcuts for extra actions (sorted for consistent display)
 			shortcuts := p.ShortCuts()
-			// Sort shortcut keys to ensure consistent ordering (1, 2, 3, etc.)
 			shortcutKeys := make([]string, 0, len(shortcuts))
 			for key := range shortcuts {
 				shortcutKeys = append(shortcutKeys, key)
 			}
 			sort.Strings(shortcutKeys)
 
-			// Add shortcuts in sorted order
+			const maxKeybindingColumns = 2
+			const maxKeybindingRows = 7
+			remaining := maxKeybindingColumns*maxKeybindingRows - len(keyBindings)
+			if remaining < 0 {
+				remaining = 0
+			}
+
+			addedShortcut := false
 			for _, key := range shortcutKeys {
+				if remaining <= 0 {
+					break
+				}
 				widget := shortcuts[key]
 				if shortcut := widget.ShortCut(); shortcut != nil {
 					keyBindings = append(keyBindings, *shortcut)
+					remaining--
+					addedShortcut = true
 				}
 			}
+			if !addedShortcut {
+				keyBindings = append(keyBindings,
+					common.KeyBinding{Key: "<d>", Desc: "describe"},
+					common.KeyBinding{Key: "<x>", Desc: "extra actions"},
+				)
+			}
+		} else {
+			keyBindings = append(keyBindings, common.KeyBinding{Key: "<d>", Desc: "describe"})
 		}
 	case common.NavigatorModeCreate:
 		keyBindings = []common.KeyBinding{

@@ -31,6 +31,32 @@ func TestContentLinePadsStyledText(t *testing.T) {
 	}
 }
 
+func TestContentLineTruncatesLongText(t *testing.T) {
+	long := strings.Repeat("A", 500)
+	line := ContentLine(40, long)
+	if lipgloss.Width(line) != 40 {
+		t.Fatalf("width = %d, want 40", lipgloss.Width(line))
+	}
+}
+
+func TestContentLineTruncatesStyledLongText(t *testing.T) {
+	long := lipgloss.NewStyle().Foreground(colors.MediumGreen).Render(strings.Repeat("B", 300))
+	line := ContentLine(32, long)
+	if lipgloss.Width(line) != 32 {
+		t.Fatalf("width = %d, want 32", lipgloss.Width(line))
+	}
+}
+
+func TestVisibleLinesClampsWideContent(t *testing.T) {
+	content := "short\n" + strings.Repeat("X", 1000)
+	out := VisibleLines(content, 0, 20, 2)
+	for i, line := range strings.Split(out, "\n") {
+		if lipgloss.Width(line) != 20 {
+			t.Fatalf("line %d width = %d, want 20", i, lipgloss.Width(line))
+		}
+	}
+}
+
 func TestFillOpaqueLinesPadsWithoutRewrapping(t *testing.T) {
 	s := NewJSONSyntaxStyles()
 	line := s.String.Render("value")

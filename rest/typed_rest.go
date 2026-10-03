@@ -2,19 +2,11 @@ package rest
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 
 	"github.com/vast-data/go-vast-client/core"
 	"github.com/vast-data/go-vast-client/resources/typed"
+	"github.com/vast-data/go-vast-client/rest/dataengine"
 )
-
-// TypedVastResourceType defines the interface constraint for all typed resources.
-// Uses interface-based constraint to avoid Go's 100 union term limitation.
-// All typed resources implement this by embedding *core.TypedVastResource.
-type TypedVastResourceType interface {
-	GetResourceType() string
-}
 
 type TypedVMSRest struct {
 	Untyped *UntypedVMSRest
@@ -137,6 +129,9 @@ type TypedVMSRest struct {
 	SupportBundlesQueue      *typed.SupportBundlesQueue
 	TlsCertificates          *typed.TlsCertificate
 	VastdbTables             *typed.VastdbTable
+
+	// DataEngine is a nested typed VastRest (see rest/dataengine).
+	DataEngine *dataengine.TypedRest
 }
 
 func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
@@ -156,124 +151,127 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 		rest.SetCtx(context.Background())
 	}
 
-	rest.ActiveDirectories = newTypedResource[typed.ActiveDirectory](rest)
-	rest.Alarms = newTypedResource[typed.Alarm](rest)
-	rest.Analytics = newTypedResource[typed.Analytics](rest)
-	rest.ApiTokens = newTypedResource[typed.ApiToken](rest)
-	rest.BGPConfigs = newTypedResource[typed.BGPConfig](rest)
-	rest.BasicSettings = newTypedResource[typed.BasicSettings](rest)
-	rest.BigCatalogConfigs = newTypedResource[typed.BigCatalogConfig](rest)
-	rest.BigCatalogIndexedColumns = newTypedResource[typed.BigCatalogIndexedColumns](rest)
-	rest.BlockHosts = newTypedResource[typed.BlockHost](rest)
-	rest.BlockHostMappings = newTypedResource[typed.BlockHostMapping](rest)
-	rest.CallhomeConfigs = newTypedResource[typed.CallhomeConfigs](rest)
-	rest.Capacities = newTypedResource[typed.Capacity](rest)
-	rest.Carriers = newTypedResource[typed.Carrier](rest)
-	rest.Cboxes = newTypedResource[typed.Cbox](rest)
-	rest.Certificates = newTypedResource[typed.Certificate](rest)
-	rest.ChallengeTokens = newTypedResource[typed.ChallengeTokens](rest)
-	rest.Clusters = newTypedResource[typed.Cluster](rest)
-	rest.Cnodes = newTypedResource[typed.Cnode](rest)
-	rest.CnodeGroups = newTypedResource[typed.CnodeGroup](rest)
-	rest.Columns = newTypedResource[typed.Column](rest)
-	rest.Configs = newTypedResource[typed.Config](rest)
-	rest.Dboxes = newTypedResource[typed.Dbox](rest)
-	rest.Deltas = newTypedResource[typed.Delta](rest)
-	rest.Dnodes = newTypedResource[typed.Dnode](rest)
-	rest.Dnses = newTypedResource[typed.Dns](rest)
-	rest.Dtrays = newTypedResource[typed.Dtray](rest)
-	rest.Eboxes = newTypedResource[typed.Ebox](rest)
-	rest.EncryptedPaths = newTypedResource[typed.EncryptedPath](rest)
-	rest.EncryptionGroups = newTypedResource[typed.EncryptionGroup](rest)
-	rest.Envs = newTypedResource[typed.Env](rest)
-	rest.Events = newTypedResource[typed.Event](rest)
-	rest.EventDefinitions = newTypedResource[typed.EventDefinition](rest)
-	rest.EventDefinitionConfigs = newTypedResource[typed.EventDefinitionConfig](rest)
-	rest.Fans = newTypedResource[typed.Fan](rest)
-	rest.Folders = newTypedResource[typed.Folder](rest)
-	rest.Filesystems = newTypedResource[typed.Filesystem](rest)
-	rest.GlobalSnapshotStreams = newTypedResource[typed.GlobalSnapshotStream](rest)
-	rest.Groups = newTypedResource[typed.Group](rest)
-	rest.IamRoles = newTypedResource[typed.IamRole](rest)
-	rest.Injectionses = newTypedResource[typed.Injections](rest)
-	rest.Indestructibility = newTypedResource[typed.Indestructibility](rest)
-	rest.IoDatas = newTypedResource[typed.IoData](rest)
-	rest.KafkaBrokers = newTypedResource[typed.KafkaBroker](rest)
-	rest.Kerberos = newTypedResource[typed.Kerberos](rest)
-	rest.Ldaps = newTypedResource[typed.Ldap](rest)
-	rest.Licenses = newTypedResource[typed.License](rest)
-	rest.LocalProviders = newTypedResource[typed.LocalProvider](rest)
-	rest.LocalS3Keys = newTypedResource[typed.LocalS3Key](rest)
-	rest.ManageApplications = newTypedResource[typed.ManageApplications](rest)
-	rest.Managers = newTypedResource[typed.Manager](rest)
-	rest.Metrics = newTypedResource[typed.Metrics](rest)
-	rest.Modules = newTypedResource[typed.Module](rest)
-	rest.Monitors = newTypedResource[typed.Monitor](rest)
-	rest.Nics = newTypedResource[typed.Nic](rest)
-	rest.NicPorts = newTypedResource[typed.NicPort](rest)
-	rest.Nises = newTypedResource[typed.Nis](rest)
-	rest.Nvrams = newTypedResource[typed.Nvram](rest)
-	rest.Oidc = newTypedResource[typed.Oidc](rest)
-	rest.Permissions = newTypedResource[typed.Permissions](rest)
-	rest.Ports = newTypedResource[typed.Port](rest)
-	rest.Projections = newTypedResource[typed.Projection](rest)
-	rest.ProjectionColumns = newTypedResource[typed.ProjectionColumn](rest)
-	rest.PrometheusMetrics = newTypedResource[typed.PrometheusMetrics](rest)
-	rest.ProtectedPaths = newTypedResource[typed.ProtectedPath](rest)
-	rest.ProtectionPolicies = newTypedResource[typed.ProtectionPolicy](rest)
-	rest.Psus = newTypedResource[typed.Psu](rest)
-	rest.QosPolicies = newTypedResource[typed.QosPolicy](rest)
-	rest.Quotas = newTypedResource[typed.Quota](rest)
-	rest.QuotaEntityInfos = newTypedResource[typed.QuotaEntityInfo](rest)
-	rest.Racks = newTypedResource[typed.Rack](rest)
-	rest.Realms = newTypedResource[typed.Realm](rest)
-	rest.ReplicationPeers = newTypedResource[typed.ReplicationPeers](rest)
-	rest.ReplicationPolicies = newTypedResource[typed.ReplicationPolicy](rest)
-	rest.ReplicationRestorePoints = newTypedResource[typed.ReplicationRestorePoint](rest)
-	rest.ReplicationStreams = newTypedResource[typed.ReplicationStream](rest)
-	rest.Roles = newTypedResource[typed.Role](rest)
-	rest.S3Keys = newTypedResource[typed.S3Keys](rest)
-	rest.S3LifeCycleRules = newTypedResource[typed.S3LifeCycleRule](rest)
-	rest.S3Policies = newTypedResource[typed.S3Policy](rest)
-	rest.S3ReplicationPeers = newTypedResource[typed.S3replicationPeers](rest)
-	rest.Schemas = newTypedResource[typed.Schema](rest)
-	rest.SettingDiffs = newTypedResource[typed.SettingDiff](rest)
-	rest.Snapshots = newTypedResource[typed.Snapshot](rest)
-	rest.SnapshotPolicies = newTypedResource[typed.SnapshotPolicy](rest)
-	rest.Ssds = newTypedResource[typed.Ssd](rest)
-	rest.SubnetManagers = newTypedResource[typed.SubnetManager](rest)
-	rest.SupportBundles = newTypedResource[typed.SupportBundles](rest)
-	rest.SupportedDrivers = newTypedResource[typed.SupportedDrivers](rest)
-	rest.Switches = newTypedResource[typed.Switch](rest)
-	rest.Tables = newTypedResource[typed.Table](rest)
-	rest.Tenants = newTypedResource[typed.Tenant](rest)
-	rest.Topics = newTypedResource[typed.Topic](rest)
-	rest.Users = newTypedResource[typed.User](rest)
-	rest.UserQuotas = newTypedResource[typed.UserQuota](rest)
-	rest.VTasks = newTypedResource[typed.VTask](rest)
-	rest.VastAuditLogs = newTypedResource[typed.VastAuditLog](rest)
-	rest.VastDb = newTypedResource[typed.VastDb](rest)
-	rest.Versions = newTypedResource[typed.Version](rest)
-	rest.Views = newTypedResource[typed.View](rest)
-	rest.ViewPolicies = newTypedResource[typed.ViewPolicy](rest)
-	rest.Vips = newTypedResource[typed.Vip](rest)
-	rest.VipPools = newTypedResource[typed.VipPool](rest)
-	rest.Vmses = newTypedResource[typed.Vms](rest)
-	rest.Volumes = newTypedResource[typed.Volume](rest)
-	rest.VpnTunnels = newTypedResource[typed.VpnTunnel](rest)
-	rest.WebHooks = newTypedResource[typed.WebHook](rest)
-	rest.Hosts = newTypedResource[typed.Host](rest)
-	rest.VirtualMachines = newTypedResource[typed.VirtualMachine](rest)
-	rest.BlobExpansions = newTypedResource[typed.BlobExpansion](rest)
-	rest.ComputeClusters = newTypedResource[typed.ComputeCluster](rest)
-	rest.EventBrokers = newTypedResource[typed.EventBroker](rest)
-	rest.OpenFiles = newTypedResource[typed.OpenFile](rest)
-	rest.OpenFileHandles = newTypedResource[typed.OpenFileHandle](rest)
-	rest.OpenFilesQueries = newTypedResource[typed.OpenFilesQuery](rest)
-	rest.QuotaGroups = newTypedResource[typed.QuotaGroup](rest)
-	rest.SupportBundlesQueue = newTypedResource[typed.SupportBundlesQueue](rest)
-	rest.TlsCertificates = newTypedResource[typed.TlsCertificate](rest)
-	rest.VastdbTables = newTypedResource[typed.VastdbTable](rest)
+	rest.ActiveDirectories = core.NewTypedResource[typed.ActiveDirectory](rest.Untyped)
+	rest.Alarms = core.NewTypedResource[typed.Alarm](rest.Untyped)
+	rest.Analytics = core.NewTypedResource[typed.Analytics](rest.Untyped)
+	rest.ApiTokens = core.NewTypedResource[typed.ApiToken](rest.Untyped)
+	rest.BGPConfigs = core.NewTypedResource[typed.BGPConfig](rest.Untyped)
+	rest.BasicSettings = core.NewTypedResource[typed.BasicSettings](rest.Untyped)
+	rest.BigCatalogConfigs = core.NewTypedResource[typed.BigCatalogConfig](rest.Untyped)
+	rest.BigCatalogIndexedColumns = core.NewTypedResource[typed.BigCatalogIndexedColumns](rest.Untyped)
+	rest.BlockHosts = core.NewTypedResource[typed.BlockHost](rest.Untyped)
+	rest.BlockHostMappings = core.NewTypedResource[typed.BlockHostMapping](rest.Untyped)
+	rest.CallhomeConfigs = core.NewTypedResource[typed.CallhomeConfigs](rest.Untyped)
+	rest.Capacities = core.NewTypedResource[typed.Capacity](rest.Untyped)
+	rest.Carriers = core.NewTypedResource[typed.Carrier](rest.Untyped)
+	rest.Cboxes = core.NewTypedResource[typed.Cbox](rest.Untyped)
+	rest.Certificates = core.NewTypedResource[typed.Certificate](rest.Untyped)
+	rest.ChallengeTokens = core.NewTypedResource[typed.ChallengeTokens](rest.Untyped)
+	rest.Clusters = core.NewTypedResource[typed.Cluster](rest.Untyped)
+	rest.Cnodes = core.NewTypedResource[typed.Cnode](rest.Untyped)
+	rest.CnodeGroups = core.NewTypedResource[typed.CnodeGroup](rest.Untyped)
+	rest.Columns = core.NewTypedResource[typed.Column](rest.Untyped)
+	rest.Configs = core.NewTypedResource[typed.Config](rest.Untyped)
+	rest.Dboxes = core.NewTypedResource[typed.Dbox](rest.Untyped)
+	rest.Deltas = core.NewTypedResource[typed.Delta](rest.Untyped)
+	rest.Dnodes = core.NewTypedResource[typed.Dnode](rest.Untyped)
+	rest.Dnses = core.NewTypedResource[typed.Dns](rest.Untyped)
+	rest.Dtrays = core.NewTypedResource[typed.Dtray](rest.Untyped)
+	rest.Eboxes = core.NewTypedResource[typed.Ebox](rest.Untyped)
+	rest.EncryptedPaths = core.NewTypedResource[typed.EncryptedPath](rest.Untyped)
+	rest.EncryptionGroups = core.NewTypedResource[typed.EncryptionGroup](rest.Untyped)
+	rest.Envs = core.NewTypedResource[typed.Env](rest.Untyped)
+	rest.Events = core.NewTypedResource[typed.Event](rest.Untyped)
+	rest.EventDefinitions = core.NewTypedResource[typed.EventDefinition](rest.Untyped)
+	rest.EventDefinitionConfigs = core.NewTypedResource[typed.EventDefinitionConfig](rest.Untyped)
+	rest.Fans = core.NewTypedResource[typed.Fan](rest.Untyped)
+	rest.Folders = core.NewTypedResource[typed.Folder](rest.Untyped)
+	rest.Filesystems = core.NewTypedResource[typed.Filesystem](rest.Untyped)
+	rest.GlobalSnapshotStreams = core.NewTypedResource[typed.GlobalSnapshotStream](rest.Untyped)
+	rest.Groups = core.NewTypedResource[typed.Group](rest.Untyped)
+	rest.IamRoles = core.NewTypedResource[typed.IamRole](rest.Untyped)
+	rest.Injectionses = core.NewTypedResource[typed.Injections](rest.Untyped)
+	rest.Indestructibility = core.NewTypedResource[typed.Indestructibility](rest.Untyped)
+	rest.IoDatas = core.NewTypedResource[typed.IoData](rest.Untyped)
+	rest.KafkaBrokers = core.NewTypedResource[typed.KafkaBroker](rest.Untyped)
+	rest.Kerberos = core.NewTypedResource[typed.Kerberos](rest.Untyped)
+	rest.Ldaps = core.NewTypedResource[typed.Ldap](rest.Untyped)
+	rest.Licenses = core.NewTypedResource[typed.License](rest.Untyped)
+	rest.LocalProviders = core.NewTypedResource[typed.LocalProvider](rest.Untyped)
+	rest.LocalS3Keys = core.NewTypedResource[typed.LocalS3Key](rest.Untyped)
+	rest.ManageApplications = core.NewTypedResource[typed.ManageApplications](rest.Untyped)
+	rest.Managers = core.NewTypedResource[typed.Manager](rest.Untyped)
+	rest.Metrics = core.NewTypedResource[typed.Metrics](rest.Untyped)
+	rest.Modules = core.NewTypedResource[typed.Module](rest.Untyped)
+	rest.Monitors = core.NewTypedResource[typed.Monitor](rest.Untyped)
+	rest.Nics = core.NewTypedResource[typed.Nic](rest.Untyped)
+	rest.NicPorts = core.NewTypedResource[typed.NicPort](rest.Untyped)
+	rest.Nises = core.NewTypedResource[typed.Nis](rest.Untyped)
+	rest.Nvrams = core.NewTypedResource[typed.Nvram](rest.Untyped)
+	rest.Oidc = core.NewTypedResource[typed.Oidc](rest.Untyped)
+	rest.Permissions = core.NewTypedResource[typed.Permissions](rest.Untyped)
+	rest.Ports = core.NewTypedResource[typed.Port](rest.Untyped)
+	rest.Projections = core.NewTypedResource[typed.Projection](rest.Untyped)
+	rest.ProjectionColumns = core.NewTypedResource[typed.ProjectionColumn](rest.Untyped)
+	rest.PrometheusMetrics = core.NewTypedResource[typed.PrometheusMetrics](rest.Untyped)
+	rest.ProtectedPaths = core.NewTypedResource[typed.ProtectedPath](rest.Untyped)
+	rest.ProtectionPolicies = core.NewTypedResource[typed.ProtectionPolicy](rest.Untyped)
+	rest.Psus = core.NewTypedResource[typed.Psu](rest.Untyped)
+	rest.QosPolicies = core.NewTypedResource[typed.QosPolicy](rest.Untyped)
+	rest.Quotas = core.NewTypedResource[typed.Quota](rest.Untyped)
+	rest.QuotaEntityInfos = core.NewTypedResource[typed.QuotaEntityInfo](rest.Untyped)
+	rest.Racks = core.NewTypedResource[typed.Rack](rest.Untyped)
+	rest.Realms = core.NewTypedResource[typed.Realm](rest.Untyped)
+	rest.ReplicationPeers = core.NewTypedResource[typed.ReplicationPeers](rest.Untyped)
+	rest.ReplicationPolicies = core.NewTypedResource[typed.ReplicationPolicy](rest.Untyped)
+	rest.ReplicationRestorePoints = core.NewTypedResource[typed.ReplicationRestorePoint](rest.Untyped)
+	rest.ReplicationStreams = core.NewTypedResource[typed.ReplicationStream](rest.Untyped)
+	rest.Roles = core.NewTypedResource[typed.Role](rest.Untyped)
+	rest.S3Keys = core.NewTypedResource[typed.S3Keys](rest.Untyped)
+	rest.S3LifeCycleRules = core.NewTypedResource[typed.S3LifeCycleRule](rest.Untyped)
+	rest.S3Policies = core.NewTypedResource[typed.S3Policy](rest.Untyped)
+	rest.S3ReplicationPeers = core.NewTypedResource[typed.S3replicationPeers](rest.Untyped)
+	rest.Schemas = core.NewTypedResource[typed.Schema](rest.Untyped)
+	rest.SettingDiffs = core.NewTypedResource[typed.SettingDiff](rest.Untyped)
+	rest.Snapshots = core.NewTypedResource[typed.Snapshot](rest.Untyped)
+	rest.SnapshotPolicies = core.NewTypedResource[typed.SnapshotPolicy](rest.Untyped)
+	rest.Ssds = core.NewTypedResource[typed.Ssd](rest.Untyped)
+	rest.SubnetManagers = core.NewTypedResource[typed.SubnetManager](rest.Untyped)
+	rest.SupportBundles = core.NewTypedResource[typed.SupportBundles](rest.Untyped)
+	rest.SupportedDrivers = core.NewTypedResource[typed.SupportedDrivers](rest.Untyped)
+	rest.Switches = core.NewTypedResource[typed.Switch](rest.Untyped)
+	rest.Tables = core.NewTypedResource[typed.Table](rest.Untyped)
+	rest.Tenants = core.NewTypedResource[typed.Tenant](rest.Untyped)
+	rest.Topics = core.NewTypedResource[typed.Topic](rest.Untyped)
+	rest.Users = core.NewTypedResource[typed.User](rest.Untyped)
+	rest.UserQuotas = core.NewTypedResource[typed.UserQuota](rest.Untyped)
+	rest.VTasks = core.NewTypedResource[typed.VTask](rest.Untyped)
+	rest.VastAuditLogs = core.NewTypedResource[typed.VastAuditLog](rest.Untyped)
+	rest.VastDb = core.NewTypedResource[typed.VastDb](rest.Untyped)
+	rest.Versions = core.NewTypedResource[typed.Version](rest.Untyped)
+	rest.Views = core.NewTypedResource[typed.View](rest.Untyped)
+	rest.ViewPolicies = core.NewTypedResource[typed.ViewPolicy](rest.Untyped)
+	rest.Vips = core.NewTypedResource[typed.Vip](rest.Untyped)
+	rest.VipPools = core.NewTypedResource[typed.VipPool](rest.Untyped)
+	rest.Vmses = core.NewTypedResource[typed.Vms](rest.Untyped)
+	rest.Volumes = core.NewTypedResource[typed.Volume](rest.Untyped)
+	rest.VpnTunnels = core.NewTypedResource[typed.VpnTunnel](rest.Untyped)
+	rest.WebHooks = core.NewTypedResource[typed.WebHook](rest.Untyped)
+	rest.Hosts = core.NewTypedResource[typed.Host](rest.Untyped)
+	rest.VirtualMachines = core.NewTypedResource[typed.VirtualMachine](rest.Untyped)
+	rest.BlobExpansions = core.NewTypedResource[typed.BlobExpansion](rest.Untyped)
+	rest.ComputeClusters = core.NewTypedResource[typed.ComputeCluster](rest.Untyped)
+	rest.EventBrokers = core.NewTypedResource[typed.EventBroker](rest.Untyped)
+	rest.OpenFiles = core.NewTypedResource[typed.OpenFile](rest.Untyped)
+	rest.OpenFileHandles = core.NewTypedResource[typed.OpenFileHandle](rest.Untyped)
+	rest.OpenFilesQueries = core.NewTypedResource[typed.OpenFilesQuery](rest.Untyped)
+	rest.QuotaGroups = core.NewTypedResource[typed.QuotaGroup](rest.Untyped)
+	rest.SupportBundlesQueue = core.NewTypedResource[typed.SupportBundlesQueue](rest.Untyped)
+	rest.TlsCertificates = core.NewTypedResource[typed.TlsCertificate](rest.Untyped)
+	rest.VastdbTables = core.NewTypedResource[typed.VastdbTable](rest.Untyped)
+
+	// Nested DataEngine rest (serverless); shares session with parent VMS rest.
+	rest.DataEngine = dataengine.NewTyped(untyped.DataEngine)
 
 	return rest, nil
 }
@@ -282,7 +280,7 @@ func (rest *TypedVMSRest) GetSession() core.RESTSession {
 	return rest.Untyped.Session
 }
 
-func (rest *TypedVMSRest) GetResourceMap() map[string]core.VastResourceAPIWithContext {
+func (rest *TypedVMSRest) GetResourceMap() map[string]core.ResourceEntry {
 	return rest.Untyped.resourceMap
 }
 
@@ -291,55 +289,15 @@ func (rest *TypedVMSRest) GetCtx() context.Context {
 }
 
 func (rest *TypedVMSRest) SetCtx(ctx context.Context) {
-	rest.Untyped.ctx = ctx
+	// Delegate so nested rests (DataEngine) stay in sync via UntypedVMSRest.SetCtx.
+	rest.Untyped.SetCtx(ctx)
+}
+
+func (rest *TypedVMSRest) GetApiRoot() string {
+	return rest.Untyped.GetApiRoot()
 }
 
 // String returns a log-friendly identity of this client: VMS host and auth mode.
 func (rest *TypedVMSRest) String() string {
 	return rest.Untyped.String()
-}
-
-func newTypedResource[T TypedVastResourceType](rest *TypedVMSRest) *T {
-	// Get the concrete type from the type parameter
-	var zero T
-	t := reflect.TypeOf(zero)
-	resourceType := t.Name()
-
-	// Create new instance using reflection
-	instance := reflect.New(t).Interface()
-
-	// Create the typed resource
-	typedRes := core.NewTypedVastResource(resourceType, rest.Untyped)
-
-	// Set the embedded *TypedVastResource field using reflection
-	// All typed resources embed *core.TypedVastResource
-	val := reflect.ValueOf(instance).Elem()
-
-	// Find the embedded *TypedVastResource field
-	found := false
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		if field.Type() == reflect.TypeOf((*core.TypedVastResource)(nil)) {
-			if field.CanSet() {
-				field.Set(reflect.ValueOf(typedRes))
-				found = true
-				break
-			}
-		}
-	}
-
-	if !found {
-		panic(fmt.Sprintf("Resource %s does not embed *core.TypedVastResource or field is not settable", resourceType))
-	}
-
-	// Verify the corresponding untyped resource exists
-	if _, ok := rest.Untyped.resourceMap[resourceType]; !ok {
-		panic(fmt.Sprintf("untyped resource type %s not found in REST", resourceType))
-	}
-
-	// Return as pointer to the constrained type
-	if result, ok := instance.(*T); ok {
-		return result
-	}
-	panic(fmt.Sprintf("Failed to convert instance to type *%s", resourceType))
 }

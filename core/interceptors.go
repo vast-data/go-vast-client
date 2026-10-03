@@ -49,7 +49,7 @@ func (e *VastResource) doBeforeRequest(ctx context.Context, r *http.Request, ver
 	if logLevel != "" {
 		beforeRequestLog(verb, url, body)
 	}
-	if interceptor, ok := resourceCaller.(RequestInterceptor); ok {
+	if interceptor, ok := resourceCaller.VastResourceAPIWithContext.(RequestInterceptor); ok {
 		if err = interceptor.BeforeRequest(ctx, r, verb, url, body); err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable) 
 	if logLevel != "" {
 		afterRequestLog(response)
 	}
-	if interceptor, ok := resourceCaller.(RequestInterceptor); ok {
+	if interceptor, ok := resourceCaller.VastResourceAPIWithContext.(RequestInterceptor); ok {
 		response, err = interceptor.AfterRequest(ctx, response)
 		if err != nil {
 			return nil, err

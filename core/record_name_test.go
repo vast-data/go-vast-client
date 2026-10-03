@@ -17,6 +17,16 @@ func TestRecordDisplayName_ConventionalURL(t *testing.T) {
 	}
 }
 
+func TestRecordDisplayName_ServerlessURL(t *testing.T) {
+	record := Record{
+		"guid": "abc",
+		"url":  "https://l101:443/api/latest/serverless/functions/abc/",
+	}
+	if got := recordDisplayName(record); got != "Function" {
+		t.Fatalf("recordDisplayName = %q, want Function", got)
+	}
+}
+
 func TestRecordDisplayName_LatestVersion(t *testing.T) {
 	record := Record{"url": "https://l101/api/latest/users/1/"}
 	if got := recordDisplayName(record); got != "User" {
@@ -132,6 +142,8 @@ func TestConventionalResourceSegment_PathVariants(t *testing.T) {
 		{"empty resource", "/api/v5//6/", "", false},
 		{"empty id", "/api/v5/views//", "", false},
 		{"singular segment", "/api/latest/policy/1/", "policy", true},
+		{"serverless dataengine", "/api/latest/serverless/functions/abc-guid/", "functions", true},
+		{"unknown nested root", "/api/latest/not-a-root/functions/abc/", "", false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

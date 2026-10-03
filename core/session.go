@@ -105,12 +105,17 @@ func NewVMSSession(config *VMSConfig) (*VMSSession, error) {
 		MinVersion:         tls.VersionTLS12,
 	}
 	transport.MaxConnsPerHost = config.MaxConnections
-	transport.IdleConnTimeout = *config.Timeout
+	if config.Timeout != nil {
+		transport.IdleConnTimeout = *config.Timeout
+	}
 	if config.RespectProxy {
 		// Ensure proxy environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY) are respected
 		transport.Proxy = http.ProxyFromEnvironment
 	}
 	client := &http.Client{Transport: transport}
+	if config.Timeout != nil {
+		client.Timeout = *config.Timeout
+	}
 	authenticator, err := createAuthenticator(config)
 	if err != nil {
 		return nil, err
@@ -168,7 +173,7 @@ func RequestWithHeaders[T RecordUnion](
 	if params != nil {
 		query = params.ToQuery()
 	}
-	url, err := buildUrl(session, path, query, session.GetConfig().ApiVersion)
+	url, err := buildUrl(session, path, query, session.GetConfig().ApiVersion, r.GetApiRoot())
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +243,7 @@ func (s *VMSSession) Delete(ctx context.Context, url string, body Params, header
 
 // fetchSchema retrieves the OpenAPI schema using Basic Auth and custom headers
 func (s *VMSSession) fetchSchema(ctx context.Context) (Renderable, error) {
-	url, err := buildUrl(s, "", "", s.config.ApiVersion)
+	url, err := buildUrl(s, "", "", s.config.ApiVersion, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to build URL for OpenAPI schema: %w", err)
 	}

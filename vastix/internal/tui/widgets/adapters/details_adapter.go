@@ -809,6 +809,42 @@ func formatObjectRecursive(objStr string, nestLevel int) string {
 	return details.String()
 }
 
+// jsonStringWrapAt soft-wraps long JSON string values in details view so fields
+// like base64 certificates remain scrollable instead of one ultra-wide line.
+const jsonStringWrapAt = 96
+
+// formatJSONStringValue renders a quoted JSON string, wrapping long values across lines.
+func formatJSONStringValue(v string, style lipgloss.Style, contIndent string) string {
+	runes := []rune(v)
+	if len(runes) <= jsonStringWrapAt {
+		return style.Render(`"` + v + `"`)
+	}
+
+	var b strings.Builder
+	for i := 0; i < len(runes); i += jsonStringWrapAt {
+		end := i + jsonStringWrapAt
+		if end > len(runes) {
+			end = len(runes)
+		}
+		chunk := string(runes[i:end])
+		if i > 0 {
+			b.WriteByte('\n')
+			b.WriteString(contIndent)
+		}
+		switch {
+		case i == 0 && end >= len(runes):
+			b.WriteString(style.Render(`"` + chunk + `"`))
+		case i == 0:
+			b.WriteString(style.Render(`"` + chunk))
+		case end >= len(runes):
+			b.WriteString(style.Render(chunk + `"`))
+		default:
+			b.WriteString(style.Render(chunk))
+		}
+	}
+	return b.String()
+}
+
 // formatRecordAsJSON converts a map[string]any record into JSON-style formatted string with syntax highlighting
 // Moved here from widgets/common_utils.go to restore original colored formatting
 func formatRecordAsJSON(record map[string]any) string {
@@ -1294,13 +1330,14 @@ func formatRecordAsJSON(record map[string]any) string {
 					if jsonBytes, err := json.Marshal(parsedMap); err == nil {
 						valueStr = formatObjectRecursive(string(jsonBytes), 1)
 					} else {
-						valueStr = stringColor.Render(fmt.Sprintf("\"%s\"", v))
+						valueStr = formatJSONStringValue(v, stringColor, leftMargin+"    ")
 					}
 				} else {
-					valueStr = stringColor.Render(fmt.Sprintf("\"%s\"", v))
+					valueStr = formatJSONStringValue(v, stringColor, leftMargin+"    ")
 				}
 			} else {
-				valueStr = stringColor.Render(fmt.Sprintf("\"%s\"", v))
+				// Soft-wrap long values (certs/base64) so details layout stays terminal-width
+				valueStr = formatJSONStringValue(v, stringColor, leftMargin+"    ")
 			}
 		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 			valueStr = numberColor.Render(fmt.Sprintf("%v", v))

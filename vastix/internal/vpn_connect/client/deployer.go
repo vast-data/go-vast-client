@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- VIP pool connectivity check, not crypto
@@ -1120,15 +1121,15 @@ func (d *Deployer) runCommandWithContext(ctx context.Context, cmd string) error 
 
 	select {
 	case r := <-ch:
-		if err := session.Close(); err != nil {
-			if r.err == nil {
-				return fmt.Errorf("failed to close SSH session: %w", err)
-			}
+		// CombinedOutput already waits for the remote exit and tears down the
+		// channel; Close then often returns io.EOF. Treat that as success.
+		if err := session.Close(); err != nil && !errors.Is(err, io.EOF) && r.err == nil {
+			return fmt.Errorf("failed to close SSH session: %w", err)
 		}
 		return r.err
 	case <-ctx.Done():
 		// Close the session so CombinedOutput unblocks and the goroutine exits.
-		if err := session.Close(); err != nil {
+		if err := session.Close(); err != nil && !errors.Is(err, io.EOF) {
 			return fmt.Errorf("command timed out (%w); additionally failed to close session: %w", ctx.Err(), err)
 		}
 		// Give the goroutine a moment to drain before we return.

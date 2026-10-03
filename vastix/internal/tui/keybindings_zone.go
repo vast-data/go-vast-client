@@ -106,14 +106,32 @@ func (k *KeybindingsZone) View() string {
 		return ""
 	}
 
-	// Build columns with max 7 items per column (to show all create mode bindings)
-	const itemsPerColumn = 7
-	var columns []string
+	// Never more than 2 columns. Split items evenly across those columns
+	// (ceil(n/2) rows) so a third column is never created. Cap by available
+	// height when known so the hints stay within the profile header band.
+	const maxColumns = 2
+	maxRows := 7
+	if k.height > 0 {
+		maxRows = k.height
+	}
+	capacity := maxColumns * maxRows
+	if len(allBindings) > capacity {
+		allBindings = allBindings[:capacity]
+	}
+	itemsPerColumn := (len(allBindings) + maxColumns - 1) / maxColumns
+	if itemsPerColumn < 1 {
+		itemsPerColumn = 1
+	}
 
+	var columns []string
 	for i := 0; i < len(allBindings); i += itemsPerColumn {
 		end := i + itemsPerColumn
 		if end > len(allBindings) {
 			end = len(allBindings)
+		}
+		// Hard stop at 2 columns even if math drifts.
+		if len(columns) >= maxColumns {
+			break
 		}
 
 		// Find the longest key in THIS specific column

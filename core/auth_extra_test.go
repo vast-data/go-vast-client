@@ -142,17 +142,20 @@ func TestJWTAuthenticator_RefreshTokenErrors(t *testing.T) {
 	}
 }
 
-func TestJWTAuthenticator_AcquireTokenWithTenant(t *testing.T) {
-	var tenantHeader string
+func TestJWTAuthenticator_AcquireTokenWithTenantHeader(t *testing.T) {
+	var gotPath, tenantHeader string
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		tenantHeader = r.Header.Get(HeaderXTenantName)
 		if r.URL.Path == "/api/token/" {
-			tenantHeader = r.Header.Get(HeaderXTenantName)
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]string{
 				"access":  "access",
 				"refresh": "refresh",
 			})
+			return
 		}
+		http.NotFound(w, r)
 	}))
 	defer server.Close()
 
@@ -171,7 +174,100 @@ func TestJWTAuthenticator_AcquireTokenWithTenant(t *testing.T) {
 	if err := auth.acquireToken(client); err != nil {
 		t.Fatalf("acquireToken: %v", err)
 	}
+	if gotPath != "/api/token/" {
+		t.Fatalf("token path = %q, want /api/token/", gotPath)
+	}
 	if tenantHeader != "tenant-b" {
-		t.Fatalf("tenant header = %q", tenantHeader)
+		t.Fatalf("X-Tenant-Name = %q, want tenant-b", tenantHeader)
+	}
+}
+
+func TestJWTAuthenticator_AcquireTokenWithTenantPath(t *testing.T) {
+	var gotPath, tenantHeader string
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		tenantHeader = r.Header.Get(HeaderXTenantName)
+		if r.URL.Path == "/api/token/tenant-b/" {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"access":  "access",
+				"refresh": "refresh",
+			})
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	host, port := parseTestServerAddress(server.Listener.Addr().String())
+	auth := &JWTAuthenticator{
+		Host: host, Port: port, SslVerify: false,
+		Username: "tenant-admin", Password: "password",
+		Tenant:             "tenant-b",
+		useTenantTokenPath: true,
+		Token:              &jwtToken{},
+	}
+	auth.authCond = sync.NewCond(&auth.mu)
+
+	client := &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- httptest.NewTLSServer uses a self-signed cert
+	}}
+	if err := auth.acquireToken(client); err != nil {
+		t.Fatalf("acquireToken: %v", err)
+	}
+	if gotPath != "/api/token/tenant-b/" {
+		t.Fatalf("token path = %q, want /api/token/tenant-b/", gotPath)
+	}
+	if tenantHeader != "" {
+		t.Fatalf("X-Tenant-Name on obtain = %q, want empty", tenantHeader)
+	}
+	if auth.Token.Access != "access" {
+		t.Fatalf("access token = %q", auth.Token.Access)
+	}
+}
+
+func TestCreateAuthenticator_UseTenantTokenPath(t *testing.T) {
+	authenticatorsMu.Lock()
+	original := authenticators
+	authenticators = nil
+	authenticatorsMu.Unlock()
+	defer func() {
+		authenticatorsMu.Lock()
+		authenticators = original
+		authenticatorsMu.Unlock()
+	}()
+
+	auth, err := createAuthenticator(&VMSConfig{
+		Host: "test.example.com", Port: 443, SslVerify: false,
+		Username: "tenant-admin", Password: "password", Tenant: "tenant-b",
+	})
+	if err != nil {
+		t.Fatalf("createAuthenticator: %v", err)
+	}
+	jwtAuth, ok := auth.(*JWTAuthenticator)
+	if !ok {
+		t.Fatalf("got %T, want *JWTAuthenticator", auth)
+	}
+	if jwtAuth.useTenantTokenPath {
+		t.Fatal("useTenantTokenPath should be false by default")
+	}
+
+	auth2, err := createAuthenticator(&VMSConfig{
+		Host: "test.example.com", Port: 443, SslVerify: false,
+		Username: "tenant-admin", Password: "password", Tenant: "tenant-b",
+		UseTenantTokenPath: true,
+	})
+	if err != nil {
+		t.Fatalf("createAuthenticator: %v", err)
+	}
+	jwtAuth2, ok := auth2.(*JWTAuthenticator)
+	if !ok {
+		t.Fatalf("got %T, want *JWTAuthenticator", auth2)
+	}
+	if !jwtAuth2.useTenantTokenPath {
+		t.Fatal("useTenantTokenPath should be true")
+	}
+	if auth == auth2 {
+		t.Fatal("header vs path login must not share the same authenticator instance")
 	}
 }
