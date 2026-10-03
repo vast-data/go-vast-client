@@ -68,7 +68,9 @@ jobs:
       if: steps.meta.outputs.skip != 'true'
       uses: actions/setup-go@v7
       with:
-        go-version: '1.25'
+        # Install whatever vastix/go.mod requires; build scripts also set
+        # GOTOOLCHAIN=auto so a newer toolchain can be downloaded if needed.
+        go-version-file: vastix/go.mod
 
     - name: Build VPN server binaries
       if: steps.meta.outputs.skip != 'true'
