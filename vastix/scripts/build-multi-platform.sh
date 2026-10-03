@@ -25,6 +25,10 @@ echo ""
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
 
+# Allow Go to download the toolchain required by go.mod when the installed
+# Go is older. actions/setup-go sets GOTOOLCHAIN=local, which blocks that.
+export GOTOOLCHAIN=auto
+
 # Ensure VPN binaries are built first
 echo -e "${BLUE}Step 1: Building VPN server binaries...${NC}"
 "$SCRIPT_DIR/build-vpn-binaries.sh"

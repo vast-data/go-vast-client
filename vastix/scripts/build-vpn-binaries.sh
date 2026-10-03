@@ -26,6 +26,10 @@ mkdir -p "$OUTPUT_DIR"
 # Change to vastix directory for Go build
 cd "$VASTIX_ROOT"
 
+# Allow Go to download the toolchain required by go.mod when the installed
+# Go is older. actions/setup-go sets GOTOOLCHAIN=local, which blocks that.
+export GOTOOLCHAIN=auto
+
 # Build function
 build_binary() {
     local GOOS=$1
