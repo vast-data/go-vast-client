@@ -79,7 +79,7 @@ func BeforeRequestFnCallback(ctx context.Context, _ *http.Request, verb, url str
 // For single records, it shows the @resourceType if available, otherwise just "Record received".
 // For record sets, it shows the count and @resourceType from the first record if available.
 // For more details see: https://github.com/vast-data/go-vast-client
-func AfterRequestFnCallback(ctx context.Context, response vastclient.Renderable) (vastclient.Renderable, error) {
+func AfterRequestFnCallback(ctx context.Context, response vastclient.Renderable, statusCode int) (vastclient.Renderable, error) {
 	// Skip logging if context has the ignore flag set (e.g., for periodic ticker requests)
 	if ShouldIgnoreLogging(ctx) {
 		return response, nil
@@ -88,31 +88,38 @@ func AfterRequestFnCallback(ctx context.Context, response vastclient.Renderable)
 	auxLogger := log.GetAuxLogger()
 
 	var responseStr string
-	switch resp := response.(type) {
-	case vastclient.Record:
-		// For single records, try to extract @resourceType for concise logging
-		if resourceType, ok := resp[recordTypeKey].(string); ok && resourceType != "" {
-			responseStr = fmt.Sprintf("Record of type: %s", resourceType)
-		} else {
-			responseStr = "Record received"
-		}
-	case vastclient.RecordSet:
-		// For record sets, show count and resource type from first record if available
-		count := len(resp)
-		if count > 0 {
-			// Try to extract @resourceType from the first record
-			firstRecord := resp[0]
-			if resourceType, ok := firstRecord[recordTypeKey].(string); ok && resourceType != "" {
-				responseStr = fmt.Sprintf("RecordSet with %d record(s) of type: %s", count, resourceType)
+	if response == nil {
+		// nil means unsuccessful request (non-2xx / transport); empty Record{} is success.
+		responseStr = fmt.Sprintf("unsuccessful response (status_code=%d)", statusCode)
+	} else {
+		switch resp := response.(type) {
+		case vastclient.Record:
+			// For single records, try to extract @resourceType for concise logging
+			if resourceType, ok := resp[recordTypeKey].(string); ok && resourceType != "" {
+				responseStr = fmt.Sprintf("Record of type: %s", resourceType)
+			} else if len(resp) == 0 {
+				responseStr = fmt.Sprintf("empty response (status_code=%d)", statusCode)
 			} else {
-				responseStr = fmt.Sprintf("RecordSet with %d record(s)", count)
+				responseStr = "Record received"
 			}
-		} else {
-			responseStr = "RecordSet with 0 record(s)"
+		case vastclient.RecordSet:
+			// For record sets, show count and resource type from first record if available
+			count := len(resp)
+			if count > 0 {
+				// Try to extract @resourceType from the first record
+				firstRecord := resp[0]
+				if resourceType, ok := firstRecord[recordTypeKey].(string); ok && resourceType != "" {
+					responseStr = fmt.Sprintf("RecordSet with %d record(s) of type: %s", count, resourceType)
+				} else {
+					responseStr = fmt.Sprintf("RecordSet with %d record(s)", count)
+				}
+			} else {
+				responseStr = "RecordSet with 0 record(s)"
+			}
+		default:
+			// Fallback - just indicate response received
+			responseStr = "Response received"
 		}
-	default:
-		// Fallback - just indicate response received
-		responseStr = "Response received"
 	}
 
 	auxLogger.Printf("HTTP response: %s", responseStr)

@@ -30,6 +30,11 @@ cd "$VASTIX_ROOT"
 # Go is older. actions/setup-go sets GOTOOLCHAIN=local, which blocks that.
 export GOTOOLCHAIN=auto
 
+# Parent workspace (~/VastData/go.work) lists go-vast-client but not vastix.
+# Without this, go build resolves the parent module and fails with:
+#   main module (github.com/vast-data/go-vast-client) does not contain package .../vastix/...
+export GOWORK=off
+
 # Build function
 build_binary() {
     local GOOS=$1

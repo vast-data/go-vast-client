@@ -48,17 +48,22 @@ type VMSConfig struct {
 	//   - error: Any error returned will abort the request.
 	BeforeRequestFn func(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error
 
-	// AfterRequestFn is an optional function hook executed after receiving an API response.
-	// It can be used for post-processing, transformation, or logging of the response.
+	// AfterRequestFn is an optional function hook executed after every HTTP attempt
+	// that produced a response (or a transport failure). It runs for 2xx and non-2xx
+	// statuses alike, so hooks can log statusCode even when the request fails.
 	//
 	// Parameters:
 	//   - ctx: The request context for managing deadlines and cancellations.
-	//   - response: A Renderable result such as Record or RecordSet.
+	//   - response: Parsed body on success (Record / RecordSet). nil means the
+	//     request failed (non-2xx or transport error) — do not treat nil as an
+	//     empty successful body; empty Record{} is a successful empty response.
+	//   - statusCode: HTTP status code (2xx on success, non-2xx on API errors, 0
+	//     when there was no HTTP response / transport error).
 	//
 	// Returns:
-	//   - A potentially modified Renderable object.
-	//   - An error, if processing the response fails.
-	AfterRequestFn func(ctx context.Context, response Renderable) (Renderable, error)
+	//   - A potentially modified Renderable object (used only on success paths).
+	//   - An error, if processing the response fails (takes precedence over ApiError).
+	AfterRequestFn func(ctx context.Context, response Renderable, statusCode int) (Renderable, error)
 
 	// FillFn optionally overrides the default function used to populate structs
 	// from generic Record maps. If provided, this function is invoked instead of

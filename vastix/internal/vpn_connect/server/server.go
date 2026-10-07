@@ -600,9 +600,8 @@ func (s *Server) monitorHeartbeat(ctx context.Context, heartbeatFile string) {
 				s.logger.Info("✓ Server self-destructed due to heartbeat timeout - cleanup complete")
 				s.logger.Info("Terminating server process now...")
 
-				// Exit the process - this is critical for self-destruction
-				// Without this, the process sits idle even though all resources are cleaned up
-				os.Exit(0)
+				// Non-zero so the SSH session is not reported as a normal/successful exit.
+				os.Exit(1)
 			}
 
 			s.logger.Debug("Heartbeat OK", slog.Duration("age", timeSinceHeartbeat))

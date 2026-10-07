@@ -315,14 +315,13 @@ func setupHeaders(s RESTSession, r *http.Request, headers http.Header) error {
 }
 
 // doRequest Create and process the new HTTP request using the context
-func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params, headers []http.Header) (Renderable, error) {
+func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params, headers []http.Header) (result Renderable, err error) {
 	// callerExist if request is processed via "request" method
 	var (
 		config            = s.GetConfig()
 		resourceCaller    InterceptableVastResourceAPI
 		requestData       io.Reader
 		beforeRequestData io.Reader
-		err               error
 	)
 	originResource, resourceExist := ctx.Value(caller).(InterceptableVastResourceAPI)
 	if !resourceExist {
@@ -390,20 +389,34 @@ func doRequest(ctx context.Context, s *VMSSession, verb, url string, body Params
 	if err = resourceCaller.doBeforeRequest(ctx, req, verb, url, beforeRequestData); err != nil {
 		return nil, err
 	}
-	response, responseErr := s.client.Do(req)
 
+	// After the HTTP attempt, run after-hooks once (success, non-2xx, or transport error).
+	// result stays nil on failure; empty Record{} is reserved for a successful empty body.
+	var statusCode int
+	defer func() {
+		afterResp, afterErr := resourceCaller.doAfterRequest(ctx, result, statusCode)
+		if afterErr != nil {
+			result, err = nil, afterErr
+			return
+		}
+		if err == nil {
+			result = afterResp
+		}
+	}()
+
+	response, responseErr := s.client.Do(req)
 	if responseErr != nil {
 		return nil, fmt.Errorf("failed to perform %s request to %s, error %v", verb, url, responseErr)
 	}
+
+	statusCode = response.StatusCode
 	if err = validateResponse(response, config.Host, config.Port); err != nil {
+		// Non-2xx: body consumed into ApiError; defer sees result=nil + statusCode.
 		return nil, err
 	}
-	result, err := unmarshalToRecordUnion(response)
-	if err != nil {
-		return nil, err
-	}
-	// after request interceptor
-	return resourceCaller.doAfterRequest(ctx, result)
+
+	result, err = unmarshalToRecordUnion(response)
+	return result, err
 }
 
 // doRequestWithRetries attempts to perform an HTTP request using doRequest,

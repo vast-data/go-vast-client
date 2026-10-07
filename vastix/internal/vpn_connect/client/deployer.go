@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- VIP pool connectivity check, not crypto
 	"net"
 	"net/netip"
 	"os"
@@ -420,8 +419,15 @@ After configuring, try connecting again.`, d.sshHost, d.sshUser)
 		if err != nil {
 			return fmt.Errorf("server exited with error: %w", err)
 		}
-		d.writef("\n--- Server Exited Normally ---\n")
-		return nil
+		// session.Run returning nil means the remote process exited 0.
+		// Heartbeat self-destruct uses that, and SSH teardown can look the same.
+		// Only treat it as intentional shutdown when our context was cancelled.
+		if ctx.Err() != nil {
+			d.writef("\n--- Server stopped after session shutdown ---\n")
+			return ctx.Err()
+		}
+		d.writef("\n--- Server process exited (exit 0) without a local shutdown request ---\n")
+		return fmt.Errorf("VPN server process exited unexpectedly")
 	}
 }
 
@@ -1182,9 +1188,9 @@ func (d *Deployer) SetVipPoolIPs(ips []netip.Addr) {
 	d.vipPoolIPs = ips
 }
 
-// CheckSSHHealth checks if the SSH connection is still alive
-// Also pings a random VIP pool IP to verify end-to-end connectivity
-// Returns error if the connection is dead or IP is unreachable
+// CheckSSHHealth checks if the SSH connection is still alive.
+// VIP reachability is checked separately through the VPN tunnel — a single
+// unreachable VIP from the SSH host must not tear the forwarding session down.
 func (d *Deployer) CheckSSHHealth() error {
 	if d.sshClient == nil {
 		return fmt.Errorf("SSH client not initialized")
@@ -1198,7 +1204,6 @@ func (d *Deployer) CheckSSHHealth() error {
 	resultChan := make(chan error, 1)
 
 	go func() {
-		// Try to create a new session - this will fail if the connection is dead
 		session, err := d.sshClient.NewSession()
 		if err != nil {
 			resultChan <- fmt.Errorf("SSH connection dead: %w", err)
@@ -1206,25 +1211,10 @@ func (d *Deployer) CheckSSHHealth() error {
 		}
 		defer func() { _ = session.Close() }() // #nosec G104 -- SSH session teardown after keepalive ping
 
-		// If we have VIP pool IPs, ping a random one to verify end-to-end connectivity
-		if len(d.vipPoolIPs) > 0 {
-			// Pick a random IP
-			randomIP := d.vipPoolIPs[rand.Intn(len(d.vipPoolIPs))] // #nosec G404 -- VIP pool connectivity check, not crypto
-
-			// Ping the IP (1 ping, 5 sec timeout, no output logged)
-			pingCmd := fmt.Sprintf("ping -c 1 -W 5 %s > /dev/null 2>&1", randomIP)
-			if err := session.Run(pingCmd); err != nil {
-				resultChan <- fmt.Errorf("VIP pool IP %s unreachable: %w", randomIP, err)
-				return
-			}
-		} else {
-			// No VIP pool IPs to check, just run a simple command
-			if err := session.Run("echo health_check"); err != nil {
-				resultChan <- fmt.Errorf("SSH health check command failed: %w", err)
-				return
-			}
+		if err := session.Run("echo health_check"); err != nil {
+			resultChan <- fmt.Errorf("SSH health check command failed: %w", err)
+			return
 		}
-
 		resultChan <- nil
 	}()
 

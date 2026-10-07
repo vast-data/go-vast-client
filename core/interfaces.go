@@ -124,7 +124,7 @@ type RequestInterceptor interface {
 	doBeforeRequest(context.Context, *http.Request, string, string, io.Reader) error
 
 	// doAfterRequest No need to implement on VAST API Resources. For internal usage only
-	doAfterRequest(context.Context, Renderable) (Renderable, error)
+	doAfterRequest(context.Context, Renderable, int) (Renderable, error)
 }
 
 type VastRest interface {
