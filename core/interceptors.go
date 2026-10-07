@@ -62,7 +62,7 @@ func (e *VastResource) doBeforeRequest(ctx context.Context, r *http.Request, ver
 }
 
 // doAfterRequest Do not override this method in VastResource implementations. For internal use only
-func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable) (Renderable, error) {
+func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable, statusCode int) (Renderable, error) {
 	var err error
 	session := e.Session()
 	config := session.GetConfig()
@@ -82,7 +82,7 @@ func (e *VastResource) doAfterRequest(ctx context.Context, response Renderable) 
 	}
 	// User-defined callback
 	if config.AfterRequestFn != nil {
-		response, err = config.AfterRequestFn(ctx, response)
+		response, err = config.AfterRequestFn(ctx, response, statusCode)
 		if err != nil {
 			return nil, err
 		}
@@ -155,26 +155,32 @@ func afterRequestLog(response Renderable) {
 func afterRequestLogInfo(response Renderable) {
 	var responseStr string
 
-	switch resp := response.(type) {
-	case Record:
-		if displayName := recordDisplayName(resp); displayName != "" {
-			responseStr = fmt.Sprintf("Record of type: %s", displayName)
-		} else {
-			responseStr = "Record received"
-		}
-	case RecordSet:
-		count := len(resp)
-		if count > 0 {
-			if displayName := recordDisplayName(resp[0]); displayName != "" {
-				responseStr = fmt.Sprintf("RecordSet with %d record(s) of type: %s", count, displayName)
+	if response == nil {
+		responseStr = "unsuccessful response"
+	} else {
+		switch resp := response.(type) {
+		case Record:
+			if displayName := recordDisplayName(resp); displayName != "" {
+				responseStr = fmt.Sprintf("Record of type: %s", displayName)
+			} else if len(resp) == 0 {
+				responseStr = "empty Record"
 			} else {
-				responseStr = fmt.Sprintf("RecordSet with %d record(s)", count)
+				responseStr = "Record received"
 			}
-		} else {
-			responseStr = "RecordSet with 0 record(s)"
+		case RecordSet:
+			count := len(resp)
+			if count > 0 {
+				if displayName := recordDisplayName(resp[0]); displayName != "" {
+					responseStr = fmt.Sprintf("RecordSet with %d record(s) of type: %s", count, displayName)
+				} else {
+					responseStr = fmt.Sprintf("RecordSet with %d record(s)", count)
+				}
+			} else {
+				responseStr = "RecordSet with 0 record(s)"
+			}
+		default:
+			responseStr = "Response received"
 		}
-	default:
-		responseStr = "Response received"
 	}
 
 	log.Printf("INFO: response | %s", responseStr)
@@ -186,29 +192,36 @@ func afterRequestLogDebug(response Renderable) {
 	var header string
 	var body string
 
-	switch resp := response.(type) {
-	case Record:
-		if displayName := recordDisplayName(resp); displayName != "" {
-			header = "response |"
-		} else {
-			header = "response | Record received"
-		}
-		body = resp.PrettyJson("  ")
-	case RecordSet:
-		count := len(resp)
-		if count > 0 {
-			if displayName := recordDisplayName(resp[0]); displayName != "" {
-				header = fmt.Sprintf("response | RecordSet with %d record(s) of type: %s", count, displayName)
+	if response == nil {
+		header = "response | unsuccessful response"
+		body = "<nil>"
+	} else {
+		switch resp := response.(type) {
+		case Record:
+			if displayName := recordDisplayName(resp); displayName != "" {
+				header = "response |"
+			} else if len(resp) == 0 {
+				header = "response | empty Record"
 			} else {
-				header = fmt.Sprintf("response | RecordSet with %d record(s)", count)
+				header = "response | Record received"
 			}
-		} else {
-			header = "response | RecordSet with 0 record(s)"
+			body = resp.PrettyJson("  ")
+		case RecordSet:
+			count := len(resp)
+			if count > 0 {
+				if displayName := recordDisplayName(resp[0]); displayName != "" {
+					header = fmt.Sprintf("response | RecordSet with %d record(s) of type: %s", count, displayName)
+				} else {
+					header = fmt.Sprintf("response | RecordSet with %d record(s)", count)
+				}
+			} else {
+				header = "response | RecordSet with 0 record(s)"
+			}
+			body = resp.PrettyJson("  ")
+		default:
+			header = "response | Response received"
+			body = fmt.Sprintf("%v", response)
 		}
-		body = resp.PrettyJson("  ")
-	default:
-		header = "response | Response received"
-		body = fmt.Sprintf("%v", response)
 	}
 
 	log.Printf("DEBUG: %s\n%s", header, body)

@@ -210,12 +210,47 @@ func TestDoAfterRequest_AfterRequestFnError(t *testing.T) {
 	defer server.Close()
 
 	resource := newCRUDTestResource(t, server, NewResourceOps(R))
-	resource.Session().GetConfig().AfterRequestFn = func(ctx context.Context, response Renderable) (Renderable, error) {
+	resource.Session().GetConfig().AfterRequestFn = func(ctx context.Context, response Renderable, statusCode int) (Renderable, error) {
 		return nil, errors.New("after hook failed")
 	}
 	_, err := resource.GetById(1)
 	if err == nil {
 		t.Fatal("expected after-request error")
+	}
+}
+
+func TestAfterRequestFn_CalledOnNonSuccessStatus(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "unavailable", http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	resource := newCRUDTestResource(t, server, NewResourceOps(R))
+	var gotStatus int
+	var gotResponse Renderable
+	var called bool
+	resource.Session().GetConfig().AfterRequestFn = func(ctx context.Context, response Renderable, statusCode int) (Renderable, error) {
+		called = true
+		gotStatus = statusCode
+		gotResponse = response
+		return response, nil
+	}
+
+	_, err := resource.GetById(1)
+	if err == nil {
+		t.Fatal("expected API error for 503")
+	}
+	if !called {
+		t.Fatal("expected AfterRequestFn to run on non-2xx")
+	}
+	if gotStatus != http.StatusServiceUnavailable {
+		t.Fatalf("statusCode = %d, want %d", gotStatus, http.StatusServiceUnavailable)
+	}
+	if gotResponse != nil {
+		t.Fatalf("response = %#v, want nil on unsuccessful status", gotResponse)
+	}
+	if !ExpectStatusCodes(err, http.StatusServiceUnavailable) {
+		t.Fatalf("expected ApiError 503, got %v", err)
 	}
 }
 

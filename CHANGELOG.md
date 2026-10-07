@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.162.0
+
+BREAKING CHANGES:
+
+* **AfterRequestFn Status Code**: `VMSConfig.AfterRequestFn` is now `func(ctx context.Context, response Renderable, statusCode int) (Renderable, error)`. The hook runs for every attempt — 2xx, non-2xx (e.g. 503), and transport failures (`statusCode` 0). On failure `response` is `nil` (not an empty `Record{}`); empty `Record{}` still means a successful empty body. Update any custom after-request hooks accordingly.
+
 ## 0.161.0
 
 ENHANCEMENTS:

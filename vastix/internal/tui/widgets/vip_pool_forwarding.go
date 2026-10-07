@@ -1092,6 +1092,11 @@ func (w *VipPoolForwarding) ViewDetails() string {
 func (w *VipPoolForwarding) Disconnect() error {
 	w.auxlog.Printf("Disconnecting VPN...")
 
+	// Cancel the server session first so StartServer does not treat SSH close as a clean exit 0.
+	if w.cancel != nil {
+		w.cancel()
+	}
+
 	// Step 1: Disconnect local VPN client
 	// Always clean up the local interface if vpnClient exists, regardless of connected state
 	// (connection might be marked as lost but interface is still up)
