@@ -75,7 +75,7 @@ type FunctionRequestBody struct {
 	RevisionAlias         string    `json:"revision_alias,omitempty" yaml:"revision_alias,omitempty" required:"false" doc:"Alias for the revision. If not provided, the revision number will be used."`
 	RevisionDescription   string    `json:"revision_description,omitempty" yaml:"revision_description,omitempty" required:"false" doc:"Description of the revision."`
 	Runtime               string    `json:"runtime,omitempty" yaml:"runtime,omitempty" required:"false" doc:""`
-	SkipImageValidation   bool      `json:"skip_image_validation,omitempty" yaml:"skip_image_validation,omitempty" required:"false" doc:"Skip image reachability validation when creating the function. Useful when the container registry uses authentication that the provisioning service cannot access (e.g., ECR with IRSA where only the K8s cluster has credentials)."`
+	SkipImageValidation   bool      `json:"skip_image_validation,omitempty" yaml:"skip_image_validation,omitempty" required:"false" doc:"Deprecated. Prefer setting the container registry's is_accessible_to_data_engine to false, which also skips create-time image reachability validation. Kept for compatibility / internal use."`
 	Tags                  *[]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 

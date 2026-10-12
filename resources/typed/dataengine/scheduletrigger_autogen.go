@@ -56,7 +56,7 @@ type TriggersScheduleRequestBody_Broker struct {
 
 // TriggersScheduleRequestBody_Config represents a nested type for request body
 type TriggersScheduleRequestBody_Config struct {
-	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Cron schedule for a Schedule Trigger."`
+	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Schedule for a Schedule Trigger. Accepts a 5-field cron expression, a 6/7-field Quartz expression, or an interval as \"<value><unit>\" with an optional \"@<start time>\" suffix, where the units are s/m/h/d/w and the start time is seconds since epoch in UTC and acts as the anchor of the interval (for example \"10s\" or \"7m@1704067200\"). An interval submitted without a start time is stored anchored at the time of the request."`
 }
 
 // ScheduleTriggerRequestBody represents the request body for ScheduleTrigger operations

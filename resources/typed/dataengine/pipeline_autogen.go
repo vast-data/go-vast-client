@@ -30,6 +30,7 @@ type PipelineSearchParams struct {
 	CreatedAfter         expr.IntField `json:"created_after,omitempty" yaml:"created_after,omitempty" required:"false" doc:"Filter pipelines created after this timestamp (microseconds since epoch)"`
 	CreatedBefore        expr.IntField `json:"created_before,omitempty" yaml:"created_before,omitempty" required:"false" doc:"Filter pipelines created before this timestamp (microseconds since epoch)"`
 	Guid                 expr.StrField `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Filter by pipeline GUID"`
+	IncludeUsage         bool          `json:"include_usage,omitempty" yaml:"include_usage,omitempty" required:"false" doc:"Whether to include current resource usage (CPU/memory) in the response."`
 	KubernetesClusterVrn expr.StrField `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"Filter by Kubernetes cluster VRN"`
 	LastRevisionNumber   expr.IntField `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"Filter by last revision number"`
 	Name                 expr.StrField `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Filter by pipeline name"`
@@ -66,7 +67,7 @@ type PipelineSearchParams struct {
 type PipelineRequestBody_Manifest struct {
 	Config              string                                                  `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]PipelineRequestBody_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]PipelineRequestBody_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]PipelineRequestBody_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]PipelineRequestBody_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -429,10 +430,24 @@ type PipelineBulkDeleteModel_ResultsItem struct {
 
 // PipelineBulkPromoteModel_ResultsItem represents a nested type for Pipeline extra method response
 type PipelineBulkPromoteModel_ResultsItem struct {
-	PipelineGuid string `json:"pipeline_guid,omitempty" yaml:"pipeline_guid,omitempty" required:"true" doc:"The pipeline GUID that was attempted to be promoted"`
-	Status       string `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"Whether the promotion started successfully"`
-	Error        string `json:"error,omitempty" yaml:"error,omitempty" required:"false" doc:"Error message if promotion failed to start"`
-	StackGuid    string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"The resolved stack GUID for this pipeline"`
+	Outcome              string `json:"outcome,omitempty" yaml:"outcome,omitempty" required:"true" doc:""`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion. Promotion creates a new pipeline with a new GUID and deletes the original. Null when the original pipeline could not be resolved."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Present only when outcome=rejected."`
+	StackGuid            string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"Null only when promoting by pipeline_guids and the pipeline could not be resolved to a stack."`
+}
+
+// PipelineIdentitiesItem represents a nested type for Pipeline extra method response
+type PipelineIdentitiesItem struct {
+	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"true" doc:"A globally unique identifier (GUID) for the resource."`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The pipeline's name"`
+}
+
+// PipelinePromoteAllModel_ResultsItem represents a nested type for Pipeline extra method response
+type PipelinePromoteAllModel_ResultsItem struct {
+	Outcome              string `json:"outcome,omitempty" yaml:"outcome,omitempty" required:"true" doc:""`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion. Promotion creates a new pipeline with a new GUID and deletes the original. Null when the original pipeline could not be resolved."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Present only when outcome=rejected."`
+	StackGuid            string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"Null only when promoting by pipeline_guids and the pipeline could not be resolved to a stack."`
 }
 
 // PipelineBulkDelete_POST_Body represents the request body for PipelineBulkDelete
@@ -479,27 +494,33 @@ func (r *Pipeline) PipelineBulkDelete_POST(body *PipelineBulkDelete_POST_Body) (
 	return r.PipelineBulkDeleteWithContext_POST(r.Untyped.GetCtx(), body)
 }
 
+// PipelineBulkPromote_POST_Body represents the request body for PipelineBulkPromote
+type PipelineBulkPromote_POST_Body struct {
+	PipelineGuids *[]string `json:"pipeline_guids,omitempty" yaml:"pipeline_guids,omitempty" required:"false" doc:"Pipeline GUIDs to promote. Each is resolved to its auto-generated stack."`
+	StackGuids    *[]string `json:"stack_guids,omitempty" yaml:"stack_guids,omitempty" required:"false" doc:"Stack GUIDs to promote directly. Bypasses pipeline resolution. Use for retrying failed promotions where the old pipeline was already deleted."`
+}
+
 // PipelineBulkPromote_POST_Model represents the response model for PipelineBulkPromote
 type PipelineBulkPromote_POST_Model struct {
-	Failed  int64                                   `json:"failed,omitempty" yaml:"failed,omitempty" required:"true" doc:"Number of pipelines that failed validation"`
-	Results *[]PipelineBulkPromoteModel_ResultsItem `json:"results,omitempty" yaml:"results,omitempty" required:"true" doc:"Results for each pipeline GUID"`
-	Started int64                                   `json:"started,omitempty" yaml:"started,omitempty" required:"true" doc:"Number of pipelines that started promoting"`
-	Total   int64                                   `json:"total,omitempty" yaml:"total,omitempty" required:"true" doc:"Total number of pipelines requested"`
+	AlreadyInProgress int64                                   `json:"already_in_progress,omitempty" yaml:"already_in_progress,omitempty" required:"true" doc:"Items already being promoted. No action needed."`
+	AlreadyPromoted   int64                                   `json:"already_promoted,omitempty" yaml:"already_promoted,omitempty" required:"true" doc:"Items already successfully promoted. No action needed."`
+	Rejected          int64                                   `json:"rejected,omitempty" yaml:"rejected,omitempty" required:"true" doc:"Items that could not be promoted. See each result's reason field."`
+	Results           *[]PipelineBulkPromoteModel_ResultsItem `json:"results,omitempty" yaml:"results,omitempty" required:"true" doc:""`
+	Submitted         int64                                   `json:"submitted,omitempty" yaml:"submitted,omitempty" required:"true" doc:"New items reserved and queued for promotion by this request."`
 }
 
 // PipelineBulkPromoteWithContext_POST
 // method: POST
 // url: /pipelines/bulk-promote/
-// summary: Bulk promote pipelines' auto-generated stacks
-//
-// Parameters:
-//   - pipelineGuids (body): List of pipeline GUIDs to promote
-func (r *Pipeline) PipelineBulkPromoteWithContext_POST(ctx context.Context, pipelineGuids string) (*PipelineBulkPromote_POST_Model, error) {
+// summary: Promote multiple pipelines
+func (r *Pipeline) PipelineBulkPromoteWithContext_POST(ctx context.Context, body *PipelineBulkPromote_POST_Body) (*PipelineBulkPromote_POST_Model, error) {
 	resourcePath := "/pipelines/bulk-promote/"
 
 	var reqParams core.Params
-	reqBody := core.Params{}
-	reqBody["pipeline_guids"] = pipelineGuids
+	reqBody, err := core.NewParamsFromStruct(body)
+	if err != nil {
+		return nil, err
+	}
 
 	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
 	if err != nil {
@@ -517,12 +538,9 @@ func (r *Pipeline) PipelineBulkPromoteWithContext_POST(ctx context.Context, pipe
 // PipelineBulkPromote_POST
 // method: POST
 // url: /pipelines/bulk-promote/
-// summary: Bulk promote pipelines' auto-generated stacks
-//
-// Parameters:
-//   - pipelineGuids (body): List of pipeline GUIDs to promote
-func (r *Pipeline) PipelineBulkPromote_POST(pipelineGuids string) (*PipelineBulkPromote_POST_Model, error) {
-	return r.PipelineBulkPromoteWithContext_POST(r.Untyped.GetCtx(), pipelineGuids)
+// summary: Promote multiple pipelines
+func (r *Pipeline) PipelineBulkPromote_POST(body *PipelineBulkPromote_POST_Body) (*PipelineBulkPromote_POST_Model, error) {
+	return r.PipelineBulkPromoteWithContext_POST(r.Untyped.GetCtx(), body)
 }
 
 // PipelineGuidsWithContext_GET
@@ -558,18 +576,107 @@ func (r *Pipeline) PipelineGuids_GET() ([]string, error) {
 	return r.PipelineGuidsWithContext_GET(r.Untyped.GetCtx())
 }
 
+// PipelineIdentitiesWithContext_GET
+// method: GET
+// url: /pipelines/identities/
+// summary: Get list of pipeline identities (GUID and name)
+func (r *Pipeline) PipelineIdentitiesWithContext_GET(ctx context.Context) ([]PipelineIdentitiesItem, error) {
+	resourcePath := "/pipelines/identities/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.RecordSet](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+	// Convert RecordSet ([]core.Record) to typed array ([]PipelineIdentitiesItem)
+	result := make([]PipelineIdentitiesItem, len(record))
+	for i, item := range record {
+		if err := item.Fill(&result[i]); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal array item %d: %w", i, err)
+		}
+	}
+	return result, nil
+
+}
+
+// PipelineIdentities_GET
+// method: GET
+// url: /pipelines/identities/
+// summary: Get list of pipeline identities (GUID and name)
+func (r *Pipeline) PipelineIdentities_GET() ([]PipelineIdentitiesItem, error) {
+	return r.PipelineIdentitiesWithContext_GET(r.Untyped.GetCtx())
+}
+
+// PipelinePromoteAll_POST_Model represents the response model for PipelinePromoteAll
+type PipelinePromoteAll_POST_Model struct {
+	AlreadyInProgress int64                                  `json:"already_in_progress,omitempty" yaml:"already_in_progress,omitempty" required:"true" doc:"Items already being promoted. No action needed."`
+	AlreadyPromoted   int64                                  `json:"already_promoted,omitempty" yaml:"already_promoted,omitempty" required:"true" doc:"Items already successfully promoted. No action needed."`
+	Rejected          int64                                  `json:"rejected,omitempty" yaml:"rejected,omitempty" required:"true" doc:"Items that could not be promoted. See each result's reason field."`
+	Results           *[]PipelinePromoteAllModel_ResultsItem `json:"results,omitempty" yaml:"results,omitempty" required:"true" doc:""`
+	Submitted         int64                                  `json:"submitted,omitempty" yaml:"submitted,omitempty" required:"true" doc:"New items reserved and queued for promotion by this request."`
+}
+
+// PipelinePromoteAllWithContext_POST
+// method: POST
+// url: /pipelines/promote-all/
+// summary: Discover and promote all promotable stacks tenant-wide
+func (r *Pipeline) PipelinePromoteAllWithContext_POST(ctx context.Context) (*PipelinePromoteAll_POST_Model, error) {
+	resourcePath := "/pipelines/promote-all/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response PipelinePromoteAll_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// PipelinePromoteAll_POST
+// method: POST
+// url: /pipelines/promote-all/
+// summary: Discover and promote all promotable stacks tenant-wide
+func (r *Pipeline) PipelinePromoteAll_POST() (*PipelinePromoteAll_POST_Model, error) {
+	return r.PipelinePromoteAllWithContext_POST(r.Untyped.GetCtx())
+}
+
+// PipelinePromote_POST_Model represents the response model for PipelinePromote
+type PipelinePromote_POST_Model struct {
+	Outcome              string `json:"outcome,omitempty" yaml:"outcome,omitempty" required:"true" doc:""`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion. Promotion creates a new pipeline with a new GUID and deletes the original. Null when the original pipeline could not be resolved."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Present only when outcome=rejected."`
+	StackGuid            string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"Null only when promoting by pipeline_guids and the pipeline could not be resolved to a stack."`
+}
+
 // PipelinePromoteWithContext_POST
 // method: POST
 // url: /pipelines/{guid}/promote/
 // summary: Promote a pipeline's auto-generated stack
-func (r *Pipeline) PipelinePromoteWithContext_POST(ctx context.Context, id any) error {
+func (r *Pipeline) PipelinePromoteWithContext_POST(ctx context.Context, id any) (*PipelinePromote_POST_Model, error) {
 	resourcePath := core.BuildResourcePathWithID("pipelines", id, "promote")
 
 	var reqParams core.Params
 	var reqBody core.Params
 
-	_, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
-	return err
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodPost, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response PipelinePromote_POST_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
 
 }
 
@@ -577,11 +684,53 @@ func (r *Pipeline) PipelinePromoteWithContext_POST(ctx context.Context, id any) 
 // method: POST
 // url: /pipelines/{guid}/promote/
 // summary: Promote a pipeline's auto-generated stack
-func (r *Pipeline) PipelinePromote_POST(id any) error {
+func (r *Pipeline) PipelinePromote_POST(id any) (*PipelinePromote_POST_Model, error) {
 	return r.PipelinePromoteWithContext_POST(r.Untyped.GetCtx(), id)
+}
+
+// PipelinePromotionSummary_GET_Model represents the response model for PipelinePromotionSummary
+type PipelinePromotionSummary_GET_Model struct {
+	AwaitingSubmission int64 `json:"awaiting_submission,omitempty" yaml:"awaiting_submission,omitempty" required:"true" doc:"Auto-generated stacks that have not been submitted for promotion yet. Submit via POST /pipelines/promote-all to process all eligible stacks, or POST /pipelines/bulk-promote with specific stack GUIDs."`
+	Failed             int64 `json:"failed,omitempty" yaml:"failed,omitempty" required:"true" doc:"Stacks where promotion failed. Submit via POST /pipelines/promote-all to reprocess all eligible stacks, or POST /pipelines/bulk-promote with specific stack GUIDs."`
+	InProgress         int64 `json:"in_progress,omitempty" yaml:"in_progress,omitempty" required:"true" doc:"Stacks currently being promoted. No action needed — poll this endpoint to track progress."`
+	Stalled            int64 `json:"stalled,omitempty" yaml:"stalled,omitempty" required:"true" doc:"Stacks where promotion started but the process is no longer running. Submit via POST /pipelines/promote-all to reprocess all eligible stacks, or POST /pipelines/bulk-promote with specific stack GUIDs."`
+	Succeeded          int64 `json:"succeeded,omitempty" yaml:"succeeded,omitempty" required:"true" doc:"Stacks that have been successfully promoted. No action needed."`
+	Total              int64 `json:"total,omitempty" yaml:"total,omitempty" required:"true" doc:"Total number of stacks relevant to promotion. Equals the sum of all other counters. When total equals succeeded, all promotions are complete."`
+}
+
+// PipelinePromotionSummaryWithContext_GET
+// method: GET
+// url: /pipelines/promotion-summary/
+// summary: Get overall promotion health summary
+func (r *Pipeline) PipelinePromotionSummaryWithContext_GET(ctx context.Context) (*PipelinePromotionSummary_GET_Model, error) {
+	resourcePath := "/pipelines/promotion-summary/"
+
+	var reqParams core.Params
+	var reqBody core.Params
+
+	record, err := core.Request[core.Record](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var response PipelinePromotionSummary_GET_Model
+	if err := record.Fill(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+
+}
+
+// PipelinePromotionSummary_GET
+// method: GET
+// url: /pipelines/promotion-summary/
+// summary: Get overall promotion health summary
+func (r *Pipeline) PipelinePromotionSummary_GET() (*PipelinePromotionSummary_GET_Model, error) {
+	return r.PipelinePromotionSummaryWithContext_GET(r.Untyped.GetCtx())
 }
 
 // -----------------------------------------------------
 // GENERATION ISSUES
 // -----------------------------------------------------
 //   - Extra method POST /pipelines/is-promote-supported/ skipped: POST /pipelines/is-promote-supported/ - Response is a map-like object (additionalProperties: object). Typed methods do not support map return types
+//   - Extra method POST /pipelines/promotion-status/ skipped: POST /pipelines/promotion-status/ - Response is a map-like object (additionalProperties: any). Typed methods do not support map return types

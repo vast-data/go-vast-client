@@ -861,3 +861,21 @@ func TestValidateOperationExists_NormalizesPath(t *testing.T) {
 		t.Fatalf("ValidateOperationExists: %v", err)
 	}
 }
+
+// The embedded specs store paths with a trailing slash. This covers the lookup
+// that matches a path key stored without one.
+func TestValidateOperationExists_PathWithoutTrailingSlash(t *testing.T) {
+	doc, err := loadOpenAPIDoc(PackVMS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const path = "/coverage-unslashed-path"
+	doc.Paths.Set(path, &openapi3.PathItem{
+		Get: &openapi3.Operation{},
+	})
+	t.Cleanup(func() { doc.Paths.Delete(path) })
+
+	if err := ValidateOperationExists(PackVMS, "GET", path); err != nil {
+		t.Fatal(err)
+	}
+}

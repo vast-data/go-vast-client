@@ -31,6 +31,9 @@ type Component_AgentCreate struct {
 	Description           string    `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
 	ImageTag              string    `json:"image_tag,omitempty" yaml:"image_tag,omitempty" required:"false" doc:"Tag of the container image in the container registry."`
 	ImageUrl              string    `json:"image_url,omitempty" yaml:"image_url,omitempty" required:"false" doc:"The full container image URL, constructed as {registry_url}/{artifact_source}:{image_tag}. This field is computed and read-only."`
+	RevisionAlias         string    `json:"revision_alias,omitempty" yaml:"revision_alias,omitempty" required:"false" doc:"Alias for the first revision. If not provided, the revision is named '{agent-name}-r1'."`
+	RevisionDescription   string    `json:"revision_description,omitempty" yaml:"revision_description,omitempty" required:"false" doc:"Description of the first revision."`
+	RevisionTags          *[]string `json:"revision_tags,omitempty" yaml:"revision_tags,omitempty" required:"false" doc:"Tags for the first revision."`
 	Tags                  *[]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
@@ -60,21 +63,23 @@ type Component_AgentDeployment struct {
 	HpaConfig            AgentDeployment_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
 	Id                   int64                                       `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
 	KubernetesClusterVrn string                                      `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	LogLevel             string                                      `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the service"`
+	LogLevel             string                                      `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
 	Namespace            string                                      `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace for the agent deployment"`
 	Nodeport             int64                                       `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
 	Owner                AgentDeployment_Owner                       `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
-	PersistentVolumes    *[]AgentDeployment_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the service/agent pods"`
+	PersistentVolumes    *[]AgentDeployment_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
 	Reason               string                                      `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Explanation for current status"`
+	SecretDefinitions    *[]AgentDeployment_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                   `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
-	SecurityPolicies     *[]AgentDeployment_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this service/agent deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the service."`
+	SecurityPolicies     *[]AgentDeployment_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
 	StackGuid            string                                      `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
 	StackRevisionNumber  int64                                       `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this deployment (null if created directly)"`
 	Status               string                                      `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Operational status of the object."`
-	StickyDeployment     bool                                        `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Mandatory for agent services (automatically set to true), optional for generic services."`
+	StickyDeployment     bool                                        `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing for agent deployments. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Defaults to true. Can be explicitly set to false if sticky routing is not needed."`
 	Tags                 *[]string                                   `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 	TenantGuid           string                                      `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
 	UpdatedAt            string                                      `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	UsedResources        *[]AgentDeployment_UsedResourcesItem        `json:"used_resources,omitempty" yaml:"used_resources,omitempty" required:"false" doc:"Resources currently used by the deployment's pods. Empty when scaled to zero."`
 	Vrn                  string                                      `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
@@ -91,13 +96,32 @@ type Component_AgentDeploymentCreate struct {
 	ExternalAccess       AgentDeploymentCreate_ExternalAccess              `json:"external_access,omitempty" yaml:"external_access,omitempty" required:"false" doc:"External access configuration via VastGateway"`
 	HealthChecks         AgentDeploymentCreate_HealthChecks                `json:"health_checks,omitempty" yaml:"health_checks,omitempty" required:"false" doc:"Custom health probe configuration for services"`
 	HpaConfig            AgentDeploymentCreate_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
-	LogLevel             string                                            `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the service"`
+	LogLevel             string                                            `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
 	Nodeport             int64                                             `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
-	PersistentVolumes    *[]AgentDeploymentCreate_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the service/agent pods"`
+	PersistentVolumes    *[]AgentDeploymentCreate_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
+	SecretDefinitions    *[]AgentDeploymentCreate_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                         `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
-	SecurityPolicies     *[]AgentDeploymentCreate_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this service/agent deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the service."`
-	StickyDeployment     bool                                              `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Mandatory for agent services (automatically set to true), optional for generic services."`
+	SecurityPolicies     *[]AgentDeploymentCreate_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
+	StickyDeployment     bool                                              `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing for agent deployments. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Defaults to true. Can be explicitly set to false if sticky routing is not needed."`
 	Tags                 *[]string                                         `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+}
+
+// Component_AgentDeploymentManifest represents the OpenAPI component schema
+// Component: #/components/schemas/AgentDeploymentManifest
+type Component_AgentDeploymentManifest struct {
+	ComputeConfig        AgentDeploymentManifest_ComputeConfig               `json:"compute_config,omitempty" yaml:"compute_config,omitempty" required:"false" doc:"Resource allocation settings for service deployments"`
+	Configmaps           *[]AgentDeploymentManifest_ConfigmapsItem           `json:"configmaps,omitempty" yaml:"configmaps,omitempty" required:"false" doc:"ConfigMaps that will be mounted to the deployment"`
+	EnvironmentVariables *[]AgentDeploymentManifest_EnvironmentVariablesItem `json:"environment_variables,omitempty" yaml:"environment_variables,omitempty" required:"false" doc:""`
+	ExternalAccess       AgentDeploymentManifest_ExternalAccess              `json:"external_access,omitempty" yaml:"external_access,omitempty" required:"false" doc:"External access configuration via VastGateway"`
+	HealthChecks         AgentDeploymentManifest_HealthChecks                `json:"health_checks,omitempty" yaml:"health_checks,omitempty" required:"false" doc:"Custom health probe configuration for services"`
+	HpaConfig            AgentDeploymentManifest_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
+	LogLevel             string                                              `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
+	Nodeport             int64                                               `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
+	PersistentVolumes    *[]AgentDeploymentManifest_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
+	SecretDefinitions    *[]AgentDeploymentManifest_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
+	Secrets              *[]string                                           `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
+	SecurityPolicies     *[]AgentDeploymentManifest_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
+	StickyDeployment     bool                                                `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing for agent deployments. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Defaults to true. Can be explicitly set to false if sticky routing is not needed."`
 }
 
 // Component_AgentLinkedItem represents the OpenAPI component schema
@@ -142,10 +166,13 @@ type Component_AgentRevision struct {
 // Component_AgentRevisionCreate represents the OpenAPI component schema
 // Component: #/components/schemas/AgentRevisionCreate
 type Component_AgentRevisionCreate struct {
-	ArtifactSource       string `json:"artifact_source,omitempty" yaml:"artifact_source,omitempty" required:"true" doc:"URL path for the container image in the container registry (without protocol and tag). The full image URL will be constructed as: {registry_url}/{artifact_source}:{image_tag}"`
-	ContainerRegistryVrn string `json:"container_registry_vrn,omitempty" yaml:"container_registry_vrn,omitempty" required:"true" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	ImageTag             string `json:"image_tag,omitempty" yaml:"image_tag,omitempty" required:"false" doc:"Tag of the container image in the container registry."`
-	ImageUrl             string `json:"image_url,omitempty" yaml:"image_url,omitempty" required:"false" doc:"The full container image URL, constructed as {registry_url}/{artifact_source}:{image_tag}. This field is computed and read-only."`
+	ArtifactSource       string    `json:"artifact_source,omitempty" yaml:"artifact_source,omitempty" required:"true" doc:"URL path for the container image in the container registry (without protocol and tag). The full image URL will be constructed as: {registry_url}/{artifact_source}:{image_tag}"`
+	ContainerRegistryVrn string    `json:"container_registry_vrn,omitempty" yaml:"container_registry_vrn,omitempty" required:"true" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	Description          string    `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	ImageTag             string    `json:"image_tag,omitempty" yaml:"image_tag,omitempty" required:"false" doc:"Tag of the container image in the container registry."`
+	ImageUrl             string    `json:"image_url,omitempty" yaml:"image_url,omitempty" required:"false" doc:"The full container image URL, constructed as {registry_url}/{artifact_source}:{image_tag}. This field is computed and read-only."`
+	Name                 string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the resource."`
+	Tags                 *[]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
 // Component_AgentSearchResult represents the OpenAPI component schema
@@ -191,6 +218,7 @@ type Component_AutoscalingConfig struct {
 type Component_BaseManifestConfig struct {
 	Configmaps           *[]BaseManifestConfig_ConfigmapsItem           `json:"configmaps,omitempty" yaml:"configmaps,omitempty" required:"false" doc:"ConfigMaps that will be mounted to the deployment"`
 	EnvironmentVariables *[]BaseManifestConfig_EnvironmentVariablesItem `json:"environment_variables,omitempty" yaml:"environment_variables,omitempty" required:"false" doc:""`
+	SecretDefinitions    *[]BaseManifestConfig_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                      `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
 }
 
@@ -223,22 +251,21 @@ type Component_BulkDeleteResult struct {
 	Error   string `json:"error,omitempty" yaml:"error,omitempty" required:"false" doc:"Error message if deletion failed"`
 }
 
+// Component_BulkPromoteRequest represents the OpenAPI component schema
+// Component: #/components/schemas/BulkPromoteRequest
+type Component_BulkPromoteRequest struct {
+	PipelineGuids *[]string `json:"pipeline_guids,omitempty" yaml:"pipeline_guids,omitempty" required:"false" doc:"Pipeline GUIDs to promote. Each is resolved to its auto-generated stack."`
+	StackGuids    *[]string `json:"stack_guids,omitempty" yaml:"stack_guids,omitempty" required:"false" doc:"Stack GUIDs to promote directly. Bypasses pipeline resolution. Use for retrying failed promotions where the old pipeline was already deleted."`
+}
+
 // Component_BulkPromoteResponse represents the OpenAPI component schema
 // Component: #/components/schemas/BulkPromoteResponse
 type Component_BulkPromoteResponse struct {
-	Failed  int64                              `json:"failed,omitempty" yaml:"failed,omitempty" required:"true" doc:"Number of pipelines that failed validation"`
-	Results *[]BulkPromoteResponse_ResultsItem `json:"results,omitempty" yaml:"results,omitempty" required:"true" doc:"Results for each pipeline GUID"`
-	Started int64                              `json:"started,omitempty" yaml:"started,omitempty" required:"true" doc:"Number of pipelines that started promoting"`
-	Total   int64                              `json:"total,omitempty" yaml:"total,omitempty" required:"true" doc:"Total number of pipelines requested"`
-}
-
-// Component_BulkPromoteResult represents the OpenAPI component schema
-// Component: #/components/schemas/BulkPromoteResult
-type Component_BulkPromoteResult struct {
-	PipelineGuid string `json:"pipeline_guid,omitempty" yaml:"pipeline_guid,omitempty" required:"true" doc:"The pipeline GUID that was attempted to be promoted"`
-	Status       string `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"Whether the promotion started successfully"`
-	Error        string `json:"error,omitempty" yaml:"error,omitempty" required:"false" doc:"Error message if promotion failed to start"`
-	StackGuid    string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"The resolved stack GUID for this pipeline"`
+	AlreadyInProgress int64                              `json:"already_in_progress,omitempty" yaml:"already_in_progress,omitempty" required:"true" doc:"Items already being promoted. No action needed."`
+	AlreadyPromoted   int64                              `json:"already_promoted,omitempty" yaml:"already_promoted,omitempty" required:"true" doc:"Items already successfully promoted. No action needed."`
+	Rejected          int64                              `json:"rejected,omitempty" yaml:"rejected,omitempty" required:"true" doc:"Items that could not be promoted. See each result's reason field."`
+	Results           *[]BulkPromoteResponse_ResultsItem `json:"results,omitempty" yaml:"results,omitempty" required:"true" doc:""`
+	Submitted         int64                              `json:"submitted,omitempty" yaml:"submitted,omitempty" required:"true" doc:"New items reserved and queued for promotion by this request."`
 }
 
 // Component_CommonTrigger represents the OpenAPI component schema
@@ -249,6 +276,16 @@ type Component_CommonTrigger struct {
 	Description string               `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
 	Tags        *[]string            `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 	TopicName   string               `json:"topic_name,omitempty" yaml:"topic_name,omitempty" required:"false" doc:"The name of the topic in the broker. Used with broker field for automatic topic creation."`
+}
+
+// Component_ComponentAnalytics represents the OpenAPI component schema
+// Component: #/components/schemas/ComponentAnalytics
+type Component_ComponentAnalytics struct {
+	Cpu          ComponentAnalytics_Cpu                          `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"true" doc:"Per-minute values (60 slots) and their summary statistics over the last hour."`
+	Mem          ComponentAnalytics_Mem                          `json:"mem,omitempty" yaml:"mem,omitempty" required:"true" doc:"Per-minute values (60 slots) and their summary statistics over the last hour."`
+	Status       *[]ComponentAnalytics_StatusItem                `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"Status timeline over the last hour."`
+	PodAnalytics map[string]ComponentAnalytics_PodAnalyticsValue `json:"pod_analytics,omitempty" yaml:"pod_analytics,omitempty" required:"false" doc:"Per-pod average/max cpu and mem over the last hour, keyed by pod name."`
+	TokenUsage   string                                          `json:"token_usage,omitempty" yaml:"token_usage,omitempty" required:"false" doc:"Token-usage analytics; present for agent deployments only."`
 }
 
 // Component_ConcurrencyAutoscalingConfig represents the OpenAPI component schema
@@ -362,7 +399,7 @@ type Component_ContainerRegistryUpdate struct {
 	AuthType                     string                                                      `json:"auth_type,omitempty" yaml:"auth_type,omitempty" required:"false" doc:""`
 	Description                  string                                                      `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
 	Email                        string                                                      `json:"email,omitempty" yaml:"email,omitempty" required:"false" doc:""`
-	IsAccessibleToDataEngine     bool                                                        `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the container registry and its images are accessible. Set to false if the registry is not reachable from the Data Engine."`
+	IsAccessibleToDataEngine     bool                                                        `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the container registry and its images are accessible, and function create/update will check image reachability. Set to false if the registry is not reachable from the Data Engine (e.g. ECR with IRSA); this also skips create-time image reachability validation."`
 	Name                         string                                                      `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the resource."`
 	Password                     string                                                      `json:"password,omitempty" yaml:"password,omitempty" required:"false" doc:""`
 	PrimaryKubernetesCluster     ContainerRegistryUpdate_PrimaryKubernetesCluster            `json:"primary_kubernetes_cluster,omitempty" yaml:"primary_kubernetes_cluster,omitempty" required:"false" doc:""`
@@ -428,6 +465,23 @@ type Component_DataEngineStatus struct {
 // Component: #/components/schemas/DeleteResourceRequest
 type Component_DeleteResourceRequest struct {
 	Force bool `json:"force,omitempty" yaml:"force,omitempty" required:"false" doc:"Force removal even if errors occur"`
+}
+
+// Component_DeploymentManifestBase represents the OpenAPI component schema
+// Component: #/components/schemas/DeploymentManifestBase
+type Component_DeploymentManifestBase struct {
+	ComputeConfig        DeploymentManifestBase_ComputeConfig               `json:"compute_config,omitempty" yaml:"compute_config,omitempty" required:"false" doc:"Resource allocation settings for service deployments"`
+	Configmaps           *[]DeploymentManifestBase_ConfigmapsItem           `json:"configmaps,omitempty" yaml:"configmaps,omitempty" required:"false" doc:"ConfigMaps that will be mounted to the deployment"`
+	EnvironmentVariables *[]DeploymentManifestBase_EnvironmentVariablesItem `json:"environment_variables,omitempty" yaml:"environment_variables,omitempty" required:"false" doc:""`
+	ExternalAccess       DeploymentManifestBase_ExternalAccess              `json:"external_access,omitempty" yaml:"external_access,omitempty" required:"false" doc:"External access configuration via VastGateway"`
+	HealthChecks         DeploymentManifestBase_HealthChecks                `json:"health_checks,omitempty" yaml:"health_checks,omitempty" required:"false" doc:"Custom health probe configuration for services"`
+	HpaConfig            DeploymentManifestBase_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
+	LogLevel             string                                             `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
+	Nodeport             int64                                              `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
+	PersistentVolumes    *[]DeploymentManifestBase_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
+	SecretDefinitions    *[]DeploymentManifestBase_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
+	Secrets              *[]string                                          `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
+	SecurityPolicies     *[]DeploymentManifestBase_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
 }
 
 // Component_ElementTrigger represents the OpenAPI component schema
@@ -534,9 +588,10 @@ type Component_EventBatchingConfig struct {
 // Component_ExternalAccess represents the OpenAPI component schema
 // Component: #/components/schemas/ExternalAccess
 type Component_ExternalAccess struct {
-	Gateway   string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
-	Hostnames *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Use \"*\" to accept any gateway hostname."`
-	RoutePath string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
 }
 
 // Component_Function represents the OpenAPI component schema
@@ -580,7 +635,7 @@ type Component_FunctionCreate struct {
 	RevisionAlias         string    `json:"revision_alias,omitempty" yaml:"revision_alias,omitempty" required:"false" doc:"Alias for the revision. If not provided, the revision number will be used."`
 	RevisionDescription   string    `json:"revision_description,omitempty" yaml:"revision_description,omitempty" required:"false" doc:"Description of the revision."`
 	Runtime               string    `json:"runtime,omitempty" yaml:"runtime,omitempty" required:"false" doc:""`
-	SkipImageValidation   bool      `json:"skip_image_validation,omitempty" yaml:"skip_image_validation,omitempty" required:"false" doc:"Skip image reachability validation when creating the function. Useful when the container registry uses authentication that the provisioning service cannot access (e.g., ECR with IRSA where only the K8s cluster has credentials)."`
+	SkipImageValidation   bool      `json:"skip_image_validation,omitempty" yaml:"skip_image_validation,omitempty" required:"false" doc:"Deprecated. Prefer setting the container registry's is_accessible_to_data_engine to false, which also skips create-time image reachability validation. Kept for compatibility / internal use."`
 	Tags                  *[]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
@@ -591,6 +646,7 @@ type Component_FunctionDeploymentConfig struct {
 	EnvironmentVariables *[]FunctionDeploymentConfig_EnvironmentVariablesItem `json:"environment_variables,omitempty" yaml:"environment_variables,omitempty" required:"false" doc:""`
 	EventBatching        FunctionDeploymentConfig_EventBatching               `json:"event_batching,omitempty" yaml:"event_batching,omitempty" required:"false" doc:""`
 	LogLevel             string                                               `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level for functions and services."`
+	SecretDefinitions    *[]FunctionDeploymentConfig_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                            `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
 }
 
@@ -748,6 +804,14 @@ type Component_HPAConfig struct {
 type Component_HealthChecks struct {
 	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
 	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
+}
+
+// Component_HourlyAnalytics represents the OpenAPI component schema
+// Component: #/components/schemas/HourlyAnalytics
+type Component_HourlyAnalytics struct {
+	Analytics HourlyAnalytics_Analytics `json:"analytics,omitempty" yaml:"analytics,omitempty" required:"true" doc:"Summary statistics for a metric over the last hour."`
+	Values    *[]string                 `json:"values,omitempty" yaml:"values,omitempty" required:"true" doc:"One summed value per minute over the last hour (60 entries); null for minutes with no data."`
 }
 
 // Component_IsPromoteSupportedResponse represents the OpenAPI component schema
@@ -787,6 +851,24 @@ type Component_JwtProviderCreate struct {
 	Description string    `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
 	Issuer      string    `json:"issuer,omitempty" yaml:"issuer,omitempty" required:"false" doc:"JWT issuer (optional)"`
 	Tags        *[]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+}
+
+// Component_JwtProviderSearchResult represents the OpenAPI component schema
+// Component: #/components/schemas/JwtProviderSearchResult
+type Component_JwtProviderSearchResult struct {
+	JwksUri      string                        `json:"jwks_uri,omitempty" yaml:"jwks_uri,omitempty" required:"true" doc:"URI for the JSON Web Key Set"`
+	Name         string                        `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"JWT Provider name (must be DNS-1123 label compliant: lowercase alphanumeric and hyphens, must start and end with alphanumeric). Used as the Kubernetes resource name directly."`
+	ResourceType string                        `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
+	CreatedAt    string                        `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	Description  string                        `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Guid         string                        `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Id           int64                         `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	Issuer       string                        `json:"issuer,omitempty" yaml:"issuer,omitempty" required:"false" doc:"JWT issuer (optional)"`
+	Owner        JwtProviderSearchResult_Owner `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	Tags         *[]string                     `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid   string                        `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	UpdatedAt    string                        `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	Vrn          string                        `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
 // Component_JwtProviderUpdate represents the OpenAPI component schema
@@ -980,7 +1062,7 @@ type Component_MTLSAuthenticationCredentialsValidate struct {
 type Component_Manifest struct {
 	Config              string                              `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -992,6 +1074,16 @@ type Component_ManifestLinks struct{}
 // Component: #/components/schemas/ManifestTriggers
 type Component_ManifestTriggers struct{}
 
+// Component_MetricAnalytics represents the OpenAPI component schema
+// Component: #/components/schemas/MetricAnalytics
+type Component_MetricAnalytics struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+	Min     float64 `json:"min,omitempty" yaml:"min,omitempty" required:"true" doc:""`
+	P95     float64 `json:"p95,omitempty" yaml:"p95,omitempty" required:"true" doc:""`
+	P99     float64 `json:"p99,omitempty" yaml:"p99,omitempty" required:"true" doc:""`
+}
+
 // Component_PersistentVolumeConfig represents the OpenAPI component schema
 // Component: #/components/schemas/PersistentVolumeConfig
 type Component_PersistentVolumeConfig struct {
@@ -1001,35 +1093,30 @@ type Component_PersistentVolumeConfig struct {
 	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
 	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
 	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
-	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC: - Filesystem: Volume is mounted as a filesystem (default, works with NFS, most storage) - Block: Volume is exposed as a raw block device (for databases, specialized workloads)"`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
 }
 
 // Component_Pipeline represents the OpenAPI component schema
 // Component: #/components/schemas/Pipeline
 type Component_Pipeline struct {
-	Name                 string         `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
-	CreatedAt            string         `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
-	Description          string         `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
-	Guid                 string         `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	Id                   int64          `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
-	KubernetesClusterVrn string         `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	LastRevisionNumber   int64          `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"The latest revision number"`
-	Namespace            string         `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
-	Owner                Pipeline_Owner `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
-	Reason               string         `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for status current"`
-	StackGuid            string         `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	StackRevisionNumber  int64          `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this pipeline (null if created directly)"`
-	Status               string         `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of pipeline deployment"`
-	Tags                 *[]string      `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
-	TenantGuid           string         `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	UpdatedAt            string         `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
-	Vrn                  string         `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-}
-
-// Component_PipelineBulkPromoteRequest represents the OpenAPI component schema
-// Component: #/components/schemas/PipelineBulkPromoteRequest
-type Component_PipelineBulkPromoteRequest struct {
-	PipelineGuids string `json:"pipeline_guids,omitempty" yaml:"pipeline_guids,omitempty" required:"true" doc:"List of pipeline GUIDs to promote"`
+	Name                 string                                        `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
+	CreatedAt            string                                        `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	Description          string                                        `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Guid                 string                                        `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Id                   int64                                         `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	KubernetesClusterVrn string                                        `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	LastRevisionNumber   int64                                         `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"The latest revision number"`
+	Namespace            string                                        `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
+	Owner                Pipeline_Owner                                `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	Reason               string                                        `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for status current"`
+	StackGuid            string                                        `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	StackRevisionNumber  int64                                         `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this pipeline (null if created directly)"`
+	Status               string                                        `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of pipeline deployment"`
+	Tags                 *[]string                                     `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid           string                                        `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	UpdatedAt            string                                        `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	UsedResources        map[string]*[]Pipeline_UsedResourcesValueItem `json:"used_resources,omitempty" yaml:"used_resources,omitempty" required:"false" doc:"Per-function-deployment resource usage, keyed by function deployment name. Each value is the list of pod resources for that function deployment (empty when scaled to zero)."`
+	Vrn                  string                                        `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
 // Component_PipelineConfig represents the OpenAPI component schema
@@ -1037,6 +1124,7 @@ type Component_PipelineBulkPromoteRequest struct {
 type Component_PipelineConfig struct {
 	Configmaps           *[]PipelineConfig_ConfigmapsItem           `json:"configmaps,omitempty" yaml:"configmaps,omitempty" required:"false" doc:"ConfigMaps that will be mounted to the deployment"`
 	EnvironmentVariables *[]PipelineConfig_EnvironmentVariablesItem `json:"environment_variables,omitempty" yaml:"environment_variables,omitempty" required:"false" doc:""`
+	SecretDefinitions    *[]PipelineConfig_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                  `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
 }
 
@@ -1075,6 +1163,13 @@ type Component_PipelineGuidsRequest struct {
 	PipelineGuids *[]string `json:"pipeline_guids,omitempty" yaml:"pipeline_guids,omitempty" required:"true" doc:"List of pipeline GUIDs"`
 }
 
+// Component_PipelineIdentity represents the OpenAPI component schema
+// Component: #/components/schemas/PipelineIdentity
+type Component_PipelineIdentity struct {
+	Guid string `json:"guid,omitempty" yaml:"guid,omitempty" required:"true" doc:"A globally unique identifier (GUID) for the resource."`
+	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"The pipeline's name"`
+}
+
 // Component_PipelineIsPromoteSupportedRequest represents the OpenAPI component schema
 // Component: #/components/schemas/PipelineIsPromoteSupportedRequest
 type Component_PipelineIsPromoteSupportedRequest struct {
@@ -1103,25 +1198,26 @@ type Component_PipelineRevision struct {
 // Component_PipelineSearchResult represents the OpenAPI component schema
 // Component: #/components/schemas/PipelineSearchResult
 type Component_PipelineSearchResult struct {
-	Name                 string                     `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
-	ResourceType         string                     `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
-	CreatedAt            string                     `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
-	Description          string                     `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
-	Guid                 string                     `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	Id                   int64                      `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
-	KubernetesClusterVrn string                     `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	LastRevisionNumber   int64                      `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"The latest revision number"`
-	LatestRevision       string                     `json:"latest_revision,omitempty" yaml:"latest_revision,omitempty" required:"false" doc:""`
-	Namespace            string                     `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
-	Owner                PipelineSearchResult_Owner `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
-	Reason               string                     `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for status current"`
-	StackGuid            string                     `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	StackRevisionNumber  int64                      `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this pipeline (null if created directly)"`
-	Status               string                     `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of pipeline deployment"`
-	Tags                 *[]string                  `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
-	TenantGuid           string                     `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	UpdatedAt            string                     `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
-	Vrn                  string                     `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	Name                 string                                                    `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
+	ResourceType         string                                                    `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
+	CreatedAt            string                                                    `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	Description          string                                                    `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Guid                 string                                                    `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Id                   int64                                                     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	KubernetesClusterVrn string                                                    `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	LastRevisionNumber   int64                                                     `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"The latest revision number"`
+	LatestRevision       string                                                    `json:"latest_revision,omitempty" yaml:"latest_revision,omitempty" required:"false" doc:""`
+	Namespace            string                                                    `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
+	Owner                PipelineSearchResult_Owner                                `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	Reason               string                                                    `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for status current"`
+	StackGuid            string                                                    `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	StackRevisionNumber  int64                                                     `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this pipeline (null if created directly)"`
+	Status               string                                                    `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of pipeline deployment"`
+	Tags                 *[]string                                                 `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid           string                                                    `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	UpdatedAt            string                                                    `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	UsedResources        map[string]*[]PipelineSearchResult_UsedResourcesValueItem `json:"used_resources,omitempty" yaml:"used_resources,omitempty" required:"false" doc:"Per-function-deployment resource usage, keyed by function deployment name. Each value is the list of pod resources for that function deployment (empty when scaled to zero)."`
+	Vrn                  string                                                    `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
 // Component_PipelineUpdate represents the OpenAPI component schema
@@ -1135,6 +1231,29 @@ type Component_PipelineUpdate struct {
 	Tags                 *[]string               `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
+// Component_PodAnalytics represents the OpenAPI component schema
+// Component: #/components/schemas/PodAnalytics
+type Component_PodAnalytics struct {
+	Cpu         PodAnalytics_Cpu `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"true" doc:"Average and max for a metric over the last hour, for a single pod."`
+	FirstUpdate string           `json:"first_update,omitempty" yaml:"first_update,omitempty" required:"true" doc:"Timestamp of the earliest metric datapoint received from this pod within the last hour. Shows when the pod started reporting (e.g. when it scaled up)."`
+	LastUpdate  string           `json:"last_update,omitempty" yaml:"last_update,omitempty" required:"true" doc:"Timestamp of the most recent metric datapoint received from this pod. Lets consumers tell apart currently-live pods from ones that have since scaled down or died but are still shown because they reported data within the last hour."`
+	Mem         PodAnalytics_Mem `json:"mem,omitempty" yaml:"mem,omitempty" required:"true" doc:"Average and max for a metric over the last hour, for a single pod."`
+}
+
+// Component_PodMetricStats represents the OpenAPI component schema
+// Component: #/components/schemas/PodMetricStats
+type Component_PodMetricStats struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+}
+
+// Component_PodResources represents the OpenAPI component schema
+// Component: #/components/schemas/PodResources
+type Component_PodResources struct {
+	Cpu int64 `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU used by the pod, in millicores."`
+	Mem int64 `json:"mem,omitempty" yaml:"mem,omitempty" required:"false" doc:"Memory used by the pod, in bytes."`
+}
+
 // Component_ProbeConfig represents the OpenAPI component schema
 // Component: #/components/schemas/ProbeConfig
 type Component_ProbeConfig struct {
@@ -1144,11 +1263,38 @@ type Component_ProbeConfig struct {
 	TimeoutSeconds      int64 `json:"timeout_seconds,omitempty" yaml:"timeout_seconds,omitempty" required:"false" doc:"Probe timeout in seconds"`
 }
 
+// Component_PromoteResult represents the OpenAPI component schema
+// Component: #/components/schemas/PromoteResult
+type Component_PromoteResult struct {
+	Outcome              string `json:"outcome,omitempty" yaml:"outcome,omitempty" required:"true" doc:""`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion. Promotion creates a new pipeline with a new GUID and deletes the original. Null when the original pipeline could not be resolved."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Present only when outcome=rejected."`
+	StackGuid            string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"Null only when promoting by pipeline_guids and the pipeline could not be resolved to a stack."`
+}
+
 // Component_PromoteSupportStatus represents the OpenAPI component schema
 // Component: #/components/schemas/PromoteSupportStatus
 type Component_PromoteSupportStatus struct {
 	IsSupported bool   `json:"is_supported,omitempty" yaml:"is_supported,omitempty" required:"true" doc:"Whether promotion is supported for this stack"`
 	Reason      string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Reason why promotion is not supported (null if is_supported is true)"`
+}
+
+// Component_PromotionStatusRequest represents the OpenAPI component schema
+// Component: #/components/schemas/PromotionStatusRequest
+type Component_PromotionStatusRequest struct {
+	PipelineGuids *[]string `json:"pipeline_guids,omitempty" yaml:"pipeline_guids,omitempty" required:"false" doc:""`
+	StackGuids    *[]string `json:"stack_guids,omitempty" yaml:"stack_guids,omitempty" required:"false" doc:""`
+}
+
+// Component_PromotionSummary represents the OpenAPI component schema
+// Component: #/components/schemas/PromotionSummary
+type Component_PromotionSummary struct {
+	AwaitingSubmission int64 `json:"awaiting_submission,omitempty" yaml:"awaiting_submission,omitempty" required:"true" doc:"Auto-generated stacks that have not been submitted for promotion yet. Submit via POST /pipelines/promote-all to process all eligible stacks, or POST /pipelines/bulk-promote with specific stack GUIDs."`
+	Failed             int64 `json:"failed,omitempty" yaml:"failed,omitempty" required:"true" doc:"Stacks where promotion failed. Submit via POST /pipelines/promote-all to reprocess all eligible stacks, or POST /pipelines/bulk-promote with specific stack GUIDs."`
+	InProgress         int64 `json:"in_progress,omitempty" yaml:"in_progress,omitempty" required:"true" doc:"Stacks currently being promoted. No action needed — poll this endpoint to track progress."`
+	Stalled            int64 `json:"stalled,omitempty" yaml:"stalled,omitempty" required:"true" doc:"Stacks where promotion started but the process is no longer running. Submit via POST /pipelines/promote-all to reprocess all eligible stacks, or POST /pipelines/bulk-promote with specific stack GUIDs."`
+	Succeeded          int64 `json:"succeeded,omitempty" yaml:"succeeded,omitempty" required:"true" doc:"Stacks that have been successfully promoted. No action needed."`
+	Total              int64 `json:"total,omitempty" yaml:"total,omitempty" required:"true" doc:"Total number of stacks relevant to promotion. Equals the sum of all other counters. When total equals succeeded, all promotions are complete."`
 }
 
 // Component_RemoveDataEngineRequest represents the OpenAPI component schema
@@ -1160,65 +1306,67 @@ type Component_RemoveDataEngineRequest struct {
 // Component_Report represents the OpenAPI component schema
 // Component: #/components/schemas/Report
 type Component_Report struct {
-	MetricNames         *[]string         `json:"metric_names,omitempty" yaml:"metric_names,omitempty" required:"true" doc:"List of metric names to query (1-10 metrics, e.g. [\"http_requests\", \"memory_usage\", \"dataengine.function.invocations\"]). Each name allows alphanumeric characters, dots, colons, underscores, hyphens, and slashes."`
-	ReportName          string            `json:"report_name,omitempty" yaml:"report_name,omitempty" required:"true" doc:"Name of the report"`
-	Agent               string            `json:"agent,omitempty" yaml:"agent,omitempty" required:"false" doc:"Agent name filter (optional)"`
-	AgentDeployment     string            `json:"agent_deployment,omitempty" yaml:"agent_deployment,omitempty" required:"false" doc:"Agent deployment name filter (optional)"`
-	Aggregation         string            `json:"aggregation,omitempty" yaml:"aggregation,omitempty" required:"false" doc:"Aggregation method (defaults to 'avg')"`
-	AttributeFilters    map[string]string `json:"attribute_filters,omitempty" yaml:"attribute_filters,omitempty" required:"false" doc:"JSON-encoded key-value object to filter by OTEL data-point attributes (e.g. {\"route\":\"/ping\",\"method\":\"GET\"}). Requires scoping filters: stack + one of function/service/agent."`
-	AttributeGroupBy    string            `json:"attribute_group_by,omitempty" yaml:"attribute_group_by,omitempty" required:"false" doc:"The OTEL data-point attribute key to group by (e.g. \"route\"). Required when group_by=attribute. Must be combined with scoping filters (stack + one of function/service/agent)."`
-	BottomK             int64             `json:"bottom_k,omitempty" yaml:"bottom_k,omitempty" required:"false" doc:"Return only the bottom K groups with lowest values (requires group_by, mutually exclusive with top_k) (optional)"`
-	CreatedAt           string            `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"When the report was created"`
-	Description         string            `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"Optional description of the report"`
-	ExecutionCount      int64             `json:"execution_count,omitempty" yaml:"execution_count,omitempty" required:"false" doc:"Number of times the report has been executed"`
-	Function            string            `json:"function,omitempty" yaml:"function,omitempty" required:"false" doc:"Function name filter (optional)"`
-	FunctionDeployment  string            `json:"function_deployment,omitempty" yaml:"function_deployment,omitempty" required:"false" doc:"Function deployment name filter (optional)"`
-	GroupBy             string            `json:"group_by,omitempty" yaml:"group_by,omitempty" required:"false" doc:"Group metrics by entity name, by an OTEL attribute key (requires attribute_group_by), or by multiple dimensions (requires multiple_group_by_keys)"`
-	IsUsedInDashboard   bool              `json:"is_used_in_dashboard,omitempty" yaml:"is_used_in_dashboard,omitempty" required:"false" doc:"Flag indicating if this report is used in a dashboard"`
-	LastExecutedAt      string            `json:"last_executed_at,omitempty" yaml:"last_executed_at,omitempty" required:"false" doc:"When the report was last executed"`
-	MaxPoints           int64             `json:"max_points,omitempty" yaml:"max_points,omitempty" required:"false" doc:"Maximum data points to return (defaults to 60)"`
-	MetricType          string            `json:"metric_type,omitempty" yaml:"metric_type,omitempty" required:"false" doc:"Type of metric (Counter, Histogram, Gauge, UpDownCounter)"`
-	MultipleGroupByKeys *[]string         `json:"multiple_group_by_keys,omitempty" yaml:"multiple_group_by_keys,omitempty" required:"false" doc:"Pair of grouping dimensions (exactly 2). Required when group_by=multiple, rejected otherwise. Valid values are all GroupBy enum values except 'attribute' and 'multiple'."`
-	OwnerVid            int64             `json:"owner_vid,omitempty" yaml:"owner_vid,omitempty" required:"false" doc:"User ID (VID) of the report owner (server-generated)"`
-	Pipeline            string            `json:"pipeline,omitempty" yaml:"pipeline,omitempty" required:"false" doc:"Pipeline name filter (optional)"`
-	ReportId            string            `json:"report_id,omitempty" yaml:"report_id,omitempty" required:"false" doc:"Unique identifier for a report (server-generated UUID)"`
-	Service             string            `json:"service,omitempty" yaml:"service,omitempty" required:"false" doc:"Service name filter (optional)"`
-	ServiceDeployment   string            `json:"service_deployment,omitempty" yaml:"service_deployment,omitempty" required:"false" doc:"Service deployment name filter (optional)"`
-	Stack               string            `json:"stack,omitempty" yaml:"stack,omitempty" required:"false" doc:"Stack name filter (optional)"`
-	TimeEnd             string            `json:"time_end,omitempty" yaml:"time_end,omitempty" required:"false" doc:"Absolute end time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_start for a fixed time window."`
-	TimeStart           string            `json:"time_start,omitempty" yaml:"time_start,omitempty" required:"false" doc:"Absolute start time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_end for a fixed time window."`
-	Timeframe           string            `json:"timeframe,omitempty" yaml:"timeframe,omitempty" required:"false" doc:"Time window like '30s', '5m', '1h', '7d'. Defaults to '1h' if not specified."`
-	TopK                int64             `json:"top_k,omitempty" yaml:"top_k,omitempty" required:"false" doc:"Return only the top K groups with highest values (requires group_by, mutually exclusive with bottom_k) (optional)"`
-	UpdatedAt           string            `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"When the report was last modified"`
+	MetricNames         *[]string                    `json:"metric_names,omitempty" yaml:"metric_names,omitempty" required:"true" doc:"List of metric names to query (1-10 metrics, e.g. [\"http_requests\", \"memory_usage\", \"dataengine.function.invocations\"]). Each name allows alphanumeric characters, dots, colons, underscores, hyphens, and slashes."`
+	ReportName          string                       `json:"report_name,omitempty" yaml:"report_name,omitempty" required:"true" doc:"Name of the report"`
+	Agent               string                       `json:"agent,omitempty" yaml:"agent,omitempty" required:"false" doc:"Agent name filter (optional)"`
+	AgentDeployment     string                       `json:"agent_deployment,omitempty" yaml:"agent_deployment,omitempty" required:"false" doc:"Agent deployment name filter (optional)"`
+	Aggregation         string                       `json:"aggregation,omitempty" yaml:"aggregation,omitempty" required:"false" doc:"Aggregation method (defaults to 'avg')"`
+	AttributeFilters    map[string]map[string]string `json:"attribute_filters,omitempty" yaml:"attribute_filters,omitempty" required:"false" doc:"Per-metric attribute filters, mapping each metric name to its OTEL data-point attribute key-value filters (e.g. {\"metric-1\":{\"route\":\"/ping\"},\"metric-2\":{\"status\":\"200\"}}). Requires scoping filters: stack + one of function/service/agent."`
+	AttributeGroupBy    string                       `json:"attribute_group_by,omitempty" yaml:"attribute_group_by,omitempty" required:"false" doc:"The OTEL data-point attribute key to group by (e.g. \"route\"). Required when group_by=attribute. Must be combined with scoping filters (stack + one of function/service/agent)."`
+	BottomK             int64                        `json:"bottom_k,omitempty" yaml:"bottom_k,omitempty" required:"false" doc:"Return only the bottom K groups with lowest values (requires group_by, mutually exclusive with top_k) (optional)"`
+	CreatedAt           string                       `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"When the report was created"`
+	Description         string                       `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"Optional description of the report"`
+	EmitterType         string                       `json:"emitter_type,omitempty" yaml:"emitter_type,omitempty" required:"false" doc:"Filter by emitter type - function, service, agent (optional)"`
+	ExecutionCount      int64                        `json:"execution_count,omitempty" yaml:"execution_count,omitempty" required:"false" doc:"Number of times the report has been executed"`
+	Function            string                       `json:"function,omitempty" yaml:"function,omitempty" required:"false" doc:"Function name filter (optional)"`
+	FunctionDeployment  string                       `json:"function_deployment,omitempty" yaml:"function_deployment,omitempty" required:"false" doc:"Function deployment name filter (optional)"`
+	GroupBy             string                       `json:"group_by,omitempty" yaml:"group_by,omitempty" required:"false" doc:"Group metrics by entity name, by an OTEL attribute key (requires attribute_group_by), or by multiple dimensions (requires multiple_group_by_keys)"`
+	IsUsedInDashboard   bool                         `json:"is_used_in_dashboard,omitempty" yaml:"is_used_in_dashboard,omitempty" required:"false" doc:"Flag indicating if this report is used in a dashboard"`
+	LastExecutedAt      string                       `json:"last_executed_at,omitempty" yaml:"last_executed_at,omitempty" required:"false" doc:"When the report was last executed"`
+	MaxPoints           int64                        `json:"max_points,omitempty" yaml:"max_points,omitempty" required:"false" doc:"Maximum data points to return (defaults to 60)"`
+	MetricType          string                       `json:"metric_type,omitempty" yaml:"metric_type,omitempty" required:"false" doc:"Type of metric (Counter, Histogram, Gauge, UpDownCounter)"`
+	MultipleGroupByKeys *[]string                    `json:"multiple_group_by_keys,omitempty" yaml:"multiple_group_by_keys,omitempty" required:"false" doc:"Pair of grouping dimensions (exactly 2). Required when group_by=multiple, rejected otherwise. Valid values are all GroupBy enum values except 'attribute' and 'multiple'."`
+	OwnerVid            int64                        `json:"owner_vid,omitempty" yaml:"owner_vid,omitempty" required:"false" doc:"User ID (VID) of the report owner (server-generated)"`
+	Pipeline            string                       `json:"pipeline,omitempty" yaml:"pipeline,omitempty" required:"false" doc:"Pipeline name filter (optional)"`
+	ReportId            string                       `json:"report_id,omitempty" yaml:"report_id,omitempty" required:"false" doc:"Unique identifier for a report (server-generated UUID)"`
+	Service             string                       `json:"service,omitempty" yaml:"service,omitempty" required:"false" doc:"Service name filter (optional)"`
+	ServiceDeployment   string                       `json:"service_deployment,omitempty" yaml:"service_deployment,omitempty" required:"false" doc:"Service deployment name filter (optional)"`
+	Stack               string                       `json:"stack,omitempty" yaml:"stack,omitempty" required:"false" doc:"Stack name filter (optional)"`
+	TimeEnd             string                       `json:"time_end,omitempty" yaml:"time_end,omitempty" required:"false" doc:"Absolute end time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_start for a fixed time window."`
+	TimeStart           string                       `json:"time_start,omitempty" yaml:"time_start,omitempty" required:"false" doc:"Absolute start time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_end for a fixed time window."`
+	Timeframe           string                       `json:"timeframe,omitempty" yaml:"timeframe,omitempty" required:"false" doc:"Time window like '30s', '5m', '1h', '7d'. Defaults to '1h' if not specified."`
+	TopK                int64                        `json:"top_k,omitempty" yaml:"top_k,omitempty" required:"false" doc:"Return only the top K groups with highest values (requires group_by, mutually exclusive with bottom_k) (optional)"`
+	UpdatedAt           string                       `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"When the report was last modified"`
 }
 
 // Component_ReportCreate represents the OpenAPI component schema
 // Component: #/components/schemas/ReportCreate
 type Component_ReportCreate struct {
-	MetricNames         *[]string         `json:"metric_names,omitempty" yaml:"metric_names,omitempty" required:"true" doc:"List of metric names to query (1-10 metrics, e.g. [\"http_requests\", \"memory_usage\", \"dataengine.function.invocations\"]). Each name allows alphanumeric characters, dots, colons, underscores, hyphens, and slashes."`
-	ReportName          string            `json:"report_name,omitempty" yaml:"report_name,omitempty" required:"true" doc:"Name of the report"`
-	Agent               string            `json:"agent,omitempty" yaml:"agent,omitempty" required:"false" doc:"Agent name filter (optional)"`
-	AgentDeployment     string            `json:"agent_deployment,omitempty" yaml:"agent_deployment,omitempty" required:"false" doc:"Agent deployment name filter (optional)"`
-	Aggregation         string            `json:"aggregation,omitempty" yaml:"aggregation,omitempty" required:"false" doc:"Aggregation method (defaults to 'avg')"`
-	AttributeFilters    map[string]string `json:"attribute_filters,omitempty" yaml:"attribute_filters,omitempty" required:"false" doc:"JSON-encoded key-value object to filter by OTEL data-point attributes (e.g. {\"route\":\"/ping\",\"method\":\"GET\"}). Requires scoping filters: stack + one of function/service/agent."`
-	AttributeGroupBy    string            `json:"attribute_group_by,omitempty" yaml:"attribute_group_by,omitempty" required:"false" doc:"The OTEL data-point attribute key to group by (e.g. \"route\"). Required when group_by=attribute. Must be combined with scoping filters (stack + one of function/service/agent)."`
-	BottomK             int64             `json:"bottom_k,omitempty" yaml:"bottom_k,omitempty" required:"false" doc:"Return only the bottom K groups with lowest values (requires group_by, mutually exclusive with top_k) (optional)"`
-	Description         string            `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"Optional description of the report"`
-	Function            string            `json:"function,omitempty" yaml:"function,omitempty" required:"false" doc:"Function name filter (optional)"`
-	FunctionDeployment  string            `json:"function_deployment,omitempty" yaml:"function_deployment,omitempty" required:"false" doc:"Function deployment name filter (optional)"`
-	GroupBy             string            `json:"group_by,omitempty" yaml:"group_by,omitempty" required:"false" doc:"Group metrics by entity name, by an OTEL attribute key (requires attribute_group_by), or by multiple dimensions (requires multiple_group_by_keys)"`
-	IsUsedInDashboard   bool              `json:"is_used_in_dashboard,omitempty" yaml:"is_used_in_dashboard,omitempty" required:"false" doc:"Flag indicating if this report is used in a dashboard"`
-	MaxPoints           int64             `json:"max_points,omitempty" yaml:"max_points,omitempty" required:"false" doc:"Maximum data points to return (defaults to 60)"`
-	MetricType          string            `json:"metric_type,omitempty" yaml:"metric_type,omitempty" required:"false" doc:"Type of metric (Counter, Histogram, Gauge, UpDownCounter)"`
-	MultipleGroupByKeys *[]string         `json:"multiple_group_by_keys,omitempty" yaml:"multiple_group_by_keys,omitempty" required:"false" doc:"Pair of grouping dimensions (exactly 2). Required when group_by=multiple, rejected otherwise. Valid values are all GroupBy enum values except 'attribute' and 'multiple'."`
-	Pipeline            string            `json:"pipeline,omitempty" yaml:"pipeline,omitempty" required:"false" doc:"Pipeline name filter (optional)"`
-	Service             string            `json:"service,omitempty" yaml:"service,omitempty" required:"false" doc:"Service name filter (optional)"`
-	ServiceDeployment   string            `json:"service_deployment,omitempty" yaml:"service_deployment,omitempty" required:"false" doc:"Service deployment name filter (optional)"`
-	Stack               string            `json:"stack,omitempty" yaml:"stack,omitempty" required:"false" doc:"Stack name filter (optional)"`
-	TimeEnd             string            `json:"time_end,omitempty" yaml:"time_end,omitempty" required:"false" doc:"Absolute end time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_start for a fixed time window."`
-	TimeStart           string            `json:"time_start,omitempty" yaml:"time_start,omitempty" required:"false" doc:"Absolute start time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_end for a fixed time window."`
-	Timeframe           string            `json:"timeframe,omitempty" yaml:"timeframe,omitempty" required:"false" doc:"Time window like '30s', '5m', '1h', '7d'. Defaults to '1h' if not specified."`
-	TopK                int64             `json:"top_k,omitempty" yaml:"top_k,omitempty" required:"false" doc:"Return only the top K groups with highest values (requires group_by, mutually exclusive with bottom_k) (optional)"`
+	MetricNames         *[]string                    `json:"metric_names,omitempty" yaml:"metric_names,omitempty" required:"true" doc:"List of metric names to query (1-10 metrics, e.g. [\"http_requests\", \"memory_usage\", \"dataengine.function.invocations\"]). Each name allows alphanumeric characters, dots, colons, underscores, hyphens, and slashes."`
+	ReportName          string                       `json:"report_name,omitempty" yaml:"report_name,omitempty" required:"true" doc:"Name of the report"`
+	Agent               string                       `json:"agent,omitempty" yaml:"agent,omitempty" required:"false" doc:"Agent name filter (optional)"`
+	AgentDeployment     string                       `json:"agent_deployment,omitempty" yaml:"agent_deployment,omitempty" required:"false" doc:"Agent deployment name filter (optional)"`
+	Aggregation         string                       `json:"aggregation,omitempty" yaml:"aggregation,omitempty" required:"false" doc:"Aggregation method (defaults to 'avg')"`
+	AttributeFilters    map[string]map[string]string `json:"attribute_filters,omitempty" yaml:"attribute_filters,omitempty" required:"false" doc:"Per-metric attribute filters, mapping each metric name to its OTEL data-point attribute key-value filters (e.g. {\"metric-1\":{\"route\":\"/ping\"},\"metric-2\":{\"status\":\"200\"}}). Requires scoping filters: stack + one of function/service/agent."`
+	AttributeGroupBy    string                       `json:"attribute_group_by,omitempty" yaml:"attribute_group_by,omitempty" required:"false" doc:"The OTEL data-point attribute key to group by (e.g. \"route\"). Required when group_by=attribute. Must be combined with scoping filters (stack + one of function/service/agent)."`
+	BottomK             int64                        `json:"bottom_k,omitempty" yaml:"bottom_k,omitempty" required:"false" doc:"Return only the bottom K groups with lowest values (requires group_by, mutually exclusive with top_k) (optional)"`
+	Description         string                       `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"Optional description of the report"`
+	EmitterType         string                       `json:"emitter_type,omitempty" yaml:"emitter_type,omitempty" required:"false" doc:"Filter by emitter type - function, service, agent (optional)"`
+	Function            string                       `json:"function,omitempty" yaml:"function,omitempty" required:"false" doc:"Function name filter (optional)"`
+	FunctionDeployment  string                       `json:"function_deployment,omitempty" yaml:"function_deployment,omitempty" required:"false" doc:"Function deployment name filter (optional)"`
+	GroupBy             string                       `json:"group_by,omitempty" yaml:"group_by,omitempty" required:"false" doc:"Group metrics by entity name, by an OTEL attribute key (requires attribute_group_by), or by multiple dimensions (requires multiple_group_by_keys)"`
+	IsUsedInDashboard   bool                         `json:"is_used_in_dashboard,omitempty" yaml:"is_used_in_dashboard,omitempty" required:"false" doc:"Flag indicating if this report is used in a dashboard"`
+	MaxPoints           int64                        `json:"max_points,omitempty" yaml:"max_points,omitempty" required:"false" doc:"Maximum data points to return (defaults to 60)"`
+	MetricType          string                       `json:"metric_type,omitempty" yaml:"metric_type,omitempty" required:"false" doc:"Type of metric (Counter, Histogram, Gauge, UpDownCounter)"`
+	MultipleGroupByKeys *[]string                    `json:"multiple_group_by_keys,omitempty" yaml:"multiple_group_by_keys,omitempty" required:"false" doc:"Pair of grouping dimensions (exactly 2). Required when group_by=multiple, rejected otherwise. Valid values are all GroupBy enum values except 'attribute' and 'multiple'."`
+	Pipeline            string                       `json:"pipeline,omitempty" yaml:"pipeline,omitempty" required:"false" doc:"Pipeline name filter (optional)"`
+	Service             string                       `json:"service,omitempty" yaml:"service,omitempty" required:"false" doc:"Service name filter (optional)"`
+	ServiceDeployment   string                       `json:"service_deployment,omitempty" yaml:"service_deployment,omitempty" required:"false" doc:"Service deployment name filter (optional)"`
+	Stack               string                       `json:"stack,omitempty" yaml:"stack,omitempty" required:"false" doc:"Stack name filter (optional)"`
+	TimeEnd             string                       `json:"time_end,omitempty" yaml:"time_end,omitempty" required:"false" doc:"Absolute end time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_start for a fixed time window."`
+	TimeStart           string                       `json:"time_start,omitempty" yaml:"time_start,omitempty" required:"false" doc:"Absolute start time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_end for a fixed time window."`
+	Timeframe           string                       `json:"timeframe,omitempty" yaml:"timeframe,omitempty" required:"false" doc:"Time window like '30s', '5m', '1h', '7d'. Defaults to '1h' if not specified."`
+	TopK                int64                        `json:"top_k,omitempty" yaml:"top_k,omitempty" required:"false" doc:"Return only the top K groups with highest values (requires group_by, mutually exclusive with bottom_k) (optional)"`
 }
 
 // Component_ReportSummary represents the OpenAPI component schema
@@ -1237,30 +1385,31 @@ type Component_ReportSummary struct {
 // Component_ReportUpdate represents the OpenAPI component schema
 // Component: #/components/schemas/ReportUpdate
 type Component_ReportUpdate struct {
-	Agent               string            `json:"agent,omitempty" yaml:"agent,omitempty" required:"false" doc:"Agent name filter (optional)"`
-	AgentDeployment     string            `json:"agent_deployment,omitempty" yaml:"agent_deployment,omitempty" required:"false" doc:"Agent deployment name filter (optional)"`
-	Aggregation         string            `json:"aggregation,omitempty" yaml:"aggregation,omitempty" required:"false" doc:"Aggregation method (defaults to 'avg')"`
-	AttributeFilters    map[string]string `json:"attribute_filters,omitempty" yaml:"attribute_filters,omitempty" required:"false" doc:"JSON-encoded key-value object to filter by OTEL data-point attributes (e.g. {\"route\":\"/ping\",\"method\":\"GET\"}). Requires scoping filters: stack + one of function/service/agent."`
-	AttributeGroupBy    string            `json:"attribute_group_by,omitempty" yaml:"attribute_group_by,omitempty" required:"false" doc:"The OTEL data-point attribute key to group by (e.g. \"route\"). Required when group_by=attribute. Must be combined with scoping filters (stack + one of function/service/agent)."`
-	BottomK             int64             `json:"bottom_k,omitempty" yaml:"bottom_k,omitempty" required:"false" doc:"Return only the bottom K groups with lowest values (requires group_by, mutually exclusive with top_k) (optional)"`
-	Description         string            `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"Optional description of the report"`
-	Function            string            `json:"function,omitempty" yaml:"function,omitempty" required:"false" doc:"Function name filter (optional)"`
-	FunctionDeployment  string            `json:"function_deployment,omitempty" yaml:"function_deployment,omitempty" required:"false" doc:"Function deployment name filter (optional)"`
-	GroupBy             string            `json:"group_by,omitempty" yaml:"group_by,omitempty" required:"false" doc:"Group metrics by entity name, by an OTEL attribute key (requires attribute_group_by), or by multiple dimensions (requires multiple_group_by_keys)"`
-	IsUsedInDashboard   bool              `json:"is_used_in_dashboard,omitempty" yaml:"is_used_in_dashboard,omitempty" required:"false" doc:"Flag indicating if this report is used in a dashboard"`
-	MaxPoints           int64             `json:"max_points,omitempty" yaml:"max_points,omitempty" required:"false" doc:"Maximum data points to return (defaults to 60)"`
-	MetricNames         *[]string         `json:"metric_names,omitempty" yaml:"metric_names,omitempty" required:"false" doc:"List of metric names to query (1-10 metrics, e.g. [\"http_requests\", \"memory_usage\", \"dataengine.function.invocations\"]). Each name allows alphanumeric characters, dots, colons, underscores, hyphens, and slashes."`
-	MetricType          string            `json:"metric_type,omitempty" yaml:"metric_type,omitempty" required:"false" doc:"Type of metric (Counter, Histogram, Gauge, UpDownCounter)"`
-	MultipleGroupByKeys *[]string         `json:"multiple_group_by_keys,omitempty" yaml:"multiple_group_by_keys,omitempty" required:"false" doc:"Pair of grouping dimensions (exactly 2). Required when group_by=multiple, rejected otherwise. Valid values are all GroupBy enum values except 'attribute' and 'multiple'."`
-	Pipeline            string            `json:"pipeline,omitempty" yaml:"pipeline,omitempty" required:"false" doc:"Pipeline name filter (optional)"`
-	ReportName          string            `json:"report_name,omitempty" yaml:"report_name,omitempty" required:"false" doc:"Name of the report"`
-	Service             string            `json:"service,omitempty" yaml:"service,omitempty" required:"false" doc:"Service name filter (optional)"`
-	ServiceDeployment   string            `json:"service_deployment,omitempty" yaml:"service_deployment,omitempty" required:"false" doc:"Service deployment name filter (optional)"`
-	Stack               string            `json:"stack,omitempty" yaml:"stack,omitempty" required:"false" doc:"Stack name filter (optional)"`
-	TimeEnd             string            `json:"time_end,omitempty" yaml:"time_end,omitempty" required:"false" doc:"Absolute end time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_start for a fixed time window."`
-	TimeStart           string            `json:"time_start,omitempty" yaml:"time_start,omitempty" required:"false" doc:"Absolute start time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_end for a fixed time window."`
-	Timeframe           string            `json:"timeframe,omitempty" yaml:"timeframe,omitempty" required:"false" doc:"Time window like '30s', '5m', '1h', '7d'. Defaults to '1h' if not specified."`
-	TopK                int64             `json:"top_k,omitempty" yaml:"top_k,omitempty" required:"false" doc:"Return only the top K groups with highest values (requires group_by, mutually exclusive with bottom_k) (optional)"`
+	Agent               string                       `json:"agent,omitempty" yaml:"agent,omitempty" required:"false" doc:"Agent name filter (optional)"`
+	AgentDeployment     string                       `json:"agent_deployment,omitempty" yaml:"agent_deployment,omitempty" required:"false" doc:"Agent deployment name filter (optional)"`
+	Aggregation         string                       `json:"aggregation,omitempty" yaml:"aggregation,omitempty" required:"false" doc:"Aggregation method (defaults to 'avg')"`
+	AttributeFilters    map[string]map[string]string `json:"attribute_filters,omitempty" yaml:"attribute_filters,omitempty" required:"false" doc:"Per-metric attribute filters, mapping each metric name to its OTEL data-point attribute key-value filters (e.g. {\"metric-1\":{\"route\":\"/ping\"},\"metric-2\":{\"status\":\"200\"}}). Requires scoping filters: stack + one of function/service/agent."`
+	AttributeGroupBy    string                       `json:"attribute_group_by,omitempty" yaml:"attribute_group_by,omitempty" required:"false" doc:"The OTEL data-point attribute key to group by (e.g. \"route\"). Required when group_by=attribute. Must be combined with scoping filters (stack + one of function/service/agent)."`
+	BottomK             int64                        `json:"bottom_k,omitempty" yaml:"bottom_k,omitempty" required:"false" doc:"Return only the bottom K groups with lowest values (requires group_by, mutually exclusive with top_k) (optional)"`
+	Description         string                       `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"Optional description of the report"`
+	EmitterType         string                       `json:"emitter_type,omitempty" yaml:"emitter_type,omitempty" required:"false" doc:"Filter by emitter type - function, service, agent (optional)"`
+	Function            string                       `json:"function,omitempty" yaml:"function,omitempty" required:"false" doc:"Function name filter (optional)"`
+	FunctionDeployment  string                       `json:"function_deployment,omitempty" yaml:"function_deployment,omitempty" required:"false" doc:"Function deployment name filter (optional)"`
+	GroupBy             string                       `json:"group_by,omitempty" yaml:"group_by,omitempty" required:"false" doc:"Group metrics by entity name, by an OTEL attribute key (requires attribute_group_by), or by multiple dimensions (requires multiple_group_by_keys)"`
+	IsUsedInDashboard   bool                         `json:"is_used_in_dashboard,omitempty" yaml:"is_used_in_dashboard,omitempty" required:"false" doc:"Flag indicating if this report is used in a dashboard"`
+	MaxPoints           int64                        `json:"max_points,omitempty" yaml:"max_points,omitempty" required:"false" doc:"Maximum data points to return (defaults to 60)"`
+	MetricNames         *[]string                    `json:"metric_names,omitempty" yaml:"metric_names,omitempty" required:"false" doc:"List of metric names to query (1-10 metrics, e.g. [\"http_requests\", \"memory_usage\", \"dataengine.function.invocations\"]). Each name allows alphanumeric characters, dots, colons, underscores, hyphens, and slashes."`
+	MetricType          string                       `json:"metric_type,omitempty" yaml:"metric_type,omitempty" required:"false" doc:"Type of metric (Counter, Histogram, Gauge, UpDownCounter)"`
+	MultipleGroupByKeys *[]string                    `json:"multiple_group_by_keys,omitempty" yaml:"multiple_group_by_keys,omitempty" required:"false" doc:"Pair of grouping dimensions (exactly 2). Required when group_by=multiple, rejected otherwise. Valid values are all GroupBy enum values except 'attribute' and 'multiple'."`
+	Pipeline            string                       `json:"pipeline,omitempty" yaml:"pipeline,omitempty" required:"false" doc:"Pipeline name filter (optional)"`
+	ReportName          string                       `json:"report_name,omitempty" yaml:"report_name,omitempty" required:"false" doc:"Name of the report"`
+	Service             string                       `json:"service,omitempty" yaml:"service,omitempty" required:"false" doc:"Service name filter (optional)"`
+	ServiceDeployment   string                       `json:"service_deployment,omitempty" yaml:"service_deployment,omitempty" required:"false" doc:"Service deployment name filter (optional)"`
+	Stack               string                       `json:"stack,omitempty" yaml:"stack,omitempty" required:"false" doc:"Stack name filter (optional)"`
+	TimeEnd             string                       `json:"time_end,omitempty" yaml:"time_end,omitempty" required:"false" doc:"Absolute end time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_start for a fixed time window."`
+	TimeStart           string                       `json:"time_start,omitempty" yaml:"time_start,omitempty" required:"false" doc:"Absolute start time (ISO 8601 format). Mutually exclusive with timeframe; provide together with time_end for a fixed time window."`
+	Timeframe           string                       `json:"timeframe,omitempty" yaml:"timeframe,omitempty" required:"false" doc:"Time window like '30s', '5m', '1h', '7d'. Defaults to '1h' if not specified."`
+	TopK                int64                        `json:"top_k,omitempty" yaml:"top_k,omitempty" required:"false" doc:"Return only the top K groups with highest values (requires group_by, mutually exclusive with bottom_k) (optional)"`
 }
 
 // Component_RequestAutoscalingConfig represents the OpenAPI component schema
@@ -1317,7 +1466,7 @@ type Component_ResourceUpdate struct {
 // Component_ScheduleTriggerConfig represents the OpenAPI component schema
 // Component: #/components/schemas/ScheduleTriggerConfig
 type Component_ScheduleTriggerConfig struct {
-	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Cron schedule for a Schedule Trigger."`
+	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Schedule for a Schedule Trigger. Accepts a 5-field cron expression, a 6/7-field Quartz expression, or an interval as \"<value><unit>\" with an optional \"@<start time>\" suffix, where the units are s/m/h/d/w and the start time is seconds since epoch in UTC and acts as the anchor of the interval (for example \"10s\" or \"7m@1704067200\"). An interval submitted without a start time is stored anchored at the time of the request."`
 }
 
 // Component_ScheduleTriggerCreate represents the OpenAPI component schema
@@ -1372,58 +1521,73 @@ type Component_SearchResponse struct {
 // Component_SearchResultItem represents the OpenAPI component schema
 // Component: #/components/schemas/SearchResultItem
 type Component_SearchResultItem struct {
-	Broker                       SearchResultItem_Broker                              `json:"broker,omitempty" yaml:"broker,omitempty" required:"true" doc:""`
-	CertificateAuthorityB64      string                                               `json:"certificate_authority_b64,omitempty" yaml:"certificate_authority_b64,omitempty" required:"true" doc:"Base64-encoded CA certificate used to verify the identity of the Kubernetes API server. It ensures that the client is communicating with the legitimate Kubernetes API server by validating the server's certificate."`
-	ClientCertificateB64         string                                               `json:"client_certificate_b64,omitempty" yaml:"client_certificate_b64,omitempty" required:"true" doc:"Base64-encoded X.509 certificate for the client. It works in conjunction with the client-key-data to authenticate the user to the Kubernetes API server. This certificate is typically issued by a trusted Certificate Authority (CA)."`
-	ClientKeyB64                 string                                               `json:"client_key_b64,omitempty" yaml:"client_key_b64,omitempty" required:"true" doc:"Base64-encoded private key associated with a client certificate. It is used by the Kubernetes client (e.g., kubectl) to prove its identity to the API server when making requests. This key must remain confidential and secure."`
-	KubeApiUrl                   string                                               `json:"kube_api_url,omitempty" yaml:"kube_api_url,omitempty" required:"true" doc:""`
-	MtlsCredentialsGuid          string                                               `json:"mtls_credentials_guid,omitempty" yaml:"mtls_credentials_guid,omitempty" required:"true" doc:"A GUID of the kubernetes credentials object created."`
-	Name                         string                                               `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
-	NameInBroker                 string                                               `json:"name_in_broker,omitempty" yaml:"name_in_broker,omitempty" required:"true" doc:"The name of the topic in the broker. (can different from the name of the Serverless Topic object)"`
-	Namespaces                   *[]string                                            `json:"namespaces,omitempty" yaml:"namespaces,omitempty" required:"true" doc:""`
-	PrimaryKubernetesCluster     SearchResultItem_PrimaryKubernetesCluster            `json:"primary_kubernetes_cluster,omitempty" yaml:"primary_kubernetes_cluster,omitempty" required:"true" doc:""`
-	ResourceType                 string                                               `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
-	Type                         string                                               `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
-	Url                          string                                               `json:"url,omitempty" yaml:"url,omitempty" required:"true" doc:"URL to the container registry."`
-	AdditionalKubernetesClusters *[]SearchResultItem_AdditionalKubernetesClustersItem `json:"additional_kubernetes_clusters,omitempty" yaml:"additional_kubernetes_clusters,omitempty" required:"false" doc:"List of Kubernetes clusters and namespaces where the container registry is replicated."`
-	AuthType                     string                                               `json:"auth_type,omitempty" yaml:"auth_type,omitempty" required:"false" doc:"Flag indincating login to the container registry requires user and password, secret name, or none"`
-	AutoGen                      bool                                                 `json:"auto_gen,omitempty" yaml:"auto_gen,omitempty" required:"false" doc:"Whether this stack was auto-generated by the system"`
-	Capability                   *[]string                                            `json:"capability,omitempty" yaml:"capability,omitempty" required:"false" doc:"List of capabilities supported by the service. defaults to all capabilities."`
-	Config                       string                                               `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:"Configuration specific to the trigger type"`
-	ContainerRegistryVrn         string                                               `json:"container_registry_vrn,omitempty" yaml:"container_registry_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	CreatedAt                    string                                               `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
-	Deadletter                   bool                                                 `json:"deadletter,omitempty" yaml:"deadletter,omitempty" required:"false" doc:"Flag indicating if the topic is the dead letter topic for the tenant. Setting a topic as dead letter will make it so that the previous dead letter topic is no longer the dlt."`
-	Default                      bool                                                 `json:"default,omitempty" yaml:"default,omitempty" required:"false" doc:"Flag indicating if the topic is the default topic for the tenant. Setting a topic as default will make it so that the previous default topic is no longer the default."`
-	DefaultRevisionNumber        int64                                                `json:"default_revision_number,omitempty" yaml:"default_revision_number,omitempty" required:"false" doc:"The default revision number. If not provided, the latest revision will be used."`
-	DeployedResourceVrns         *[]string                                            `json:"deployed_resource_vrns,omitempty" yaml:"deployed_resource_vrns,omitempty" required:"false" doc:"VRNs of pipelines and service deployments created by this stack"`
-	DeployedRevision             int64                                                `json:"deployed_revision,omitempty" yaml:"deployed_revision,omitempty" required:"false" doc:"The revision number that is currently deployed (if any)"`
-	Description                  string                                               `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
-	Events                       *[]string                                            `json:"events,omitempty" yaml:"events,omitempty" required:"false" doc:""`
-	Guid                         string                                               `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	Id                           int64                                                `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
-	IsAccessibleToDataEngine     bool                                                 `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the container registry and its images are accessible. Set to false if the registry is not reachable from the Data Engine (e.g., ECR with IRSA)."`
-	IsInternal                   bool                                                 `json:"is_internal,omitempty" yaml:"is_internal,omitempty" required:"false" doc:"Whether this is an internal VAST-managed cluster. Defaults to false (external cluster)."`
-	KubernetesClusterVrn         string                                               `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	LastDeployedRevisionNumber   int64                                                `json:"last_deployed_revision_number,omitempty" yaml:"last_deployed_revision_number,omitempty" required:"false" doc:"The latest deployed revision number, or null if no revisions have been deployed"`
-	LastPublishedRevisionNumber  int64                                                `json:"last_published_revision_number,omitempty" yaml:"last_published_revision_number,omitempty" required:"false" doc:"The latest published revision number, or null if no revisions have been published"`
-	LastRevisionNumber           int64                                                `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"Latest revision number"`
-	LatestRevision               string                                               `json:"latest_revision,omitempty" yaml:"latest_revision,omitempty" required:"false" doc:"An Agent Revision represents a specific version of an Agent"`
-	Namespace                    string                                               `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
-	Owner                        SearchResultItem_Owner                               `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
-	Reason                       string                                               `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for current status"`
-	Secret                       string                                               `json:"secret,omitempty" yaml:"secret,omitempty" required:"false" doc:"Secret name for logging in the container registry"`
-	SourceBucketName             string                                               `json:"source_bucket_name,omitempty" yaml:"source_bucket_name,omitempty" required:"false" doc:"The bucket name of a VMS View. Relevant for Element Trigger"`
-	SourceTypes                  *[]string                                            `json:"source_types,omitempty" yaml:"source_types,omitempty" required:"false" doc:"Source types from which we want to trigger events. Relevant for Element Trigger"`
-	StackGuid                    string                                               `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	StackRevisionNumber          int64                                                `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this pipeline (null if created directly)"`
-	Status                       string                                               `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of stack deployment"`
-	Tags                         *[]string                                            `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
-	TenantGuid                   string                                               `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	Topic                        string                                               `json:"topic,omitempty" yaml:"topic,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	TopicName                    string                                               `json:"topic_name,omitempty" yaml:"topic_name,omitempty" required:"false" doc:"The name of the topic in the broker. Used with broker field for automatic topic creation."`
-	UpdatedAt                    string                                               `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
-	Vrn                          string                                               `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	WasPromoted                  bool                                                 `json:"was_promoted,omitempty" yaml:"was_promoted,omitempty" required:"false" doc:"Whether this stack has undergone a promotion attempt"`
+	Broker                       SearchResultItem_Broker                               `json:"broker,omitempty" yaml:"broker,omitempty" required:"true" doc:""`
+	CertificateAuthorityB64      string                                                `json:"certificate_authority_b64,omitempty" yaml:"certificate_authority_b64,omitempty" required:"true" doc:"Base64-encoded CA certificate used to verify the identity of the Kubernetes API server. It ensures that the client is communicating with the legitimate Kubernetes API server by validating the server's certificate."`
+	ClientCertificateB64         string                                                `json:"client_certificate_b64,omitempty" yaml:"client_certificate_b64,omitempty" required:"true" doc:"Base64-encoded X.509 certificate for the client. It works in conjunction with the client-key-data to authenticate the user to the Kubernetes API server. This certificate is typically issued by a trusted Certificate Authority (CA)."`
+	ClientKeyB64                 string                                                `json:"client_key_b64,omitempty" yaml:"client_key_b64,omitempty" required:"true" doc:"Base64-encoded private key associated with a client certificate. It is used by the Kubernetes client (e.g., kubectl) to prove its identity to the API server when making requests. This key must remain confidential and secure."`
+	JwksUri                      string                                                `json:"jwks_uri,omitempty" yaml:"jwks_uri,omitempty" required:"true" doc:"URI for the JSON Web Key Set"`
+	KubeApiUrl                   string                                                `json:"kube_api_url,omitempty" yaml:"kube_api_url,omitempty" required:"true" doc:""`
+	KubernetesCluster            string                                                `json:"kubernetes_cluster,omitempty" yaml:"kubernetes_cluster,omitempty" required:"true" doc:"VRN of the KubernetesCluster this gateway belongs to"`
+	MtlsCredentialsGuid          string                                                `json:"mtls_credentials_guid,omitempty" yaml:"mtls_credentials_guid,omitempty" required:"true" doc:"A GUID of the kubernetes credentials object created."`
+	Name                         string                                                `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"JWT Provider name (must be DNS-1123 label compliant: lowercase alphanumeric and hyphens, must start and end with alphanumeric). Used as the Kubernetes resource name directly."`
+	NameInBroker                 string                                                `json:"name_in_broker,omitempty" yaml:"name_in_broker,omitempty" required:"true" doc:"The name of the topic in the broker. (can different from the name of the Serverless Topic object)"`
+	Namespace                    string                                                `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"true" doc:"Kubernetes namespace (must be valid for the cluster)"`
+	Namespaces                   *[]string                                             `json:"namespaces,omitempty" yaml:"namespaces,omitempty" required:"true" doc:""`
+	PrimaryKubernetesCluster     SearchResultItem_PrimaryKubernetesCluster             `json:"primary_kubernetes_cluster,omitempty" yaml:"primary_kubernetes_cluster,omitempty" required:"true" doc:""`
+	ResourceType                 string                                                `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
+	Type                         string                                                `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
+	Url                          string                                                `json:"url,omitempty" yaml:"url,omitempty" required:"true" doc:"URL to the container registry."`
+	AdditionalKubernetesClusters *[]SearchResultItem_AdditionalKubernetesClustersItem  `json:"additional_kubernetes_clusters,omitempty" yaml:"additional_kubernetes_clusters,omitempty" required:"false" doc:"List of Kubernetes clusters and namespaces where the container registry is replicated."`
+	Addresses                    *[]SearchResultItem_AddressesItem                     `json:"addresses,omitempty" yaml:"addresses,omitempty" required:"false" doc:"Assigned gateway addresses"`
+	AggregatedCpu                int64                                                 `json:"aggregated_cpu,omitempty" yaml:"aggregated_cpu,omitempty" required:"false" doc:"Aggregated CPU (millicores) used across all pods in the stack"`
+	AggregatedMem                int64                                                 `json:"aggregated_mem,omitempty" yaml:"aggregated_mem,omitempty" required:"false" doc:"Aggregated memory (bytes) used across all pods in the stack"`
+	AggregatedPods               int64                                                 `json:"aggregated_pods,omitempty" yaml:"aggregated_pods,omitempty" required:"false" doc:"Total number of running pods in the stack"`
+	AuthType                     string                                                `json:"auth_type,omitempty" yaml:"auth_type,omitempty" required:"false" doc:"Flag indincating login to the container registry requires user and password, secret name, or none"`
+	AutoGen                      bool                                                  `json:"auto_gen,omitempty" yaml:"auto_gen,omitempty" required:"false" doc:"Whether this stack was auto-generated by the system"`
+	Capability                   *[]string                                             `json:"capability,omitempty" yaml:"capability,omitempty" required:"false" doc:"List of capabilities supported by the service. defaults to all capabilities."`
+	Certificates                 *[]SearchResultItem_CertificatesItem                  `json:"certificates,omitempty" yaml:"certificates,omitempty" required:"false" doc:"TLS certificates for this gateway. Required when https_enabled is true (the default). Not required for HTTP-only gateways."`
+	Config                       string                                                `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:"Configuration specific to the trigger type"`
+	ContainerRegistryVrn         string                                                `json:"container_registry_vrn,omitempty" yaml:"container_registry_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	CreatedAt                    string                                                `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	Deadletter                   bool                                                  `json:"deadletter,omitempty" yaml:"deadletter,omitempty" required:"false" doc:"Flag indicating if the topic is the dead letter topic for the tenant. Setting a topic as dead letter will make it so that the previous dead letter topic is no longer the dlt."`
+	Default                      bool                                                  `json:"default,omitempty" yaml:"default,omitempty" required:"false" doc:"Flag indicating if the topic is the default topic for the tenant. Setting a topic as default will make it so that the previous default topic is no longer the default."`
+	DefaultRevisionNumber        int64                                                 `json:"default_revision_number,omitempty" yaml:"default_revision_number,omitempty" required:"false" doc:"The default revision number. If not provided, the latest revision will be used."`
+	DeployedResourceVrns         *[]string                                             `json:"deployed_resource_vrns,omitempty" yaml:"deployed_resource_vrns,omitempty" required:"false" doc:"VRNs of pipelines and service deployments created by this stack"`
+	DeployedRevision             int64                                                 `json:"deployed_revision,omitempty" yaml:"deployed_revision,omitempty" required:"false" doc:"The revision number that is currently deployed (if any)"`
+	Description                  string                                                `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Events                       *[]string                                             `json:"events,omitempty" yaml:"events,omitempty" required:"false" doc:""`
+	Guid                         string                                                `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	HttpEnabled                  bool                                                  `json:"http_enabled,omitempty" yaml:"http_enabled,omitempty" required:"false" doc:"Enable HTTP protocol on this gateway. Requires the global config 'provisioning.gateway.http_enabled' to be true."`
+	HttpsEnabled                 bool                                                  `json:"https_enabled,omitempty" yaml:"https_enabled,omitempty" required:"false" doc:"Enable HTTPS protocol on this gateway. At least one of http_enabled or https_enabled must be true. Disabling HTTPS requires the global config 'provisioning.gateway.https_enabled' to be false."`
+	Id                           int64                                                 `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	IpAddresses                  *[]string                                             `json:"ip_addresses,omitempty" yaml:"ip_addresses,omitempty" required:"false" doc:"Optional requested IP addresses for the gateway"`
+	IsAccessibleToDataEngine     bool                                                  `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the container registry and its images are accessible. Set to false if the registry is not reachable from the Data Engine (e.g., ECR with IRSA)."`
+	IsInternal                   bool                                                  `json:"is_internal,omitempty" yaml:"is_internal,omitempty" required:"false" doc:"Whether this is an internal VAST-managed cluster. Defaults to false (external cluster)."`
+	Issuer                       string                                                `json:"issuer,omitempty" yaml:"issuer,omitempty" required:"false" doc:"JWT issuer (optional)"`
+	KubernetesClusterVrn         string                                                `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	LastDeployedRevisionNumber   int64                                                 `json:"last_deployed_revision_number,omitempty" yaml:"last_deployed_revision_number,omitempty" required:"false" doc:"The latest deployed revision number, or null if no revisions have been deployed"`
+	LastPublishedRevisionNumber  int64                                                 `json:"last_published_revision_number,omitempty" yaml:"last_published_revision_number,omitempty" required:"false" doc:"The latest published revision number, or null if no revisions have been published"`
+	LastRevisionNumber           int64                                                 `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"Latest revision number"`
+	LatestRevision               string                                                `json:"latest_revision,omitempty" yaml:"latest_revision,omitempty" required:"false" doc:"An Agent Revision represents a specific version of an Agent"`
+	Owner                        SearchResultItem_Owner                                `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	Port                         int64                                                 `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Gateway listen port"`
+	Promotion                    SearchResultItem_Promotion                            `json:"promotion,omitempty" yaml:"promotion,omitempty" required:"false" doc:""`
+	Reason                       string                                                `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for current gateway status"`
+	Secret                       string                                                `json:"secret,omitempty" yaml:"secret,omitempty" required:"false" doc:"Secret name for logging in the container registry"`
+	SecurityPolicies             *[]SearchResultItem_SecurityPoliciesItem              `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this gateway. When set, a SecurityPolicy CRD will be deployed for each policy alongside the gateway."`
+	SourceBucketName             string                                                `json:"source_bucket_name,omitempty" yaml:"source_bucket_name,omitempty" required:"false" doc:"The bucket name of a VMS View. Relevant for Element Trigger"`
+	SourceTypes                  *[]string                                             `json:"source_types,omitempty" yaml:"source_types,omitempty" required:"false" doc:"Source types from which we want to trigger events. Relevant for Element Trigger"`
+	StackGuid                    string                                                `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	StackRevisionNumber          int64                                                 `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this pipeline (null if created directly)"`
+	Status                       string                                                `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Gateway status"`
+	Tags                         *[]string                                             `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid                   string                                                `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	TlsCertificates              *[]SearchResultItem_TlsCertificatesItem               `json:"tls_certificates,omitempty" yaml:"tls_certificates,omitempty" required:"false" doc:"Attached TLS certificates (read-only)"`
+	Topic                        string                                                `json:"topic,omitempty" yaml:"topic,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	TopicName                    string                                                `json:"topic_name,omitempty" yaml:"topic_name,omitempty" required:"false" doc:"The name of the topic in the broker. Used with broker field for automatic topic creation."`
+	UpdatedAt                    string                                                `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	UsedResources                map[string]*[]SearchResultItem_UsedResourcesValueItem `json:"used_resources,omitempty" yaml:"used_resources,omitempty" required:"false" doc:"Per-function-deployment resource usage, keyed by function deployment name. Each value is the list of pod resources for that function deployment (empty when scaled to zero)."`
+	Vrn                          string                                                `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
 // Component_Secret represents the OpenAPI component schema
@@ -1454,6 +1618,14 @@ type Component_SecretCreate struct {
 	Tags                 *[]string                   `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
+// Component_SecretDefinition represents the OpenAPI component schema
+// Component: #/components/schemas/SecretDefinition
+type Component_SecretDefinition struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
+}
+
 // Component_SecretEntry represents the OpenAPI component schema
 // Component: #/components/schemas/SecretEntry
 type Component_SecretEntry struct {
@@ -1466,11 +1638,19 @@ type Component_SecretEntry struct {
 type Component_SecurityPolicy struct {
 	AuthenticationMethod string                     `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                     `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               SecurityPolicy_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                  `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                  `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          SecurityPolicy_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
 	JwtProvider          string                     `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
 	RequiredClaims       map[string]*[]string       `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// Component_SecurityPolicyApiKey represents the OpenAPI component schema
+// Component: #/components/schemas/SecurityPolicyApiKey
+type Component_SecurityPolicyApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // Component_ServerlessBucket represents the OpenAPI component schema
@@ -1520,6 +1700,9 @@ type Component_ServiceCreate struct {
 	Description           string    `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
 	ImageTag              string    `json:"image_tag,omitempty" yaml:"image_tag,omitempty" required:"false" doc:"Tag of the container image in the container registry."`
 	ImageUrl              string    `json:"image_url,omitempty" yaml:"image_url,omitempty" required:"false" doc:"The full container image URL, constructed as {registry_url}/{artifact_source}:{image_tag}. This field is computed and read-only."`
+	RevisionAlias         string    `json:"revision_alias,omitempty" yaml:"revision_alias,omitempty" required:"false" doc:"Alias for the first revision. If not provided, the revision is named '{service-name}-r1'."`
+	RevisionDescription   string    `json:"revision_description,omitempty" yaml:"revision_description,omitempty" required:"false" doc:"Description of the first revision."`
+	RevisionTags          *[]string `json:"revision_tags,omitempty" yaml:"revision_tags,omitempty" required:"false" doc:"Tags for the first revision."`
 	Tags                  *[]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
@@ -1548,23 +1731,25 @@ type Component_ServiceDeployment struct {
 	HpaConfig             ServiceDeployment_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
 	Id                    int64                                         `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
 	KubernetesClusterVrn  string                                        `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	LogLevel              string                                        `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the service"`
+	LogLevel              string                                        `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
 	Namespace             string                                        `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace that the service deployment is located at"`
 	Nodeport              int64                                         `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
 	Owner                 ServiceDeployment_Owner                       `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
-	PersistentVolumes     *[]ServiceDeployment_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the service/agent pods"`
+	PersistentVolumes     *[]ServiceDeployment_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
 	Reason                string                                        `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Explanation for current status"`
+	SecretDefinitions     *[]ServiceDeployment_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets               *[]string                                     `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
-	SecurityPolicies      *[]ServiceDeployment_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this service/agent deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the service."`
+	SecurityPolicies      *[]ServiceDeployment_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
 	ServiceGuid           string                                        `json:"service_guid,omitempty" yaml:"service_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
 	ServiceRevisionNumber int64                                         `json:"service_revision_number,omitempty" yaml:"service_revision_number,omitempty" required:"false" doc:"The revision number of the service that is deployed"`
 	StackGuid             string                                        `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
 	StackRevisionNumber   int64                                         `json:"stack_revision_number,omitempty" yaml:"stack_revision_number,omitempty" required:"false" doc:"Revision number of the stack that created this deployment (null if created directly)"`
 	Status                string                                        `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Operational status of the object."`
-	StickyDeployment      bool                                          `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Mandatory for agent services (automatically set to true), optional for generic services."`
+	StickyDeployment      bool                                          `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing for service deployments. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Defaults to false."`
 	Tags                  *[]string                                     `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 	TenantGuid            string                                        `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
 	UpdatedAt             string                                        `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	UsedResources         *[]ServiceDeployment_UsedResourcesItem        `json:"used_resources,omitempty" yaml:"used_resources,omitempty" required:"false" doc:"Resources currently used by the deployment's pods. Empty when scaled to zero."`
 	Vrn                   string                                        `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
@@ -1581,12 +1766,13 @@ type Component_ServiceDeploymentCreate struct {
 	ExternalAccess       ServiceDeploymentCreate_ExternalAccess              `json:"external_access,omitempty" yaml:"external_access,omitempty" required:"false" doc:"External access configuration via VastGateway"`
 	HealthChecks         ServiceDeploymentCreate_HealthChecks                `json:"health_checks,omitempty" yaml:"health_checks,omitempty" required:"false" doc:"Custom health probe configuration for services"`
 	HpaConfig            ServiceDeploymentCreate_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
-	LogLevel             string                                              `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the service"`
+	LogLevel             string                                              `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
 	Nodeport             int64                                               `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
-	PersistentVolumes    *[]ServiceDeploymentCreate_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the service/agent pods"`
+	PersistentVolumes    *[]ServiceDeploymentCreate_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
+	SecretDefinitions    *[]ServiceDeploymentCreate_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                           `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
-	SecurityPolicies     *[]ServiceDeploymentCreate_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this service/agent deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the service."`
-	StickyDeployment     bool                                                `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Mandatory for agent services (automatically set to true), optional for generic services."`
+	SecurityPolicies     *[]ServiceDeploymentCreate_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
+	StickyDeployment     bool                                                `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing for service deployments. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Defaults to false."`
 	Tags                 *[]string                                           `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
@@ -1599,12 +1785,13 @@ type Component_ServiceDeploymentManifest struct {
 	ExternalAccess       ServiceDeploymentManifest_ExternalAccess              `json:"external_access,omitempty" yaml:"external_access,omitempty" required:"false" doc:"External access configuration via VastGateway"`
 	HealthChecks         ServiceDeploymentManifest_HealthChecks                `json:"health_checks,omitempty" yaml:"health_checks,omitempty" required:"false" doc:"Custom health probe configuration for services"`
 	HpaConfig            ServiceDeploymentManifest_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
-	LogLevel             string                                                `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the service"`
+	LogLevel             string                                                `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
 	Nodeport             int64                                                 `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
-	PersistentVolumes    *[]ServiceDeploymentManifest_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the service/agent pods"`
+	PersistentVolumes    *[]ServiceDeploymentManifest_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
+	SecretDefinitions    *[]ServiceDeploymentManifest_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                             `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
-	SecurityPolicies     *[]ServiceDeploymentManifest_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this service/agent deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the service."`
-	StickyDeployment     bool                                                  `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Mandatory for agent services (automatically set to true), optional for generic services."`
+	SecurityPolicies     *[]ServiceDeploymentManifest_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
+	StickyDeployment     bool                                                  `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing for service deployments. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Defaults to false."`
 }
 
 // Component_ServiceLinkedItem represents the OpenAPI component schema
@@ -1650,10 +1837,13 @@ type Component_ServiceRevision struct {
 // Component_ServiceRevisionCreate represents the OpenAPI component schema
 // Component: #/components/schemas/ServiceRevisionCreate
 type Component_ServiceRevisionCreate struct {
-	ArtifactSource       string `json:"artifact_source,omitempty" yaml:"artifact_source,omitempty" required:"true" doc:"URL path for the container image in the container registry (without protocol and tag). The full image URL will be constructed as: {registry_url}/{artifact_source}:{image_tag}"`
-	ContainerRegistryVrn string `json:"container_registry_vrn,omitempty" yaml:"container_registry_vrn,omitempty" required:"true" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	ImageTag             string `json:"image_tag,omitempty" yaml:"image_tag,omitempty" required:"false" doc:"Tag of the container image in the container registry."`
-	ImageUrl             string `json:"image_url,omitempty" yaml:"image_url,omitempty" required:"false" doc:"The full container image URL, constructed as {registry_url}/{artifact_source}:{image_tag}. This field is computed and read-only."`
+	ArtifactSource       string    `json:"artifact_source,omitempty" yaml:"artifact_source,omitempty" required:"true" doc:"URL path for the container image in the container registry (without protocol and tag). The full image URL will be constructed as: {registry_url}/{artifact_source}:{image_tag}"`
+	ContainerRegistryVrn string    `json:"container_registry_vrn,omitempty" yaml:"container_registry_vrn,omitempty" required:"true" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	Description          string    `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	ImageTag             string    `json:"image_tag,omitempty" yaml:"image_tag,omitempty" required:"false" doc:"Tag of the container image in the container registry."`
+	ImageUrl             string    `json:"image_url,omitempty" yaml:"image_url,omitempty" required:"false" doc:"The full container image URL, constructed as {registry_url}/{artifact_source}:{image_tag}. This field is computed and read-only."`
+	Name                 string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the resource."`
+	Tags                 *[]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
 // Component_ServiceSearchResult represents the OpenAPI component schema
@@ -1720,25 +1910,28 @@ type Component_SetupProvisioningStatus struct {
 // Component_Stack represents the OpenAPI component schema
 // Component: #/components/schemas/Stack
 type Component_Stack struct {
-	Name                 string      `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
-	AutoGen              bool        `json:"auto_gen,omitempty" yaml:"auto_gen,omitempty" required:"false" doc:"Whether this stack was auto-generated by the system"`
-	CreatedAt            string      `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
-	DeployedResourceVrns *[]string   `json:"deployed_resource_vrns,omitempty" yaml:"deployed_resource_vrns,omitempty" required:"false" doc:"VRNs of pipelines and service deployments created by this stack"`
-	DeployedRevision     int64       `json:"deployed_revision,omitempty" yaml:"deployed_revision,omitempty" required:"false" doc:"The revision number that is currently deployed (if any)"`
-	Description          string      `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
-	Guid                 string      `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	Id                   int64       `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
-	KubernetesClusterVrn string      `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	LastRevisionNumber   int64       `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"The latest revision number"`
-	Namespace            string      `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
-	Owner                Stack_Owner `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
-	Reason               string      `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for current status"`
-	Status               string      `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of stack deployment"`
-	Tags                 *[]string   `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
-	TenantGuid           string      `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	UpdatedAt            string      `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
-	Vrn                  string      `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	WasPromoted          bool        `json:"was_promoted,omitempty" yaml:"was_promoted,omitempty" required:"false" doc:"Whether this stack has undergone a promotion attempt"`
+	Name                 string          `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
+	AggregatedCpu        int64           `json:"aggregated_cpu,omitempty" yaml:"aggregated_cpu,omitempty" required:"false" doc:"Aggregated CPU (millicores) used across all pods in the stack"`
+	AggregatedMem        int64           `json:"aggregated_mem,omitempty" yaml:"aggregated_mem,omitempty" required:"false" doc:"Aggregated memory (bytes) used across all pods in the stack"`
+	AggregatedPods       int64           `json:"aggregated_pods,omitempty" yaml:"aggregated_pods,omitempty" required:"false" doc:"Total number of running pods in the stack"`
+	AutoGen              bool            `json:"auto_gen,omitempty" yaml:"auto_gen,omitempty" required:"false" doc:"Whether this stack was auto-generated by the system"`
+	CreatedAt            string          `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	DeployedResourceVrns *[]string       `json:"deployed_resource_vrns,omitempty" yaml:"deployed_resource_vrns,omitempty" required:"false" doc:"VRNs of pipelines and service deployments created by this stack"`
+	DeployedRevision     int64           `json:"deployed_revision,omitempty" yaml:"deployed_revision,omitempty" required:"false" doc:"The revision number that is currently deployed (if any)"`
+	Description          string          `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Guid                 string          `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Id                   int64           `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	KubernetesClusterVrn string          `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	LastRevisionNumber   int64           `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"The latest revision number"`
+	Namespace            string          `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
+	Owner                Stack_Owner     `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	Promotion            Stack_Promotion `json:"promotion,omitempty" yaml:"promotion,omitempty" required:"false" doc:""`
+	Reason               string          `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for current status"`
+	Status               string          `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of stack deployment"`
+	Tags                 *[]string       `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid           string          `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	UpdatedAt            string          `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	Vrn                  string          `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
 // Component_StackAgentDeployment represents the OpenAPI component schema
@@ -1746,7 +1939,7 @@ type Component_Stack struct {
 type Component_StackAgentDeployment struct {
 	AgentGuid            string                                           `json:"agent_guid,omitempty" yaml:"agent_guid,omitempty" required:"true" doc:"A globally unique identifier (GUID) for the resource."`
 	Name                 string                                           `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Unique name for this agent deployment within the stack"`
-	AgentRevisionNumber  int64                                            `json:"agent_revision_number,omitempty" yaml:"agent_revision_number,omitempty" required:"false" doc:"Which revision of the agent to deploy. If not specified, uses the latest revision."`
+	AgentRevisionNumber  int64                                            `json:"agent_revision_number,omitempty" yaml:"agent_revision_number,omitempty" required:"false" doc:"Which revision of the agent to deploy. If not specified, uses the agent's default_revision_number, or the latest revision when no default is set."`
 	ComputeConfig        StackAgentDeployment_ComputeConfig               `json:"compute_config,omitempty" yaml:"compute_config,omitempty" required:"false" doc:"Resource allocation settings for service deployments"`
 	Configmaps           *[]StackAgentDeployment_ConfigmapsItem           `json:"configmaps,omitempty" yaml:"configmaps,omitempty" required:"false" doc:"ConfigMaps that will be mounted to the deployment"`
 	EnvironmentVariables *[]StackAgentDeployment_EnvironmentVariablesItem `json:"environment_variables,omitempty" yaml:"environment_variables,omitempty" required:"false" doc:""`
@@ -1755,12 +1948,13 @@ type Component_StackAgentDeployment struct {
 	HpaConfig            StackAgentDeployment_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
 	LinkedAgents         *[]string                                        `json:"linked_agents,omitempty" yaml:"linked_agents,omitempty" required:"false" doc:"List of agent deployment names (from agent_deployments in the same stack manifest) that this agent can discover at runtime via context. The linked agents will be automatically added as remote agents ONLY if they expose a VAST agent with a2a interface - which publishes an agent catalog and Agent Card."`
 	LinkedServices       *[]string                                        `json:"linked_services,omitempty" yaml:"linked_services,omitempty" required:"false" doc:"List of service deployment names (from service_deployments in the same stack manifest) that this agent can discover at runtime via context."`
-	LogLevel             string                                           `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the service"`
+	LogLevel             string                                           `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
 	Nodeport             int64                                            `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
-	PersistentVolumes    *[]StackAgentDeployment_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the service/agent pods"`
+	PersistentVolumes    *[]StackAgentDeployment_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
+	SecretDefinitions    *[]StackAgentDeployment_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                        `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
-	SecurityPolicies     *[]StackAgentDeployment_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this service/agent deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the service."`
-	StickyDeployment     bool                                             `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Mandatory for agent services (automatically set to true), optional for generic services."`
+	SecurityPolicies     *[]StackAgentDeployment_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
+	StickyDeployment     bool                                             `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing for agent deployments. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Defaults to true. Can be explicitly set to false if sticky routing is not needed."`
 }
 
 // Component_StackCreate represents the OpenAPI component schema
@@ -1790,6 +1984,7 @@ type Component_StackManifest struct {
 	Configmaps           *[]StackManifest_ConfigmapsItem           `json:"configmaps,omitempty" yaml:"configmaps,omitempty" required:"false" doc:"ConfigMaps that will be mounted to the deployment"`
 	EnvironmentVariables *[]StackManifest_EnvironmentVariablesItem `json:"environment_variables,omitempty" yaml:"environment_variables,omitempty" required:"false" doc:""`
 	PipelineDeployments  *[]StackManifest_PipelineDeploymentsItem  `json:"pipeline_deployments,omitempty" yaml:"pipeline_deployments,omitempty" required:"false" doc:"Pipeline deployments to create in this stack. Each creates a new pipeline with its first revision."`
+	SecretDefinitions    *[]StackManifest_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets              *[]string                                 `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
 	SecurityPolicies     *[]StackManifest_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Default security policies applied to all service and agent deployments in this stack that don't define their own security_policies."`
 	ServiceDeployments   *[]string                                 `json:"service_deployments,omitempty" yaml:"service_deployments,omitempty" required:"false" doc:"Service deployments to include in this stack. References pre-existing services and revisions."`
@@ -1800,6 +1995,27 @@ type Component_StackManifest struct {
 type Component_StackPipelineDeployment struct {
 	Manifest StackPipelineDeployment_Manifest `json:"manifest,omitempty" yaml:"manifest,omitempty" required:"true" doc:""`
 	Name     string                           `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Unique name for this pipeline deployment within the stack"`
+}
+
+// Component_StackPromotionInfo represents the OpenAPI component schema
+// Component: #/components/schemas/StackPromotionInfo
+type Component_StackPromotionInfo struct {
+	Status               string `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"The derived promotion status for a stack."`
+	AttemptCount         int64  `json:"attempt_count,omitempty" yaml:"attempt_count,omitempty" required:"false" doc:"Number of promotion attempts for this stack."`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Failure reason (only present when status is failed)."`
+	UpdatedAt            string `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"When the promotion state was last updated."`
+}
+
+// Component_StackPromotionStatus represents the OpenAPI component schema
+// Component: #/components/schemas/StackPromotionStatus
+type Component_StackPromotionStatus struct {
+	StackGuid            string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"true" doc:""`
+	Status               string `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"The derived promotion status for a stack."`
+	AttemptCount         int64  `json:"attempt_count,omitempty" yaml:"attempt_count,omitempty" required:"false" doc:"Number of promotion attempts for this stack."`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Failure reason (only present when status is failed)."`
+	UpdatedAt            string `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"When the promotion state was last updated."`
 }
 
 // Component_StackRevision represents the OpenAPI component schema
@@ -1832,26 +2048,29 @@ type Component_StackRevisionCreate struct {
 // Component_StackSearchResult represents the OpenAPI component schema
 // Component: #/components/schemas/StackSearchResult
 type Component_StackSearchResult struct {
-	Name                 string                  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
-	ResourceType         string                  `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
-	AutoGen              bool                    `json:"auto_gen,omitempty" yaml:"auto_gen,omitempty" required:"false" doc:"Whether this stack was auto-generated by the system"`
-	CreatedAt            string                  `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
-	DeployedResourceVrns *[]string               `json:"deployed_resource_vrns,omitempty" yaml:"deployed_resource_vrns,omitempty" required:"false" doc:"VRNs of pipelines and service deployments created by this stack"`
-	DeployedRevision     int64                   `json:"deployed_revision,omitempty" yaml:"deployed_revision,omitempty" required:"false" doc:"The revision number that is currently deployed (if any)"`
-	Description          string                  `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
-	Guid                 string                  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	Id                   int64                   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
-	KubernetesClusterVrn string                  `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	LastRevisionNumber   int64                   `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"The latest revision number"`
-	Namespace            string                  `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
-	Owner                StackSearchResult_Owner `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
-	Reason               string                  `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for current status"`
-	Status               string                  `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of stack deployment"`
-	Tags                 *[]string               `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
-	TenantGuid           string                  `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
-	UpdatedAt            string                  `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
-	Vrn                  string                  `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
-	WasPromoted          bool                    `json:"was_promoted,omitempty" yaml:"was_promoted,omitempty" required:"false" doc:"Whether this stack has undergone a promotion attempt"`
+	Name                 string                      `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"A name for the resource."`
+	ResourceType         string                      `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
+	AggregatedCpu        int64                       `json:"aggregated_cpu,omitempty" yaml:"aggregated_cpu,omitempty" required:"false" doc:"Aggregated CPU (millicores) used across all pods in the stack"`
+	AggregatedMem        int64                       `json:"aggregated_mem,omitempty" yaml:"aggregated_mem,omitempty" required:"false" doc:"Aggregated memory (bytes) used across all pods in the stack"`
+	AggregatedPods       int64                       `json:"aggregated_pods,omitempty" yaml:"aggregated_pods,omitempty" required:"false" doc:"Total number of running pods in the stack"`
+	AutoGen              bool                        `json:"auto_gen,omitempty" yaml:"auto_gen,omitempty" required:"false" doc:"Whether this stack was auto-generated by the system"`
+	CreatedAt            string                      `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	DeployedResourceVrns *[]string                   `json:"deployed_resource_vrns,omitempty" yaml:"deployed_resource_vrns,omitempty" required:"false" doc:"VRNs of pipelines and service deployments created by this stack"`
+	DeployedRevision     int64                       `json:"deployed_revision,omitempty" yaml:"deployed_revision,omitempty" required:"false" doc:"The revision number that is currently deployed (if any)"`
+	Description          string                      `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Guid                 string                      `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	Id                   int64                       `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	KubernetesClusterVrn string                      `json:"kubernetes_cluster_vrn,omitempty" yaml:"kubernetes_cluster_vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+	LastRevisionNumber   int64                       `json:"last_revision_number,omitempty" yaml:"last_revision_number,omitempty" required:"false" doc:"The latest revision number"`
+	Namespace            string                      `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:"The namespace in the kubernetes cluster"`
+	Owner                StackSearchResult_Owner     `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	Promotion            StackSearchResult_Promotion `json:"promotion,omitempty" yaml:"promotion,omitempty" required:"false" doc:""`
+	Reason               string                      `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for current status"`
+	Status               string                      `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"The status of stack deployment"`
+	Tags                 *[]string                   `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid           string                      `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	UpdatedAt            string                      `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	Vrn                  string                      `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
 // Component_StackServiceDeployment represents the OpenAPI component schema
@@ -1865,13 +2084,14 @@ type Component_StackServiceDeployment struct {
 	ExternalAccess        StackServiceDeployment_ExternalAccess              `json:"external_access,omitempty" yaml:"external_access,omitempty" required:"false" doc:"External access configuration via VastGateway"`
 	HealthChecks          StackServiceDeployment_HealthChecks                `json:"health_checks,omitempty" yaml:"health_checks,omitempty" required:"false" doc:"Custom health probe configuration for services"`
 	HpaConfig             StackServiceDeployment_HpaConfig                   `json:"hpa_config,omitempty" yaml:"hpa_config,omitempty" required:"false" doc:"Horizontal Pod Autoscaler configuration"`
-	LogLevel              string                                             `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the service"`
+	LogLevel              string                                             `json:"log_level,omitempty" yaml:"log_level,omitempty" required:"false" doc:"Log level of the deployment"`
 	Nodeport              int64                                              `json:"nodeport,omitempty" yaml:"nodeport,omitempty" required:"false" doc:"Optional NodePort for port forwarding as bypass for the Gateway. Must be in range 30000-32767 (Kubernetes NodePort range)"`
-	PersistentVolumes     *[]StackServiceDeployment_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the service/agent pods"`
+	PersistentVolumes     *[]StackServiceDeployment_PersistentVolumesItem    `json:"persistent_volumes,omitempty" yaml:"persistent_volumes,omitempty" required:"false" doc:"List of persistent volumes to attach to the deployment pods"`
+	SecretDefinitions     *[]StackServiceDeployment_SecretDefinitionsItem    `json:"secret_definitions,omitempty" yaml:"secret_definitions,omitempty" required:"false" doc:"Secrets supplied inline and mounted to the deployment"`
 	Secrets               *[]string                                          `json:"secrets,omitempty" yaml:"secrets,omitempty" required:"false" doc:""`
-	SecurityPolicies      *[]StackServiceDeployment_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this service/agent deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the service."`
-	ServiceRevisionNumber int64                                              `json:"service_revision_number,omitempty" yaml:"service_revision_number,omitempty" required:"false" doc:"Which revision of the service to deploy. If not specified, uses the latest revision."`
-	StickyDeployment      bool                                               `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Mandatory for agent services (automatically set to true), optional for generic services."`
+	SecurityPolicies      *[]StackServiceDeployment_SecurityPoliciesItem     `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this deployment. When set, a SecurityPolicy CRD will be deployed for each policy alongside the deployment."`
+	ServiceRevisionNumber int64                                              `json:"service_revision_number,omitempty" yaml:"service_revision_number,omitempty" required:"false" doc:"Which revision of the service to deploy. If not specified, uses the service's default_revision_number, or the latest revision when no default is set."`
+	StickyDeployment      bool                                               `json:"sticky_deployment,omitempty" yaml:"sticky_deployment,omitempty" required:"false" doc:"Enable session-based sticky routing for service deployments. When enabled, all requests with the same session ID will be routed to the same pod. Uses x-vast-session-id header for session identification. Defaults to false."`
 }
 
 // Component_StackUpdate represents the OpenAPI component schema
@@ -1881,6 +2101,13 @@ type Component_StackUpdate struct {
 	Manifest    string    `json:"manifest,omitempty" yaml:"manifest,omitempty" required:"false" doc:"Stack manifest combining pipeline deployments with service deployments and agent deployments. Stack-level environment variables, secrets, and configmaps are passed to all components during deploy. Stack-level security_policies is applied as default to services/agents that don't define their own."`
 	Name        string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A name for the resource."`
 	Tags        *[]string `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+}
+
+// Component_StatusHistoryEntry represents the OpenAPI component schema
+// Component: #/components/schemas/StatusHistoryEntry
+type Component_StatusHistoryEntry struct {
+	Timestamp string `json:"timestamp,omitempty" yaml:"timestamp,omitempty" required:"true" doc:""`
+	Status    string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
 }
 
 // Component_Topic represents the OpenAPI component schema
@@ -2199,6 +2426,34 @@ type Component_VastGatewayCreate struct {
 	Tags              *[]string                                 `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
 }
 
+// Component_VastGatewaySearchResult represents the OpenAPI component schema
+// Component: #/components/schemas/VastGatewaySearchResult
+type Component_VastGatewaySearchResult struct {
+	KubernetesCluster string                                          `json:"kubernetes_cluster,omitempty" yaml:"kubernetes_cluster,omitempty" required:"true" doc:"VRN of the KubernetesCluster this gateway belongs to"`
+	Name              string                                          `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Gateway name (must be DNS-1123 label compliant: lowercase alphanumeric and hyphens, must start and end with alphanumeric). Used as the Kubernetes resource name directly."`
+	Namespace         string                                          `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"true" doc:"Kubernetes namespace (must be valid for the cluster)"`
+	ResourceType      string                                          `json:"resource_type,omitempty" yaml:"resource_type,omitempty" required:"true" doc:"Resource types available for search"`
+	Addresses         *[]VastGatewaySearchResult_AddressesItem        `json:"addresses,omitempty" yaml:"addresses,omitempty" required:"false" doc:"Assigned gateway addresses"`
+	Certificates      *[]VastGatewaySearchResult_CertificatesItem     `json:"certificates,omitempty" yaml:"certificates,omitempty" required:"false" doc:"TLS certificates for this gateway. Required when https_enabled is true (the default). Not required for HTTP-only gateways."`
+	CreatedAt         string                                          `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"Timestamp when the resource was created."`
+	Description       string                                          `json:"description,omitempty" yaml:"description,omitempty" required:"false" doc:"A description of the resource."`
+	Guid              string                                          `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	HttpEnabled       bool                                            `json:"http_enabled,omitempty" yaml:"http_enabled,omitempty" required:"false" doc:"Enable HTTP protocol on this gateway. Requires the global config 'provisioning.gateway.http_enabled' to be true."`
+	HttpsEnabled      bool                                            `json:"https_enabled,omitempty" yaml:"https_enabled,omitempty" required:"false" doc:"Enable HTTPS protocol on this gateway. At least one of http_enabled or https_enabled must be true. Disabling HTTPS requires the global config 'provisioning.gateway.https_enabled' to be false."`
+	Id                int64                                           `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"A globally unique identifier (ID) for the resource."`
+	IpAddresses       *[]string                                       `json:"ip_addresses,omitempty" yaml:"ip_addresses,omitempty" required:"false" doc:"Optional requested IP addresses for the gateway"`
+	Owner             VastGatewaySearchResult_Owner                   `json:"owner,omitempty" yaml:"owner,omitempty" required:"false" doc:"Represents the owner of the resource."`
+	Port              int64                                           `json:"port,omitempty" yaml:"port,omitempty" required:"false" doc:"Gateway listen port"`
+	Reason            string                                          `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"The reason for current gateway status"`
+	SecurityPolicies  *[]VastGatewaySearchResult_SecurityPoliciesItem `json:"security_policies,omitempty" yaml:"security_policies,omitempty" required:"false" doc:"Optional list of security policies for this gateway. When set, a SecurityPolicy CRD will be deployed for each policy alongside the gateway."`
+	Status            string                                          `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:"Gateway status"`
+	Tags              *[]string                                       `json:"tags,omitempty" yaml:"tags,omitempty" required:"false" doc:"Custom tags for organizing and categorizing resources in the GUI."`
+	TenantGuid        string                                          `json:"tenant_guid,omitempty" yaml:"tenant_guid,omitempty" required:"false" doc:"A globally unique identifier (GUID) for the resource."`
+	TlsCertificates   *[]VastGatewaySearchResult_TlsCertificatesItem  `json:"tls_certificates,omitempty" yaml:"tls_certificates,omitempty" required:"false" doc:"Attached TLS certificates (read-only)"`
+	UpdatedAt         string                                          `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"Timestamp when the resource was last updated."`
+	Vrn               string                                          `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"false" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
+}
+
 // Component_VastGatewayUpdate represents the OpenAPI component schema
 // Component: #/components/schemas/VastGatewayUpdate
 type Component_VastGatewayUpdate struct {
@@ -2255,15 +2510,17 @@ type AgentDeploymentCreate_EnvironmentVariablesItem struct {
 
 // AgentDeploymentCreate_ExternalAccess represents a nested type within components
 type AgentDeploymentCreate_ExternalAccess struct {
-	Gateway   string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
-	Hostnames *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Use \"*\" to accept any gateway hostname."`
-	RoutePath string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
 }
 
 // AgentDeploymentCreate_HealthChecks represents a nested type within components
 type AgentDeploymentCreate_HealthChecks struct {
 	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
 	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
 }
 
 // AgentDeploymentCreate_HpaConfig represents a nested type within components
@@ -2282,13 +2539,21 @@ type AgentDeploymentCreate_PersistentVolumesItem struct {
 	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
 	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
 	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
-	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC: - Filesystem: Volume is mounted as a filesystem (default, works with NFS, most storage) - Block: Volume is exposed as a raw block device (for databases, specialized workloads)"`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// AgentDeploymentCreate_SecretDefinitionsItem represents a nested type within components
+type AgentDeploymentCreate_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
 }
 
 // AgentDeploymentCreate_SecurityPoliciesItem represents a nested type within components
 type AgentDeploymentCreate_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                                 `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                                 `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               AgentDeploymentCreate_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                              `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                              `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          AgentDeploymentCreate_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
@@ -2296,8 +2561,102 @@ type AgentDeploymentCreate_SecurityPoliciesItem struct {
 	RequiredClaims       map[string]*[]string                                   `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
 }
 
+// AgentDeploymentCreate_SecurityPoliciesItem_ApiKey represents a nested type within components
+type AgentDeploymentCreate_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
+}
+
 // AgentDeploymentCreate_SecurityPoliciesItem_ExtractFrom represents a nested type within components
 type AgentDeploymentCreate_SecurityPoliciesItem_ExtractFrom struct {
+	Cookies *[]string `json:"cookies,omitempty" yaml:"cookies,omitempty" required:"false" doc:"Cookies to extract JWT from"`
+	Headers *[]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:"HTTP headers to extract JWT from"`
+	Params  *[]string `json:"params,omitempty" yaml:"params,omitempty" required:"false" doc:"Query parameters to extract JWT from"`
+}
+
+// AgentDeploymentManifest_ComputeConfig represents a nested type within components
+type AgentDeploymentManifest_ComputeConfig struct {
+	LimitCpu        string `json:"limit_cpu,omitempty" yaml:"limit_cpu,omitempty" required:"false" doc:"CPU limit (maximum allowed)"`
+	LimitMemory     string `json:"limit_memory,omitempty" yaml:"limit_memory,omitempty" required:"false" doc:"Memory limit (maximum allowed)"`
+	RequestedCpu    string `json:"requested_cpu,omitempty" yaml:"requested_cpu,omitempty" required:"false" doc:"CPU request (minimum guaranteed)"`
+	RequestedMemory string `json:"requested_memory,omitempty" yaml:"requested_memory,omitempty" required:"false" doc:"Memory request (minimum guaranteed)"`
+	Storage         string `json:"storage,omitempty" yaml:"storage,omitempty" required:"false" doc:"Ephemeral storage size"`
+}
+
+// AgentDeploymentManifest_ConfigmapsItem represents a nested type within components
+type AgentDeploymentManifest_ConfigmapsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the ConfigMap"`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary data (base64-encoded)"`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of configuration string values."`
+}
+
+// AgentDeploymentManifest_EnvironmentVariablesItem represents a nested type within components
+type AgentDeploymentManifest_EnvironmentVariablesItem struct {
+	Name  string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Value string `json:"value,omitempty" yaml:"value,omitempty" required:"false" doc:""`
+}
+
+// AgentDeploymentManifest_ExternalAccess represents a nested type within components
+type AgentDeploymentManifest_ExternalAccess struct {
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
+}
+
+// AgentDeploymentManifest_HealthChecks represents a nested type within components
+type AgentDeploymentManifest_HealthChecks struct {
+	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
+	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
+}
+
+// AgentDeploymentManifest_HpaConfig represents a nested type within components
+type AgentDeploymentManifest_HpaConfig struct {
+	MaxReplicas             int64 `json:"max_replicas,omitempty" yaml:"max_replicas,omitempty" required:"false" doc:"Maximum pods for horizontal autoscaling"`
+	MinReplicas             int64 `json:"min_replicas,omitempty" yaml:"min_replicas,omitempty" required:"false" doc:"Minimum number of pods"`
+	TargetCpuUtilization    int64 `json:"target_cpu_utilization,omitempty" yaml:"target_cpu_utilization,omitempty" required:"false" doc:"CPU percentage that triggers scale-up"`
+	TargetMemoryUtilization int64 `json:"target_memory_utilization,omitempty" yaml:"target_memory_utilization,omitempty" required:"false" doc:"Memory percentage that triggers scale-up"`
+}
+
+// AgentDeploymentManifest_PersistentVolumesItem represents a nested type within components
+type AgentDeploymentManifest_PersistentVolumesItem struct {
+	MountPath        string    `json:"mount_path,omitempty" yaml:"mount_path,omitempty" required:"true" doc:"Absolute path where the volume will be mounted in the container. Must be unique within the deployment (no duplicate mount paths)."`
+	Name             string    `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Volume name (must be DNS-1123 compliant: lowercase alphanumeric, hyphens allowed). Used to generate PVC name as {service-name}-{volume-name}. Must be unique within the deployment."`
+	Size             string    `json:"size,omitempty" yaml:"size,omitempty" required:"true" doc:"Volume size in Kubernetes format (e.g., \"10Gi\", \"100Mi\", \"1Ti\"). Supported units: Ki (kibibytes), Mi (mebibytes), Gi (gibibytes), Ti (tebibytes)."`
+	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
+	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
+	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// AgentDeploymentManifest_SecretDefinitionsItem represents a nested type within components
+type AgentDeploymentManifest_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
+}
+
+// AgentDeploymentManifest_SecurityPoliciesItem represents a nested type within components
+type AgentDeploymentManifest_SecurityPoliciesItem struct {
+	AuthenticationMethod string                                                   `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
+	Name                 string                                                   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               AgentDeploymentManifest_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
+	Audiences            *[]string                                                `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
+	ExcludedPaths        *[]string                                                `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
+	ExtractFrom          AgentDeploymentManifest_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
+	JwtProvider          string                                                   `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
+	RequiredClaims       map[string]*[]string                                     `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// AgentDeploymentManifest_SecurityPoliciesItem_ApiKey represents a nested type within components
+type AgentDeploymentManifest_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
+}
+
+// AgentDeploymentManifest_SecurityPoliciesItem_ExtractFrom represents a nested type within components
+type AgentDeploymentManifest_SecurityPoliciesItem_ExtractFrom struct {
 	Cookies *[]string `json:"cookies,omitempty" yaml:"cookies,omitempty" required:"false" doc:"Cookies to extract JWT from"`
 	Headers *[]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:"HTTP headers to extract JWT from"`
 	Params  *[]string `json:"params,omitempty" yaml:"params,omitempty" required:"false" doc:"Query parameters to extract JWT from"`
@@ -2327,15 +2686,17 @@ type AgentDeployment_EnvironmentVariablesItem struct {
 
 // AgentDeployment_ExternalAccess represents a nested type within components
 type AgentDeployment_ExternalAccess struct {
-	Gateway   string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
-	Hostnames *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Use \"*\" to accept any gateway hostname."`
-	RoutePath string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
 }
 
 // AgentDeployment_HealthChecks represents a nested type within components
 type AgentDeployment_HealthChecks struct {
 	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
 	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
 }
 
 // AgentDeployment_HpaConfig represents a nested type within components
@@ -2361,13 +2722,21 @@ type AgentDeployment_PersistentVolumesItem struct {
 	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
 	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
 	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
-	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC: - Filesystem: Volume is mounted as a filesystem (default, works with NFS, most storage) - Block: Volume is exposed as a raw block device (for databases, specialized workloads)"`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// AgentDeployment_SecretDefinitionsItem represents a nested type within components
+type AgentDeployment_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
 }
 
 // AgentDeployment_SecurityPoliciesItem represents a nested type within components
 type AgentDeployment_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                           `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                           `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               AgentDeployment_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                        `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                        `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          AgentDeployment_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
@@ -2375,11 +2744,23 @@ type AgentDeployment_SecurityPoliciesItem struct {
 	RequiredClaims       map[string]*[]string                             `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
 }
 
+// AgentDeployment_SecurityPoliciesItem_ApiKey represents a nested type within components
+type AgentDeployment_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
+}
+
 // AgentDeployment_SecurityPoliciesItem_ExtractFrom represents a nested type within components
 type AgentDeployment_SecurityPoliciesItem_ExtractFrom struct {
 	Cookies *[]string `json:"cookies,omitempty" yaml:"cookies,omitempty" required:"false" doc:"Cookies to extract JWT from"`
 	Headers *[]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:"HTTP headers to extract JWT from"`
 	Params  *[]string `json:"params,omitempty" yaml:"params,omitempty" required:"false" doc:"Query parameters to extract JWT from"`
+}
+
+// AgentDeployment_UsedResourcesItem represents a nested type within components
+type AgentDeployment_UsedResourcesItem struct {
+	Cpu int64 `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU used by the pod, in millicores."`
+	Mem int64 `json:"mem,omitempty" yaml:"mem,omitempty" required:"false" doc:"Memory used by the pod, in bytes."`
 }
 
 // AgentLinkedResponse_DataItem represents a nested type within components
@@ -2443,6 +2824,13 @@ type BaseManifestConfig_EnvironmentVariablesItem struct {
 	Value string `json:"value,omitempty" yaml:"value,omitempty" required:"false" doc:""`
 }
 
+// BaseManifestConfig_SecretDefinitionsItem represents a nested type within components
+type BaseManifestConfig_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
+}
+
 // BulkDeleteResponse_ResultsItem represents a nested type within components
 type BulkDeleteResponse_ResultsItem struct {
 	Guid    string `json:"guid,omitempty" yaml:"guid,omitempty" required:"true" doc:"The GUID that was attempted to be deleted"`
@@ -2452,10 +2840,10 @@ type BulkDeleteResponse_ResultsItem struct {
 
 // BulkPromoteResponse_ResultsItem represents a nested type within components
 type BulkPromoteResponse_ResultsItem struct {
-	PipelineGuid string `json:"pipeline_guid,omitempty" yaml:"pipeline_guid,omitempty" required:"true" doc:"The pipeline GUID that was attempted to be promoted"`
-	Status       string `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"Whether the promotion started successfully"`
-	Error        string `json:"error,omitempty" yaml:"error,omitempty" required:"false" doc:"Error message if promotion failed to start"`
-	StackGuid    string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"The resolved stack GUID for this pipeline"`
+	Outcome              string `json:"outcome,omitempty" yaml:"outcome,omitempty" required:"true" doc:""`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion. Promotion creates a new pipeline with a new GUID and deletes the original. Null when the original pipeline could not be resolved."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Present only when outcome=rejected."`
+	StackGuid            string `json:"stack_guid,omitempty" yaml:"stack_guid,omitempty" required:"false" doc:"Null only when promoting by pipeline_guids and the pipeline could not be resolved to a stack."`
 }
 
 // CommonTrigger_Broker represents a nested type within components
@@ -2464,6 +2852,62 @@ type CommonTrigger_Broker struct {
 	Type                     string `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
 	IsAccessibleToDataEngine bool   `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the broker is accessible. Set to false if the broker is not reachable from the Data Engine (e.g., external brokers behind firewalls)."`
 	Url                      string `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Deprecated. The broker URL is now resolved from VMS by broker name. This field is ignored for VMS-registered brokers and only used as a legacy fallback for brokers not yet registered in VMS. It will be removed in a future release."`
+}
+
+// ComponentAnalytics_Cpu represents a nested type within components
+type ComponentAnalytics_Cpu struct {
+	Analytics ComponentAnalytics_Cpu_Analytics `json:"analytics,omitempty" yaml:"analytics,omitempty" required:"true" doc:"Summary statistics for a metric over the last hour."`
+	Values    *[]string                        `json:"values,omitempty" yaml:"values,omitempty" required:"true" doc:"One summed value per minute over the last hour (60 entries); null for minutes with no data."`
+}
+
+// ComponentAnalytics_Cpu_Analytics represents a nested type within components
+type ComponentAnalytics_Cpu_Analytics struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+	Min     float64 `json:"min,omitempty" yaml:"min,omitempty" required:"true" doc:""`
+	P95     float64 `json:"p95,omitempty" yaml:"p95,omitempty" required:"true" doc:""`
+	P99     float64 `json:"p99,omitempty" yaml:"p99,omitempty" required:"true" doc:""`
+}
+
+// ComponentAnalytics_Mem represents a nested type within components
+type ComponentAnalytics_Mem struct {
+	Analytics ComponentAnalytics_Mem_Analytics `json:"analytics,omitempty" yaml:"analytics,omitempty" required:"true" doc:"Summary statistics for a metric over the last hour."`
+	Values    *[]string                        `json:"values,omitempty" yaml:"values,omitempty" required:"true" doc:"One summed value per minute over the last hour (60 entries); null for minutes with no data."`
+}
+
+// ComponentAnalytics_Mem_Analytics represents a nested type within components
+type ComponentAnalytics_Mem_Analytics struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+	Min     float64 `json:"min,omitempty" yaml:"min,omitempty" required:"true" doc:""`
+	P95     float64 `json:"p95,omitempty" yaml:"p95,omitempty" required:"true" doc:""`
+	P99     float64 `json:"p99,omitempty" yaml:"p99,omitempty" required:"true" doc:""`
+}
+
+// ComponentAnalytics_PodAnalyticsValue represents a nested type within components
+type ComponentAnalytics_PodAnalyticsValue struct {
+	Cpu         ComponentAnalytics_PodAnalyticsValue_Cpu `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"true" doc:"Average and max for a metric over the last hour, for a single pod."`
+	FirstUpdate string                                   `json:"first_update,omitempty" yaml:"first_update,omitempty" required:"true" doc:"Timestamp of the earliest metric datapoint received from this pod within the last hour. Shows when the pod started reporting (e.g. when it scaled up)."`
+	LastUpdate  string                                   `json:"last_update,omitempty" yaml:"last_update,omitempty" required:"true" doc:"Timestamp of the most recent metric datapoint received from this pod. Lets consumers tell apart currently-live pods from ones that have since scaled down or died but are still shown because they reported data within the last hour."`
+	Mem         ComponentAnalytics_PodAnalyticsValue_Mem `json:"mem,omitempty" yaml:"mem,omitempty" required:"true" doc:"Average and max for a metric over the last hour, for a single pod."`
+}
+
+// ComponentAnalytics_PodAnalyticsValue_Cpu represents a nested type within components
+type ComponentAnalytics_PodAnalyticsValue_Cpu struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+}
+
+// ComponentAnalytics_PodAnalyticsValue_Mem represents a nested type within components
+type ComponentAnalytics_PodAnalyticsValue_Mem struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+}
+
+// ComponentAnalytics_StatusItem represents a nested type within components
+type ComponentAnalytics_StatusItem struct {
+	Timestamp string `json:"timestamp,omitempty" yaml:"timestamp,omitempty" required:"true" doc:""`
+	Status    string `json:"status,omitempty" yaml:"status,omitempty" required:"false" doc:""`
 }
 
 // ContainerRegistryBase_AdditionalKubernetesClustersItem represents a nested type within components
@@ -2619,6 +3063,94 @@ type DataEngineStatus_Setup_Parameters_KafkaBroker struct {
 	Type                     string `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
 	IsAccessibleToDataEngine bool   `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the broker is accessible. Set to false if the broker is not reachable from the Data Engine (e.g., external brokers behind firewalls)."`
 	Url                      string `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Deprecated. The broker URL is now resolved from VMS by broker name. This field is ignored for VMS-registered brokers and only used as a legacy fallback for brokers not yet registered in VMS. It will be removed in a future release."`
+}
+
+// DeploymentManifestBase_ComputeConfig represents a nested type within components
+type DeploymentManifestBase_ComputeConfig struct {
+	LimitCpu        string `json:"limit_cpu,omitempty" yaml:"limit_cpu,omitempty" required:"false" doc:"CPU limit (maximum allowed)"`
+	LimitMemory     string `json:"limit_memory,omitempty" yaml:"limit_memory,omitempty" required:"false" doc:"Memory limit (maximum allowed)"`
+	RequestedCpu    string `json:"requested_cpu,omitempty" yaml:"requested_cpu,omitempty" required:"false" doc:"CPU request (minimum guaranteed)"`
+	RequestedMemory string `json:"requested_memory,omitempty" yaml:"requested_memory,omitempty" required:"false" doc:"Memory request (minimum guaranteed)"`
+	Storage         string `json:"storage,omitempty" yaml:"storage,omitempty" required:"false" doc:"Ephemeral storage size"`
+}
+
+// DeploymentManifestBase_ConfigmapsItem represents a nested type within components
+type DeploymentManifestBase_ConfigmapsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the ConfigMap"`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary data (base64-encoded)"`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of configuration string values."`
+}
+
+// DeploymentManifestBase_EnvironmentVariablesItem represents a nested type within components
+type DeploymentManifestBase_EnvironmentVariablesItem struct {
+	Name  string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Value string `json:"value,omitempty" yaml:"value,omitempty" required:"false" doc:""`
+}
+
+// DeploymentManifestBase_ExternalAccess represents a nested type within components
+type DeploymentManifestBase_ExternalAccess struct {
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
+}
+
+// DeploymentManifestBase_HealthChecks represents a nested type within components
+type DeploymentManifestBase_HealthChecks struct {
+	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
+	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
+}
+
+// DeploymentManifestBase_HpaConfig represents a nested type within components
+type DeploymentManifestBase_HpaConfig struct {
+	MaxReplicas             int64 `json:"max_replicas,omitempty" yaml:"max_replicas,omitempty" required:"false" doc:"Maximum pods for horizontal autoscaling"`
+	MinReplicas             int64 `json:"min_replicas,omitempty" yaml:"min_replicas,omitempty" required:"false" doc:"Minimum number of pods"`
+	TargetCpuUtilization    int64 `json:"target_cpu_utilization,omitempty" yaml:"target_cpu_utilization,omitempty" required:"false" doc:"CPU percentage that triggers scale-up"`
+	TargetMemoryUtilization int64 `json:"target_memory_utilization,omitempty" yaml:"target_memory_utilization,omitempty" required:"false" doc:"Memory percentage that triggers scale-up"`
+}
+
+// DeploymentManifestBase_PersistentVolumesItem represents a nested type within components
+type DeploymentManifestBase_PersistentVolumesItem struct {
+	MountPath        string    `json:"mount_path,omitempty" yaml:"mount_path,omitempty" required:"true" doc:"Absolute path where the volume will be mounted in the container. Must be unique within the deployment (no duplicate mount paths)."`
+	Name             string    `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Volume name (must be DNS-1123 compliant: lowercase alphanumeric, hyphens allowed). Used to generate PVC name as {service-name}-{volume-name}. Must be unique within the deployment."`
+	Size             string    `json:"size,omitempty" yaml:"size,omitempty" required:"true" doc:"Volume size in Kubernetes format (e.g., \"10Gi\", \"100Mi\", \"1Ti\"). Supported units: Ki (kibibytes), Mi (mebibytes), Gi (gibibytes), Ti (tebibytes)."`
+	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
+	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
+	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// DeploymentManifestBase_SecretDefinitionsItem represents a nested type within components
+type DeploymentManifestBase_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
+}
+
+// DeploymentManifestBase_SecurityPoliciesItem represents a nested type within components
+type DeploymentManifestBase_SecurityPoliciesItem struct {
+	AuthenticationMethod string                                                  `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
+	Name                 string                                                  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               DeploymentManifestBase_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
+	Audiences            *[]string                                               `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
+	ExcludedPaths        *[]string                                               `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
+	ExtractFrom          DeploymentManifestBase_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
+	JwtProvider          string                                                  `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
+	RequiredClaims       map[string]*[]string                                    `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// DeploymentManifestBase_SecurityPoliciesItem_ApiKey represents a nested type within components
+type DeploymentManifestBase_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
+}
+
+// DeploymentManifestBase_SecurityPoliciesItem_ExtractFrom represents a nested type within components
+type DeploymentManifestBase_SecurityPoliciesItem_ExtractFrom struct {
+	Cookies *[]string `json:"cookies,omitempty" yaml:"cookies,omitempty" required:"false" doc:"Cookies to extract JWT from"`
+	Headers *[]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:"HTTP headers to extract JWT from"`
+	Params  *[]string `json:"params,omitempty" yaml:"params,omitempty" required:"false" doc:"Query parameters to extract JWT from"`
 }
 
 // ElementTriggerConfig_NameFilters represents a nested type within components
@@ -2778,6 +3310,13 @@ type FunctionDeploymentConfig_EventBatching struct {
 	BatchTimeoutMs int64 `json:"batch_timeout_ms,omitempty" yaml:"batch_timeout_ms,omitempty" required:"true" doc:"The timeout in milliseconds for the batch. The batch will be invoked after this timeout, even if the batch is not full."`
 }
 
+// FunctionDeploymentConfig_SecretDefinitionsItem represents a nested type within components
+type FunctionDeploymentConfig_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
+}
+
 // FunctionDeploymentResources_Autoscaling represents a nested type within components
 type FunctionDeploymentResources_Autoscaling struct {
 	Metric      string                                           `json:"metric,omitempty" yaml:"metric,omitempty" required:"true" doc:"The metric used for autoscaling decisions. Determines which configuration object should be provided: - concurrency: Provide 'concurrency' configuration object - rps: Provide 'rps' configuration object - resource: Provide 'resource' configuration object"`
@@ -2830,6 +3369,22 @@ type FunctionSearchResult_Owner struct {
 
 // Function_Owner represents a nested type within components
 type Function_Owner struct {
+	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
+	IdType string `json:"id_type,omitempty" yaml:"id_type,omitempty" required:"true" doc:"The type of identifier for the owner."`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
+}
+
+// HourlyAnalytics_Analytics represents a nested type within components
+type HourlyAnalytics_Analytics struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+	Min     float64 `json:"min,omitempty" yaml:"min,omitempty" required:"true" doc:""`
+	P95     float64 `json:"p95,omitempty" yaml:"p95,omitempty" required:"true" doc:""`
+	P99     float64 `json:"p99,omitempty" yaml:"p99,omitempty" required:"true" doc:""`
+}
+
+// JwtProviderSearchResult_Owner represents a nested type within components
+type JwtProviderSearchResult_Owner struct {
 	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
 	IdType string `json:"id_type,omitempty" yaml:"id_type,omitempty" required:"true" doc:"The type of identifier for the owner."`
 	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
@@ -2968,11 +3523,18 @@ type PipelineConfig_EnvironmentVariablesItem struct {
 	Value string `json:"value,omitempty" yaml:"value,omitempty" required:"false" doc:""`
 }
 
+// PipelineConfig_SecretDefinitionsItem represents a nested type within components
+type PipelineConfig_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
+}
+
 // PipelineCreateInfo_Manifest represents a nested type within components
 type PipelineCreateInfo_Manifest struct {
 	Config              string                                                 `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]PipelineCreateInfo_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]PipelineCreateInfo_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]PipelineCreateInfo_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]PipelineCreateInfo_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -3059,7 +3621,7 @@ type PipelineCreateInfo_Manifest_TriggersItem struct {
 type PipelineCreate_Manifest struct {
 	Config              string                                             `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]PipelineCreate_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]PipelineCreate_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]PipelineCreate_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]PipelineCreate_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -3146,7 +3708,7 @@ type PipelineCreate_Manifest_TriggersItem struct {
 type PipelineDescribe_Manifest struct {
 	Config              string                                               `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]PipelineDescribe_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]PipelineDescribe_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]PipelineDescribe_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]PipelineDescribe_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -3233,7 +3795,7 @@ type PipelineDescribe_Manifest_TriggersItem struct {
 type PipelineRevision_Manifest struct {
 	Config              string                                               `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]PipelineRevision_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]PipelineRevision_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]PipelineRevision_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]PipelineRevision_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -3330,11 +3892,17 @@ type PipelineSearchResult_Owner struct {
 	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
 }
 
+// PipelineSearchResult_UsedResourcesValueItem represents a nested type within components
+type PipelineSearchResult_UsedResourcesValueItem struct {
+	Cpu int64 `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU used by the pod, in millicores."`
+	Mem int64 `json:"mem,omitempty" yaml:"mem,omitempty" required:"false" doc:"Memory used by the pod, in bytes."`
+}
+
 // PipelineUpdate_Manifest represents a nested type within components
 type PipelineUpdate_Manifest struct {
 	Config              string                                             `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]PipelineUpdate_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]PipelineUpdate_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]PipelineUpdate_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]PipelineUpdate_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -3424,6 +3992,24 @@ type Pipeline_Owner struct {
 	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
 }
 
+// Pipeline_UsedResourcesValueItem represents a nested type within components
+type Pipeline_UsedResourcesValueItem struct {
+	Cpu int64 `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU used by the pod, in millicores."`
+	Mem int64 `json:"mem,omitempty" yaml:"mem,omitempty" required:"false" doc:"Memory used by the pod, in bytes."`
+}
+
+// PodAnalytics_Cpu represents a nested type within components
+type PodAnalytics_Cpu struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+}
+
+// PodAnalytics_Mem represents a nested type within components
+type PodAnalytics_Mem struct {
+	Average float64 `json:"average,omitempty" yaml:"average,omitempty" required:"true" doc:""`
+	Max     float64 `json:"max,omitempty" yaml:"max,omitempty" required:"true" doc:""`
+}
+
 // Resource_Owner represents a nested type within components
 type Resource_Owner struct {
 	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
@@ -3441,7 +4027,7 @@ type ScheduleTriggerCreate_Broker struct {
 
 // ScheduleTriggerCreate_Config represents a nested type within components
 type ScheduleTriggerCreate_Config struct {
-	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Cron schedule for a Schedule Trigger."`
+	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Schedule for a Schedule Trigger. Accepts a 5-field cron expression, a 6/7-field Quartz expression, or an interval as \"<value><unit>\" with an optional \"@<start time>\" suffix, where the units are s/m/h/d/w and the start time is seconds since epoch in UTC and acts as the anchor of the interval (for example \"10s\" or \"7m@1704067200\"). An interval submitted without a start time is stored anchored at the time of the request."`
 }
 
 // ScheduleTriggerResponse_Broker represents a nested type within components
@@ -3454,7 +4040,7 @@ type ScheduleTriggerResponse_Broker struct {
 
 // ScheduleTriggerResponse_Config represents a nested type within components
 type ScheduleTriggerResponse_Config struct {
-	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Cron schedule for a Schedule Trigger."`
+	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Schedule for a Schedule Trigger. Accepts a 5-field cron expression, a 6/7-field Quartz expression, or an interval as \"<value><unit>\" with an optional \"@<start time>\" suffix, where the units are s/m/h/d/w and the start time is seconds since epoch in UTC and acts as the anchor of the interval (for example \"10s\" or \"7m@1704067200\"). An interval submitted without a start time is stored anchored at the time of the request."`
 }
 
 // ScheduleTriggerResponse_Owner represents a nested type within components
@@ -3474,7 +4060,7 @@ type ScheduleTriggerUpdate_Broker struct {
 
 // ScheduleTriggerUpdate_Config represents a nested type within components
 type ScheduleTriggerUpdate_Config struct {
-	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Cron schedule for a Schedule Trigger."`
+	CronSchedule string `json:"cron_schedule,omitempty" yaml:"cron_schedule,omitempty" required:"true" doc:"Schedule for a Schedule Trigger. Accepts a 5-field cron expression, a 6/7-field Quartz expression, or an interval as \"<value><unit>\" with an optional \"@<start time>\" suffix, where the units are s/m/h/d/w and the start time is seconds since epoch in UTC and acts as the anchor of the interval (for example \"10s\" or \"7m@1704067200\"). An interval submitted without a start time is stored anchored at the time of the request."`
 }
 
 // SearchResultItem_AdditionalKubernetesClustersItem represents a nested type within components
@@ -3483,12 +4069,25 @@ type SearchResultItem_AdditionalKubernetesClustersItem struct {
 	Namespace            string `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:""`
 }
 
+// SearchResultItem_AddressesItem represents a nested type within components
+type SearchResultItem_AddressesItem struct {
+	Value string `json:"value,omitempty" yaml:"value,omitempty" required:"true" doc:"The address value (IP address or hostname)"`
+	Type  string `json:"type,omitempty" yaml:"type,omitempty" required:"false" doc:""`
+}
+
 // SearchResultItem_Broker represents a nested type within components
 type SearchResultItem_Broker struct {
 	Name                     string `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Broker name for external or Bucket (View) name for internal."`
 	Type                     string `json:"type,omitempty" yaml:"type,omitempty" required:"true" doc:""`
 	IsAccessibleToDataEngine bool   `json:"is_accessible_to_data_engine,omitempty" yaml:"is_accessible_to_data_engine,omitempty" required:"false" doc:"When true (default), the Data Engine will periodically validate that the broker is accessible. Set to false if the broker is not reachable from the Data Engine (e.g., external brokers behind firewalls)."`
 	Url                      string `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Deprecated. The broker URL is now resolved from VMS by broker name. This field is ignored for VMS-registered brokers and only used as a legacy fallback for brokers not yet registered in VMS. It will be removed in a future release."`
+}
+
+// SearchResultItem_CertificatesItem represents a nested type within components
+type SearchResultItem_CertificatesItem struct {
+	TlsCrt string `json:"tls_crt,omitempty" yaml:"tls_crt,omitempty" required:"true" doc:"PEM-encoded TLS certificate"`
+	TlsKey string `json:"tls_key,omitempty" yaml:"tls_key,omitempty" required:"true" doc:"PEM-encoded private key"`
+	CaCrt  string `json:"ca_crt,omitempty" yaml:"ca_crt,omitempty" required:"false" doc:"PEM-encoded CA certificate (optional)"`
 }
 
 // SearchResultItem_Owner represents a nested type within components
@@ -3504,6 +4103,56 @@ type SearchResultItem_PrimaryKubernetesCluster struct {
 	Namespace            string `json:"namespace,omitempty" yaml:"namespace,omitempty" required:"false" doc:""`
 }
 
+// SearchResultItem_Promotion represents a nested type within components
+type SearchResultItem_Promotion struct {
+	Status               string `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"The derived promotion status for a stack."`
+	AttemptCount         int64  `json:"attempt_count,omitempty" yaml:"attempt_count,omitempty" required:"false" doc:"Number of promotion attempts for this stack."`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Failure reason (only present when status is failed)."`
+	UpdatedAt            string `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"When the promotion state was last updated."`
+}
+
+// SearchResultItem_SecurityPoliciesItem represents a nested type within components
+type SearchResultItem_SecurityPoliciesItem struct {
+	AuthenticationMethod string                                            `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
+	Name                 string                                            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               SearchResultItem_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
+	Audiences            *[]string                                         `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
+	ExcludedPaths        *[]string                                         `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
+	ExtractFrom          SearchResultItem_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
+	JwtProvider          string                                            `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
+	RequiredClaims       map[string]*[]string                              `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// SearchResultItem_SecurityPoliciesItem_ApiKey represents a nested type within components
+type SearchResultItem_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
+}
+
+// SearchResultItem_SecurityPoliciesItem_ExtractFrom represents a nested type within components
+type SearchResultItem_SecurityPoliciesItem_ExtractFrom struct {
+	Cookies *[]string `json:"cookies,omitempty" yaml:"cookies,omitempty" required:"false" doc:"Cookies to extract JWT from"`
+	Headers *[]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:"HTTP headers to extract JWT from"`
+	Params  *[]string `json:"params,omitempty" yaml:"params,omitempty" required:"false" doc:"Query parameters to extract JWT from"`
+}
+
+// SearchResultItem_TlsCertificatesItem represents a nested type within components
+type SearchResultItem_TlsCertificatesItem struct {
+	CreatedAt        string    `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"When the certificate was uploaded"`
+	ExpiresAt        string    `json:"expires_at,omitempty" yaml:"expires_at,omitempty" required:"false" doc:"Certificate expiration time"`
+	Fingerprint      string    `json:"fingerprint,omitempty" yaml:"fingerprint,omitempty" required:"false" doc:"SHA-256 fingerprint of the certificate"`
+	HostnamePatterns *[]string `json:"hostname_patterns,omitempty" yaml:"hostname_patterns,omitempty" required:"false" doc:"DNS patterns parsed from certificate SANs (e.g., [\"*.example.com\", \"example.com\"])"`
+	Id               string    `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Certificate identifier (short UUID)"`
+	SecretName       string    `json:"secret_name,omitempty" yaml:"secret_name,omitempty" required:"false" doc:"K8s secret name (internal reference)"`
+}
+
+// SearchResultItem_UsedResourcesValueItem represents a nested type within components
+type SearchResultItem_UsedResourcesValueItem struct {
+	Cpu int64 `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU used by the pod, in millicores."`
+	Mem int64 `json:"mem,omitempty" yaml:"mem,omitempty" required:"false" doc:"Memory used by the pod, in bytes."`
+}
+
 // SecretCreate_EntriesItem represents a nested type within components
 type SecretCreate_EntriesItem struct {
 	Key   string `json:"key,omitempty" yaml:"key,omitempty" required:"true" doc:""`
@@ -3515,6 +4164,12 @@ type Secret_Owner struct {
 	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
 	IdType string `json:"id_type,omitempty" yaml:"id_type,omitempty" required:"true" doc:"The type of identifier for the owner."`
 	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
+}
+
+// SecurityPolicy_ApiKey represents a nested type within components
+type SecurityPolicy_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // SecurityPolicy_ExtractFrom represents a nested type within components
@@ -3548,15 +4203,17 @@ type ServiceDeploymentCreate_EnvironmentVariablesItem struct {
 
 // ServiceDeploymentCreate_ExternalAccess represents a nested type within components
 type ServiceDeploymentCreate_ExternalAccess struct {
-	Gateway   string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
-	Hostnames *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Use \"*\" to accept any gateway hostname."`
-	RoutePath string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
 }
 
 // ServiceDeploymentCreate_HealthChecks represents a nested type within components
 type ServiceDeploymentCreate_HealthChecks struct {
 	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
 	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
 }
 
 // ServiceDeploymentCreate_HpaConfig represents a nested type within components
@@ -3575,18 +4232,32 @@ type ServiceDeploymentCreate_PersistentVolumesItem struct {
 	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
 	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
 	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
-	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC: - Filesystem: Volume is mounted as a filesystem (default, works with NFS, most storage) - Block: Volume is exposed as a raw block device (for databases, specialized workloads)"`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// ServiceDeploymentCreate_SecretDefinitionsItem represents a nested type within components
+type ServiceDeploymentCreate_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
 }
 
 // ServiceDeploymentCreate_SecurityPoliciesItem represents a nested type within components
 type ServiceDeploymentCreate_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                                   `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                                   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               ServiceDeploymentCreate_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                                `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                                `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          ServiceDeploymentCreate_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
 	JwtProvider          string                                                   `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
 	RequiredClaims       map[string]*[]string                                     `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// ServiceDeploymentCreate_SecurityPoliciesItem_ApiKey represents a nested type within components
+type ServiceDeploymentCreate_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // ServiceDeploymentCreate_SecurityPoliciesItem_ExtractFrom represents a nested type within components
@@ -3620,15 +4291,17 @@ type ServiceDeploymentManifest_EnvironmentVariablesItem struct {
 
 // ServiceDeploymentManifest_ExternalAccess represents a nested type within components
 type ServiceDeploymentManifest_ExternalAccess struct {
-	Gateway   string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
-	Hostnames *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Use \"*\" to accept any gateway hostname."`
-	RoutePath string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
 }
 
 // ServiceDeploymentManifest_HealthChecks represents a nested type within components
 type ServiceDeploymentManifest_HealthChecks struct {
 	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
 	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
 }
 
 // ServiceDeploymentManifest_HpaConfig represents a nested type within components
@@ -3647,18 +4320,32 @@ type ServiceDeploymentManifest_PersistentVolumesItem struct {
 	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
 	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
 	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
-	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC: - Filesystem: Volume is mounted as a filesystem (default, works with NFS, most storage) - Block: Volume is exposed as a raw block device (for databases, specialized workloads)"`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// ServiceDeploymentManifest_SecretDefinitionsItem represents a nested type within components
+type ServiceDeploymentManifest_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
 }
 
 // ServiceDeploymentManifest_SecurityPoliciesItem represents a nested type within components
 type ServiceDeploymentManifest_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                                     `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                                     `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               ServiceDeploymentManifest_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                                  `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                                  `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          ServiceDeploymentManifest_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
 	JwtProvider          string                                                     `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
 	RequiredClaims       map[string]*[]string                                       `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// ServiceDeploymentManifest_SecurityPoliciesItem_ApiKey represents a nested type within components
+type ServiceDeploymentManifest_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // ServiceDeploymentManifest_SecurityPoliciesItem_ExtractFrom represents a nested type within components
@@ -3692,15 +4379,17 @@ type ServiceDeployment_EnvironmentVariablesItem struct {
 
 // ServiceDeployment_ExternalAccess represents a nested type within components
 type ServiceDeployment_ExternalAccess struct {
-	Gateway   string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
-	Hostnames *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Use \"*\" to accept any gateway hostname."`
-	RoutePath string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
 }
 
 // ServiceDeployment_HealthChecks represents a nested type within components
 type ServiceDeployment_HealthChecks struct {
 	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
 	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
 }
 
 // ServiceDeployment_HpaConfig represents a nested type within components
@@ -3726,13 +4415,21 @@ type ServiceDeployment_PersistentVolumesItem struct {
 	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
 	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
 	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
-	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC: - Filesystem: Volume is mounted as a filesystem (default, works with NFS, most storage) - Block: Volume is exposed as a raw block device (for databases, specialized workloads)"`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// ServiceDeployment_SecretDefinitionsItem represents a nested type within components
+type ServiceDeployment_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
 }
 
 // ServiceDeployment_SecurityPoliciesItem represents a nested type within components
 type ServiceDeployment_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                             `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                             `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               ServiceDeployment_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                          `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                          `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          ServiceDeployment_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
@@ -3740,11 +4437,23 @@ type ServiceDeployment_SecurityPoliciesItem struct {
 	RequiredClaims       map[string]*[]string                               `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
 }
 
+// ServiceDeployment_SecurityPoliciesItem_ApiKey represents a nested type within components
+type ServiceDeployment_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
+}
+
 // ServiceDeployment_SecurityPoliciesItem_ExtractFrom represents a nested type within components
 type ServiceDeployment_SecurityPoliciesItem_ExtractFrom struct {
 	Cookies *[]string `json:"cookies,omitempty" yaml:"cookies,omitempty" required:"false" doc:"Cookies to extract JWT from"`
 	Headers *[]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:"HTTP headers to extract JWT from"`
 	Params  *[]string `json:"params,omitempty" yaml:"params,omitempty" required:"false" doc:"Query parameters to extract JWT from"`
+}
+
+// ServiceDeployment_UsedResourcesItem represents a nested type within components
+type ServiceDeployment_UsedResourcesItem struct {
+	Cpu int64 `json:"cpu,omitempty" yaml:"cpu,omitempty" required:"false" doc:"CPU used by the pod, in millicores."`
+	Mem int64 `json:"mem,omitempty" yaml:"mem,omitempty" required:"false" doc:"Memory used by the pod, in bytes."`
 }
 
 // ServiceLinkedResponse_DataItem represents a nested type within components
@@ -3834,15 +4543,17 @@ type StackAgentDeployment_EnvironmentVariablesItem struct {
 
 // StackAgentDeployment_ExternalAccess represents a nested type within components
 type StackAgentDeployment_ExternalAccess struct {
-	Gateway   string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
-	Hostnames *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Use \"*\" to accept any gateway hostname."`
-	RoutePath string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
 }
 
 // StackAgentDeployment_HealthChecks represents a nested type within components
 type StackAgentDeployment_HealthChecks struct {
 	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
 	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
 }
 
 // StackAgentDeployment_HpaConfig represents a nested type within components
@@ -3861,18 +4572,32 @@ type StackAgentDeployment_PersistentVolumesItem struct {
 	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
 	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
 	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
-	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC: - Filesystem: Volume is mounted as a filesystem (default, works with NFS, most storage) - Block: Volume is exposed as a raw block device (for databases, specialized workloads)"`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// StackAgentDeployment_SecretDefinitionsItem represents a nested type within components
+type StackAgentDeployment_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
 }
 
 // StackAgentDeployment_SecurityPoliciesItem represents a nested type within components
 type StackAgentDeployment_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                                `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                                `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               StackAgentDeployment_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                             `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                             `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          StackAgentDeployment_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
 	JwtProvider          string                                                `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
 	RequiredClaims       map[string]*[]string                                  `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// StackAgentDeployment_SecurityPoliciesItem_ApiKey represents a nested type within components
+type StackAgentDeployment_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // StackAgentDeployment_SecurityPoliciesItem_ExtractFrom represents a nested type within components
@@ -3892,7 +4617,7 @@ type StackDescribe_PipelinesItem struct {
 type StackDescribe_PipelinesItem_Manifest struct {
 	Config              string                                                          `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]StackDescribe_PipelinesItem_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]StackDescribe_PipelinesItem_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]StackDescribe_PipelinesItem_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]StackDescribe_PipelinesItem_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -3998,7 +4723,7 @@ type StackManifest_PipelineDeploymentsItem struct {
 type StackManifest_PipelineDeploymentsItem_Manifest struct {
 	Config              string                                                                    `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]StackManifest_PipelineDeploymentsItem_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]StackManifest_PipelineDeploymentsItem_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]StackManifest_PipelineDeploymentsItem_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]StackManifest_PipelineDeploymentsItem_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -4081,15 +4806,29 @@ type StackManifest_PipelineDeploymentsItem_Manifest_TriggersItem struct {
 	Vrn  string `json:"vrn,omitempty" yaml:"vrn,omitempty" required:"true" doc:"A logical path for resource grouping and policy assignment. The structure of the logical path is: vast:dataengine:<resource type>:<custom structure per type> where resource type is one of: triggers / functions / pipelines / topics / kubernetes-clusters / container-registries / mtls-authentication-credentials."`
 }
 
+// StackManifest_SecretDefinitionsItem represents a nested type within components
+type StackManifest_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
+}
+
 // StackManifest_SecurityPoliciesItem represents a nested type within components
 type StackManifest_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                         `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                         `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               StackManifest_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                      `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                      `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          StackManifest_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
 	JwtProvider          string                                         `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
 	RequiredClaims       map[string]*[]string                           `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// StackManifest_SecurityPoliciesItem_ApiKey represents a nested type within components
+type StackManifest_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // StackManifest_SecurityPoliciesItem_ExtractFrom represents a nested type within components
@@ -4103,7 +4842,7 @@ type StackManifest_SecurityPoliciesItem_ExtractFrom struct {
 type StackPipelineDeployment_Manifest struct {
 	Config              string                                                      `json:"config,omitempty" yaml:"config,omitempty" required:"false" doc:""`
 	FunctionDeployments *[]StackPipelineDeployment_Manifest_FunctionDeploymentsItem `json:"function_deployments,omitempty" yaml:"function_deployments,omitempty" required:"false" doc:""`
-	Links               *[]StackPipelineDeployment_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using the context.set_trigger_labels() method."`
+	Links               *[]StackPipelineDeployment_Manifest_LinksItem               `json:"links,omitempty" yaml:"links,omitempty" required:"false" doc:"Links which define the calling graph of functions in a pipeline. | Each of the sources at the source array triggers all function deployments in the destination array | if all the labels in the conditional_trigger_labels array are set to the specified values. | The label values are set by the source function handler using event.set_trigger_labels(), or by a UserDefined trigger invoke via trigger_labels."`
 	Triggers            *[]StackPipelineDeployment_Manifest_TriggersItem            `json:"triggers,omitempty" yaml:"triggers,omitempty" required:"false" doc:""`
 }
 
@@ -4200,6 +4939,15 @@ type StackSearchResult_Owner struct {
 	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
 }
 
+// StackSearchResult_Promotion represents a nested type within components
+type StackSearchResult_Promotion struct {
+	Status               string `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"The derived promotion status for a stack."`
+	AttemptCount         int64  `json:"attempt_count,omitempty" yaml:"attempt_count,omitempty" required:"false" doc:"Number of promotion attempts for this stack."`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Failure reason (only present when status is failed)."`
+	UpdatedAt            string `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"When the promotion state was last updated."`
+}
+
 // StackServiceDeployment_ComputeConfig represents a nested type within components
 type StackServiceDeployment_ComputeConfig struct {
 	LimitCpu        string `json:"limit_cpu,omitempty" yaml:"limit_cpu,omitempty" required:"false" doc:"CPU limit (maximum allowed)"`
@@ -4224,15 +4972,17 @@ type StackServiceDeployment_EnvironmentVariablesItem struct {
 
 // StackServiceDeployment_ExternalAccess represents a nested type within components
 type StackServiceDeployment_ExternalAccess struct {
-	Gateway   string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
-	Hostnames *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Use \"*\" to accept any gateway hostname."`
-	RoutePath string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	Gateway        string    `json:"gateway,omitempty" yaml:"gateway,omitempty" required:"true" doc:"VRN of the VastGateway for external access (must be in same namespace as the deployment)"`
+	Hostnames      *[]string `json:"hostnames,omitempty" yaml:"hostnames,omitempty" required:"true" doc:"List of DNS hostnames for routing. Each hostname must match at least one of the gateway's certificate hostname patterns. Wildcard prefixes such as \"*.example.com\" are supported; a standalone \"*\" is not allowed."`
+	RoutePath      string    `json:"route_path,omitempty" yaml:"route_path,omitempty" required:"false" doc:"URL path prefix for routing (e.g., \"/api/myservice\"). Required when multiple services share the same hostname on a gateway."`
+	StripRoutePath bool      `json:"strip_route_path,omitempty" yaml:"strip_route_path,omitempty" required:"false" doc:"Whether to strip the route_path prefix from the request path before forwarding it to the backend. When true (default), a request to \"<route_path>/foo\" is forwarded to the backend as \"/foo\", so the backend app can use paths relative to its own root regardless of where it is mounted. Set to false to forward the full path including the route_path prefix (legacy behavior). Has no effect when route_path is not set."`
 }
 
 // StackServiceDeployment_HealthChecks represents a nested type within components
 type StackServiceDeployment_HealthChecks struct {
 	Liveness  string `json:"liveness,omitempty" yaml:"liveness,omitempty" required:"false" doc:"Liveness probe configuration (defaults to /liveness)"`
 	Readiness string `json:"readiness,omitempty" yaml:"readiness,omitempty" required:"false" doc:"Readiness probe configuration (defaults to /readiness)"`
+	Startup   string `json:"startup,omitempty" yaml:"startup,omitempty" required:"false" doc:"Startup probe configuration (probes the liveness route)"`
 }
 
 // StackServiceDeployment_HpaConfig represents a nested type within components
@@ -4251,18 +5001,32 @@ type StackServiceDeployment_PersistentVolumesItem struct {
 	AccessModes      *[]string `json:"access_modes,omitempty" yaml:"access_modes,omitempty" required:"false" doc:"Volume access modes (standard Kubernetes PVC access modes). - ReadWriteOnce (RWO): Single node, read-write - ReadOnlyMany (ROX): Multiple nodes, read-only - ReadWriteMany (RWX): Multiple nodes, read-write - ReadWriteOncePod (RWOP): Single pod, read-write"`
 	ReclaimPolicy    string    `json:"reclaim_policy,omitempty" yaml:"reclaim_policy,omitempty" required:"false" doc:"PVC retention policy - what happens to the PVC when the service/agent deployment is deleted: - Delete: PVC is automatically deleted when deployment is removed (data will be lost) - Retain: PVC is kept after deployment deletion (data persists, must be manually cleaned up) Note: This controls PVC lifecycle, not pod restarts. The actual data retention also depends on the PersistentVolume's reclaimPolicy (set in the StorageClass)."`
 	StorageClassName string    `json:"storage_class_name,omitempty" yaml:"storage_class_name,omitempty" required:"false" doc:"StorageClass name for provisioning (e.g., \"vastdata-filesystem\", \"nfs-client\", \"gp2\"). If not specified, uses the cluster's default StorageClass."`
-	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC: - Filesystem: Volume is mounted as a filesystem (default, works with NFS, most storage) - Block: Volume is exposed as a raw block device (for databases, specialized workloads)"`
+	VolumeMode       string    `json:"volume_mode,omitempty" yaml:"volume_mode,omitempty" required:"false" doc:"Volume mode for the PVC. Only Filesystem is supported. Block (raw block device) is not supported in Agent Engine."`
+}
+
+// StackServiceDeployment_SecretDefinitionsItem represents a nested type within components
+type StackServiceDeployment_SecretDefinitionsItem struct {
+	Name       string            `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"Name of the secret. It is mounted into pods at /secrets/<name>."`
+	BinaryData map[string]string `json:"binaryData,omitempty" yaml:"binaryData,omitempty" required:"false" doc:"Key-value pairs of binary secret data (base64-encoded)."`
+	Data       map[string]string `json:"data,omitempty" yaml:"data,omitempty" required:"false" doc:"Key-value pairs of string secret values."`
 }
 
 // StackServiceDeployment_SecurityPoliciesItem represents a nested type within components
 type StackServiceDeployment_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                                  `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                                  `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               StackServiceDeployment_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                               `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                               `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          StackServiceDeployment_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
 	JwtProvider          string                                                  `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
 	RequiredClaims       map[string]*[]string                                    `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// StackServiceDeployment_SecurityPoliciesItem_ApiKey represents a nested type within components
+type StackServiceDeployment_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // StackServiceDeployment_SecurityPoliciesItem_ExtractFrom represents a nested type within components
@@ -4277,6 +5041,15 @@ type Stack_Owner struct {
 	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
 	IdType string `json:"id_type,omitempty" yaml:"id_type,omitempty" required:"true" doc:"The type of identifier for the owner."`
 	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
+}
+
+// Stack_Promotion represents a nested type within components
+type Stack_Promotion struct {
+	Status               string `json:"status,omitempty" yaml:"status,omitempty" required:"true" doc:"The derived promotion status for a stack."`
+	AttemptCount         int64  `json:"attempt_count,omitempty" yaml:"attempt_count,omitempty" required:"false" doc:"Number of promotion attempts for this stack."`
+	OriginalPipelineGuid string `json:"original_pipeline_guid,omitempty" yaml:"original_pipeline_guid,omitempty" required:"false" doc:"The pipeline GUID that existed before promotion."`
+	Reason               string `json:"reason,omitempty" yaml:"reason,omitempty" required:"false" doc:"Failure reason (only present when status is failed)."`
+	UpdatedAt            string `json:"updated_at,omitempty" yaml:"updated_at,omitempty" required:"false" doc:"When the promotion state was last updated."`
 }
 
 // TopicCreate_Broker represents a nested type within components
@@ -4451,6 +5224,7 @@ type VastGatewayCreate_CertificatesItem struct {
 type VastGatewayCreate_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                             `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                             `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               VastGatewayCreate_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                          `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                          `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          VastGatewayCreate_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
@@ -4458,11 +5232,72 @@ type VastGatewayCreate_SecurityPoliciesItem struct {
 	RequiredClaims       map[string]*[]string                               `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
 }
 
+// VastGatewayCreate_SecurityPoliciesItem_ApiKey represents a nested type within components
+type VastGatewayCreate_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
+}
+
 // VastGatewayCreate_SecurityPoliciesItem_ExtractFrom represents a nested type within components
 type VastGatewayCreate_SecurityPoliciesItem_ExtractFrom struct {
 	Cookies *[]string `json:"cookies,omitempty" yaml:"cookies,omitempty" required:"false" doc:"Cookies to extract JWT from"`
 	Headers *[]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:"HTTP headers to extract JWT from"`
 	Params  *[]string `json:"params,omitempty" yaml:"params,omitempty" required:"false" doc:"Query parameters to extract JWT from"`
+}
+
+// VastGatewaySearchResult_AddressesItem represents a nested type within components
+type VastGatewaySearchResult_AddressesItem struct {
+	Value string `json:"value,omitempty" yaml:"value,omitempty" required:"true" doc:"The address value (IP address or hostname)"`
+	Type  string `json:"type,omitempty" yaml:"type,omitempty" required:"false" doc:""`
+}
+
+// VastGatewaySearchResult_CertificatesItem represents a nested type within components
+type VastGatewaySearchResult_CertificatesItem struct {
+	TlsCrt string `json:"tls_crt,omitempty" yaml:"tls_crt,omitempty" required:"true" doc:"PEM-encoded TLS certificate"`
+	TlsKey string `json:"tls_key,omitempty" yaml:"tls_key,omitempty" required:"true" doc:"PEM-encoded private key"`
+	CaCrt  string `json:"ca_crt,omitempty" yaml:"ca_crt,omitempty" required:"false" doc:"PEM-encoded CA certificate (optional)"`
+}
+
+// VastGatewaySearchResult_Owner represents a nested type within components
+type VastGatewaySearchResult_Owner struct {
+	Id     string `json:"id,omitempty" yaml:"id,omitempty" required:"true" doc:"The unique identifier for the owner."`
+	IdType string `json:"id_type,omitempty" yaml:"id_type,omitempty" required:"true" doc:"The type of identifier for the owner."`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"The presentable name of the owner"`
+}
+
+// VastGatewaySearchResult_SecurityPoliciesItem represents a nested type within components
+type VastGatewaySearchResult_SecurityPoliciesItem struct {
+	AuthenticationMethod string                                                   `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
+	Name                 string                                                   `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               VastGatewaySearchResult_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
+	Audiences            *[]string                                                `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
+	ExcludedPaths        *[]string                                                `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
+	ExtractFrom          VastGatewaySearchResult_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
+	JwtProvider          string                                                   `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
+	RequiredClaims       map[string]*[]string                                     `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// VastGatewaySearchResult_SecurityPoliciesItem_ApiKey represents a nested type within components
+type VastGatewaySearchResult_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
+}
+
+// VastGatewaySearchResult_SecurityPoliciesItem_ExtractFrom represents a nested type within components
+type VastGatewaySearchResult_SecurityPoliciesItem_ExtractFrom struct {
+	Cookies *[]string `json:"cookies,omitempty" yaml:"cookies,omitempty" required:"false" doc:"Cookies to extract JWT from"`
+	Headers *[]string `json:"headers,omitempty" yaml:"headers,omitempty" required:"false" doc:"HTTP headers to extract JWT from"`
+	Params  *[]string `json:"params,omitempty" yaml:"params,omitempty" required:"false" doc:"Query parameters to extract JWT from"`
+}
+
+// VastGatewaySearchResult_TlsCertificatesItem represents a nested type within components
+type VastGatewaySearchResult_TlsCertificatesItem struct {
+	CreatedAt        string    `json:"created_at,omitempty" yaml:"created_at,omitempty" required:"false" doc:"When the certificate was uploaded"`
+	ExpiresAt        string    `json:"expires_at,omitempty" yaml:"expires_at,omitempty" required:"false" doc:"Certificate expiration time"`
+	Fingerprint      string    `json:"fingerprint,omitempty" yaml:"fingerprint,omitempty" required:"false" doc:"SHA-256 fingerprint of the certificate"`
+	HostnamePatterns *[]string `json:"hostname_patterns,omitempty" yaml:"hostname_patterns,omitempty" required:"false" doc:"DNS patterns parsed from certificate SANs (e.g., [\"*.example.com\", \"example.com\"])"`
+	Id               string    `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Certificate identifier (short UUID)"`
+	SecretName       string    `json:"secret_name,omitempty" yaml:"secret_name,omitempty" required:"false" doc:"K8s secret name (internal reference)"`
 }
 
 // VastGatewayUpdate_CertificatesItem represents a nested type within components
@@ -4476,11 +5311,18 @@ type VastGatewayUpdate_CertificatesItem struct {
 type VastGatewayUpdate_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                             `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                             `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               VastGatewayUpdate_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                          `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                          `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          VastGatewayUpdate_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
 	JwtProvider          string                                             `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
 	RequiredClaims       map[string]*[]string                               `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// VastGatewayUpdate_SecurityPoliciesItem_ApiKey represents a nested type within components
+type VastGatewayUpdate_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // VastGatewayUpdate_SecurityPoliciesItem_ExtractFrom represents a nested type within components
@@ -4514,11 +5356,18 @@ type VastGateway_Owner struct {
 type VastGateway_SecurityPoliciesItem struct {
 	AuthenticationMethod string                                       `json:"authentication_method,omitempty" yaml:"authentication_method,omitempty" required:"true" doc:"Authentication method. \"none\" means no authentication enforcement. \"jwt\" enables JWT token validation using the referenced JWTProvider."`
 	Name                 string                                       `json:"name,omitempty" yaml:"name,omitempty" required:"true" doc:"SecurityPolicy name (DNS-1123 label compliant). Must be unique within the parent resource's security_policies list."`
+	ApiKey               VastGateway_SecurityPoliciesItem_ApiKey      `json:"api_key,omitempty" yaml:"api_key,omitempty" required:"false" doc:"Accept a VMS API token instead of a JWT. Requires authentication_method \"jwt\". Send the token in the configured header (default X-API-Key). If jwt_provider is omitted, the default VMS JWT provider is used."`
 	Audiences            *[]string                                    `json:"audiences,omitempty" yaml:"audiences,omitempty" required:"false" doc:"Allowed audience values (OR -- token must match any one)"`
 	ExcludedPaths        *[]string                                    `json:"excluded_paths,omitempty" yaml:"excluded_paths,omitempty" required:"false" doc:"URI paths excluded from JWT authentication. Requests matching these paths are allowed without a valid JWT token. Two matching modes are supported: 1. Exact match — a plain path matches only that literal URI. - \"/health\" matches \"/health\" only (not \"/health/\" or \"/Health\"). 2. Prefix wildcard ('*' at the end) — matches any URI that starts with the prefix before the '*', including deeper sub-paths. - \"/public/*\" matches \"/public/\", \"/public/css/style.css\". - \"/api/v1/docs/*\" matches \"/api/v1/docs/swagger.json\". Note: \"/public*\" also matches \"/publicly\" (pure prefix, not path-segment-aware). Use \"/public/*\" to restrict to the sub-tree."`
 	ExtractFrom          VastGateway_SecurityPoliciesItem_ExtractFrom `json:"extract_from,omitempty" yaml:"extract_from,omitempty" required:"false" doc:""`
 	JwtProvider          string                                       `json:"jwt_provider,omitempty" yaml:"jwt_provider,omitempty" required:"false" doc:"VRN of a JWTProvider resource. Required when authentication_method is \"jwt\"."`
 	RequiredClaims       map[string]*[]string                         `json:"required_claims,omitempty" yaml:"required_claims,omitempty" required:"false" doc:"Claim-based authorization rules. Each key is a JWT claim name, and the values are the allowed values for that claim (OR semantics per claim). When the jwt_provider is the default VMS provider, the deploying user's tenant_guid is automatically added to required_claims if not explicitly provided. This ensures only tokens from the same tenant can access the service. To override, explicitly set a tenant_guid key with the desired values."`
+}
+
+// VastGateway_SecurityPoliciesItem_ApiKey represents a nested type within components
+type VastGateway_SecurityPoliciesItem_ApiKey struct {
+	Enabled    bool   `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"Turn on API token authentication for this policy."`
+	HeaderName string `json:"header_name,omitempty" yaml:"header_name,omitempty" required:"false" doc:"HTTP header carrying the API token."`
 }
 
 // VastGateway_SecurityPoliciesItem_ExtractFrom represents a nested type within components
