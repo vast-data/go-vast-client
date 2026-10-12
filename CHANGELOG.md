@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.163.0
+
+ENHANCEMENTS:
+
+* **Expanded DataEngine API Coverage**: Added typed and untyped resources for agents, agent deployments, services, service deployments, stacks, gateways, JWT providers, topics, generic triggers, pipeline revisions, reports, dashboard statistics, and search.
+
 ## 0.162.0
 
 BREAKING CHANGES:

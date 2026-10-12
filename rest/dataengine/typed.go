@@ -19,7 +19,20 @@ type TypedRest struct {
 	ScheduleTriggers              *tde.ScheduleTrigger
 	ElementTriggers               *tde.ElementTrigger
 	Pipelines                     *tde.Pipeline
+	PipelineRevisions             *tde.PipelineRevision
 	DataEngine                    *tde.DataEngine
+	Agents                        *tde.Agent
+	AgentDeployments              *tde.AgentDeployment
+	Services                      *tde.Service
+	ServiceDeployments            *tde.ServiceDeployment
+	Stacks                        *tde.Stack
+	VastGateways                  *tde.VastGateway
+	JwtProviders                  *tde.JwtProvider
+	Topics                        *tde.DataEngineTopic
+	Triggers                      *tde.Trigger
+	Reports                       *tde.Report
+	Dashboard                     *tde.Dashboard
+	Search                        *tde.Search
 }
 
 var _ core.VastRest = (*TypedRest)(nil)
@@ -38,7 +51,20 @@ func NewTyped(untyped *UntypedRest) *TypedRest {
 	rest.ScheduleTriggers = core.NewTypedResource[tde.ScheduleTrigger](rest.Untyped)
 	rest.ElementTriggers = core.NewTypedResource[tde.ElementTrigger](rest.Untyped)
 	rest.Pipelines = core.NewTypedResource[tde.Pipeline](rest.Untyped)
+	rest.PipelineRevisions = core.NewTypedResource[tde.PipelineRevision](rest.Untyped)
 	rest.DataEngine = core.NewTypedResource[tde.DataEngine](rest.Untyped)
+	rest.Agents = core.NewTypedResource[tde.Agent](rest.Untyped)
+	rest.AgentDeployments = core.NewTypedResource[tde.AgentDeployment](rest.Untyped)
+	rest.Services = core.NewTypedResource[tde.Service](rest.Untyped)
+	rest.ServiceDeployments = core.NewTypedResource[tde.ServiceDeployment](rest.Untyped)
+	rest.Stacks = core.NewTypedResource[tde.Stack](rest.Untyped)
+	rest.VastGateways = core.NewTypedResource[tde.VastGateway](rest.Untyped)
+	rest.JwtProviders = core.NewTypedResource[tde.JwtProvider](rest.Untyped)
+	rest.Topics = core.NewTypedResource[tde.DataEngineTopic](rest.Untyped)
+	rest.Triggers = core.NewTypedResource[tde.Trigger](rest.Untyped)
+	rest.Reports = core.NewTypedResource[tde.Report](rest.Untyped)
+	rest.Dashboard = core.NewTypedResource[tde.Dashboard](rest.Untyped)
+	rest.Search = core.NewTypedResource[tde.Search](rest.Untyped)
 	return rest
 }
 

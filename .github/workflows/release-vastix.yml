@@ -124,6 +124,10 @@ jobs:
         sha256sum -c checksums.txt
         \`\`\`
 
+        ## Get started guide
+
+        https://github.com/${{ github.repository }}/tree/main/vastix#quick-start-walkthrough
+
         See [commits](https://github.com/${{ github.repository }}/commits/${{ steps.meta.outputs.version }}) for details.
         EOF
 
