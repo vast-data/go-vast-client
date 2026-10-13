@@ -1026,27 +1026,29 @@ type Component_CapacityRules struct {
 // Component_Carrier represents the OpenAPI component schema
 // Component: #/components/schemas/Carrier
 type Component_Carrier struct {
-	CarrierIndex  string `json:"carrier_index,omitempty" yaml:"carrier_index,omitempty" required:"false" doc:""`
-	CarrierType   string `json:"carrier_type,omitempty" yaml:"carrier_type,omitempty" required:"false" doc:"Disks type (SSD / NVRAM)"`
-	Cluster       string `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:""`
-	ClusterId     string `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
-	Dbox          string `json:"dbox,omitempty" yaml:"dbox,omitempty" required:"false" doc:""`
-	DboxId        int64  `json:"dbox_id,omitempty" yaml:"dbox_id,omitempty" required:"false" doc:""`
-	DisplayName   string `json:"display_name,omitempty" yaml:"display_name,omitempty" required:"false" doc:""`
-	FwVersion     string `json:"fw_version,omitempty" yaml:"fw_version,omitempty" required:"false" doc:"FW version"`
-	Guid          string `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	HwVersion     string `json:"hw_version,omitempty" yaml:"hw_version,omitempty" required:"false" doc:"HW version"`
-	Id            int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	InsertionTime string `json:"insertion_time,omitempty" yaml:"insertion_time,omitempty" required:"false" doc:""`
-	LedStatus     string `json:"led_status,omitempty" yaml:"led_status,omitempty" required:"false" doc:""`
-	Model         string `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:""`
-	Name          string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	Position      string `json:"position,omitempty" yaml:"position,omitempty" required:"false" doc:""`
-	Shelf         string `json:"shelf,omitempty" yaml:"shelf,omitempty" required:"false" doc:"The shelf (left/right/front/rear)"`
-	Sn            string `json:"sn,omitempty" yaml:"sn,omitempty" required:"false" doc:"Carrier serial number"`
-	State         string `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"NIC state"`
-	SwVersion     string `json:"sw_version,omitempty" yaml:"sw_version,omitempty" required:"false" doc:"SW version"`
-	Title         string `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:""`
+	CarrierIndex  int64     `json:"carrier_index,omitempty" yaml:"carrier_index,omitempty" required:"false" doc:""`
+	CarrierType   string    `json:"carrier_type,omitempty" yaml:"carrier_type,omitempty" required:"false" doc:"Disks type (SSD / NVRAM)"`
+	Cluster       string    `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:""`
+	ClusterId     int64     `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:""`
+	Dbox          string    `json:"dbox,omitempty" yaml:"dbox,omitempty" required:"false" doc:""`
+	DboxId        int64     `json:"dbox_id,omitempty" yaml:"dbox_id,omitempty" required:"false" doc:""`
+	DisplayName   string    `json:"display_name,omitempty" yaml:"display_name,omitempty" required:"false" doc:""`
+	FwVersion     string    `json:"fw_version,omitempty" yaml:"fw_version,omitempty" required:"false" doc:"FW version"`
+	Guid          string    `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	HwVersion     string    `json:"hw_version,omitempty" yaml:"hw_version,omitempty" required:"false" doc:"HW version"`
+	Id            int64     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	InsertionTime string    `json:"insertion_time,omitempty" yaml:"insertion_time,omitempty" required:"false" doc:""`
+	LedStatus     string    `json:"led_status,omitempty" yaml:"led_status,omitempty" required:"false" doc:""`
+	Model         string    `json:"model,omitempty" yaml:"model,omitempty" required:"false" doc:""`
+	Name          string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	Nvrams        *[]string `json:"nvrams,omitempty" yaml:"nvrams,omitempty" required:"false" doc:""`
+	Position      string    `json:"position,omitempty" yaml:"position,omitempty" required:"false" doc:""`
+	Shelf         string    `json:"shelf,omitempty" yaml:"shelf,omitempty" required:"false" doc:"The shelf (left/right/front/rear)"`
+	Sn            string    `json:"sn,omitempty" yaml:"sn,omitempty" required:"false" doc:"Carrier serial number"`
+	Ssds          *[]string `json:"ssds,omitempty" yaml:"ssds,omitempty" required:"false" doc:""`
+	State         string    `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"NIC state"`
+	SwVersion     string    `json:"sw_version,omitempty" yaml:"sw_version,omitempty" required:"false" doc:"SW version"`
+	Title         string    `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:""`
 }
 
 // Component_Certificate represents the OpenAPI component schema
@@ -2057,26 +2059,24 @@ type Component_Event struct {
 // Component_EventDefinition represents the OpenAPI component schema
 // Component: #/components/schemas/EventDefinition
 type Component_EventDefinition struct {
-	ActionDefinitions string    `json:"action_definitions,omitempty" yaml:"action_definitions,omitempty" required:"false" doc:"Actions triggered by the event"`
-	AlarmDefinitions  string    `json:"alarm_definitions,omitempty" yaml:"alarm_definitions,omitempty" required:"false" doc:"A collection of properties of the alarm definition associated with the event."`
-	AlarmOnly         bool      `json:"alarm_only,omitempty" yaml:"alarm_only,omitempty" required:"false" doc:"When this is enabled, only alarms will lead to email and webhook actions"`
-	Cooldown          int64     `json:"cooldown,omitempty" yaml:"cooldown,omitempty" required:"false" doc:"Minimal time to wait between two consecutive events"`
-	DisableActions    bool      `json:"disable_actions,omitempty" yaml:"disable_actions,omitempty" required:"false" doc:"If true, actions are disabled."`
-	EmailRecipients   *[]string `json:"email_recipients,omitempty" yaml:"email_recipients,omitempty" required:"false" doc:"List of emails you want to notify in case this event occurs"`
-	Enabled           bool      `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"If true, the event definition is enabled."`
-	EventMessage      string    `json:"event_message,omitempty" yaml:"event_message,omitempty" required:"false" doc:"Message text."`
-	EventType         string    `json:"event_type,omitempty" yaml:"event_type,omitempty" required:"false" doc:""`
-	Id                int64     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	Internal          bool      `json:"internal,omitempty" yaml:"internal,omitempty" required:"false" doc:""`
-	Name              string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
-	ObjectType        string    `json:"object_type,omitempty" yaml:"object_type,omitempty" required:"false" doc:""`
-	Property          string    `json:"property,omitempty" yaml:"property,omitempty" required:"false" doc:"Monitored property"`
-	RaiseAtCount      int64     `json:"raise_at_count,omitempty" yaml:"raise_at_count,omitempty" required:"false" doc:"Raise an alarm after a specific number of recurrences"`
-	Severity          string    `json:"severity,omitempty" yaml:"severity,omitempty" required:"false" doc:"The severity of the alarm"`
-	TriggerOff        string    `json:"trigger_off,omitempty" yaml:"trigger_off,omitempty" required:"false" doc:"For 'Object Modified' alarms: a list of values"`
-	TriggerOn         string    `json:"trigger_on,omitempty" yaml:"trigger_on,omitempty" required:"false" doc:"For 'Object Modified' alarms: a list of values | For 'Threshold/Rate' alarms: a list of 2 members. The first is an operator like gt/ge/lte and the second is a number"`
-	UserModified      bool      `json:"user_modified,omitempty" yaml:"user_modified,omitempty" required:"false" doc:"Did a user modify this event definition"`
-	Webhooks          *[]int64  `json:"webhooks,omitempty" yaml:"webhooks,omitempty" required:"false" doc:"List of IDs of webhooks to be triggered by the event."`
+	AlarmOnly       bool      `json:"alarm_only,omitempty" yaml:"alarm_only,omitempty" required:"false" doc:"When this is enabled, only alarms will lead to email and webhook actions"`
+	Cooldown        int64     `json:"cooldown,omitempty" yaml:"cooldown,omitempty" required:"false" doc:"Minimal time to wait between two consecutive events"`
+	DisableActions  bool      `json:"disable_actions,omitempty" yaml:"disable_actions,omitempty" required:"false" doc:"If true, actions are disabled."`
+	EmailRecipients *[]string `json:"email_recipients,omitempty" yaml:"email_recipients,omitempty" required:"false" doc:"List of emails you want to notify in case this event occurs"`
+	Enabled         bool      `json:"enabled,omitempty" yaml:"enabled,omitempty" required:"false" doc:"If true, the event definition is enabled."`
+	EventMessage    string    `json:"event_message,omitempty" yaml:"event_message,omitempty" required:"false" doc:"Message text."`
+	EventType       string    `json:"event_type,omitempty" yaml:"event_type,omitempty" required:"false" doc:""`
+	Id              int64     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	Internal        bool      `json:"internal,omitempty" yaml:"internal,omitempty" required:"false" doc:""`
+	Name            string    `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:""`
+	ObjectType      string    `json:"object_type,omitempty" yaml:"object_type,omitempty" required:"false" doc:""`
+	Property        string    `json:"property,omitempty" yaml:"property,omitempty" required:"false" doc:"Monitored property"`
+	RaiseAtCount    int64     `json:"raise_at_count,omitempty" yaml:"raise_at_count,omitempty" required:"false" doc:"Raise an alarm after a specific number of recurrences"`
+	Severity        string    `json:"severity,omitempty" yaml:"severity,omitempty" required:"false" doc:"The severity of the alarm"`
+	TriggerOff      *[]string `json:"trigger_off,omitempty" yaml:"trigger_off,omitempty" required:"false" doc:"For 'Object Modified' alarms: a list of values"`
+	TriggerOn       *[]string `json:"trigger_on,omitempty" yaml:"trigger_on,omitempty" required:"false" doc:"For 'Object Modified' alarms: a list of values | For 'Threshold/Rate' alarms: a list of 2 members. The first is an operator like gt/ge/lte and the second is a number"`
+	UserModified    bool      `json:"user_modified,omitempty" yaml:"user_modified,omitempty" required:"false" doc:"Did a user modify this event definition"`
+	Webhooks        *[]int64  `json:"webhooks,omitempty" yaml:"webhooks,omitempty" required:"false" doc:"List of IDs of webhooks to be triggered by the event."`
 }
 
 // Component_EventDefinitionConfig represents the OpenAPI component schema
@@ -2592,24 +2592,25 @@ type Component_ManagedApplicationSet struct {
 // Component_Manager represents the OpenAPI component schema
 // Component: #/components/schemas/Manager
 type Component_Manager struct {
-	Password                   string         `json:"password,omitempty" yaml:"password,omitempty" required:"true" doc:"Password for VMS login"`
-	Username                   string         `json:"username,omitempty" yaml:"username,omitempty" required:"true" doc:"Username for VMS login"`
-	FailedLogins               int64          `json:"failed_logins,omitempty" yaml:"failed_logins,omitempty" required:"false" doc:"Number of failed logins"`
-	FirstName                  string         `json:"first_name,omitempty" yaml:"first_name,omitempty" required:"false" doc:"Manager's first name"`
-	FullName                   string         `json:"full_name,omitempty" yaml:"full_name,omitempty" required:"false" doc:"First and last name"`
-	Guid                       string         `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
-	Id                         int64          `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
-	IsActive                   bool           `json:"is_active,omitempty" yaml:"is_active,omitempty" required:"false" doc:"True if manager is active"`
-	IsDefault                  bool           `json:"is_default,omitempty" yaml:"is_default,omitempty" required:"false" doc:"Sets the manager to be the default manager"`
-	IsTemporaryPassword        bool           `json:"is_temporary_password,omitempty" yaml:"is_temporary_password,omitempty" required:"false" doc:"Sets the password to be temporary. Expiration of temporary passwords is controlled by the tmp_pwd_expiration_timeout setting, which you can modify and retrieve through the /vms/{id}/pwd_settings/ path."`
-	LastLogin                  string         `json:"last_login,omitempty" yaml:"last_login,omitempty" required:"false" doc:"Last login time"`
-	LastName                   string         `json:"last_name,omitempty" yaml:"last_name,omitempty" required:"false" doc:"Manager's first name"`
-	PasswordExpiration         string         `json:"password_expiration,omitempty" yaml:"password_expiration,omitempty" required:"false" doc:"Password expiration"`
-	PasswordExpirationDisabled bool           `json:"password_expiration_disabled,omitempty" yaml:"password_expiration_disabled,omitempty" required:"false" doc:"Password expiration is disabled"`
-	PasswordRetype             string         `json:"password_retype,omitempty" yaml:"password_retype,omitempty" required:"false" doc:"Retype the password"`
-	Tenant                     Manager_Tenant `json:"tenant,omitempty" yaml:"tenant,omitempty" required:"false" doc:""`
-	TenantId                   int64          `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
-	UserType                   string         `json:"user_type,omitempty" yaml:"user_type,omitempty" required:"false" doc:"Manager user type. SUPER_ADMIN aka 'cluster admin' = VMS manager users who can log into the cluster VMS to manage the cluster. TENANT_ADMIN=VMS manager users who can log into a specific tenant's VMS to manage that tenant."`
+	FailedLogins               int64     `json:"failed_logins,omitempty" yaml:"failed_logins,omitempty" required:"false" doc:"Number of failed logins"`
+	FirstName                  string    `json:"first_name,omitempty" yaml:"first_name,omitempty" required:"false" doc:"Manager's first name"`
+	FullName                   string    `json:"full_name,omitempty" yaml:"full_name,omitempty" required:"false" doc:"First and last name"`
+	Guid                       string    `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:""`
+	Id                         int64     `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
+	IsActive                   bool      `json:"is_active,omitempty" yaml:"is_active,omitempty" required:"false" doc:"True if manager is active"`
+	IsDefault                  bool      `json:"is_default,omitempty" yaml:"is_default,omitempty" required:"false" doc:"Sets the manager to be the default manager"`
+	IsTemporaryPassword        bool      `json:"is_temporary_password,omitempty" yaml:"is_temporary_password,omitempty" required:"false" doc:"Sets the password to be temporary. Expiration of temporary passwords is controlled by the tmp_pwd_expiration_timeout setting, which you can modify and retrieve through the /vms/{id}/pwd_settings/ path."`
+	LastLogin                  string    `json:"last_login,omitempty" yaml:"last_login,omitempty" required:"false" doc:"Last login time"`
+	LastName                   string    `json:"last_name,omitempty" yaml:"last_name,omitempty" required:"false" doc:"Manager's first name"`
+	Password                   string    `json:"password,omitempty" yaml:"password,omitempty" required:"false" doc:"Password for VMS login"`
+	PasswordExpiration         string    `json:"password_expiration,omitempty" yaml:"password_expiration,omitempty" required:"false" doc:"Password expiration"`
+	PasswordExpirationDisabled bool      `json:"password_expiration_disabled,omitempty" yaml:"password_expiration_disabled,omitempty" required:"false" doc:"Password expiration is disabled"`
+	PasswordRetype             string    `json:"password_retype,omitempty" yaml:"password_retype,omitempty" required:"false" doc:"Retype the password"`
+	Roles                      *[]string `json:"roles,omitempty" yaml:"roles,omitempty" required:"false" doc:"Roles assigned to the manager"`
+	Tenant                     string    `json:"tenant,omitempty" yaml:"tenant,omitempty" required:"false" doc:""`
+	TenantId                   int64     `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
+	UserType                   string    `json:"user_type,omitempty" yaml:"user_type,omitempty" required:"false" doc:"Manager user type. SUPER_ADMIN aka 'cluster admin' = VMS manager users who can log into the cluster VMS to manage the cluster. TENANT_ADMIN=VMS manager users who can log into a specific tenant's VMS to manage that tenant."`
+	Username                   string    `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:"Username for VMS login"`
 }
 
 // Component_MetricViewerCertificates represents the OpenAPI component schema
@@ -3726,7 +3727,7 @@ type Component_Role struct {
 	LdapGroups  *[]string            `json:"ldap_groups,omitempty" yaml:"ldap_groups,omitempty" required:"false" doc:"LDAP group(s) associated with the role. Members of the specified groups on a connected LDAP/Active Directory provider can access VMS and are granted whichever permissions are included in the role. A group can be associated with multiple roles."`
 	Managers    *[]Role_ManagersItem `json:"managers,omitempty" yaml:"managers,omitempty" required:"false" doc:"Managers to which the role is granted"`
 	Permissions *[]string            `json:"permissions,omitempty" yaml:"permissions,omitempty" required:"false" doc:"A list of permission codenames (<permission_type>_<realm>). Note, that this does not correspond to provided in POST/PATCH schema's 'permissions', which is a legacy name."`
-	Tenant      Role_Tenant          `json:"tenant,omitempty" yaml:"tenant,omitempty" required:"false" doc:""`
+	Tenant      string               `json:"tenant,omitempty" yaml:"tenant,omitempty" required:"false" doc:""`
 	TenantId    int64                `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty" required:"false" doc:"Tenant ID"`
 	TenantNames string               `json:"tenant_names,omitempty" yaml:"tenant_names,omitempty" required:"false" doc:"Tenant names for the role"`
 	Tenants     *[]int64             `json:"tenants,omitempty" yaml:"tenants,omitempty" required:"false" doc:"Tenants for the role"`
@@ -4254,7 +4255,7 @@ type Component_Tenant struct {
 	AllowLockedUsers                     bool                   `json:"allow_locked_users,omitempty" yaml:"allow_locked_users,omitempty" required:"false" doc:"Allow IO from users whose Active Directory accounts are locked out by lockout policies due to unsuccessful login attempts."`
 	AllowedDelegations                   string                 `json:"allowed_delegations,omitempty" yaml:"allowed_delegations,omitempty" required:"false" doc:"Defines the possible types of NFSv4 delegations"`
 	ApplicationUsersGroupName            string                 `json:"application_users_group_name,omitempty" yaml:"application_users_group_name,omitempty" required:"false" doc:"The name of the group that will be used for application users"`
-	CapacityRules                        Tenant_CapacityRules   `json:"capacity_rules,omitempty" yaml:"capacity_rules,omitempty" required:"false" doc:""`
+	CapacityRules                        string                 `json:"capacity_rules,omitempty" yaml:"capacity_rules,omitempty" required:"false" doc:""`
 	ClientIpRanges                       *[][]string            `json:"client_ip_ranges,omitempty" yaml:"client_ip_ranges,omitempty" required:"false" doc:"Array of source IP ranges to allow for the tenant."`
 	ClientIpRangesSummary                string                 `json:"client_ip_ranges_summary,omitempty" yaml:"client_ip_ranges_summary,omitempty" required:"false" doc:""`
 	DataEngineEnabled                    bool                   `json:"data_engine_enabled,omitempty" yaml:"data_engine_enabled,omitempty" required:"false" doc:"True if DataEngine is enabled on this tenant"`
@@ -4286,7 +4287,7 @@ type Component_Tenant struct {
 	OidcProviderTitle                    string                 `json:"oidc_provider_title,omitempty" yaml:"oidc_provider_title,omitempty" required:"false" doc:""`
 	PosixPrimaryProvider                 string                 `json:"posix_primary_provider,omitempty" yaml:"posix_primary_provider,omitempty" required:"false" doc:"The primary provider that takes precedence for POSIX user attributes in case of conflict between two providers that both have POSIX user attributes"`
 	PreferredOwningGroup                 string                 `json:"preferred_owning_group,omitempty" yaml:"preferred_owning_group,omitempty" required:"false" doc:"Set to prefer GID of the user as the owning group of the file"`
-	Qos                                  Tenant_Qos             `json:"qos,omitempty" yaml:"qos,omitempty" required:"false" doc:""`
+	Qos                                  string                 `json:"qos,omitempty" yaml:"qos,omitempty" required:"false" doc:""`
 	RequireSmbSigning                    bool                   `json:"require_smb_signing,omitempty" yaml:"require_smb_signing,omitempty" required:"false" doc:"Require SMB clients to perform SMB message signing. SMB messages with invalid or missing signatures will be blocked."`
 	SmbAdministratorsGroupName           string                 `json:"smb_administrators_group_name,omitempty" yaml:"smb_administrators_group_name,omitempty" required:"false" doc:"Optional custom name to specify a non default privileged group. If not set, privileged group is the BUILTIN\\Administrators group."`
 	SmbAllowed                           bool                   `json:"smb_allowed,omitempty" yaml:"smb_allowed,omitempty" required:"false" doc:""`
@@ -4636,10 +4637,22 @@ type Component_VMSNetworkSettingsInput struct {
 	Ntp               *[]string                            `json:"ntp,omitempty" yaml:"ntp,omitempty" required:"false" doc:""`
 }
 
+// Component_VMSNetworkSettingsResponse represents the OpenAPI component schema
+// Component: #/components/schemas/VMSNetworkSettingsResponse
+type Component_VMSNetworkSettingsResponse struct {
+	Data VMSNetworkSettingsResponse_Data `json:"data,omitempty" yaml:"data,omitempty" required:"true" doc:""`
+}
+
 // Component_VMSNetworkSettingsSummary represents the OpenAPI component schema
 // Component: #/components/schemas/VMSNetworkSettingsSummary
 type Component_VMSNetworkSettingsSummary struct {
 	Hosts *[]VMSNetworkSettingsSummary_HostsItem `json:"hosts,omitempty" yaml:"hosts,omitempty" required:"false" doc:""`
+}
+
+// Component_VMSNetworkSettingsSummaryResponse represents the OpenAPI component schema
+// Component: #/components/schemas/VMSNetworkSettingsSummaryResponse
+type Component_VMSNetworkSettingsSummaryResponse struct {
+	Data VMSNetworkSettingsSummaryResponse_Data `json:"data,omitempty" yaml:"data,omitempty" required:"true" doc:""`
 }
 
 // Component_VTask represents the OpenAPI component schema
@@ -5863,12 +5876,6 @@ type ListPrefetchItem_Tenant struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Tenant name"`
 }
 
-// Manager_Tenant represents a nested type within components
-type Manager_Tenant struct {
-	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Tenant ID"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Tenant Name"`
-}
-
 // NFS4DelegateInfo_ListOpenHandlesTask represents a nested type within components
 type NFS4DelegateInfo_ListOpenHandlesTask struct {
 	Id        int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Task ID"`
@@ -6145,12 +6152,6 @@ type Role_ManagersItem struct {
 	Username string `json:"username,omitempty" yaml:"username,omitempty" required:"false" doc:""`
 }
 
-// Role_Tenant represents a nested type within components
-type Role_Tenant struct {
-	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Tenant ID"`
-	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Tenant Name"`
-}
-
 // S3Key_Tenant represents a nested type within components
 type S3Key_Tenant struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"Tenant ID"`
@@ -6299,42 +6300,10 @@ type TenantMetricLabelValue_Label struct {
 	Key string `json:"key,omitempty" yaml:"key,omitempty" required:"false" doc:""`
 }
 
-// Tenant_CapacityRules represents a nested type within components
-type Tenant_CapacityRules struct {
-	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period for tenant capacity limit, in seconds"`
-	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Capacity hard limit for the tenant"`
-	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard limit on the number of files or directories for the tenant"`
-	NotifyHardLimit bool   `json:"notify_hard_limit,omitempty" yaml:"notify_hard_limit,omitempty" required:"false" doc:"Notify on reaching hard limit"`
-	NotifySoftLimit bool   `json:"notify_soft_limit,omitempty" yaml:"notify_soft_limit,omitempty" required:"false" doc:"Notify on reaching soft limit"`
-	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Capacity soft limit for the tenant"`
-	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft limit on the number of files or directories for the tenant"`
-}
-
 // Tenant_LocalProvider represents a nested type within components
 type Tenant_LocalProvider struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"ID of the local provider"`
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the local provider"`
-}
-
-// Tenant_Qos represents a nested type within components
-type Tenant_Qos struct {
-	StaticLimits Tenant_Qos_StaticLimits `json:"static_limits,omitempty" yaml:"static_limits,omitempty" required:"true" doc:""`
-}
-
-// Tenant_Qos_StaticLimits represents a nested type within components
-type Tenant_Qos_StaticLimits struct {
-	BurstReadsBwMb      int64 `json:"burst_reads_bw_mb,omitempty" yaml:"burst_reads_bw_mb,omitempty" required:"true" doc:"Burst reads BW Mb"`
-	BurstReadsIops      int64 `json:"burst_reads_iops,omitempty" yaml:"burst_reads_iops,omitempty" required:"true" doc:"Burst reads IOPS"`
-	BurstReadsLoanIops  int64 `json:"burst_reads_loan_iops,omitempty" yaml:"burst_reads_loan_iops,omitempty" required:"true" doc:"Burst reads loan IOPS"`
-	BurstReadsLoanMb    int64 `json:"burst_reads_loan_mb,omitempty" yaml:"burst_reads_loan_mb,omitempty" required:"true" doc:"Burst reads loan Mb"`
-	BurstWritesBwMb     int64 `json:"burst_writes_bw_mb,omitempty" yaml:"burst_writes_bw_mb,omitempty" required:"true" doc:"Burst writes BW Mb"`
-	BurstWritesIops     int64 `json:"burst_writes_iops,omitempty" yaml:"burst_writes_iops,omitempty" required:"true" doc:"Burst writes IOPS"`
-	BurstWritesLoanIops int64 `json:"burst_writes_loan_iops,omitempty" yaml:"burst_writes_loan_iops,omitempty" required:"true" doc:"Burst writes loan IOPS"`
-	BurstWritesLoanMb   int64 `json:"burst_writes_loan_mb,omitempty" yaml:"burst_writes_loan_mb,omitempty" required:"true" doc:"Burst writes loan Mb"`
-	MaxReadsBwMbps      int64 `json:"max_reads_bw_mbps,omitempty" yaml:"max_reads_bw_mbps,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
-	MaxReadsIops        int64 `json:"max_reads_iops,omitempty" yaml:"max_reads_iops,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
-	MaxWritesBwMbps     int64 `json:"max_writes_bw_mbps,omitempty" yaml:"max_writes_bw_mbps,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
-	MaxWritesIops       int64 `json:"max_writes_iops,omitempty" yaml:"max_writes_iops,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
 }
 
 // Tenant_VippoolsItem represents a nested type within components
@@ -6418,6 +6387,49 @@ type VMSNetworkSettingsInput_HostsItem struct {
 	MgmtIp   string `json:"mgmt_ip,omitempty" yaml:"mgmt_ip,omitempty" required:"false" doc:"The management IP of the CNode or DNode"`
 	NbEthMtu int64  `json:"nb_eth_mtu,omitempty" yaml:"nb_eth_mtu,omitempty" required:"false" doc:"For dual-NIC CNodes where a NIC is directly connected to an external Ethernet network, use this field to set the MTU for that Ethernet network."`
 	NbIbMtu  int64  `json:"nb_ib_mtu,omitempty" yaml:"nb_ib_mtu,omitempty" required:"false" doc:"For dual-NIC CNodes where a NIC is directly connected to an external InfiniBand data network, use this field to set the MTU for that InfiniBand network. Default is 2044. If NB IB type is Connected, the maximum IB NB MTU is 65520. If NB IB type is Datagram, the maximum IB NB MTU is 4092."`
+}
+
+// VMSNetworkSettingsResponse_Data represents a nested type within components
+type VMSNetworkSettingsResponse_Data struct {
+	AutoPortsExtIface string                                       `json:"auto_ports_ext_iface,omitempty" yaml:"auto_ports_ext_iface,omitempty" required:"false" doc:"Allocates the external management IP to one of the following: - Outband. Allocates the external management IP to the onboard left or right port, depending whether B2B is enabled or not. - Inband. Allocates the external management IP to the bond0 interface. - Bond. Creates a bond interface (bond1) on the two RJ45 ports, allowing for redundancy. Negates the ability to have a technician interface. - Northband. For clusters with dual NIC CNodes where one NIC on each CNode is directly connected to the an external client network, this option allocates the external management IP to the externally connected NIC."`
+	B2bIpmi           bool                                         `json:"b2b_ipmi,omitempty" yaml:"b2b_ipmi,omitempty" required:"false" doc:"Enables auto configuring the IPMI ports on the nodes with IP addresses according to the B2B template."`
+	Boxes             *[]VMSNetworkSettingsResponse_Data_BoxesItem `json:"boxes,omitempty" yaml:"boxes,omitempty" required:"false" doc:""`
+	Dns               *[]string                                    `json:"dns,omitempty" yaml:"dns,omitempty" required:"false" doc:""`
+	EthMtu            int64                                        `json:"eth_mtu,omitempty" yaml:"eth_mtu,omitempty" required:"false" doc:"The MTU size for the CNode and DNode internal network interfaces, for clusters with Ethernet internal network infrastructure. The MTU should be aligned with the switches. Default=9216."`
+	ExtNetmask        string                                       `json:"ext_netmask,omitempty" yaml:"ext_netmask,omitempty" required:"false" doc:"The subnet mask of the management subnet"`
+	ExternalGateways  *[]string                                    `json:"external_gateways,omitempty" yaml:"external_gateways,omitempty" required:"false" doc:""`
+	IbMtu             int64                                        `json:"ib_mtu,omitempty" yaml:"ib_mtu,omitempty" required:"false" doc:"The MTU size for the CNode and DNode internal network interfaces, for clusters with IB internal network infrastructure. Default=2044. Set a supported MTU for the NIC mode: If IB type is Connected, the maximum IB NB MTU is 65520. If IB type is Datagram, the maximum IB NB MTU is 4092"`
+	IpmiGateway       string                                       `json:"ipmi_gateway,omitempty" yaml:"ipmi_gateway,omitempty" required:"false" doc:"The IP of a default gateway for the IPMI interfaces on the CNodes and DNodes, if different from the management network default gateway."`
+	IpmiNetmask       string                                       `json:"ipmi_netmask,omitempty" yaml:"ipmi_netmask,omitempty" required:"false" doc:"The subnet mask for the IPMI gateway."`
+	ManagementVips    *[]string                                    `json:"management_vips,omitempty" yaml:"management_vips,omitempty" required:"false" doc:""`
+	Ntp               *[]string                                    `json:"ntp,omitempty" yaml:"ntp,omitempty" required:"false" doc:""`
+}
+
+// VMSNetworkSettingsResponse_Data_BoxesItem represents a nested type within components
+type VMSNetworkSettingsResponse_Data_BoxesItem struct {
+	BoxName string                                                 `json:"box_name,omitempty" yaml:"box_name,omitempty" required:"false" doc:"Name of CBox or DBox"`
+	Hosts   *[]VMSNetworkSettingsResponse_Data_BoxesItem_HostsItem `json:"hosts,omitempty" yaml:"hosts,omitempty" required:"false" doc:"Configuration of each CNode or DNode in the CBox or DBox"`
+}
+
+// VMSNetworkSettingsResponse_Data_BoxesItem_HostsItem represents a nested type within components
+type VMSNetworkSettingsResponse_Data_BoxesItem_HostsItem struct {
+	Hostname string `json:"hostname,omitempty" yaml:"hostname,omitempty" required:"false" doc:"The hostname of the CNode or DNode"`
+	Id       int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"The ID of the CNode or DNode"`
+	IpmiIp   string `json:"ipmi_ip,omitempty" yaml:"ipmi_ip,omitempty" required:"false" doc:"The IPMI IP of the CNode or DNode"`
+	MgmtIp   string `json:"mgmt_ip,omitempty" yaml:"mgmt_ip,omitempty" required:"false" doc:"The management IP of the CNode or DNode"`
+	NbEthMtu int64  `json:"nb_eth_mtu,omitempty" yaml:"nb_eth_mtu,omitempty" required:"false" doc:"For dual-NIC CNodes where a NIC is directly connected to an external Ethernet network, use this field to set the MTU for that Ethernet network."`
+	NbIbMtu  int64  `json:"nb_ib_mtu,omitempty" yaml:"nb_ib_mtu,omitempty" required:"false" doc:"For dual-NIC CNodes where a NIC is directly connected to an external InfiniBand data network, use this field to set the MTU for that InfiniBand network. Default is 2044. If NB IB type is Connected, the maximum IB NB MTU is 65520. If NB IB type is Datagram, the maximum IB NB MTU is 4092."`
+}
+
+// VMSNetworkSettingsSummaryResponse_Data represents a nested type within components
+type VMSNetworkSettingsSummaryResponse_Data struct {
+	Hosts *[]VMSNetworkSettingsSummaryResponse_Data_HostsItem `json:"hosts,omitempty" yaml:"hosts,omitempty" required:"false" doc:""`
+}
+
+// VMSNetworkSettingsSummaryResponse_Data_HostsItem represents a nested type within components
+type VMSNetworkSettingsSummaryResponse_Data_HostsItem struct {
+	Hostname string `json:"hostname,omitempty" yaml:"hostname,omitempty" required:"false" doc:""`
+	Id       int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:""`
 }
 
 // VMSNetworkSettingsSummary_HostsItem represents a nested type within components

@@ -46,14 +46,13 @@ func (h *Host) HostDiscover_GET(waitTimeout time.Duration) (*AsyncResult, error)
 //
 // Params:
 //   - host_type
-func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
+func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, params core.Params) (core.Record, error) {
 	resourcePath := "/hosts/discovered_hosts/"
-	result, err := core.Request[core.RecordSet](ctx, h, http.MethodGet, resourcePath, params, nil)
+	result, err := core.Request[core.Record](ctx, h, http.MethodGet, resourcePath, params, nil)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
-
 }
 
 // HostDiscoveredHosts_GET
@@ -63,6 +62,6 @@ func (h *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, params co
 //
 // Params:
 //   - host_type
-func (h *Host) HostDiscoveredHosts_GET(params core.Params) (core.RecordSet, error) {
+func (h *Host) HostDiscoveredHosts_GET(params core.Params) (core.Record, error) {
 	return h.HostDiscoveredHostsWithContext_GET(h.Rest.GetCtx(), params)
 }

@@ -5,7 +5,6 @@ package typed
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -182,71 +181,6 @@ func (r *Host) MustExistsWithContext(ctx context.Context, req *HostSearchParams)
 // EXTRA METHODS
 // -----------------------------------------------------
 
-// HostDiscoveredHostsItem represents a nested type for Host extra method response
-type HostDiscoveredHostsItem struct {
-	Hostname         string                                  `json:"hostname,omitempty" yaml:"hostname,omitempty" required:"true" doc:"Hostname"`
-	NodeType         string                                  `json:"node_type,omitempty" yaml:"node_type,omitempty" required:"true" doc:"Node type: C-Node/D-Node"`
-	Auto             bool                                    `json:"auto,omitempty" yaml:"auto,omitempty" required:"false" doc:"auto or manually host (internal property)"`
-	BoxRdmaPort      int64                                   `json:"box_rdma_port,omitempty" yaml:"box_rdma_port,omitempty" required:"false" doc:"port for internal use"`
-	Build            string                                  `json:"build,omitempty" yaml:"build,omitempty" required:"false" doc:"Node build"`
-	Cluster          string                                  `json:"cluster,omitempty" yaml:"cluster,omitempty" required:"false" doc:"The name of the cluster to which the host belongs"`
-	ClusterId        int64                                   `json:"cluster_id,omitempty" yaml:"cluster_id,omitempty" required:"false" doc:"Cluster ID"`
-	DataRdmaPort     int64                                   `json:"data_rdma_port,omitempty" yaml:"data_rdma_port,omitempty" required:"false" doc:"port for internal use"`
-	DataTcpPort      int64                                   `json:"data_tcp_port,omitempty" yaml:"data_tcp_port,omitempty" required:"false" doc:"port for internal use"`
-	DboxUid          string                                  `json:"dbox_uid,omitempty" yaml:"dbox_uid,omitempty" required:"false" doc:"Unique h/w identifier"`
-	DeepStripe       bool                                    `json:"deep_stripe,omitempty" yaml:"deep_stripe,omitempty" required:"false" doc:"Is deep stripe system"`
-	Dmsetup          bool                                    `json:"dmsetup,omitempty" yaml:"dmsetup,omitempty" required:"false" doc:"Mock NVMeoF devices with dmsetup devices"`
-	DrHashSize       int64                                   `json:"dr_hash_size,omitempty" yaml:"dr_hash_size,omitempty" required:"false" doc:"DR hash size in buckets"`
-	DriveSize        int64                                   `json:"drive_size,omitempty" yaml:"drive_size,omitempty" required:"false" doc:"Drive size for mocked devices"`
-	EnableDr         bool                                    `json:"enable_dr,omitempty" yaml:"enable_dr,omitempty" required:"false" doc:"True if data reduction is enabled"`
-	Guid             string                                  `json:"guid,omitempty" yaml:"guid,omitempty" required:"false" doc:"Globally unique identifier"`
-	HalfSystem       bool                                    `json:"half_system,omitempty" yaml:"half_system,omitempty" required:"false" doc:"Is half system"`
-	HostLabel        string                                  `json:"host_label,omitempty" yaml:"host_label,omitempty" required:"false" doc:"Host label, used to label container, e.g. 11.0.0.1-4000"`
-	Id               int64                                   `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"The ID of a host"`
-	Install          bool                                    `json:"install,omitempty" yaml:"install,omitempty" required:"false" doc:"True if selected for installation. False if excluded."`
-	InstallState     string                                  `json:"install_state,omitempty" yaml:"install_state,omitempty" required:"false" doc:"Node installation state"`
-	Ip               string                                  `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"The IP of the host's bond interface on the internal data network"`
-	Ip1              string                                  `json:"ip1,omitempty" yaml:"ip1,omitempty" required:"false" doc:"The host's 1st internal IP address"`
-	Ip2              string                                  `json:"ip2,omitempty" yaml:"ip2,omitempty" required:"false" doc:"Ths host's 2nd internal IP address"`
-	Ipv6             string                                  `json:"ipv6,omitempty" yaml:"ipv6,omitempty" required:"false" doc:"External IPv6 Address"`
-	LedStatus        string                                  `json:"led_status,omitempty" yaml:"led_status,omitempty" required:"false" doc:"Status of host LED"`
-	Loopback         bool                                    `json:"loopback,omitempty" yaml:"loopback,omitempty" required:"false" doc:"True if loopback (single node) installation"`
-	Name             string                                  `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of host"`
-	NetType          string                                  `json:"net_type,omitempty" yaml:"net_type,omitempty" required:"false" doc:"network type"`
-	NodeGuid         string                                  `json:"node_guid,omitempty" yaml:"node_guid,omitempty" required:"false" doc:"Hosts sibling node guid"`
-	NvramSize        int64                                   `json:"nvram_size,omitempty" yaml:"nvram_size,omitempty" required:"false" doc:"NVRAM size for mocked devices"`
-	OsVersion        string                                  `json:"os_version,omitempty" yaml:"os_version,omitempty" required:"false" doc:"The VAST OS version running on the node"`
-	PerfCheck        bool                                    `json:"perf_check,omitempty" yaml:"perf_check,omitempty" required:"false" doc:"Internal property related to checking cluster performance"`
-	PlatformRdmaPort int64                                   `json:"platform_rdma_port,omitempty" yaml:"platform_rdma_port,omitempty" required:"false" doc:"port for internal use"`
-	PlatformTcpPort  int64                                   `json:"platform_tcp_port,omitempty" yaml:"platform_tcp_port,omitempty" required:"false" doc:"port for internal use"`
-	SingleNic        bool                                    `json:"single_nic,omitempty" yaml:"single_nic,omitempty" required:"false" doc:"Host has single NIC"`
-	Sn               string                                  `json:"sn,omitempty" yaml:"sn,omitempty" required:"false" doc:"Serial number"`
-	SshUser          string                                  `json:"ssh_user,omitempty" yaml:"ssh_user,omitempty" required:"false" doc:"SSH User name"`
-	State            string                                  `json:"state,omitempty" yaml:"state,omitempty" required:"false" doc:"Node state"`
-	SwDefined        bool                                    `json:"sw_defined,omitempty" yaml:"sw_defined,omitempty" required:"false" doc:"True if host is software defined model"`
-	SwVersion        string                                  `json:"sw_version,omitempty" yaml:"sw_version,omitempty" required:"false" doc:"The platform software version running on the node"`
-	SystemName       string                                  `json:"system_name,omitempty" yaml:"system_name,omitempty" required:"false" doc:"Cluster GUID"`
-	Title            string                                  `json:"title,omitempty" yaml:"title,omitempty" required:"false" doc:"Descriptive string including node type, IP address and node name."`
-	UpgradeState     string                                  `json:"upgrade_state,omitempty" yaml:"upgrade_state,omitempty" required:"false" doc:"Host upgrade state"`
-	Url              string                                  `json:"url,omitempty" yaml:"url,omitempty" required:"false" doc:"Endpoint URL for API operations"`
-	VastInstallInfo  HostDiscoveredHostsItem_VastInstallInfo `json:"vast_install_info,omitempty" yaml:"vast_install_info,omitempty" required:"false" doc:""`
-}
-
-// HostDiscoveredHostsItem_VastInstallInfo represents a nested type for Host extra method response
-type HostDiscoveredHostsItem_VastInstallInfo struct {
-	BoxName   string `json:"box_name,omitempty" yaml:"box_name,omitempty" required:"false" doc:"Name of parent CBox/DBox"`
-	BoxUid    string `json:"box_uid,omitempty" yaml:"box_uid,omitempty" required:"false" doc:"UID of the parent CBox/DBox"`
-	BoxVendor string `json:"box_vendor,omitempty" yaml:"box_vendor,omitempty" required:"false" doc:"Model description, including vendor"`
-	Hostname  string `json:"hostname,omitempty" yaml:"hostname,omitempty" required:"false" doc:"Hostname"`
-	Ip        string `json:"ip,omitempty" yaml:"ip,omitempty" required:"false" doc:"Management IP"`
-	IsCeres   bool   `json:"is_ceres,omitempty" yaml:"is_ceres,omitempty" required:"false" doc:"Whether the host is part of a CERES DBox"`
-	IsCeresV2 bool   `json:"is_ceres_v2,omitempty" yaml:"is_ceres_v2,omitempty" required:"false" doc:"Whether the host is part of a CERES V2 DBox"`
-	IsVmsHost bool   `json:"is_vms_host,omitempty" yaml:"is_vms_host,omitempty" required:"false" doc:"Whether the host is the VMS CNode"`
-	NodeType  string `json:"node_type,omitempty" yaml:"node_type,omitempty" required:"false" doc:"Type of Node (CNode or DNode)"`
-	Position  string `json:"position,omitempty" yaml:"position,omitempty" required:"false" doc:"Position of node in chassis"`
-	VastOs    string `json:"vast_os,omitempty" yaml:"vast_os,omitempty" required:"false" doc:"VAST OS version running on the host"`
-}
-
 // HostDiscoverWithContext_GET
 // method: GET
 // url: /hosts/discover/
@@ -280,43 +214,7 @@ func (r *Host) HostDiscover_GET(waitTimeout time.Duration) (*untyped.AsyncResult
 	return r.HostDiscoverWithContext_GET(r.Untyped.GetCtx(), waitTimeout)
 }
 
-// HostDiscoveredHosts_GET_Body represents the request body for HostDiscoveredHosts
-type HostDiscoveredHosts_GET_Body struct {
-	HostType string `json:"host_type,omitempty" yaml:"host_type,omitempty" required:"false" doc:""`
-}
-
-// HostDiscoveredHostsWithContext_GET
-// method: GET
-// url: /hosts/discovered_hosts/
-// summary: Return new discovered hosts
-func (r *Host) HostDiscoveredHostsWithContext_GET(ctx context.Context, params *HostDiscoveredHosts_GET_Body) ([]HostDiscoveredHostsItem, error) {
-	resourcePath := "/hosts/discovered_hosts/"
-
-	reqParams, err := core.NewParamsFromStruct(params)
-	if err != nil {
-		return nil, err
-	}
-	var reqBody core.Params
-
-	record, err := core.Request[core.RecordSet](ctx, r.Untyped.GetResourceMap()[r.GetResourceType()], http.MethodGet, resourcePath, reqParams, reqBody)
-	if err != nil {
-		return nil, err
-	}
-	// Convert RecordSet ([]core.Record) to typed array ([]HostDiscoveredHostsItem)
-	result := make([]HostDiscoveredHostsItem, len(record))
-	for i, item := range record {
-		if err := item.Fill(&result[i]); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal array item %d: %w", i, err)
-		}
-	}
-	return result, nil
-
-}
-
-// HostDiscoveredHosts_GET
-// method: GET
-// url: /hosts/discovered_hosts/
-// summary: Return new discovered hosts
-func (r *Host) HostDiscoveredHosts_GET(params *HostDiscoveredHosts_GET_Body) ([]HostDiscoveredHostsItem, error) {
-	return r.HostDiscoveredHostsWithContext_GET(r.Untyped.GetCtx(), params)
-}
+// -----------------------------------------------------
+// GENERATION ISSUES
+// -----------------------------------------------------
+//   - Extra method GET /hosts/discovered_hosts/ skipped: GET /hosts/discovered_hosts/ - Response schema contains ambiguous nested objects (objects with no properties)

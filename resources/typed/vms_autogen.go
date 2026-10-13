@@ -197,14 +197,30 @@ type VmsSamlConfigBody_SamlSettings struct {
 	WantAssertionsOrResponseSigned bool   `json:"want_assertions_or_response_signed,omitempty" yaml:"want_assertions_or_response_signed,omitempty" required:"false" doc:"Set to true to require a signed response or assertion from the IdP. VMS then fails the user authentication if an unsigned response is received. If true, upload a certificate and key. Use signing_cert and signing_key to provide certificate and key. Default: false."`
 }
 
-// VmsNetworkSettingsModel_BoxesItem represents a nested type for Vms extra method response
-type VmsNetworkSettingsModel_BoxesItem struct {
-	BoxName string                                         `json:"box_name,omitempty" yaml:"box_name,omitempty" required:"false" doc:"Name of CBox or DBox"`
-	Hosts   *[]VmsNetworkSettingsModel_BoxesItem_HostsItem `json:"hosts,omitempty" yaml:"hosts,omitempty" required:"false" doc:"Configuration of each CNode or DNode in the CBox or DBox"`
+// VmsNetworkSettingsModel_Data represents a nested type for Vms extra method response
+type VmsNetworkSettingsModel_Data struct {
+	AutoPortsExtIface string                                    `json:"auto_ports_ext_iface,omitempty" yaml:"auto_ports_ext_iface,omitempty" required:"false" doc:"Allocates the external management IP to one of the following: - Outband. Allocates the external management IP to the onboard left or right port, depending whether B2B is enabled or not. - Inband. Allocates the external management IP to the bond0 interface. - Bond. Creates a bond interface (bond1) on the two RJ45 ports, allowing for redundancy. Negates the ability to have a technician interface. - Northband. For clusters with dual NIC CNodes where one NIC on each CNode is directly connected to the an external client network, this option allocates the external management IP to the externally connected NIC."`
+	B2bIpmi           bool                                      `json:"b2b_ipmi,omitempty" yaml:"b2b_ipmi,omitempty" required:"false" doc:"Enables auto configuring the IPMI ports on the nodes with IP addresses according to the B2B template."`
+	Boxes             *[]VmsNetworkSettingsModel_Data_BoxesItem `json:"boxes,omitempty" yaml:"boxes,omitempty" required:"false" doc:""`
+	Dns               *[]string                                 `json:"dns,omitempty" yaml:"dns,omitempty" required:"false" doc:""`
+	EthMtu            int64                                     `json:"eth_mtu,omitempty" yaml:"eth_mtu,omitempty" required:"false" doc:"The MTU size for the CNode and DNode internal network interfaces, for clusters with Ethernet internal network infrastructure. The MTU should be aligned with the switches. Default=9216."`
+	ExtNetmask        string                                    `json:"ext_netmask,omitempty" yaml:"ext_netmask,omitempty" required:"false" doc:"The subnet mask of the management subnet"`
+	ExternalGateways  *[]string                                 `json:"external_gateways,omitempty" yaml:"external_gateways,omitempty" required:"false" doc:""`
+	IbMtu             int64                                     `json:"ib_mtu,omitempty" yaml:"ib_mtu,omitempty" required:"false" doc:"The MTU size for the CNode and DNode internal network interfaces, for clusters with IB internal network infrastructure. Default=2044. Set a supported MTU for the NIC mode: If IB type is Connected, the maximum IB NB MTU is 65520. If IB type is Datagram, the maximum IB NB MTU is 4092"`
+	IpmiGateway       string                                    `json:"ipmi_gateway,omitempty" yaml:"ipmi_gateway,omitempty" required:"false" doc:"The IP of a default gateway for the IPMI interfaces on the CNodes and DNodes, if different from the management network default gateway."`
+	IpmiNetmask       string                                    `json:"ipmi_netmask,omitempty" yaml:"ipmi_netmask,omitempty" required:"false" doc:"The subnet mask for the IPMI gateway."`
+	ManagementVips    *[]string                                 `json:"management_vips,omitempty" yaml:"management_vips,omitempty" required:"false" doc:""`
+	Ntp               *[]string                                 `json:"ntp,omitempty" yaml:"ntp,omitempty" required:"false" doc:""`
 }
 
-// VmsNetworkSettingsModel_BoxesItem_HostsItem represents a nested type for Vms extra method response
-type VmsNetworkSettingsModel_BoxesItem_HostsItem struct {
+// VmsNetworkSettingsModel_Data_BoxesItem represents a nested type for Vms extra method response
+type VmsNetworkSettingsModel_Data_BoxesItem struct {
+	BoxName string                                              `json:"box_name,omitempty" yaml:"box_name,omitempty" required:"false" doc:"Name of CBox or DBox"`
+	Hosts   *[]VmsNetworkSettingsModel_Data_BoxesItem_HostsItem `json:"hosts,omitempty" yaml:"hosts,omitempty" required:"false" doc:"Configuration of each CNode or DNode in the CBox or DBox"`
+}
+
+// VmsNetworkSettingsModel_Data_BoxesItem_HostsItem represents a nested type for Vms extra method response
+type VmsNetworkSettingsModel_Data_BoxesItem_HostsItem struct {
 	Hostname string `json:"hostname,omitempty" yaml:"hostname,omitempty" required:"false" doc:"The hostname of the CNode or DNode"`
 	Id       int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"The ID of the CNode or DNode"`
 	IpmiIp   string `json:"ipmi_ip,omitempty" yaml:"ipmi_ip,omitempty" required:"false" doc:"The IPMI IP of the CNode or DNode"`
@@ -328,18 +344,7 @@ func (r *Vms) VmsLoginBanner_GET(id any) (*VmsLoginBanner_GET_Model, error) {
 
 // VmsNetworkSettings_GET_Model represents the response model for VmsNetworkSettings
 type VmsNetworkSettings_GET_Model struct {
-	AutoPortsExtIface string                               `json:"auto_ports_ext_iface,omitempty" yaml:"auto_ports_ext_iface,omitempty" required:"false" doc:"Allocates the external management IP to one of the following: - Outband. Allocates the external management IP to the onboard left or right port, depending whether B2B is enabled or not. - Inband. Allocates the external management IP to the bond0 interface. - Bond. Creates a bond interface (bond1) on the two RJ45 ports, allowing for redundancy. Negates the ability to have a technician interface. - Northband. For clusters with dual NIC CNodes where one NIC on each CNode is directly connected to the an external client network, this option allocates the external management IP to the externally connected NIC."`
-	B2bIpmi           bool                                 `json:"b2b_ipmi,omitempty" yaml:"b2b_ipmi,omitempty" required:"false" doc:"Enables auto configuring the IPMI ports on the nodes with IP addresses according to the B2B template."`
-	Boxes             *[]VmsNetworkSettingsModel_BoxesItem `json:"boxes,omitempty" yaml:"boxes,omitempty" required:"false" doc:""`
-	Dns               *[]string                            `json:"dns,omitempty" yaml:"dns,omitempty" required:"false" doc:""`
-	EthMtu            int64                                `json:"eth_mtu,omitempty" yaml:"eth_mtu,omitempty" required:"false" doc:"The MTU size for the CNode and DNode internal network interfaces, for clusters with Ethernet internal network infrastructure. The MTU should be aligned with the switches. Default=9216."`
-	ExtNetmask        string                               `json:"ext_netmask,omitempty" yaml:"ext_netmask,omitempty" required:"false" doc:"The subnet mask of the management subnet"`
-	ExternalGateways  *[]string                            `json:"external_gateways,omitempty" yaml:"external_gateways,omitempty" required:"false" doc:""`
-	IbMtu             int64                                `json:"ib_mtu,omitempty" yaml:"ib_mtu,omitempty" required:"false" doc:"The MTU size for the CNode and DNode internal network interfaces, for clusters with IB internal network infrastructure. Default=2044. Set a supported MTU for the NIC mode: If IB type is Connected, the maximum IB NB MTU is 65520. If IB type is Datagram, the maximum IB NB MTU is 4092"`
-	IpmiGateway       string                               `json:"ipmi_gateway,omitempty" yaml:"ipmi_gateway,omitempty" required:"false" doc:"The IP of a default gateway for the IPMI interfaces on the CNodes and DNodes, if different from the management network default gateway."`
-	IpmiNetmask       string                               `json:"ipmi_netmask,omitempty" yaml:"ipmi_netmask,omitempty" required:"false" doc:"The subnet mask for the IPMI gateway."`
-	ManagementVips    *[]string                            `json:"management_vips,omitempty" yaml:"management_vips,omitempty" required:"false" doc:""`
-	Ntp               *[]string                            `json:"ntp,omitempty" yaml:"ntp,omitempty" required:"false" doc:""`
+	Data VmsNetworkSettingsModel_Data `json:"data,omitempty" yaml:"data,omitempty" required:"true" doc:""`
 }
 
 // VmsNetworkSettingsWithContext_GET

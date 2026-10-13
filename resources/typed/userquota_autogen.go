@@ -57,15 +57,15 @@ type UserQuotaSearchParams struct {
 
 // UserQuotaRequestBody represents the request body for UserQuota operations
 type UserQuotaRequestBody struct {
+	Identifier      string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"true" doc:"Required. User or group identifier (interpreted with identifier_type)."`
+	IdentifierType  string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"true" doc:"Required. How to interpret identifier (e.g. username, uid, gid, groupname)."`
+	IsGroup         bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"true" doc:"Required. Set to true for a group. Set to false for a user."`
 	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period for the user/group. An alarm is triggered and write operations are blocked if storage usage continues to exceed the soft limit for the grace period. Format: [DD] [HH:[MM:]]ss"`
 	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Storage usage limit beyond which no writes will be allowed in the quota directory for the user/group."`
 	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the quota path beyond which no writes will be allowed for the user/group. A file with multiple hardlinks is counted only once."`
-	Identifier      string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
-	IdentifierType  string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:"Set to True for a group. Set to false for a user."`
-	IsGroup         bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:"Set to True for a group. Set to false for a user."`
 	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user name or group name."`
-	QuotaGroupId    int64  `json:"quota_group_id,omitempty" yaml:"quota_group_id,omitempty" required:"false" doc:"The ID of the quota group to which the user/group quota should be added."`
-	QuotaId         int64  `json:"quota_id,omitempty" yaml:"quota_id,omitempty" required:"false" doc:"The ID of the quota to which the user/group quota should be added."`
+	QuotaGroupId    int64  `json:"quota_group_id,omitempty" yaml:"quota_group_id,omitempty" required:"false" doc:"The ID of the quota group to which the user/group quota should be added. Required if 'quota_id' is not provided."`
+	QuotaId         int64  `json:"quota_id,omitempty" yaml:"quota_id,omitempty" required:"false" doc:"The ID of the quota to which the user/group quota should be added. Required if 'quota_group_id' is not provided."`
 	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Storage usage limit at which warnings of exceeding the quota are issued for the user/group."`
 	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Number of directories and unique files under the path at which warnings of exceeding the quota will be issued for the user/group. A file with multiple hardlinks is counted only once."`
 }

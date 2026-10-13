@@ -415,42 +415,10 @@ func (r *Tenant) MustExistsWithContext(ctx context.Context, req *TenantSearchPar
 // EXTRA METHODS
 // -----------------------------------------------------
 
-// TenantClientIpRangesModel_CapacityRules represents a nested type for Tenant extra method response
-type TenantClientIpRangesModel_CapacityRules struct {
-	GracePeriod     string `json:"grace_period,omitempty" yaml:"grace_period,omitempty" required:"false" doc:"Quota enforcement grace period for tenant capacity limit, in seconds"`
-	HardLimit       int64  `json:"hard_limit,omitempty" yaml:"hard_limit,omitempty" required:"false" doc:"Capacity hard limit for the tenant"`
-	HardLimitInodes int64  `json:"hard_limit_inodes,omitempty" yaml:"hard_limit_inodes,omitempty" required:"false" doc:"Hard limit on the number of files or directories for the tenant"`
-	NotifyHardLimit bool   `json:"notify_hard_limit,omitempty" yaml:"notify_hard_limit,omitempty" required:"false" doc:"Notify on reaching hard limit"`
-	NotifySoftLimit bool   `json:"notify_soft_limit,omitempty" yaml:"notify_soft_limit,omitempty" required:"false" doc:"Notify on reaching soft limit"`
-	SoftLimit       int64  `json:"soft_limit,omitempty" yaml:"soft_limit,omitempty" required:"false" doc:"Capacity soft limit for the tenant"`
-	SoftLimitInodes int64  `json:"soft_limit_inodes,omitempty" yaml:"soft_limit_inodes,omitempty" required:"false" doc:"Soft limit on the number of files or directories for the tenant"`
-}
-
 // TenantClientIpRangesModel_LocalProvider represents a nested type for Tenant extra method response
 type TenantClientIpRangesModel_LocalProvider struct {
 	Id   int64  `json:"id,omitempty" yaml:"id,omitempty" required:"false" doc:"ID of the local provider"`
 	Name string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"Name of the local provider"`
-}
-
-// TenantClientIpRangesModel_Qos represents a nested type for Tenant extra method response
-type TenantClientIpRangesModel_Qos struct {
-	StaticLimits TenantClientIpRangesModel_Qos_StaticLimits `json:"static_limits,omitempty" yaml:"static_limits,omitempty" required:"true" doc:""`
-}
-
-// TenantClientIpRangesModel_Qos_StaticLimits represents a nested type for Tenant extra method response
-type TenantClientIpRangesModel_Qos_StaticLimits struct {
-	BurstReadsBwMb      int64 `json:"burst_reads_bw_mb,omitempty" yaml:"burst_reads_bw_mb,omitempty" required:"true" doc:"Burst reads BW Mb"`
-	BurstReadsIops      int64 `json:"burst_reads_iops,omitempty" yaml:"burst_reads_iops,omitempty" required:"true" doc:"Burst reads IOPS"`
-	BurstReadsLoanIops  int64 `json:"burst_reads_loan_iops,omitempty" yaml:"burst_reads_loan_iops,omitempty" required:"true" doc:"Burst reads loan IOPS"`
-	BurstReadsLoanMb    int64 `json:"burst_reads_loan_mb,omitempty" yaml:"burst_reads_loan_mb,omitempty" required:"true" doc:"Burst reads loan Mb"`
-	BurstWritesBwMb     int64 `json:"burst_writes_bw_mb,omitempty" yaml:"burst_writes_bw_mb,omitempty" required:"true" doc:"Burst writes BW Mb"`
-	BurstWritesIops     int64 `json:"burst_writes_iops,omitempty" yaml:"burst_writes_iops,omitempty" required:"true" doc:"Burst writes IOPS"`
-	BurstWritesLoanIops int64 `json:"burst_writes_loan_iops,omitempty" yaml:"burst_writes_loan_iops,omitempty" required:"true" doc:"Burst writes loan IOPS"`
-	BurstWritesLoanMb   int64 `json:"burst_writes_loan_mb,omitempty" yaml:"burst_writes_loan_mb,omitempty" required:"true" doc:"Burst writes loan Mb"`
-	MaxReadsBwMbps      int64 `json:"max_reads_bw_mbps,omitempty" yaml:"max_reads_bw_mbps,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
-	MaxReadsIops        int64 `json:"max_reads_iops,omitempty" yaml:"max_reads_iops,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
-	MaxWritesBwMbps     int64 `json:"max_writes_bw_mbps,omitempty" yaml:"max_writes_bw_mbps,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
-	MaxWritesIops       int64 `json:"max_writes_iops,omitempty" yaml:"max_writes_iops,omitempty" required:"true" doc:"Maximal amount of performance to provide when there is no resource contention"`
 }
 
 // TenantClientIpRangesModel_VippoolsItem represents a nested type for Tenant extra method response
@@ -533,7 +501,7 @@ type TenantClientIpRanges_PATCH_Model struct {
 	AllowLockedUsers                     bool                                      `json:"allow_locked_users,omitempty" yaml:"allow_locked_users,omitempty" required:"false" doc:"Allow IO from users whose Active Directory accounts are locked out by lockout policies due to unsuccessful login attempts."`
 	AllowedDelegations                   string                                    `json:"allowed_delegations,omitempty" yaml:"allowed_delegations,omitempty" required:"false" doc:"Defines the possible types of NFSv4 delegations"`
 	ApplicationUsersGroupName            string                                    `json:"application_users_group_name,omitempty" yaml:"application_users_group_name,omitempty" required:"false" doc:"The name of the group that will be used for application users"`
-	CapacityRules                        TenantClientIpRangesModel_CapacityRules   `json:"capacity_rules,omitempty" yaml:"capacity_rules,omitempty" required:"false" doc:""`
+	CapacityRules                        string                                    `json:"capacity_rules,omitempty" yaml:"capacity_rules,omitempty" required:"false" doc:""`
 	ClientIpRanges                       *[][]string                               `json:"client_ip_ranges,omitempty" yaml:"client_ip_ranges,omitempty" required:"false" doc:"Array of source IP ranges to allow for the tenant."`
 	ClientIpRangesSummary                string                                    `json:"client_ip_ranges_summary,omitempty" yaml:"client_ip_ranges_summary,omitempty" required:"false" doc:""`
 	DataEngineEnabled                    bool                                      `json:"data_engine_enabled,omitempty" yaml:"data_engine_enabled,omitempty" required:"false" doc:"True if DataEngine is enabled on this tenant"`
@@ -565,7 +533,7 @@ type TenantClientIpRanges_PATCH_Model struct {
 	OidcProviderTitle                    string                                    `json:"oidc_provider_title,omitempty" yaml:"oidc_provider_title,omitempty" required:"false" doc:""`
 	PosixPrimaryProvider                 string                                    `json:"posix_primary_provider,omitempty" yaml:"posix_primary_provider,omitempty" required:"false" doc:"The primary provider that takes precedence for POSIX user attributes in case of conflict between two providers that both have POSIX user attributes"`
 	PreferredOwningGroup                 string                                    `json:"preferred_owning_group,omitempty" yaml:"preferred_owning_group,omitempty" required:"false" doc:"Set to prefer GID of the user as the owning group of the file"`
-	Qos                                  TenantClientIpRangesModel_Qos             `json:"qos,omitempty" yaml:"qos,omitempty" required:"false" doc:""`
+	Qos                                  string                                    `json:"qos,omitempty" yaml:"qos,omitempty" required:"false" doc:""`
 	RequireSmbSigning                    bool                                      `json:"require_smb_signing,omitempty" yaml:"require_smb_signing,omitempty" required:"false" doc:"Require SMB clients to perform SMB message signing. SMB messages with invalid or missing signatures will be blocked."`
 	SmbAdministratorsGroupName           string                                    `json:"smb_administrators_group_name,omitempty" yaml:"smb_administrators_group_name,omitempty" required:"false" doc:"Optional custom name to specify a non default privileged group. If not set, privileged group is the BUILTIN\\Administrators group."`
 	SmbAllowed                           bool                                      `json:"smb_allowed,omitempty" yaml:"smb_allowed,omitempty" required:"false" doc:""`
