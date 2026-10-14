@@ -22,8 +22,15 @@ config := &client.VMSConfig{
         log.Printf("Request: %s %s", verb, url)
         return nil
     },
-    AfterRequestFn: func(ctx context.Context, response client.Renderable) (client.Renderable, error) {
-        log.Println(response.PrettyTable())
+    AfterRequestFn: func(ctx context.Context, response client.Renderable, statusCode int) (client.Renderable, error) {
+        // Runs for every attempt: 2xx, non-2xx (e.g. 503), and transport failures (statusCode 0).
+        // On failure response is nil — do not call PrettyTable() without a nil check.
+        // Empty Record{} still means a successful empty body.
+        if response == nil {
+            log.Printf("Response: status_code=%d unsuccessful", statusCode)
+            return nil, nil
+        }
+        log.Printf("Response: status_code=%d\n%s", statusCode, response.PrettyTable())
         return response, nil
     },
 }
@@ -46,7 +53,7 @@ config := &client.VMSConfig{
 | `ApiVersion`    | `string`                                                                             | Optional API version to use for requests.                                         | ❌      | `v5`             |
 | `Context`       | `context.Context`                                                                    | Optional external context for controlling HTTP request lifecycle. Used as parent context for all requests. | ❌ | `nil` |
 | `BeforeRequestFn`    | `func(ctx context.Context, r *http.Request, verb, url string, body io.Reader) error` | Optional hook executed before each request. Useful for logging or mutation.       | ❌      | —                |
-| `AfterRequestFn`    | `func(ctx context.Context, response Renderable) (Renderable, error)`                 | Optional hook executed after receiving a response. Useful for logging or mutation. | ❌   | —                |
+| `AfterRequestFn`    | `func(ctx context.Context, response Renderable, statusCode int) (Renderable, error)` | Optional hook after every HTTP attempt (2xx, non-2xx, and transport failures with `statusCode` 0). `response` is `nil` on failure; empty `Record{}` is a successful empty body. Nil-check before calling methods like `PrettyTable()`. | ❌   | —                |
 
 ## Authentication Methods
 
