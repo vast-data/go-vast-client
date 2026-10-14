@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.164.0
+
+BREAKING CHANGES:
+
+* **VmsNetworkSettings GET Envelope**: Regenerated from updated VMS OpenAPI. `VmsNetworkSettings_GET_Model` now matches the live `{"data": {...}}` response — fields such as `ManagementVips`, `ExternalGateways`, and `Dns` live under `settings.Data` instead of the top-level struct (ORION-428767). Update call sites accordingly.
+
 ## 0.163.0
 
 ENHANCEMENTS:
