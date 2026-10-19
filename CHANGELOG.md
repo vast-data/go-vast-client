@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.165.0
+
+ENHANCEMENTS:
+
+* **View Update**: Typed `View.Update` / `UpdateWithContext` are generated from the OpenAPI PATCH response schema.
+* **View S3 CORS POST**: Typed `ViewS3corsConfiguration_POST` body/model are generated (was previously skipped as ambiguous).
+
 ## 0.164.0
 
 BREAKING CHANGES:
