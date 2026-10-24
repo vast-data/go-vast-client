@@ -1,5 +1,7 @@
 # Makefile for Vastix TUI Application
 
+export GOWORK := off
+
 .PHONY: build build-all build-release run run-debug clean help test test-verbose test-coverage test-bench test-inputs install uninstall package release build-vpn-binaries clean-vpn-binaries clean-dist
 
 # Build VPN server binaries for embedding
