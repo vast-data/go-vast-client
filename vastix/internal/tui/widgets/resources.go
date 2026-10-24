@@ -20,14 +20,29 @@ import (
 	"github.com/vast-data/go-vast-client/rest"
 )
 
-var customResources = shared.NewSet[string](
-	[]string{
-		"profiles",
+// Built-in resource groups. Keys must match GetAllWidgets() / widget GetResourceType().
+var (
+	// profilesResource is the first list entry (top-level, section-label color).
+	profilesResource = "profiles"
+	localDatabaseResources = []string{
 		"api_tokens [local database]",
 		"user_keys [local database]",
+	}
+	debugResources = []string{
 		"ssh_connections",
+	}
+	// standaloneLocalResources are non-factory widgets listed with regular VMS resources.
+	standaloneLocalResources = []string{
 		"vsettings",
-	},
+	}
+	// reservedResourceNames are list keys that are not factory/API widgets.
+	reservedResourceNames = shared.NewSet[string](append(
+		append(
+			append([]string{profilesResource}, localDatabaseResources...),
+			debugResources...,
+		),
+		standaloneLocalResources...,
+	))
 )
 
 // dataEngineResources tracks resource-list keys that belong to the DataEngine
@@ -360,17 +375,15 @@ func (r *Resources) setListDataInternal() tea.Msg {
 
 	var entries []ResourceListEntry
 
-	// Custom (local) resources first
-	for _, name := range customResources.ToOrderedSlice() {
-		entries = append(entries, ResourceEntry(name))
-	}
+	// Profiles first (selectable, styled like a section label).
+	entries = append(entries, ResourceEntry(profilesResource))
 
-	// Partition factory resources into DataEngine group vs top-level VMS resources
+	// Partition factory resources into DataEngine group vs top-level VMS resources.
 	var deResources []string
 	var vmsResources []string
 	if r.factory != nil {
 		for _, name := range r.factory.GetSupportedResources() {
-			if customResources.Contains(name) {
+			if reservedResourceNames.Contains(name) {
 				continue
 			}
 			if dataEngineResources.Contains(name) {
@@ -380,16 +393,22 @@ func (r *Resources) setListDataInternal() tea.Msg {
 			vmsResources = append(vmsResources, name)
 		}
 	}
+	// Local non-factory widgets (e.g. vsettings) sit with regular resources.
+	vmsResources = append(vmsResources, standaloneLocalResources...)
 
 	sort.Strings(deResources)
 	sort.Strings(vmsResources)
 
-	if len(deResources) > 0 {
-		entries = append(entries, ResourceGroup("dataengine", deResources))
-	}
 	for _, name := range vmsResources {
 		entries = append(entries, ResourceEntry(name))
 	}
+
+	// local_database and dataengine after regular resources; debug last.
+	entries = append(entries, ResourceGroup("local_database", localDatabaseResources))
+	if len(deResources) > 0 {
+		entries = append(entries, ResourceGroup("dataengine", deResources))
+	}
+	entries = append(entries, ResourceGroup("debug", debugResources))
 
 	r.ListAdapter.SetListData(flattenResourceList(entries), r.GetFuzzyListSearchString())
 	return msg_types.MockMsg{}
@@ -449,22 +468,16 @@ func (r *Resources) RenderRow(rowData common.RowData, isSelected bool, colWidth 
 
 	for i, cell := range styledRow {
 		trimmed := strings.TrimSpace(cell)
-		lowerCell := strings.ToLower(trimmed)
 
-		// Non-selectable section headers: [dataengine]
+		// Non-selectable section headers: [local_database], [dataengine], [debug]
 		if isSectionLabel(trimmed) {
 			styledRow[i] = sectionLabelStyle.Render(trimmed)
 			continue
 		}
 
-		// Grouped children keep leading indent from list data
-		if customResources.Contains(lowerCell) && !isSelected {
-			greenStyle := lipgloss.NewStyle().Foreground(colors.GreenTerm)
-			if strings.HasPrefix(cell, groupedResourcePrefix) {
-				styledRow[i] = groupedResourcePrefix + greenStyle.Render(trimmed)
-			} else {
-				styledRow[i] = greenStyle.Render(trimmed)
-			}
+		// Profiles: same orange as group headers, but still selectable.
+		if !isSelected && strings.EqualFold(trimmed, profilesResource) {
+			styledRow[i] = sectionLabelStyle.Render(trimmed)
 		}
 	}
 

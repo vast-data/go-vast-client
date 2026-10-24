@@ -5,17 +5,26 @@ import "testing"
 func TestFlattenResourceList(t *testing.T) {
 	entries := []ResourceListEntry{
 		ResourceEntry("profiles"),
-		ResourceGroup("dataengine", []string{"functions", "pipelines"}),
 		ResourceEntry("users"),
+		ResourceEntry("vsettings"),
+		ResourceGroup("local_database", []string{"api_tokens [local database]", "user_keys [local database]"}),
+		ResourceGroup("dataengine", []string{"functions", "pipelines"}),
+		ResourceGroup("debug", []string{"ssh_connections"}),
 	}
 
 	got := flattenResourceList(entries)
 	want := [][]string{
 		{"profiles"},
+		{"users"},
+		{"vsettings"},
+		{"[local_database]"},
+		{"  api_tokens [local database]"},
+		{"  user_keys [local database]"},
 		{"[dataengine]"},
 		{"  functions"},
 		{"  pipelines"},
-		{"users"},
+		{"[debug]"},
+		{"  ssh_connections"},
 	}
 
 	if len(got) != len(want) {
