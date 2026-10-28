@@ -239,16 +239,17 @@ func (p *Profile) Select(selectedRowData common.RowData) (tea.Cmd, error) {
 
 	// Extract ID from the row data
 	id := selectedRowData.GetInt64Must("id")
-	activeProfileID, err := shared.Int64FromUint(activeProfile.ID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid active profile ID: %w", err)
-	}
-	if activeProfileID == id {
-		// If the selected profile is already active, do nothing
-		log.Debug("Profile already active, no action taken",
-			zap.Uint("profile_id", activeProfile.ID),
-			zap.String("endpoint", selectedRowData.GetString("endpoint")))
-		return nil, nil
+	if activeProfile != nil {
+		activeProfileID, err := shared.Int64FromUint(activeProfile.ID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid active profile ID: %w", err)
+		}
+		if activeProfileID == id {
+			log.Debug("Profile already active, no action taken",
+				zap.Uint("profile_id", activeProfile.ID),
+				zap.String("endpoint", selectedRowData.GetString("endpoint")))
+			return nil, nil
+		}
 	}
 
 	profileID, err := shared.ToUint64(id)
@@ -260,48 +261,43 @@ func (p *Profile) Select(selectedRowData common.RowData) (tea.Cmd, error) {
 		return nil, fmt.Errorf("failed to find profile: %w", err)
 	}
 
-	// Set this profile as active
-	if err := db.SetActiveProfile(profile.ID); err != nil {
-		return nil, fmt.Errorf("failed to set active profile: %w", err)
-	}
-
-	p.log.Info("Profile activated",
+	p.log.Info("Testing profile connection before activation",
 		zap.String("endpoint", profile.Endpoint),
 		zap.String("username", profile.Username))
 
+	// Probe first; only mark active after success so a timeout does not briefly
+	// show the failed profile as [active].
 	updateVastVersionFn := func() tea.Msg {
-		newActiveProfile, err := db.GetActiveProfile()
-		if err != nil {
-			log.Error("Failed to get active profile", zap.Error(err))
-			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to get active profile: %w", err)}
-		}
-		rest, err := newActiveProfile.RestClientFromProfile()
+		rest, err := profile.RestClientFromProfile()
 		if err != nil {
 			log.Error("Failed to get REST client from profile", zap.Error(err))
 			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to get REST client from profile: %w", err)}
 		}
-		// Probe Versions for display; 403 (tenant admin) → <n/a>, do not revert activation.
+		// Probe Versions for display; 403 (tenant admin) → <n/a>, still activate.
 		vastVersion, err := client.FetchVastVersion(context.Background(), rest)
 		if err != nil {
-			log.Error("Failed to get VAST version from new active profile", zap.Error(err))
-			// Revert to previous active profile on hard failures (auth/network), not 403.
-			if revertErr := db.SetActiveProfile(activeProfile.ID); revertErr != nil {
-				log.Error("Failed to revert active profile after connection test", zap.Error(revertErr))
-			}
-			return msg_types.ErrorMsg{
-				Err: err,
-			}
+			log.Error("Failed to get VAST version from profile", zap.Error(err))
+			return msg_types.ErrorMsg{Err: err}
 		}
-		if vastVersion != newActiveProfile.VastVersion {
-			newActiveProfile.VastVersion = vastVersion
-			if err := db.UpdateProfile(newActiveProfile); err != nil {
+
+		if err := db.SetActiveProfile(profile.ID); err != nil {
+			log.Error("Failed to set active profile after connection test", zap.Error(err))
+			return msg_types.ErrorMsg{Err: fmt.Errorf("failed to set active profile: %w", err)}
+		}
+
+		if vastVersion != profile.VastVersion {
+			profile.VastVersion = vastVersion
+			if err := db.UpdateProfile(profile); err != nil {
 				log.Error("Failed to update profile with new version", zap.Error(err))
 				return msg_types.ErrorMsg{Err: fmt.Errorf("failed to update profile with new version: %w", err)}
 			}
 			p.log.Info("Profile updated with new VAST version", zap.String("version", vastVersion))
 		}
 
-		p.log.Info("Rest client initialized", zap.String("VAST version", vastVersion))
+		p.log.Info("Profile activated",
+			zap.String("endpoint", profile.Endpoint),
+			zap.String("username", profile.Username),
+			zap.String("VAST version", vastVersion))
 		return msg_types.UpdateProfileMsg{}
 	}
 
@@ -399,7 +395,8 @@ func (p *Profile) RenderRow(rowData common.RowData, isSelected bool, colWidth in
 	for i, cell := range styledRow {
 		if strings.Contains(cell, "[active]") && !isSelected {
 			activeNormalStyle := lipgloss.NewStyle().
-				Foreground(colors.GreenTerm) // Green
+				Foreground(colors.Yellow). // Match key-binding yellow (<enter>, </>)
+				Bold(true)
 			styledRow[i] = activeNormalStyle.Render(cell)
 		}
 	}

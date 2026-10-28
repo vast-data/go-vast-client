@@ -12,8 +12,8 @@ import (
 	log "vastix/internal/logging"
 
 	tea "github.com/charmbracelet/bubbletea"
-
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 )
 
 // BorderPosition moved to common package
@@ -360,8 +360,8 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 			Align(lipgloss.Left)
 
 		selectedRowStyles[i] = lipgloss.NewStyle().
-			Foreground(White).
-			Background(Blue).
+			Foreground(colors.BlackTerm).
+			Background(colors.LighterGrey).
 			Width(width).
 			Align(lipgloss.Left)
 	}
@@ -458,10 +458,10 @@ func (lr *ListAdapter) ViewList(widget common.Widget) string {
 	// Join list content
 	listContent := strings.Join(rows, "\n")
 
-	// Create resource type label with styling - use same orange as original
+	// Create resource type label with styling
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(colors.Orange).   // Orange background (same as original)
-		Foreground(colors.BlackTerm) // Black text
+		Background(colors.LighterGrey).
+		Foreground(colors.BlackTerm)
 
 	// Use predefined title if available, otherwise use resourceType
 	var titleText string
@@ -638,22 +638,18 @@ func max(a, b int) int {
 	return b
 }
 
-// truncateText truncates text to fit within maxWidth, adding ellipsis if needed
+// truncateText truncates text to fit within maxWidth, adding ellipsis if needed.
+// Uses ANSI-aware width so pre-styled cells (e.g. yellow [active]) are not
+// sliced mid-escape-sequence and rendered invisible.
 func truncateText(text string, maxWidth int) string {
 	if maxWidth <= 0 {
 		return ""
 	}
-
-	// If text fits, return as-is
-	if len(text) <= maxWidth {
+	if ansi.StringWidth(text) <= maxWidth {
 		return text
 	}
-
-	// If maxWidth is too small for ellipsis, just truncate
 	if maxWidth <= 3 {
-		return text[:maxWidth]
+		return ansi.Truncate(text, maxWidth, "")
 	}
-
-	// Truncate and add ellipsis
-	return text[:maxWidth-3] + "..."
+	return ansi.Truncate(text, maxWidth, "...")
 }

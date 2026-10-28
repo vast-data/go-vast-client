@@ -121,8 +121,8 @@ func (p *PopupInput) View(width, height int) string {
 
 	// Title style
 	titleStyle := lipgloss.NewStyle().
-		Background(colorOrange).
-		Foreground(colorBlack).
+		Background(colorLighterGrey).
+		Foreground(colorBlackTerm).
 		Padding(0, 1).
 		Bold(true)
 
