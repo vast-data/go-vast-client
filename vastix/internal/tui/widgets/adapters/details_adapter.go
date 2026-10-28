@@ -309,8 +309,8 @@ func (da *DetailsAdapter) ViewDetails(width, height int, fuzzyDetailsLocalSearch
 	}
 
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(colors.Orange).   // Orange background
-		Foreground(colors.BlackTerm) // Black text
+		Background(colors.LighterGrey).
+		Foreground(colors.BlackTerm)
 
 	// Apply fuzzy search to the FULL content first (not just visible content)
 	var filteredContent string

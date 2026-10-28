@@ -717,8 +717,8 @@ func (w *WorkingZone) getSpinnerDisplayWidth() int {
 // getFormTitle returns the same title that the normal form would have
 func (w *WorkingZone) getFormTitle() string {
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(colors.Orange).   // Orange background
-		Foreground(colors.BlackTerm) // Black text
+		Background(colors.LighterGrey).
+		Foreground(colors.BlackTerm)
 
 	switch w.currentWidget.GetMode() {
 	case common.NavigatorModeCreate:

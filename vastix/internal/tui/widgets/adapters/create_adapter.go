@@ -415,8 +415,8 @@ func (ca *CreateAdapter) renderJSONView(width, height int) string {
 
 	// Create resource type label
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(colors.Orange).   // Orange background
-		Foreground(colors.BlackTerm) // Black text
+		Background(colors.LighterGrey).
+		Foreground(colors.BlackTerm)
 
 	// Use predefined title if available, otherwise use default format
 	var titleText string
@@ -522,8 +522,8 @@ func (ca *CreateAdapter) RenderCreate(width, height int) string {
 
 	// Create resource type label
 	resourceNameStyle := lipgloss.NewStyle().
-		Background(colors.Orange).   // Orange background
-		Foreground(colors.BlackTerm) // Black text
+		Background(colors.LighterGrey).
+		Foreground(colors.BlackTerm)
 
 	// Use predefined title if available, otherwise use default format
 	var titleText string

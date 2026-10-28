@@ -11,12 +11,13 @@ import (
 
 // Define colors locally to avoid import cycle
 var (
-	colorOrange    = colors.Orange
-	colorBlack     = colors.Black
-	colorLightGrey = colors.LightGrey
-	colorYellow    = colors.Yellow // Match key binding color
-	colorBlue      = colors.Blue
-	colorDarkGrey  = colors.DarkGrey
+	colorBlack       = colors.Black
+	colorLightGrey   = colors.LightGrey
+	colorYellow      = colors.Yellow // Match key binding color
+	colorBlue        = colors.Blue
+	colorDarkGrey    = colors.DarkGrey
+	colorLighterGrey = colors.LighterGrey
+	colorBlackTerm   = colors.BlackTerm
 )
 
 type PromptAdapter struct {
@@ -87,8 +88,8 @@ func (pa *PromptAdapter) ViewPrompt(msg, title string, width, height int) string
 
 	// Title style
 	titleStyle := lipgloss.NewStyle().
-		Background(colorOrange).
-		Foreground(colorBlack).
+		Background(colorLighterGrey).
+		Foreground(colorBlackTerm).
 		Padding(0, 1).
 		Bold(true)
 

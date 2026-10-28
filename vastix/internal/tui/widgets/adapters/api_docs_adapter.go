@@ -733,7 +733,7 @@ func schemaTypeName(s *openapi3.Schema) string {
 // ---------------------------------------------------------------------------
 
 var (
-	titleStyle         = lipgloss.NewStyle().Background(colors.Orange).Foreground(colors.BlackTerm).Bold(true)
+	titleStyle         = lipgloss.NewStyle().Background(colors.LighterGrey).Foreground(colors.BlackTerm).Bold(true)
 	sectionLabelStyle  = lipgloss.NewStyle().Foreground(colors.LightGrey)
 	pathStyle          = lipgloss.NewStyle().Foreground(colors.White).Bold(true)
 	summaryStyle       = lipgloss.NewStyle().Foreground(colors.VeryLightGrey)

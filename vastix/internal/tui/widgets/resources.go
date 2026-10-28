@@ -49,9 +49,15 @@ var (
 // (serverless) nested rest. Populated when those widgets are registered.
 var dataEngineResources = shared.NewSet[string](nil)
 
-// sectionLabelStyle matches api-docs title coloring for group headers like [dataengine].
+// sectionLabelStyle matches key-binding yellow (<enter>, </>) for group
+// headers like [local_database] and [dataengine].
 var sectionLabelStyle = lipgloss.NewStyle().
-	Foreground(colors.Orange).
+	Foreground(colors.Yellow).
+	Bold(true)
+
+// profilesRowStyle matches key-binding yellow (<enter>, </>).
+var profilesRowStyle = lipgloss.NewStyle().
+	Foreground(colors.Yellow).
 	Bold(true)
 
 // Global widgets map to store auto-generated widgets
@@ -475,9 +481,9 @@ func (r *Resources) RenderRow(rowData common.RowData, isSelected bool, colWidth 
 			continue
 		}
 
-		// Profiles: same orange as group headers, but still selectable.
+		// Profiles: key-binding yellow, still selectable.
 		if !isSelected && strings.EqualFold(trimmed, profilesResource) {
-			styledRow[i] = sectionLabelStyle.Render(trimmed)
+			styledRow[i] = profilesRowStyle.Render(trimmed)
 		}
 	}
 
