@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/vast-data/go-vast-client/core"
 	"github.com/vast-data/go-vast-client/resources/typed"
@@ -278,6 +279,11 @@ func NewTypedVMSRest(config *core.VMSConfig) (*TypedVMSRest, error) {
 
 func (rest *TypedVMSRest) GetSession() core.RESTSession {
 	return rest.Untyped.Session
+}
+
+// HTTPClient returns the client behind every API request; see UntypedVMSRest.HTTPClient.
+func (rest *TypedVMSRest) HTTPClient() *http.Client {
+	return rest.Untyped.HTTPClient()
 }
 
 func (rest *TypedVMSRest) GetResourceMap() map[string]core.ResourceEntry {

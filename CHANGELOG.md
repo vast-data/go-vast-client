@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.165.0
+
+ENHANCEMENTS:
+
+* **HTTPClient Accessor**: `core.VMSSession.HTTPClient()` and `HTTPClient()` on `UntypedVMSRest` / `TypedVMSRest` return the `*http.Client` behind every API request, so callers can wrap its `Transport` with tracing or metrics middleware. JWT login/refresh use a separate client and are not affected.
+
 ## 0.164.0
 
 BREAKING CHANGES:
