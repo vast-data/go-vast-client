@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -315,6 +316,16 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 
 func (rest *UntypedVMSRest) GetSession() core.RESTSession {
 	return rest.Session
+}
+
+// HTTPClient returns the client behind every API request so its Transport can be
+// wrapped (see core.VMSSession.HTTPClient). It is nil when the session is not a
+// *core.VMSSession.
+func (rest *UntypedVMSRest) HTTPClient() *http.Client {
+	if s, ok := rest.Session.(*core.VMSSession); ok {
+		return s.HTTPClient()
+	}
+	return nil
 }
 
 func (rest *UntypedVMSRest) GetResourceMap() map[string]core.ResourceEntry {

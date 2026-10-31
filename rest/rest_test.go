@@ -211,3 +211,31 @@ func TestNewTypedVMSRest_WiresResources(t *testing.T) {
 		t.Fatal("typed String() returned empty value")
 	}
 }
+
+func TestVMSRest_HTTPClient(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	untyped, err := NewUntypedVMSRest(testVMSConfig(t, server))
+	if err != nil {
+		t.Fatalf("NewUntypedVMSRest: %v", err)
+	}
+	if untyped.HTTPClient() == nil || untyped.HTTPClient() != untyped.Session.(*core.VMSSession).HTTPClient() {
+		t.Error("untyped HTTPClient should be the session's client")
+	}
+
+	typed, err := NewTypedVMSRest(testVMSConfig(t, server))
+	if err != nil {
+		t.Fatalf("NewTypedVMSRest: %v", err)
+	}
+	if typed.HTTPClient() == nil {
+		t.Error("typed HTTPClient is nil")
+	}
+
+	mock := &UntypedVMSRest{Session: &mockRESTSession{}}
+	if mock.HTTPClient() != nil {
+		t.Error("HTTPClient should be nil for a non-VMSSession")
+	}
+}

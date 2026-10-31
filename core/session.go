@@ -264,6 +264,14 @@ func (s *VMSSession) GetAuthenticator() Authenticator {
 	return s.auth
 }
 
+// HTTPClient returns the live client behind every API request, so callers can
+// wrap its Transport (e.g. with tracing or metrics middleware). Replace the
+// Transport before the session is used concurrently. JWT login and refresh use
+// their own client and are not affected.
+func (s *VMSSession) HTTPClient() *http.Client {
+	return s.client
+}
+
 func consolidateHeaders(s RESTSession, customHeaders []http.Header) http.Header {
 	finalHeaders := make(http.Header)
 
