@@ -11,56 +11,21 @@ This directory contains the code generation tools for the VAST Data Go Client.
 - `+apityped:upsert:PUT=<path>` - Same as POST but for PUT operations
 - `+apityped:upsert:PATCH=<path>` - Same as POST but for PATCH operations
 
-### Extra Method Markers
+### Extra Methods (auto-discovered)
 
-Extra methods allow you to define custom API endpoints beyond the standard CRUD operations.
+Non-CRUD paths under each resource collection are **auto-discovered** from the
+embedded OpenAPI schema. Manual `+apiall:extraMethod:` / `+apityped:extraMethod:` /
+`+apiuntyped:extraMethod:` annotations are obsolete and should not be added.
 
-#### Typed Extra Methods
-```go
-// +apityped:extraMethod:GET=/users/{id}/tenant_data/
-// +apityped:extraMethod:PATCH=/users/{id}/tenant_data/
-```
-
-Generates typed methods with strong types for request body and response:
-- `UserGetTenantData(id any) (*UserGetTenantDataModel, error)`
-- `UserUpdateTenantData(id any, body *UserUpdateTenantDataBody) (core.Record, error)`
-
-#### Untyped Extra Methods
-```go
-// +apiuntyped:extraMethod:GET=/users/{id}/tenant_data/
-// +apiuntyped:extraMethod:PATCH=/users/{id}/tenant_data/
-```
-
-Generates untyped methods that accept and return generic `core.Params` and `core.Record`:
-- `UserGetTenantData(id any, params core.Params) (core.Record, error)`
-- `UserUpdateTenantData(id any, body core.Params) (core.Record, error)`
-
-#### Combined Markers (NEW!)
-
-The `+apiall:extraMethod` marker generates **both typed and untyped** methods from a single marker:
+Optional markers on fields in `rest/untyped_rest.go` (or DataEngine rest files):
 
 ```go
-// +apiall:extraMethod:GET=/users/{id}/tenant_data/
-// +apiall:extraMethod:PATCH=/users/{id}/tenant_data/
+// Skip a discovered path
+// +apiexclude:extraMethod:GET|PATCH|DELETE=/config/{key}/
+
+// Allow an empty typed *_Model when OpenAPI has no/empty response schema
+// +apiall:emptyResponse:PATCH=/views/{id}/legal_hold/
 ```
-
-This is equivalent to having both `+apityped:extraMethod` and `+apiuntyped:extraMethod` markers, but cleaner and less repetitive.
-
-**Example:**
-```go
-// resources/untyped/user.go
-// +apityped:details:GET=users
-// +apityped:upsert:POST=users
-// +apiall:extraMethod:PATCH=/users/{id}/tenant_data/
-// +apiall:extraMethod:GET=/users/{id}/tenant_data/
-type User struct {
-	*core.VastResource
-}
-```
-
-This will generate:
-- **Typed methods** in `resources/typed/user_autogen.go` with strong types
-- **Untyped methods** in `resources/untyped/user_autogen.go` with generic types
 
 ## Running Code Generation
 

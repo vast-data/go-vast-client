@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.166.0
+
+ENHANCEMENTS:
+
+* **Typed View Legal Hold PATCH**: Added `ViewLegalHold_PATCH` with an empty `ViewLegalHold_PATCH_Model` for the empty OpenAPI response body (TERF-297).
+* **Typed View S3 CORS POST**: Added typed request/response models for `ViewS3corsConfiguration_POST`, including nested CORS rule item types (TERF-297).
+* **View S3 CORS POST Response Shape**: Untyped `ViewS3corsConfiguration_POST` / `ViewS3corsConfigurationWithContext_POST` now return `core.Record` (`{"cors_rules": [...]}`) instead of `core.RecordSet`, matching the live OpenAPI response (TERF-297).
+* **Codegen Empty Responses**: `+apiall:emptyResponse:` opts in to generating empty typed `*_Model` structs when OpenAPI omits a response schema. Obsolete manual `+apiall:extraMethod:` annotations were dropped where methods are auto-discovered from the schema.
+
 ## 0.165.0
 
 ENHANCEMENTS:

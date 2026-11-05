@@ -37,23 +37,20 @@ type UntypedVMSRest struct {
 	BigCatalogConfigs        *untyped.BigCatalogConfig
 	BigCatalogIndexedColumns *untyped.BigCatalogIndexedColumns
 	BlockHosts               *untyped.BlockHost
-	// +apiall:extraMethod:PATCH=/blockmappings/bulk/
-	BlockHostMappings *untyped.BlockHostMapping
-	CallhomeConfigs   *untyped.CallhomeConfigs
-	Capacities        *untyped.Capacity
-	Carriers          *untyped.Carrier
-	Cboxes            *untyped.Cbox
-	Certificates      *untyped.Certificate
-	ChallengeTokens   *untyped.ChallengeTokens
-	Clusters          *untyped.Cluster
-	// +apiall:extraMethod:GET|PATCH=/cnodes/{id}/bgpconfig
-	Cnodes      *untyped.Cnode
-	CnodeGroups *untyped.CnodeGroup
-	Columns     *untyped.Column
+	BlockHostMappings        *untyped.BlockHostMapping
+	CallhomeConfigs          *untyped.CallhomeConfigs
+	Capacities               *untyped.Capacity
+	Carriers                 *untyped.Carrier
+	Cboxes                   *untyped.Cbox
+	Certificates             *untyped.Certificate
+	ChallengeTokens          *untyped.ChallengeTokens
+	Clusters                 *untyped.Cluster
+	Cnodes                   *untyped.Cnode
+	CnodeGroups              *untyped.CnodeGroup
+	Columns                  *untyped.Column
 	// +apiexclude:extraMethod:GET|PATCH|DELETE=/config/{key}/
-	Configs *untyped.Config
-	Dboxes  *untyped.Dbox
-	// +apiall:extraMethod:GET|PATCH=/delta/config/
+	Configs                *untyped.Config
+	Dboxes                 *untyped.Dbox
 	Deltas                 *untyped.Delta
 	Dnodes                 *untyped.Dnode
 	Dns                    *untyped.Dns
@@ -125,13 +122,13 @@ type UntypedVMSRest struct {
 	Switches                 *untyped.Switch
 	Tables                   *untyped.Table
 	Tenants                  *untyped.Tenant
-	// +apiall:extraMethod:GET|POST|PATCH=/topics/
-	Topics              *untyped.Topic
-	Users               *untyped.User
-	UserQuotas          *untyped.UserQuota
-	VastAuditLogs       *untyped.VastAuditLog
-	VastDb              *untyped.VastDb
-	Versions            *untyped.Version
+	Topics                   *untyped.Topic
+	Users                    *untyped.User
+	UserQuotas               *untyped.UserQuota
+	VastAuditLogs            *untyped.VastAuditLog
+	VastDb                   *untyped.VastDb
+	Versions                 *untyped.Version
+	// +apiall:emptyResponse:PATCH=/views/{id}/legal_hold/
 	Views               *untyped.View
 	ViewPolicies        *untyped.ViewPolicy
 	Vips                *untyped.Vip
