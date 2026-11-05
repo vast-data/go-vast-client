@@ -72,14 +72,15 @@ func (o Operations) HasDelete() bool {
 	return containsChar(o.Operations, 'D')
 }
 
-// ExtraMethod represents an extra method marker configuration
-// Generates: Custom typed/untyped methods for specific endpoints
-// Usage: +apityped:extraMethod:GET=/users/{id}/tenant_data/
-// Usage: +apiuntyped:extraMethod:PATCH=/users/{id}/tenant_data/
-// Usage: +apiall:extraMethod:GET=/users/{id}/tenant_data/ (generates both typed and untyped)
+// ExtraMethod represents a non-CRUD endpoint (auto-discovered from OpenAPI, or
+// listed via +apiexclude: / +apiall:emptyResponse: on rest resource fields).
+//
+// Usage: +apiexclude:extraMethod:GET=/config/{key}/
+// Usage: +apiall:emptyResponse:PATCH=/views/{id}/legal_hold/
 type ExtraMethod struct {
-	Method string // HTTP method: GET, POST, PUT, PATCH, DELETE, etc.
-	Path   string // Full path with placeholders like "/users/{id}/tenant_data/"
+	Method             string // HTTP method: GET, POST, PUT, PATCH, DELETE, etc.
+	Path               string // Full path with placeholders like "/users/{id}/tenant_data/"
+	AllowEmptyResponse bool   // Opt-in via +apiall:emptyResponse: — empty *_Model for empty/missing schema
 }
 
 // containsChar checks if a string contains a specific character

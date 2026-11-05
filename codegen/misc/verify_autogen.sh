@@ -38,11 +38,17 @@ echo ""
 
 errors=0
 
-# Check 1: Empty structs
+# Check 1: Empty structs (allow intentional empty *_Model response types for
+# OpenAPI 200 responses with no body / empty object schema)
 echo "Checking for empty structs..."
-empty_structs=$(grep -n "^type.*struct {$" "$TYPED_DIR"/*_autogen.go 2>/dev/null | while read line; do
+empty_structs=$(grep -n "^type.*struct {$" "$TYPED_DIR"/*_autogen.go "$TYPED_DIR"/**/*_autogen.go 2>/dev/null | while read line; do
     file=$(echo "$line" | cut -d: -f1)
     linenum=$(echo "$line" | cut -d: -f2)
+    typeline=$(sed -n "${linenum}p" "$file")
+    # Empty response models (e.g. ViewLegalHold_PATCH_Model) are intentional
+    if echo "$typeline" | grep -qE '_Model struct \{|_Body struct \{'; then
+        continue
+    fi
     nextline=$((linenum + 1))
     if sed -n "${nextline}p" "$file" | grep -q "^}$"; then
         echo "  $file:$linenum - Empty struct found"
@@ -53,7 +59,7 @@ if [ -n "$empty_structs" ]; then
     echo "$empty_structs"
     errors=$((errors + 1))
 else
-    echo "No empty structs found"
+    echo "No unexpected empty structs found"
 fi
 echo ""
 

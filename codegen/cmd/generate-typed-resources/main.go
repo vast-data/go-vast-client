@@ -493,20 +493,24 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 	if !methodInfo.ReturnsNoContent && !methodInfo.ReturnsTextPlain && !methodInfo.IsAsyncTask && !isBareArray {
 		schema, schemaErr := api.GetResponseModelSchema(activePack, extraMethod.Method, extraMethod.Path)
 
-		// CRITICAL: Skip if no response schema is defined at all
-		// EXCEPTION: DELETE methods are allowed without response schema (they return only error)
+		// No usable response schema:
+		//   - DELETE → ReturnsNoContent (error only)
+		//   - +apiall:emptyResponse: annotation → empty *_Model (explicit opt-in only)
+		//   - otherwise SKIP (empty/missing schema is often a swagger mistake)
 		if schemaErr != nil {
 			if extraMethod.Method == "DELETE" {
-				// DELETE without response schema is OK - treat it like 204 No Content
 				methodInfo.ReturnsNoContent = true
 				fmt.Printf("  ℹ️  DELETE method has no response schema - treating as No Content\n")
+			} else if extraMethod.AllowEmptyResponse {
+				methodInfo.ReturnsEmptyModel = true
+				fmt.Printf("  ℹ️  %s %s empty/missing response schema — generating empty model (+apiall:emptyResponse)\n", extraMethod.Method, extraMethod.Path)
 			} else {
 				return ExtraMethodInfo{}, nil, fmt.Errorf("❌ SKIPPED: %s %s - No response schema defined in OpenAPI spec. Method would return core.Record which is not allowed for typed methods. Error: %v", extraMethod.Method, extraMethod.Path, schemaErr)
 			}
 		}
 
 		// Skip if schema is ambiguous (type: object with no properties or array of ambiguous objects)
-		if schema != nil && schema.Value != nil {
+		if schema != nil && schema.Value != nil && !methodInfo.ReturnsEmptyModel {
 			// Check for primitive response types (string, number, boolean, integer)
 			if isPrimitive(schema.Value) {
 				// Primitive responses are supported - map to Go type
@@ -556,12 +560,17 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 				// Valid bare array with well-defined items - mark for special handling
 				methodInfo.ReturnsArray = true
 				// We'll generate the array item type later
+			} else if isAmbiguousObject(schema.Value) && extraMethod.AllowEmptyResponse {
+				// Top-level empty object only when +apiall:emptyResponse: opts in.
+				methodInfo.ReturnsEmptyModel = true
+				fmt.Printf("  ℹ️  %s %s empty object schema — generating empty model (+apiall:emptyResponse)\n", extraMethod.Method, extraMethod.Path)
 			} else {
 				// Only check for ambiguous objects/arrays if it's NOT a bare array response
 				// (we already validated array items above)
 
 				// CRITICAL: Check recursively for ambiguous objects in the schema tree
 				// This catches cases where a valid schema has nested ambiguous objects (e.g., AsyncTaskInResponse with async_task: {type: object})
+				// Also covers top-level empty objects without +apiall:emptyResponse.
 				if hasAmbiguousNestedObjects(schema.Value) {
 					return ExtraMethodInfo{}, nil, fmt.Errorf("❌ SKIPPED: %s %s - Response schema contains ambiguous nested objects (objects with no properties). Method would return fields with core.Record type which is not allowed for typed methods", extraMethod.Method, extraMethod.Path)
 				}
@@ -606,8 +615,8 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 				}
 			}
 		}
-	} else if !methodInfo.ReturnsPrimitive {
-		// Normal response (not an array, not a primitive)
+	} else if !methodInfo.ReturnsPrimitive && !methodInfo.ReturnsEmptyModel {
+		// Normal response (not an array, not a primitive, not empty model)
 		responseFields, err := generateModelFields(extraMethod.Path, extraMethod.Method, responseRegistry)
 		if err != nil {
 			// If schema not found, just skip response generation
@@ -616,7 +625,7 @@ func generateExtraMethodInfo(resourceName string, extraMethod apibuilder.ExtraMe
 			methodInfo.ResponseFields = responseFields
 		}
 	}
-	// For primitives, we don't need to generate response fields
+	// For primitives / empty models, we don't need to generate response fields
 
 	// Process nested types for both array and non-array responses
 	responseNestedTypes := responseRegistry.GetTypes()
@@ -894,6 +903,8 @@ type ExtraMethodInfo struct {
 	SimplifiedParams []SimplifiedParam
 	// For 204 No Content responses
 	ReturnsNoContent bool
+	// For 200/201/202 with empty body or empty object schema — emit empty *_Model struct
+	ReturnsEmptyModel bool
 	// For text/plain responses
 	ReturnsTextPlain bool
 	// For bare array responses (e.g., []Lock)

@@ -15,12 +15,13 @@ import (
 
 // RestResourceConfig represents a resource configuration parsed from untyped_rest.go
 type RestResourceConfig struct {
-	Name           string                   // Type name (e.g., "Alarm")
-	ResourcePath   string                   // API path (e.g., "alarms")
-	Operations     string                   // CRUD string (e.g., "RUD")
-	Pack           string                   // OpenAPI pack: "vms" (default) or "dataengine"
-	ExtraMethods   []apibuilder.ExtraMethod // Extra methods (manual +apiall: + auto-discovered)
-	ExcludeMethods []apibuilder.ExtraMethod // Exclusions from +apiexclude:extraMethod: annotations
+	Name                  string                   // Type name (e.g., "Alarm")
+	ResourcePath          string                   // API path (e.g., "alarms")
+	Operations            string                   // CRUD string (e.g., "RUD")
+	Pack                  string                   // OpenAPI pack: "vms" (default) or "dataengine"
+	ExtraMethods          []apibuilder.ExtraMethod // Extra methods (manual +apiall: + auto-discovered)
+	ExcludeMethods        []apibuilder.ExtraMethod // Exclusions from +apiexclude:extraMethod: annotations
+	EmptyResponseMethods  []apibuilder.ExtraMethod // +apiall:emptyResponse: — allow empty typed *_Model
 }
 
 // RestParser parses rest/untyped_rest.go to extract resource configurations
@@ -258,6 +259,20 @@ func (p *RestParser) AutoDiscoverExtraMethods() error {
 		})
 
 		config.ExtraMethods = append(config.ExtraMethods, discovered...)
+
+		// Apply +apiall:emptyResponse: allowlist onto discovered/manual extra methods.
+		emptyKeys := make(map[string]bool)
+		for _, em := range config.EmptyResponseMethods {
+			emptyKeys[em.Method+":"+normalizeAPIPath(em.Path)] = true
+		}
+		if len(emptyKeys) > 0 {
+			for i := range config.ExtraMethods {
+				key := config.ExtraMethods[i].Method + ":" + normalizeAPIPath(config.ExtraMethods[i].Path)
+				if emptyKeys[key] {
+					config.ExtraMethods[i].AllowEmptyResponse = true
+				}
+			}
+		}
 	}
 
 	return nil
@@ -373,6 +388,31 @@ func (p *RestParser) parseFieldMarkers(file *ast.File) {
 							config.ExcludeMethods = append(config.ExcludeMethods, apibuilder.ExtraMethod{
 								Method: method,
 								Path:   path,
+							})
+						}
+					}
+				}
+
+				// +apiall:emptyResponse:METHOD=/path/  – allow typed empty *_Model when OpenAPI
+				// response schema is missing or an empty object (e.g. real 200 with empty body).
+				// Empty typed models are NEVER inferred from status codes alone — annotation required.
+				if strings.HasPrefix(text, "+apiall:emptyResponse:") {
+					marker := strings.TrimPrefix(text, "+apiall:emptyResponse:")
+					parts := strings.SplitN(marker, "=", 2)
+					if len(parts) != 2 {
+						continue
+					}
+					methodsStr := parts[0]
+					path := parts[1]
+					methods := strings.Split(methodsStr, "|")
+					config := p.findOrCreateConfigByTypeName(typeName)
+					for _, method := range methods {
+						method = strings.TrimSpace(method)
+						if method != "" {
+							config.EmptyResponseMethods = append(config.EmptyResponseMethods, apibuilder.ExtraMethod{
+								Method:             method,
+								Path:               path,
+								AllowEmptyResponse: true,
 							})
 						}
 					}
