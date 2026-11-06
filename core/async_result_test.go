@@ -4,7 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/url"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -262,9 +267,8 @@ func TestAsyncResult_Wait_FailedTaskNoMessages(t *testing.T) {
 	if ar.Err == nil {
 		t.Error("Expected Err to be set")
 	}
-	// Check error message contains expected text
-	if err != nil && !strings.Contains(err.Error(), "no messages or unexpected format") {
-		t.Errorf("Expected 'no messages' in error, got: %v", err)
+	if err != nil && !strings.Contains(err.Error(), "async task") {
+		t.Errorf("Expected 'async task' in error, got: %v", err)
 	}
 }
 
@@ -465,6 +469,9 @@ func TestWaitAPIConditionConfig_Normalize_AllDefaults(t *testing.T) {
 	if config.BackoffFactor != 0.25 {
 		t.Errorf("Expected BackoffFactor 0.25, got %v", config.BackoffFactor)
 	}
+	if config.TransientInterval != 5*time.Second {
+		t.Errorf("Expected TransientInterval 5s, got %v", config.TransientInterval)
+	}
 }
 
 func TestWaitAPIConditionConfig_Normalize_PartialDefaults(t *testing.T) {
@@ -485,6 +492,9 @@ func TestWaitAPIConditionConfig_Normalize_PartialDefaults(t *testing.T) {
 	}
 	if config.BackoffFactor != 0.25 {
 		t.Errorf("Expected BackoffFactor 0.25 (default), got %v", config.BackoffFactor)
+	}
+	if config.TransientInterval != 5*time.Second {
+		t.Errorf("Expected TransientInterval 5s (default), got %v", config.TransientInterval)
 	}
 }
 
@@ -773,5 +783,347 @@ func TestWaitAPICondition_UseGetInsteadOfGetById(t *testing.T) {
 	}
 	if record["status"] != "ready" {
 		t.Error("Expected status to be ready")
+	}
+}
+
+func TestIsTransientPollError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil", nil, false},
+		{"canceled", context.Canceled, false},
+		{"deadline", context.DeadlineExceeded, false},
+		{"verification failed", fmt.Errorf("WaitAPICondition verification failed: boom"), false},
+		{"timeout", fmt.Errorf("WaitAPICondition timeout after 10m0s"), false},
+		{"cancelled", fmt.Errorf("WaitAPICondition cancelled: %w", context.Canceled), false},
+		{"generic", errors.New("task failed"), false},
+		{"api 400", &ApiError{StatusCode: 400, Body: "bad"}, false},
+		{"api 503", &ApiError{StatusCode: 503, Body: "unavailable"}, true},
+		{"api unreachable", &ApiError{StatusCode: 0, Body: "unreachable"}, true},
+		{
+			"wrapped connection reset",
+			fmt.Errorf("WaitAPICondition API call failed: %w",
+				fmt.Errorf(`failed to perform GET request to https://v162:443/api/latest/vtasks/20/, error Get "https://v162:443/api/latest/vtasks/20/": read tcp 10.241.12.3:62794->10.141.200.162:443: connection reset by peer`)),
+			true,
+		},
+		{
+			"network_settings connection reset by peer",
+			fmt.Errorf("WaitAPICondition API call failed: %w",
+				fmt.Errorf(`failed to perform GET request to https://10.131.200.144:443/api/latest/vtasks/22/, error Get "https://10.131.200.144:443/api/latest/vtasks/22/": read tcp 10.241.166.85:65299->10.131.200.144:443: read: connection reset by peer`)),
+			true,
+		},
+		{"eof", io.EOF, true},
+		{"unexpected eof", io.ErrUnexpectedEOF, true},
+		{"api 502", &ApiError{StatusCode: http.StatusBadGateway, Body: "bad gateway"}, true},
+		{"api 504", &ApiError{StatusCode: http.StatusGatewayTimeout, Body: "timeout"}, true},
+		{"net error", &net.DNSError{Err: "no such host", Name: "vms", IsNotFound: true}, true},
+		{"op error", &net.OpError{Op: "read", Net: "tcp", Err: errors.New("reset")}, true},
+		{"url error wraps eof", &url.Error{Op: "Get", URL: "https://vms/api", Err: io.EOF}, true},
+		{"syscall econnreset", syscall.ECONNRESET, true},
+		{"syscall econnrefused", syscall.ECONNREFUSED, true},
+		{"syscall epipe", syscall.EPIPE, true},
+		{"syscall etimedout", syscall.ETIMEDOUT, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsTransientPollError(tt.err); got != tt.want {
+				t.Errorf("IsTransientPollError() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAsyncTaskFailureMessage_NilRecord(t *testing.T) {
+	if got := asyncTaskFailureMessage(nil); got != "" {
+		t.Fatalf("asyncTaskFailureMessage(nil) = %q, want empty", got)
+	}
+}
+
+func TestVerifyAsyncTaskRecord(t *testing.T) {
+	tests := []struct {
+		name       string
+		record     Record
+		done       bool
+		wantErr    bool
+		errContain string
+	}{
+		{
+			name:   "completed",
+			record: Record{"id": int64(1), "state": "COMPLETED"},
+			done:   true,
+		},
+		{
+			name:   "success",
+			record: Record{"id": int64(1), "state": "SUCCESS"},
+			done:   true,
+		},
+		{
+			name:   "running keeps polling",
+			record: Record{"id": int64(1), "state": "RUNNING"},
+			done:   false,
+		},
+		{
+			name:   "pending keeps polling",
+			record: Record{"id": int64(1), "state": "PENDING"},
+			done:   false,
+		},
+		{
+			name:   "empty state keeps polling",
+			record: Record{"id": int64(1)},
+			done:   false,
+		},
+		{
+			name:   "nil record keeps polling",
+			record: nil,
+			done:   false,
+		},
+		{
+			name:   "status fallback success",
+			record: Record{"id": int64(1), "status": "success"},
+			done:   true,
+		},
+		{
+			name:       "failed with messages",
+			record:     Record{"id": int64(1), "state": "FAILED", "messages": []any{"boom"}},
+			done:       false,
+			wantErr:    true,
+			errContain: "boom",
+		},
+		{
+			name:       "error with failure_reason",
+			record:     Record{"id": int64(1), "state": "ERROR", "failure_reason": "nope"},
+			done:       false,
+			wantErr:    true,
+			errContain: "nope",
+		},
+		{
+			name:       "failed with error field",
+			record:     Record{"id": int64(2), "state": "failed", "error": "disk full"},
+			done:       false,
+			wantErr:    true,
+			errContain: "disk full",
+		},
+		{
+			name:       "failed with message field",
+			record:     Record{"id": int64(3), "state": "failed", "message": "quota exceeded"},
+			done:       false,
+			wantErr:    true,
+			errContain: "quota exceeded",
+		},
+		{
+			name:       "cancelled",
+			record:     Record{"id": int64(1), "state": "CANCELLED", "messages": []any{"stopped"}},
+			done:       false,
+			wantErr:    true,
+			errContain: "stopped",
+		},
+		{
+			name:       "canceled us spelling",
+			record:     Record{"id": int64(1), "state": "canceled"},
+			done:       false,
+			wantErr:    true,
+			errContain: "state=canceled",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			done, err := VerifyAsyncTaskRecord(tt.record)
+			if done != tt.done {
+				t.Fatalf("done = %v, want %v", done, tt.done)
+			}
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("err = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.errContain != "" && (err == nil || !strings.Contains(err.Error(), tt.errContain)) {
+				t.Fatalf("err = %v, want substring %q", err, tt.errContain)
+			}
+		})
+	}
+}
+
+func TestAsyncResult_Wait_SuccessState(t *testing.T) {
+	ctx := context.Background()
+	mockAPI := &mockVastResourceAPI{
+		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
+			return Record{
+				"id":    123,
+				"state": "SUCCESS",
+				"url":   "https://l101/api/v5/vtasks/123/",
+			}, nil
+		},
+	}
+	rest := &mockVastRest{
+		resourceMap: map[string]ResourceEntry{
+			VTaskKey: {VastResourceAPIWithContext: mockAPI},
+		},
+	}
+
+	ar := NewAsyncResult(ctx, 123, rest)
+	record, err := ar.Wait(100 * time.Millisecond)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+	if !ar.Success {
+		t.Error("Expected Success to be true")
+	}
+	if record["state"] != "SUCCESS" {
+		t.Errorf("Expected SUCCESS state, got %v", record["state"])
+	}
+}
+
+func TestAsyncResult_Wait_PendingThenCompleted(t *testing.T) {
+	ctx := context.Background()
+	callCount := 0
+	mockAPI := &mockVastResourceAPI{
+		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
+			callCount++
+			if callCount < 3 {
+				return Record{"id": 123, "state": "pending"}, nil
+			}
+			return Record{"id": 123, "state": "completed"}, nil
+		},
+	}
+	rest := &mockVastRest{
+		resourceMap: map[string]ResourceEntry{
+			VTaskKey: {VastResourceAPIWithContext: mockAPI},
+		},
+	}
+
+	ar := NewAsyncResult(ctx, 123, rest)
+	cfg := &WaitAPIConditionConfig{
+		Timeout:       2 * time.Second,
+		Interval:      10 * time.Millisecond,
+		MaxInterval:   20 * time.Millisecond,
+		BackoffFactor: 0.25,
+	}
+	record, err := WaitAPICondition(
+		ar.Ctx,
+		ar.Rest.GetResourceMap()[VTaskKey],
+		Params{"id": ar.TaskId},
+		cfg,
+		VerifyAsyncTaskRecord,
+	)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+	if callCount < 3 {
+		t.Fatalf("Expected at least 3 calls, got %d", callCount)
+	}
+	if record["state"] != "completed" {
+		t.Fatalf("Expected completed, got %v", record["state"])
+	}
+}
+
+func TestWaitAPICondition_RetriesTransientError(t *testing.T) {
+	ctx := context.Background()
+	callCount := 0
+	mockAPI := &mockVastResourceAPI{
+		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
+			callCount++
+			if callCount < 3 {
+				return nil, errors.New("read: connection reset by peer")
+			}
+			return Record{"id": 123, "state": "completed"}, nil
+		},
+	}
+
+	cfg := &WaitAPIConditionConfig{
+		Timeout:           2 * time.Second,
+		Interval:          10 * time.Millisecond,
+		MaxInterval:       20 * time.Millisecond,
+		TransientInterval: 10 * time.Millisecond,
+		BackoffFactor:     0.25,
+	}
+	record, err := WaitAPICondition(
+		ctx,
+		mockAPI,
+		Params{"id": int64(123)},
+		cfg,
+		VerifyAsyncTaskRecord,
+	)
+	if err != nil {
+		t.Fatalf("Expected no error after transient retries, got %v", err)
+	}
+	if callCount < 3 {
+		t.Fatalf("Expected at least 3 calls, got %d", callCount)
+	}
+	if record["state"] != "completed" {
+		t.Fatalf("Expected completed, got %v", record["state"])
+	}
+}
+
+func TestWaitAPICondition_AlreadyCancelledContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	mockAPI := &mockVastResourceAPI{
+		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
+			t.Fatal("GetById should not be called when context is already cancelled")
+			return nil, nil
+		},
+	}
+	_, err := WaitAPICondition(
+		ctx,
+		mockAPI,
+		Params{"id": 1},
+		&WaitAPIConditionConfig{Timeout: time.Second, Interval: 10 * time.Millisecond},
+		VerifyAsyncTaskRecord,
+	)
+	if err == nil || !strings.Contains(err.Error(), "cancelled") {
+		t.Fatalf("expected cancelled error, got %v", err)
+	}
+}
+
+func TestWaitAPICondition_TransientErrorThenTimeout(t *testing.T) {
+	ctx := context.Background()
+	mockAPI := &mockVastResourceAPI{
+		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
+			return nil, errors.New("connection reset by peer")
+		},
+	}
+	_, err := WaitAPICondition(
+		ctx,
+		mockAPI,
+		Params{"id": int64(1)},
+		&WaitAPIConditionConfig{
+			Timeout:           40 * time.Millisecond,
+			TransientInterval: 200 * time.Millisecond,
+			Interval:          10 * time.Millisecond,
+		},
+		VerifyAsyncTaskRecord,
+	)
+	if err == nil || !strings.Contains(err.Error(), "timeout") {
+		t.Fatalf("expected timeout while retrying transient errors, got %v", err)
+	}
+}
+
+func TestWaitAPICondition_NonTransientAPIErrorDoesNotRetry(t *testing.T) {
+	ctx := context.Background()
+	callCount := 0
+	mockAPI := &mockVastResourceAPI{
+		getByIdFunc: func(ctx context.Context, id any) (Record, error) {
+			callCount++
+			return nil, &ApiError{StatusCode: http.StatusForbidden, Body: "denied"}
+		},
+	}
+
+	cfg := &WaitAPIConditionConfig{
+		Timeout:           500 * time.Millisecond,
+		Interval:          10 * time.Millisecond,
+		TransientInterval: 10 * time.Millisecond,
+	}
+	_, err := WaitAPICondition(ctx, mockAPI, Params{"id": int64(1)}, cfg, VerifyAsyncTaskRecord)
+	if err == nil {
+		t.Fatal("expected non-transient API error")
+	}
+	if callCount != 1 {
+		t.Fatalf("expected exactly 1 call (no retry), got %d", callCount)
+	}
+	if !strings.Contains(err.Error(), "WaitAPICondition API call failed") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

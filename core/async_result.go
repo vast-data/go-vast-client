@@ -2,8 +2,14 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/url"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -56,10 +62,80 @@ func NewAsyncResult(ctx context.Context, taskId int64, rest VastRest) *AsyncResu
 	}
 }
 
+// asyncTaskSuccessStates are terminal success values returned by VMS vtasks.
+var asyncTaskSuccessStates = map[string]struct{}{
+	"completed": {},
+	"success":   {},
+}
+
+// asyncTaskFailureStates are terminal failure values returned by VMS vtasks.
+var asyncTaskFailureStates = map[string]struct{}{
+	"failed":    {},
+	"error":     {},
+	"cancelled": {},
+	"canceled":  {},
+}
+
+// asyncTaskState returns the lower-cased task state (or status) from a vtask record.
+func asyncTaskState(record Record) string {
+	if record == nil {
+		return ""
+	}
+	if v, ok := record["state"]; ok && v != nil && fmt.Sprintf("%v", v) != "" {
+		return strings.ToLower(fmt.Sprintf("%v", v))
+	}
+	if v, ok := record["status"]; ok && v != nil {
+		return strings.ToLower(fmt.Sprintf("%v", v))
+	}
+	return ""
+}
+
+func asyncTaskFailureMessage(record Record) string {
+	if record == nil {
+		return ""
+	}
+	for _, key := range []string{"failure_reason", "error", "message"} {
+		if v := record[key]; v != nil {
+			if s := strings.TrimSpace(fmt.Sprintf("%v", v)); s != "" && s != "<nil>" {
+				return s
+			}
+		}
+	}
+	if rawMessages, ok := record["messages"].([]any); ok && len(rawMessages) > 0 {
+		return strings.TrimSpace(fmt.Sprintf("%v", rawMessages[len(rawMessages)-1]))
+	}
+	return ""
+}
+
+// VerifyAsyncTaskRecord classifies a vtask poll result:
+//   - completed/success → done
+//   - failed/error/cancelled → abort with error
+//   - any other state (running, pending, …) → keep polling
+func VerifyAsyncTaskRecord(record Record) (bool, error) {
+	state := asyncTaskState(record)
+	if _, ok := asyncTaskSuccessStates[state]; ok {
+		return true, nil
+	}
+	if _, ok := asyncTaskFailureStates[state]; ok {
+		taskID := int64(0)
+		if _, hasID := record["id"]; hasID {
+			taskID = record.RecordID()
+		}
+		msg := asyncTaskFailureMessage(record)
+		if msg == "" {
+			return false, fmt.Errorf("async task %d failed: state=%s", taskID, state)
+		}
+		return false, fmt.Errorf("async task %d failed: state=%s, message: %s", taskID, state, msg)
+	}
+	return false, nil
+}
+
 // Wait polls the task status until it completes, fails, or times out.
 //
 // This method continuously polls the VTask resource to check the task's state.
 // It uses exponential backoff with configurable intervals to avoid overwhelming the API.
+// Transient network / availability errors (connection reset, 502/503/504, etc.) are
+// retried until the overall timeout — common when VMS restarts mid-task.
 // The Success and Err fields are updated based on the task outcome.
 //
 // Parameters:
@@ -67,12 +143,12 @@ func NewAsyncResult(ctx context.Context, taskId int64, rest VastRest) *AsyncResu
 //
 // Returns:
 //   - Record: The final task record when completed
-//   - error: An error if the task fails, times out, or an API error occurs
+//   - error: An error if the task fails, times out, or a non-transient API error occurs
 //
 // Task states handled:
-//   - "completed": Sets Success=true, returns the task record
-//   - "running": Continues polling with backoff
-//   - Any other state: Sets Success=false, Err=error, returns error with task messages
+//   - "completed" / "success": Sets Success=true, returns the task record
+//   - "failed" / "error" / "cancelled" / "canceled": Sets Success=false, returns error
+//   - Any other state (running, pending, …): Continues polling with backoff
 //
 // After calling Wait(), check ar.Success and ar.Err for task execution results.
 func (ar *AsyncResult) Wait(timeout time.Duration) (Record, error) {
@@ -86,29 +162,7 @@ func (ar *AsyncResult) Wait(timeout time.Duration) (Record, error) {
 		ar.Rest.GetResourceMap()[VTaskKey],
 		searchParams,
 		waitAPIConditionConfig,
-		func(record Record) (bool, error) {
-			state := strings.ToLower(fmt.Sprintf("%v", record["state"]))
-			switch state {
-			case "completed":
-				return true, nil
-			case "running":
-				// Continue polling with backoff
-				return false, nil
-			default:
-				// Task failed or in unexpected state
-				rawMessages := record["messages"]
-				messages, ok := rawMessages.([]any)
-				if !ok || len(messages) == 0 {
-					taskErr := fmt.Errorf("task %s failed with ID %d: state=%s, no messages or unexpected format",
-						record.RecordName(), record.RecordID(), state)
-					return false, taskErr
-				}
-				lastMsg := fmt.Sprintf("%v", messages[len(messages)-1])
-				taskErr := fmt.Errorf("task %s failed with ID %d: state=%s, message: %s",
-					record.RecordName(), record.RecordID(), state, lastMsg)
-				return false, taskErr
-			}
-		},
+		VerifyAsyncTaskRecord,
 	)
 
 	// Update AsyncResult fields based on outcome
@@ -181,6 +235,8 @@ func MaybeAsyncResultFromRecord(ctx context.Context, record Record, rest VastRes
 //   - Interval: Initial polling interval between API calls (default: 500ms)
 //   - MaxInterval: Maximum polling interval after backoff (default: 30 seconds)
 //   - BackoffFactor: Multiplier for exponential backoff (default: 0.25 = 25% increase per iteration)
+//   - TransientInterval: Sleep between retries when a poll hits a transient network /
+//     availability error (default: 5 seconds)
 //
 // Example with custom configuration:
 //
@@ -193,10 +249,11 @@ func MaybeAsyncResultFromRecord(ctx context.Context, record Record, rest VastRes
 //
 // Zero values will be replaced with defaults by the normalize() method.
 type WaitAPIConditionConfig struct {
-	Timeout       time.Duration // Maximum total wait time
-	Interval      time.Duration // Current/initial polling interval (mutated by NextInterval)
-	MaxInterval   time.Duration // Cap for exponential backoff
-	BackoffFactor float64       // Rate of interval increase (0.25 = 25% per iteration)
+	Timeout           time.Duration // Maximum total wait time
+	Interval          time.Duration // Current/initial polling interval (mutated by NextInterval)
+	MaxInterval       time.Duration // Cap for exponential backoff
+	BackoffFactor     float64       // Rate of interval increase (0.25 = 25% per iteration)
+	TransientInterval time.Duration // Sleep after transient poll errors
 }
 
 // normalize fills in missing (zero) values with sensible defaults.
@@ -206,6 +263,7 @@ type WaitAPIConditionConfig struct {
 //   - Interval: 500 milliseconds
 //   - MaxInterval: 30 seconds
 //   - BackoffFactor: 0.25 (25% increase per iteration)
+//   - TransientInterval: 5 seconds
 //
 // This method modifies the config in-place.
 func (c *WaitAPIConditionConfig) normalize() {
@@ -220,6 +278,9 @@ func (c *WaitAPIConditionConfig) normalize() {
 	}
 	if c.BackoffFactor == 0 {
 		c.BackoffFactor = 0.25
+	}
+	if c.TransientInterval == 0 {
+		c.TransientInterval = 5 * time.Second
 	}
 }
 
@@ -258,6 +319,10 @@ func (c *WaitAPIConditionConfig) NextInterval() time.Duration {
 // applies a verification function to the result, and waits with exponential backoff
 // between attempts until the condition is satisfied or a timeout is reached.
 //
+// Transient network / availability errors from the poll GET (see IsTransientPollError)
+// are retried until Timeout; verification failures and non-transient API errors abort
+// immediately.
+//
 // Parameters:
 //   - ctx: The context for the operation (can be used for cancellation)
 //   - caller: The resource API to poll (must support GetByIdWithContext or GetWithContext)
@@ -268,13 +333,14 @@ func (c *WaitAPIConditionConfig) NextInterval() time.Duration {
 //
 // Returns:
 //   - Record: The final record when the condition is met
-//   - error: An error if verification fails, timeout occurs, or API call fails
+//   - error: An error if verification fails, timeout occurs, or a non-transient API call fails
 //
 // Default configuration (when waitAPIConditionConfig is nil):
 //   - Timeout: 10 minutes
 //   - Initial Interval: 500ms
 //   - Max Interval: 30 seconds
 //   - Backoff Factor: 0.25 (25% increase per iteration)
+//   - Transient Interval: 5 seconds
 func WaitAPICondition(
 	ctx context.Context,
 	caller VastResourceAPIWithContext,
@@ -292,44 +358,131 @@ func WaitAPICondition(
 	timeoutCtx, cancel := context.WithTimeout(ctx, waitAPIConditionConfig.Timeout)
 	defer cancel()
 
-	// Polling loop with exponential backoff
-	for {
+	doneErr := func() error {
+		if ctx.Err() != nil {
+			return fmt.Errorf("WaitAPICondition cancelled: %w", ctx.Err())
+		}
+		return fmt.Errorf("WaitAPICondition timeout after %v", waitAPIConditionConfig.Timeout)
+	}
+
+	sleepOrDone := func(sleepFor time.Duration) error {
+		timer := time.NewTimer(sleepFor)
+		defer timer.Stop()
 		select {
 		case <-timeoutCtx.Done():
-			// Check if it's a timeout or cancellation
-			if ctx.Err() != nil {
-				return nil, fmt.Errorf("WaitAPICondition cancelled: %w", ctx.Err())
-			}
-			return nil, fmt.Errorf("WaitAPICondition timeout after %v", waitAPIConditionConfig.Timeout)
-
-		default:
-			var (
-				record Record
-				err    error
-			)
-
-			// Use GetById if "id" parameter is present, otherwise use Get with search params
-			if id, ok := searchParams["id"]; ok {
-				record, err = caller.GetByIdWithContext(timeoutCtx, id)
-			} else {
-				record, err = caller.GetWithContext(timeoutCtx, searchParams)
-			}
-			if err != nil {
-				return nil, fmt.Errorf("WaitAPICondition API call failed: %w", err)
-			}
-
-			// Check if condition is met
-			completed, err := verifyFn(record)
-			if err != nil {
-				return nil, fmt.Errorf("WaitAPICondition verification failed: %w", err)
-			}
-			if completed {
-				return record, nil
-			}
-
-			// Sleep for current interval, then bump interval for next iteration
-			sleepFor := waitAPIConditionConfig.NextInterval()
-			time.Sleep(sleepFor)
+			return doneErr()
+		case <-timer.C:
+			return nil
 		}
 	}
+
+	// Polling loop with exponential backoff
+	for {
+		if timeoutCtx.Err() != nil {
+			return nil, doneErr()
+		}
+
+		var (
+			record Record
+			err    error
+		)
+
+		// Use GetById if "id" parameter is present, otherwise use Get with search params
+		if id, ok := searchParams["id"]; ok {
+			record, err = caller.GetByIdWithContext(timeoutCtx, id)
+		} else {
+			record, err = caller.GetWithContext(timeoutCtx, searchParams)
+		}
+		if err != nil {
+			if IsTransientPollError(err) {
+				if sleepErr := sleepOrDone(waitAPIConditionConfig.TransientInterval); sleepErr != nil {
+					return nil, sleepErr
+				}
+				continue
+			}
+			return nil, fmt.Errorf("WaitAPICondition API call failed: %w", err)
+		}
+
+		// Check if condition is met
+		completed, err := verifyFn(record)
+		if err != nil {
+			return nil, fmt.Errorf("WaitAPICondition verification failed: %w", err)
+		}
+		if completed {
+			return record, nil
+		}
+
+		// Sleep for current interval, then bump interval for next iteration
+		if sleepErr := sleepOrDone(waitAPIConditionConfig.NextInterval()); sleepErr != nil {
+			return nil, sleepErr
+		}
+	}
+}
+
+// IsTransientPollError reports whether err is a temporary network / availability
+// failure while polling an API (e.g. async VTask status). These are expected when
+// VMS restarts mid-task (network_settings, compute cluster create, etc.).
+//
+// Non-retryable: context cancel/deadline, WaitAPICondition verification/timeout/
+// cancel outcomes, and ApiError with a non-transient HTTP status.
+func IsTransientPollError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+
+	msg := err.Error()
+	if strings.Contains(msg, "WaitAPICondition verification failed") ||
+		strings.Contains(msg, "WaitAPICondition timeout") ||
+		strings.Contains(msg, "WaitAPICondition cancelled") {
+		return false
+	}
+
+	var apiErr *ApiError
+	if errors.As(err, &apiErr) {
+		switch apiErr.StatusCode {
+		case 0, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+			return true
+		}
+		return false
+	}
+
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return true
+	}
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		return IsTransientPollError(urlErr.Err)
+	}
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		return true
+	}
+	if errors.Is(err, syscall.ECONNRESET) ||
+		errors.Is(err, syscall.ECONNREFUSED) ||
+		errors.Is(err, syscall.EPIPE) ||
+		errors.Is(err, syscall.ETIMEDOUT) {
+		return true
+	}
+
+	lower := strings.ToLower(msg)
+	for _, s := range []string{
+		"connection reset by peer",
+		"connection refused",
+		"broken pipe",
+		"i/o timeout",
+		"tls: handshake timeout",
+		"server closed idle connection",
+		"use of closed network connection",
+		"http2: client connection force closed",
+		"http2: client connection lost",
+		"eof",
+	} {
+		if strings.Contains(lower, s) {
+			return true
+		}
+	}
+	return false
 }

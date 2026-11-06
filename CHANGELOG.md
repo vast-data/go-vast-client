@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.167.0
+
+ENHANCEMENTS:
+
+* **Transient poll retries**: While waiting on async tasks, temporary network / availability errors (connection reset, EOF, 502/503/504, unreachable) are retried until the wait timeout. Configurable via `WaitAPIConditionConfig.TransientInterval` (default 5s).
+
 ## 0.166.0
 
 ENHANCEMENTS:

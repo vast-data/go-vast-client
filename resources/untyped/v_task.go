@@ -23,9 +23,10 @@ type (
 // based on the task outcome.
 //
 // Task states:
-//   - "completed" → returns the task Record with AsyncResult.Success=true.
-//   - "running"   → continues polling with exponential backoff.
-//   - any other state → considered failure, returns error with AsyncResult.Success=false.
+//   - "completed" / "success" → returns the task Record with AsyncResult.Success=true.
+//   - "failed" / "error" / "cancelled" / "canceled" → failure, AsyncResult.Success=false.
+//   - any other state (running, pending, …) → continues polling with exponential backoff.
+// Transient network errors while polling are retried until timeout.
 //
 // Parameters:
 //   - ctx: context for cancellation control.
