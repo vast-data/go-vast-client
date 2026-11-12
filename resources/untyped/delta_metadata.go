@@ -9,7 +9,7 @@ import "github.com/vast-data/go-vast-client/core"
 
 func init() {
 	// Register metadata for Delta extra methods
-	// Resource path: deltas
+	// Resource path: delta
 
 	core.RegisterExtraMethod(
 		"Delta",                         // resource type (Go struct name)

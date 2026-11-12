@@ -57,7 +57,7 @@ func (c *Cnode) CnodeAddCnodes_POST(body core.Params, waitTimeout time.Duration)
 
 // CnodeBgpconfigWithContext_GET
 // method: GET
-// url: /cnodes/{id}/bgpconfig
+// url: /cnodes/{id}/bgpconfig/
 // summary: Get BGP Configuration
 func (c *Cnode) CnodeBgpconfigWithContext_GET(ctx context.Context, id any) (core.Record, error) {
 	resourcePath := core.BuildResourcePathWithID("cnodes", id, "bgpconfig")
@@ -70,7 +70,7 @@ func (c *Cnode) CnodeBgpconfigWithContext_GET(ctx context.Context, id any) (core
 
 // CnodeBgpconfig_GET
 // method: GET
-// url: /cnodes/{id}/bgpconfig
+// url: /cnodes/{id}/bgpconfig/
 // summary: Get BGP Configuration
 func (c *Cnode) CnodeBgpconfig_GET(id any) (core.Record, error) {
 	return c.CnodeBgpconfigWithContext_GET(c.Rest.GetCtx(), id)
@@ -78,7 +78,7 @@ func (c *Cnode) CnodeBgpconfig_GET(id any) (core.Record, error) {
 
 // CnodeBgpconfigWithContext_PATCH
 // method: PATCH
-// url: /cnodes/{id}/bgpconfig
+// url: /cnodes/{id}/bgpconfig/
 // summary: Configure BGP on CNode
 //
 // Body:
@@ -98,7 +98,7 @@ func (c *Cnode) CnodeBgpconfigWithContext_PATCH(ctx context.Context, id any, bod
 
 // CnodeBgpconfig_PATCH
 // method: PATCH
-// url: /cnodes/{id}/bgpconfig
+// url: /cnodes/{id}/bgpconfig/
 // summary: Configure BGP on CNode
 //
 // Body:

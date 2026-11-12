@@ -122,6 +122,8 @@ type UntypedVMSRest struct {
 	Switches                 *untyped.Switch
 	Tables                   *untyped.Table
 	Tenants                  *untyped.Tenant
+	// Collection-level create/modify are not standard /{id}/ CRUD; keep as extras.
+	// +apiall:extraMethod:POST|PATCH=/topics/
 	Topics                   *untyped.Topic
 	Users                    *untyped.User
 	UserQuotas               *untyped.UserQuota
@@ -195,7 +197,7 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	rest.BigCatalogConfigs = core.NewUntypedResource[untyped.BigCatalogConfig](rest, "bigcatalogconfig", C, L, R, U, D)
 	rest.BigCatalogIndexedColumns = core.NewUntypedResource[untyped.BigCatalogIndexedColumns](rest, "bigcatalogindexedcolumns", L)
 	rest.BlockHosts = core.NewUntypedResource[untyped.BlockHost](rest, "blockhosts", C, L, R, U, D)
-	rest.BlockHostMappings = core.NewUntypedResource[untyped.BlockHostMapping](rest, "blockhostvolumes", L)
+	rest.BlockHostMappings = core.NewUntypedResource[untyped.BlockHostMapping](rest, "blockmappings", L, R)
 	rest.CallhomeConfigs = core.NewUntypedResource[untyped.CallhomeConfigs](rest, "callhomeconfigs", C, L, R, U)
 	rest.Capacities = core.NewUntypedResource[untyped.Capacity](rest, "capacity", L)
 	rest.Carriers = core.NewUntypedResource[untyped.Carrier](rest, "carriers", L, R, U)
@@ -208,7 +210,7 @@ func NewUntypedVMSRest(config *core.VMSConfig) (*UntypedVMSRest, error) {
 	rest.Columns = core.NewUntypedResource[untyped.Column](rest, "columns", L)
 	rest.Configs = core.NewUntypedResource[untyped.Config](rest, "config", L)
 	rest.Dboxes = core.NewUntypedResource[untyped.Dbox](rest, "dboxes", C, L, R, U, D)
-	rest.Deltas = core.NewUntypedResource[untyped.Delta](rest, "deltas", L)
+	rest.Deltas = core.NewUntypedResource[untyped.Delta](rest, "delta", L)
 	rest.Dnodes = core.NewUntypedResource[untyped.Dnode](rest, "dnodes", C, L, R, U, D)
 	rest.Dns = core.NewUntypedResource[untyped.Dns](rest, "dns", C, L, R, U, D)
 	rest.Dtrays = core.NewUntypedResource[untyped.Dtray](rest, "dtrays", C, L, R, U, D)

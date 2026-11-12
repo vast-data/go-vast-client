@@ -561,6 +561,7 @@ func TestConcurrentAuthorizationCalls(t *testing.T) {
 		Token:     &jwtToken{},
 	}
 	auth.authCond = sync.NewCond(&auth.mu)
+	auth.reuseWindow = time.Hour // concurrent callers reuse the leader's token
 
 	// Launch multiple concurrent authorize calls
 	const numGoroutines = 10
@@ -710,6 +711,7 @@ func TestConcurrentTokenRefresh(t *testing.T) {
 		Token:     &jwtToken{},
 	}
 	auth.authCond = sync.NewCond(&auth.mu)
+	auth.reuseWindow = time.Hour // concurrent callers reuse the leader's token
 
 	// First, acquire initial token
 	err := auth.authorize()
@@ -730,9 +732,10 @@ func TestConcurrentTokenRefresh(t *testing.T) {
 	done := make(chan error, numGoroutines)
 
 	// Capture the "old" token that all goroutines see
-	auth.mu.RLock()
+	auth.mu.Lock()
 	oldToken := auth.Token.Access
-	auth.mu.RUnlock()
+	auth.lastAuthorized = time.Now().Add(-2 * time.Hour) // token is expired, outside the reuse window
+	auth.mu.Unlock()
 
 	t.Logf("Old token before concurrent refresh: %s", oldToken)
 
@@ -806,6 +809,7 @@ func TestConcurrentTokenAcquisition(t *testing.T) {
 		Token:     &jwtToken{},
 	}
 	auth.authCond = sync.NewCond(&auth.mu)
+	auth.reuseWindow = time.Hour // concurrent callers reuse the leader's token
 
 	// Verify not initialized
 	if auth.isInitialized() {
@@ -952,7 +956,8 @@ func TestConcurrentRefreshWithExpiredRefreshToken(t *testing.T) {
 		Token:     &jwtToken{Access: "old-token", Refresh: "expired-refresh"},
 	}
 	auth.authCond = sync.NewCond(&auth.mu)
-	auth.setInitialized(true) // Simulate already initialized
+	auth.reuseWindow = time.Hour // concurrent callers reuse the leader's token
+	auth.setInitialized(true)    // Simulate already initialized
 
 	const numGoroutines = 10
 	done := make(chan error, numGoroutines)
@@ -1043,6 +1048,7 @@ func TestExtremeConcurrency500Goroutines(t *testing.T) {
 		Token:     &jwtToken{}, // Empty token - will trigger acquisition
 	}
 	auth.authCond = sync.NewCond(&auth.mu)
+	auth.reuseWindow = time.Hour // concurrent callers reuse the leader's token
 
 	// Launch 500 concurrent goroutines
 	const numGoroutines = 500
@@ -1177,6 +1183,7 @@ func TestNoEmptyTokenDuringRefresh(t *testing.T) {
 		Token:     &jwtToken{}, // Start with empty token to force refresh
 	}
 	auth.authCond = sync.NewCond(&auth.mu)
+	auth.reuseWindow = time.Hour // concurrent callers reuse the leader's token
 
 	const numGoroutines = 50
 	done := make(chan error, numGoroutines)

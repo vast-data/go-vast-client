@@ -414,7 +414,7 @@ type CnodeBgpconfig_GET_Model struct {
 
 // CnodeBgpconfigWithContext_GET
 // method: GET
-// url: /cnodes/{id}/bgpconfig
+// url: /cnodes/{id}/bgpconfig/
 // summary: Get BGP Configuration
 func (r *Cnode) CnodeBgpconfigWithContext_GET(ctx context.Context, id any) (*CnodeBgpconfig_GET_Model, error) {
 	resourcePath := core.BuildResourcePathWithID("cnodes", id, "bgpconfig")
@@ -437,7 +437,7 @@ func (r *Cnode) CnodeBgpconfigWithContext_GET(ctx context.Context, id any) (*Cno
 
 // CnodeBgpconfig_GET
 // method: GET
-// url: /cnodes/{id}/bgpconfig
+// url: /cnodes/{id}/bgpconfig/
 // summary: Get BGP Configuration
 func (r *Cnode) CnodeBgpconfig_GET(id any) (*CnodeBgpconfig_GET_Model, error) {
 	return r.CnodeBgpconfigWithContext_GET(r.Untyped.GetCtx(), id)
@@ -456,7 +456,7 @@ type CnodeBgpconfig_PATCH_Body struct {
 
 // CnodeBgpconfigWithContext_PATCH
 // method: PATCH
-// url: /cnodes/{id}/bgpconfig
+// url: /cnodes/{id}/bgpconfig/
 // summary: Configure BGP on CNode
 func (r *Cnode) CnodeBgpconfigWithContext_PATCH(ctx context.Context, id any, body *CnodeBgpconfig_PATCH_Body) error {
 	resourcePath := core.BuildResourcePathWithID("cnodes", id, "bgpconfig")
@@ -474,7 +474,7 @@ func (r *Cnode) CnodeBgpconfigWithContext_PATCH(ctx context.Context, id any, bod
 
 // CnodeBgpconfig_PATCH
 // method: PATCH
-// url: /cnodes/{id}/bgpconfig
+// url: /cnodes/{id}/bgpconfig/
 // summary: Configure BGP on CNode
 func (r *Cnode) CnodeBgpconfig_PATCH(id any, body *CnodeBgpconfig_PATCH_Body) error {
 	return r.CnodeBgpconfigWithContext_PATCH(r.Untyped.GetCtx(), id, body)
