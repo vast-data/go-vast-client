@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.168.0
+
+BREAKING CHANGES:
+
+* **BlockHostMapping / Delta Resource Paths**: Untyped resource paths now match OpenAPI — `blockmappings` (was `blockhostvolumes`) and `delta` (was `deltas`). LIST/READ URLs change accordingly; bulk/config extras are discovered again.
+* **TopicTopics_GET Removed**: Collection `GET /topics/` is covered by `List` / `ListWithContext`. Untyped `TopicTopics_POST` / `TopicTopics_PATCH` remain as extras.
+* **PartialUserQuota.IsGroup**: Removed from `Component_PartialUserQuota` after the OpenAPI schema drop. `Component_UserQuota.IsGroup` remains.
+
+BUG FIXES:
+
+* **JWT Reuse Window**: After a successful authorize, callers that arrive within a short window (default 30s) reuse that token instead of renewing again. Covers late 401s for a token a peer has already replaced, not only waiters of an in-flight authorize.
+
 ## 0.167.0
 
 ENHANCEMENTS:

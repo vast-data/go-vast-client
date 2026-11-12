@@ -472,6 +472,17 @@ func (wn *WidgetNavigator) Navigate(msg tea.Msg) tea.Cmd {
 					panic("WidgetNavigator: widget does not implement CopyToClipboardAdapter interface")
 				}
 			case "esc":
+				// Details-only singletons have no list; send user back to resources.
+				supportsList := true
+				if check, ok := any(wn.widget).(interface{ SupportsListOperation() bool }); ok {
+					supportsList = check.SupportsListOperation()
+				}
+				if !supportsList {
+					logging.Debug("Details-only: esc returns to resources")
+					return func() tea.Msg {
+						return msg_types.SetResourceTypeMsg{ResourceType: "resources"}
+					}
+				}
 				// Return to list mode
 				logging.Debug("Details mode canceled, returning to list mode")
 				wn.setModeIfSupported(NavigatorModeList)
