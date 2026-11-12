@@ -9,7 +9,7 @@ import "github.com/vast-data/go-vast-client/core"
 
 func init() {
 	// Register metadata for BlockHostMapping extra methods
-	// Resource path: blockhostvolumes
+	// Resource path: blockmappings
 
 	core.RegisterExtraMethod(
 		"BlockHostMapping",           // resource type (Go struct name)

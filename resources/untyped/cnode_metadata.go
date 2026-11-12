@@ -20,19 +20,19 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
-		"Cnode",                  // resource type (Go struct name)
-		"CnodeBgpconfig_GET",     // method name
-		"GET",                    // HTTP verb
-		"/cnodes/{id}/bgpconfig", // URL path with placeholders
-		"Get BGP Configuration",  // summary from OpenAPI
+		"Cnode",                   // resource type (Go struct name)
+		"CnodeBgpconfig_GET",      // method name
+		"GET",                     // HTTP verb
+		"/cnodes/{id}/bgpconfig/", // URL path with placeholders
+		"Get BGP Configuration",   // summary from OpenAPI
 	)
 
 	core.RegisterExtraMethod(
-		"Cnode",                  // resource type (Go struct name)
-		"CnodeBgpconfig_PATCH",   // method name
-		"PATCH",                  // HTTP verb
-		"/cnodes/{id}/bgpconfig", // URL path with placeholders
-		"Configure BGP on CNode", // summary from OpenAPI
+		"Cnode",                   // resource type (Go struct name)
+		"CnodeBgpconfig_PATCH",    // method name
+		"PATCH",                   // HTTP verb
+		"/cnodes/{id}/bgpconfig/", // URL path with placeholders
+		"Configure BGP on CNode",  // summary from OpenAPI
 	)
 
 	core.RegisterExtraMethod(

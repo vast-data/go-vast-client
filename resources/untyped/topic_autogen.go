@@ -71,44 +71,6 @@ func (t *Topic) TopicShow_GET(params core.Params) (core.Record, error) {
 	return t.TopicShowWithContext_GET(t.Rest.GetCtx(), params)
 }
 
-// TopicTopicsWithContext_GET
-// method: GET
-// url: /topics/
-// summary: List Kafka Topics
-//
-// Params:
-//   - page
-//   - page_size
-//   - tenant_id: Filter by tenant. Specify tenant ID.
-//   - database_name: Getting list of objects by database_name
-//   - name: Getting list of objects by exact match
-//   - count_only: Whether to only return count of objects
-func (t *Topic) TopicTopicsWithContext_GET(ctx context.Context, params core.Params) (core.RecordSet, error) {
-	resourcePath := "/topics/"
-	result, err := core.Request[core.RecordSet](ctx, t, http.MethodGet, resourcePath, params, nil)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-
-}
-
-// TopicTopics_GET
-// method: GET
-// url: /topics/
-// summary: List Kafka Topics
-//
-// Params:
-//   - page
-//   - page_size
-//   - tenant_id: Filter by tenant. Specify tenant ID.
-//   - database_name: Getting list of objects by database_name
-//   - name: Getting list of objects by exact match
-//   - count_only: Whether to only return count of objects
-func (t *Topic) TopicTopics_GET(params core.Params) (core.RecordSet, error) {
-	return t.TopicTopicsWithContext_GET(t.Rest.GetCtx(), params)
-}
-
 // TopicTopicsWithContext_PATCH
 // method: PATCH
 // url: /topics/

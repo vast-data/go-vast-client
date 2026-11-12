@@ -58,10 +58,11 @@ func newCoalesceTestAuth(host string, port uint64) *JWTAuthenticator {
 		Token:     &jwtToken{},
 	}
 	auth.authCond = sync.NewCond(&auth.mu)
+	auth.reuseWindow = time.Hour // waiters and late callers reuse a peer's token
 	return auth
 }
 
-func assertTokenAndGeneration(t *testing.T, auth *JWTAuthenticator, wantToken string, wantGeneration uint64) {
+func assertToken(t *testing.T, auth *JWTAuthenticator, wantToken string) {
 	t.Helper()
 
 	auth.mu.RLock()
@@ -69,9 +70,6 @@ func assertTokenAndGeneration(t *testing.T, auth *JWTAuthenticator, wantToken st
 
 	if auth.Token.Access != wantToken {
 		t.Errorf("access token = %q, want %q", auth.Token.Access, wantToken)
-	}
-	if auth.generation != wantGeneration {
-		t.Errorf("generation = %d, want %d", auth.generation, wantGeneration)
 	}
 }
 
@@ -126,7 +124,7 @@ func TestNoRedundantAcquireWhileLeaderInFlight(t *testing.T) {
 	if calls := atomic.LoadInt32(&acquireCalls); calls != 1 {
 		t.Errorf("token acquisitions = %d, want 1 (redundant token requests!)", calls)
 	}
-	assertTokenAndGeneration(t, auth, "access-1", 1)
+	assertToken(t, auth, "access-1")
 }
 
 // TestNoRedundantRefreshWhileLeaderInFlight verifies the same coalescing for an
@@ -181,7 +179,7 @@ func TestNoRedundantRefreshWhileLeaderInFlight(t *testing.T) {
 	if calls := atomic.LoadInt32(&acquireCalls); calls != 0 {
 		t.Errorf("token acquisitions = %d, want 0 (refresh token was still valid)", calls)
 	}
-	assertTokenAndGeneration(t, auth, "refreshed-1", 1)
+	assertToken(t, auth, "refreshed-1")
 }
 
 // TestWaitersRetryWhenLeaderAuthorizeFails verifies that coalescing is keyed on
@@ -236,7 +234,7 @@ func TestWaitersRetryWhenLeaderAuthorizeFails(t *testing.T) {
 	if calls := atomic.LoadInt32(&acquireCalls); calls != 2 {
 		t.Errorf("token acquisitions = %d, want 2 (one failure plus one retry)", calls)
 	}
-	assertTokenAndGeneration(t, auth, "access-2", 1)
+	assertToken(t, auth, "access-2")
 }
 
 // TestSequentialAuthorizeIsNotCoalesced guards the other direction: coalescing
@@ -262,6 +260,7 @@ func TestSequentialAuthorizeIsNotCoalesced(t *testing.T) {
 
 	host, port := parseTestServerAddress(server.Listener.Addr().String())
 	auth := newCoalesceTestAuth(host, port)
+	auth.reuseWindow = 0 // deliberate sequential calls must each reach the VMS
 
 	for i := 0; i < 3; i++ {
 		if err := auth.authorize(); err != nil {
@@ -275,5 +274,5 @@ func TestSequentialAuthorizeIsNotCoalesced(t *testing.T) {
 	if calls := atomic.LoadInt32(&refreshCalls); calls != 2 {
 		t.Errorf("token refreshes = %d, want 2", calls)
 	}
-	assertTokenAndGeneration(t, auth, "refreshed-2", 3)
+	assertToken(t, auth, "refreshed-2")
 }

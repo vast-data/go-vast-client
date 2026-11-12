@@ -28,14 +28,6 @@ func init() {
 	)
 
 	core.RegisterExtraMethod(
-		"Topic",             // resource type (Go struct name)
-		"TopicTopics_GET",   // method name
-		"GET",               // HTTP verb
-		"/topics/",          // URL path with placeholders
-		"List Kafka Topics", // summary from OpenAPI
-	)
-
-	core.RegisterExtraMethod(
 		"Topic",                // resource type (Go struct name)
 		"TopicTopics_PATCH",    // method name
 		"PATCH",                // HTTP verb
