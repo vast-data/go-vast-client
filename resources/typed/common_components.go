@@ -3048,7 +3048,6 @@ type Component_PartialUserQuota struct {
 	Identifier      string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
 	IdentifierType  string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:""`
 	IsAccountable   bool   `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:""`
-	IsGroup         bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:"True for a group quota. False for a user quota."`
 	IsIamRole       bool   `json:"is_iam_role,omitempty" yaml:"is_iam_role,omitempty" required:"false" doc:""`
 	Name            string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
 	PercentCapacity int64  `json:"percent_capacity,omitempty" yaml:"percent_capacity,omitempty" required:"false" doc:""`
@@ -4504,7 +4503,7 @@ type Component_UserQuota struct {
 	Identifier       string `json:"identifier,omitempty" yaml:"identifier,omitempty" required:"false" doc:""`
 	IdentifierType   string `json:"identifier_type,omitempty" yaml:"identifier_type,omitempty" required:"false" doc:""`
 	IsAccountable    bool   `json:"is_accountable,omitempty" yaml:"is_accountable,omitempty" required:"false" doc:""`
-	IsGroup          bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:"True for a group quota. False for a user quota."`
+	IsGroup          bool   `json:"is_group,omitempty" yaml:"is_group,omitempty" required:"false" doc:""`
 	IsIamRole        bool   `json:"is_iam_role,omitempty" yaml:"is_iam_role,omitempty" required:"false" doc:""`
 	Name             string `json:"name,omitempty" yaml:"name,omitempty" required:"false" doc:"A user or group name"`
 	Path             string `json:"path,omitempty" yaml:"path,omitempty" required:"false" doc:""`
