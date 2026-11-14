@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -58,6 +59,30 @@ func TestIgnoreAndExpectStatusCodes(t *testing.T) {
 	}
 	if ExpectStatusCodes(errors.New("plain"), http.StatusNotFound) {
 		t.Fatal("expected false for non-api error")
+	}
+}
+
+func TestIgnoreAndExpectStatusCodes_WrappedApiError(t *testing.T) {
+	// WaitAPICondition and callers commonly wrap API errors with %w.
+	// IsApiError sees through the wrapping, so the helpers must too
+	// (they used to panic on the direct type assertion).
+	apiErr := &ApiError{StatusCode: http.StatusServiceUnavailable}
+	wrapped := fmt.Errorf("WaitAPICondition API call failed: %w", apiErr)
+
+	if !IsApiError(wrapped) {
+		t.Fatal("expected IsApiError to see the wrapped ApiError")
+	}
+	if !ExpectStatusCodes(wrapped, http.StatusServiceUnavailable) {
+		t.Fatal("expected true for wrapped matching status")
+	}
+	if ExpectStatusCodes(wrapped, http.StatusNotFound) {
+		t.Fatal("expected false for wrapped non-matching status")
+	}
+	if IgnoreStatusCodes(wrapped, http.StatusServiceUnavailable) != nil {
+		t.Fatal("expected nil when ignoring wrapped matching status")
+	}
+	if IgnoreStatusCodes(wrapped, http.StatusNotFound) != wrapped {
+		t.Fatal("expected wrapped error back when status does not match")
 	}
 }
 
