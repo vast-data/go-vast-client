@@ -340,3 +340,40 @@ func TestKeyLocker_Lock_HighConcurrency(t *testing.T) {
 		t.Errorf("Total operations = %v, want %v", total, numGoroutines)
 	}
 }
+
+// TestKeyLocker_Lock_MutualExclusionUnderChurn hammers a single key with many
+// short critical sections so that entries are created and deleted constantly.
+// No two goroutines may be inside the critical section at the same time.
+func TestKeyLocker_Lock_MutualExclusionUnderChurn(t *testing.T) {
+	kl := NewKeyLocker()
+	const workers = 32
+	const iterations = 2000
+
+	var inside int32
+	var violations int32
+	var wg sync.WaitGroup
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < iterations; i++ {
+				unlock := kl.Lock("user", 1)
+				if atomic.AddInt32(&inside, 1) != 1 {
+					atomic.AddInt32(&violations, 1)
+				}
+				atomic.AddInt32(&inside, -1)
+				unlock()
+			}
+		}()
+	}
+	wg.Wait()
+
+	if violations != 0 {
+		t.Fatalf("mutual exclusion violated %d times", violations)
+	}
+	kl.mu.Lock()
+	defer kl.mu.Unlock()
+	if n := len(kl.locks); n != 0 {
+		t.Fatalf("expected all lock entries to be cleaned up, %d left", n)
+	}
+}

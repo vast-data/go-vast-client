@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+BUG FIXES:
+
+* **KeyLocker Mutual Exclusion**: `KeyLocker.Lock` could hand the same key to two goroutines at once when an unlock deleted the map entry while another caller had already loaded it. The lookup and the reference count now update under one mutex.
+
 ## 0.168.0
 
 BREAKING CHANGES:
