@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+BUG FIXES:
+
+* **Wrapped ApiError Panic**: `IgnoreStatusCodes` and `ExpectStatusCodes` (and the internal retry/auth/hint paths) used a direct `err.(*ApiError)` assertion after `IsApiError`, which uses `errors.As`. A wrapped API error, such as the one `WaitAPICondition` returns, caused a panic. They now use `errors.As` throughout.
+
 ## 0.168.0
 
 BREAKING CHANGES:

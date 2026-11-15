@@ -150,7 +150,9 @@ func (e *VastResource) ListWithContext(ctx context.Context, params Params) (Reco
 	iter := e.GetIteratorWithContext(ctx, params, pageSize)
 	result, err := iter.All()
 	if !e.resourceOps.has(L) && ExpectStatusCodes(err, http.StatusNotFound) {
-		err.(*ApiError).hints = e.describeResourceFrom(e)
+		if apiErr, ok := asApiError(err); ok {
+			apiErr.hints = e.describeResourceFrom(e)
+		}
 	}
 	return result, err
 }
@@ -167,7 +169,9 @@ func (e *VastResource) CreateWithContext(ctx context.Context, params ...Params) 
 	}
 	result, err := Request[Record](ctx, e, http.MethodPost, e.resourcePath, query, body)
 	if !e.resourceOps.has(C) && ExpectStatusCodes(err, http.StatusNotFound) {
-		err.(*ApiError).hints = e.describeResourceFrom(e)
+		if apiErr, ok := asApiError(err); ok {
+			apiErr.hints = e.describeResourceFrom(e)
+		}
 	}
 	return result, err
 }
@@ -189,7 +193,9 @@ func (e *VastResource) UpdateWithContext(ctx context.Context, id any, params ...
 	}
 	result, err := Request[Record](ctx, e, method, path, query, body)
 	if !e.resourceOps.has(U) && ExpectStatusCodes(err, http.StatusNotFound) {
-		err.(*ApiError).hints = e.describeResourceFrom(e)
+		if apiErr, ok := asApiError(err); ok {
+			apiErr.hints = e.describeResourceFrom(e)
+		}
 	}
 	return result, err
 }
@@ -239,7 +245,9 @@ func (e *VastResource) DeleteByIdWithContext(ctx context.Context, id any, params
 	path := BuildResourcePathWithID(e.resourcePath, id)
 	result, err := Request[Record](ctx, e, http.MethodDelete, path, query, body)
 	if !e.resourceOps.has(D) && ExpectStatusCodes(err, http.StatusNotFound) {
-		err.(*ApiError).hints = e.describeResourceFrom(e)
+		if apiErr, ok := asApiError(err); ok {
+			apiErr.hints = e.describeResourceFrom(e)
+		}
 	}
 	return result, err
 }
@@ -309,7 +317,9 @@ func (e *VastResource) GetByIdWithContext(ctx context.Context, id any, params ..
 	path := BuildResourcePathWithID(e.resourcePath, id)
 	record, err := Request[Record](ctx, e, http.MethodGet, path, query, nil)
 	if !e.resourceOps.has(R) && ExpectStatusCodes(err, http.StatusNotFound) {
-		err.(*ApiError).hints = e.describeResourceFrom(e)
+		if apiErr, ok := asApiError(err); ok {
+			apiErr.hints = e.describeResourceFrom(e)
+		}
 	}
 	return record, err
 }

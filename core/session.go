@@ -57,15 +57,26 @@ func (e *ApiError) Error() string {
 }
 
 func IsApiError(err error) bool {
+	_, ok := asApiError(err)
+	return ok
+}
+
+// asApiError returns the *ApiError in err's chain, if any. Errors are often
+// wrapped (for example by WaitAPICondition), so a direct type assertion is
+// not safe after IsApiError returns true.
+func asApiError(err error) (*ApiError, bool) {
 	var apiErr *ApiError
-	return errors.As(err, &apiErr)
+	if errors.As(err, &apiErr) {
+		return apiErr, true
+	}
+	return nil, false
 }
 
 func IgnoreStatusCodes(err error, codes ...int) error {
-	if !IsApiError(err) {
+	apiErr, ok := asApiError(err)
+	if !ok {
 		return err
 	}
-	apiErr := err.(*ApiError)
 	for _, code := range codes {
 		if apiErr.StatusCode == code {
 			return nil
@@ -75,11 +86,11 @@ func IgnoreStatusCodes(err error, codes ...int) error {
 }
 
 func ExpectStatusCodes(err error, codes ...int) bool {
-	if !IsApiError(err) {
+	apiErr, ok := asApiError(err)
+	if !ok {
 		return false
 	}
 	found := false
-	apiErr := err.(*ApiError)
 	for _, code := range codes {
 		if apiErr.StatusCode == code {
 			found = true
@@ -438,10 +449,10 @@ func doRequestWithRetries(ctx context.Context, s *VMSSession, verb, url string, 
 	)
 	for i := 0; i < maxRetries; i++ {
 		result, err = doRequest(ctx, s, verb, url, body, headers)
-		if err != nil && IsApiError(err) {
-			statusCode := err.(*ApiError).StatusCode
+		if apiErr, ok := asApiError(err); ok {
+			statusCode := apiErr.StatusCode
 			if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-				if strings.Contains(err.(*ApiError).Body, "permission_denied") {
+				if strings.Contains(apiErr.Body, "permission_denied") {
 					// Not related to identify auth error.
 					break
 				}
