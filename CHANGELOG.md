@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 BUG FIXES:
 
+* **KeyLocker Mutual Exclusion**: `KeyLocker.Lock` could hand the same key to two goroutines at once when an unlock deleted the map entry while another caller had already loaded it. The lookup and the reference count now update under one mutex.
 * **Wrapped ApiError Panic**: `IgnoreStatusCodes` and `ExpectStatusCodes` (and the internal retry/auth/hint paths) used a direct `err.(*ApiError)` assertion after `IsApiError`, which uses `errors.As`. A wrapped API error, such as the one `WaitAPICondition` returns, caused a panic. They now use `errors.As` throughout.
 
 ## 0.168.0
